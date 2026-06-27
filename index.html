@@ -532,9 +532,8 @@
 <!-- =================== INVENTARIO =================== -->
 <div id="page-inventario" class="page">
   <div class="section-title">Inventario</div>
-  <div class="section-sub">Cada unidad registrada individualmente — control exacto de costos y márgenes.</div>
+  <div class="section-sub">Cada unidad registrada individualmente — control exacto de costos, márgenes y especificaciones.</div>
 
-  <!-- Summary stats -->
   <div class="grid-3" id="inv-stats-row">
     <div class="stat-box">
       <div class="stat-label">Unidades disponibles</div>
@@ -550,19 +549,19 @@
     </div>
   </div>
 
-  <!-- Search -->
   <div class="card" style="padding:14px 20px;">
     <div style="display:flex;gap:10px;align-items:center;">
       <span style="font-size:18px;">🔍</span>
-      <input type="text" id="inv-search" placeholder="Buscar por modelo o referencia..." oninput="renderInventario()" style="flex:1;border:none;background:transparent;padding:0;font-size:14px;" />
+      <input type="text" id="inv-search" placeholder="Buscar por modelo, referencia o colección..." oninput="renderInventario()" style="flex:1;border:none;background:transparent;padding:0;font-size:14px;" />
       <button class="btn btn-outline btn-sm" onclick="document.getElementById('inv-search').value='';renderInventario()">Limpiar</button>
     </div>
   </div>
 
-  <!-- Add form -->
   <div class="card">
     <div class="card-title" id="inv-form-title">Registrar unidad</div>
     <input type="hidden" id="inv-edit-index" value="" />
+
+    <div class="divider-text">Identificación</div>
     <div class="grid-2">
       <div class="field">
         <label>Modelo</label>
@@ -572,7 +571,67 @@
         <label>Referencia</label>
         <input type="text" id="inv-sku" placeholder="Ej: INV-8926OB" />
       </div>
+      <div class="field">
+        <label>Colección</label>
+        <input type="text" id="inv-coleccion" placeholder="Ej: Pro Diver, Bolt, Subaqua..." />
+      </div>
+      <div class="field">
+        <label>Género</label>
+        <select id="inv-genero">
+          <option value="hombre">Hombre</option>
+          <option value="mujer">Mujer</option>
+          <option value="unisex">Unisex</option>
+        </select>
+      </div>
     </div>
+
+    <div class="divider-text">Especificaciones técnicas</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Diámetro de caja (mm)</label>
+        <input type="number" id="inv-mm" placeholder="Ej: 48" />
+      </div>
+      <div class="field">
+        <label>Material de caja</label>
+        <input type="text" id="inv-material-caja" placeholder="Ej: Acero inoxidable 316L" />
+      </div>
+      <div class="field">
+        <label>Material de correa / brazalete</label>
+        <input type="text" id="inv-material-correa" placeholder="Ej: Acero, silicona, cuero..." />
+      </div>
+      <div class="field">
+        <label>Color de esfera</label>
+        <input type="text" id="inv-color-esfera" placeholder="Ej: Azul, negro, blanco..." />
+      </div>
+      <div class="field">
+        <label>Tipo de movimiento</label>
+        <select id="inv-movimiento">
+          <option value="">— Seleccionar —</option>
+          <option value="Cuarzo japonés">Cuarzo japonés</option>
+          <option value="Automático">Automático</option>
+          <option value="Cronógrafo cuarzo">Cronógrafo cuarzo</option>
+          <option value="Solar">Solar</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Resistencia al agua</label>
+        <input type="text" id="inv-agua" placeholder="Ej: 200M, 100M..." />
+      </div>
+      <div class="field">
+        <label>Cristal</label>
+        <input type="text" id="inv-cristal" placeholder="Ej: Mineral, Zafiro, Flame Fusion..." />
+      </div>
+      <div class="field">
+        <label>Color / variante</label>
+        <input type="text" id="inv-color" placeholder="Ej: Dorado/negro, plateado..." />
+      </div>
+    </div>
+    <div class="field">
+      <label>Notas adicionales</label>
+      <textarea id="inv-notas" rows="2" placeholder="Características especiales, edición limitada, detalles relevantes..."></textarea>
+    </div>
+
+    <div class="divider-text">Costos y precio</div>
     <div class="grid-2">
       <div class="field">
         <label>Costo unitario ($)</label>
@@ -583,7 +642,6 @@
         <div class="currency-wrap"><input type="number" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
       </div>
     </div>
-    <!-- Auto-calculated row -->
     <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
       <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:120px;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Costo total</div>
@@ -596,7 +654,7 @@
     </div>
     <div class="grid-2">
       <div class="field">
-        <label>Precio de venta ($)</label>
+        <label>Precio de venta objetivo ($)</label>
         <div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
       </div>
       <div class="field">
@@ -609,31 +667,40 @@
         </select>
       </div>
     </div>
+
+    <div class="divider-text">Imagen</div>
     <div class="field">
-      <label>Imagen del producto <span style="color:var(--muted);font-weight:400;">— URL directa (i.imgur.com/...jpg)</span></label>
       <div style="display:flex;gap:8px;align-items:flex-start;">
         <div style="flex:1;">
-          <input type="url" id="inv-foto" placeholder="https://i.imgur.com/..." oninput="previewFoto()" />
+          <input type="url" id="inv-foto" placeholder="https://i.imgur.com/...jpg — URL directa de imagen" oninput="previewFoto()" />
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Sube la foto a <strong style="color:var(--white)">imgur.com</strong>, clic derecho → copiar dirección de imagen</div>
         </div>
         <div id="inv-foto-preview" style="width:64px;height:64px;border-radius:8px;border:1px solid var(--border);background:var(--dark);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;">📷</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
       <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>
       <button class="btn btn-outline" onclick="cancelarEdicion()" id="inv-cancel-btn" style="display:none;">Cancelar</button>
     </div>
   </div>
 
-  <!-- List -->
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div class="card-title" style="margin:0;">Unidades registradas</div>
-      <div id="inv-agrupado-toggle" style="display:flex;gap:6px;">
+      <div style="display:flex;gap:6px;">
         <button class="btn btn-outline btn-sm" onclick="toggleVista('lista')" id="vista-lista" style="border-color:var(--gold);color:var(--gold);">Lista</button>
         <button class="btn btn-outline btn-sm" onclick="toggleVista('modelo')" id="vista-modelo">Por modelo</button>
       </div>
     </div>
     <div id="inv-lista"><div class="empty"><span>📦</span>Sin unidades registradas aún.</div></div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="inv-modal" style="display:none;position:fixed;inset:0;background:rgba(10,10,10,0.88);backdrop-filter:blur(8px);z-index:200;overflow-y:auto;padding:24px 16px;">
+  <div style="max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+    <div id="inv-modal-content"></div>
   </div>
 </div>
 
@@ -1030,7 +1097,6 @@ function calcularMargenPreview() {
   }
 }
 
-let _vistaActual = 'lista';
 function toggleVista(v) {
   _vistaActual = v;
   document.getElementById('vista-lista').style.borderColor = v === 'lista' ? 'var(--gold)' : 'var(--border)';
@@ -1107,37 +1173,240 @@ function editarProducto(i) {
 function makeFotoHtml(url, size) {
   var s = size || 52;
   var style = 'width:' + s + 'px;height:' + s + 'px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;';
-  if (url) {
-    return '<img src="' + url + '" style="' + style + '" onload="" onerror="this.remove()" />';
-  }
-  return '<div style="width:' + s + 'px;height:' + s + 'px;border-radius:8px;border:1px solid var(--border);background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">⌚</div>';
+  if (url) return '<img src="' + url + '" style="' + style + '" onerror="this.remove()" />';
+  return '<div style="width:' + s + 'px;height:' + s + 'px;border-radius:8px;border:1px solid var(--border);background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:' + Math.round(s*0.35) + 'px;flex-shrink:0;">⌚</div>';
 }
 
-function renderInventario() {
-  // Update stats
-  const disponibles = state.inventario.filter(p => p.estado === 'disponible').length;
-  const transito = state.inventario.filter(p => p.estado === 'transito').length;
-  const valorStock = state.inventario
-    .filter(p => p.estado === 'disponible')
-    .reduce((a, p) => a + (p.precio || 0), 0);
+function calcularMargenPreview() {
+  const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
+  const importacion = parseFloat(document.getElementById('inv-importacion').value) || 0;
+  const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+  const total = costo + importacion;
+  document.getElementById('inv-preview-costo').textContent = '$' + total.toFixed(2);
+  if (total > 0 && precio > 0) {
+    const margen = Math.round(((precio - total) / precio) * 100);
+    const el = document.getElementById('inv-preview-margen');
+    el.textContent = margen + '%';
+    el.style.color = margen >= 30 ? 'var(--green)' : margen >= 15 ? 'var(--gold)' : 'var(--red)';
+  } else {
+    document.getElementById('inv-preview-margen').textContent = '—';
+    document.getElementById('inv-preview-margen').style.color = 'var(--muted)';
+  }
+}
 
-  const elD = document.getElementById('inv-stat-disponibles');
-  const elT = document.getElementById('inv-stat-transito');
-  const elV = document.getElementById('inv-stat-valor');
+let _vistaActual = 'lista';
+function toggleVista(v) {
+  _vistaActual = v;
+  ['lista','modelo'].forEach(function(id) {
+    var el = document.getElementById('vista-' + id);
+    el.style.borderColor = v === id ? 'var(--gold)' : 'var(--border)';
+    el.style.color = v === id ? 'var(--gold)' : 'var(--muted)';
+  });
+  renderInventario();
+}
+
+function agregarProducto() {
+  const editIdx = document.getElementById('inv-edit-index').value;
+  const nombre = document.getElementById('inv-nombre').value.trim();
+  const sku = document.getElementById('inv-sku').value.trim();
+  const coleccion = document.getElementById('inv-coleccion').value.trim();
+  const genero = document.getElementById('inv-genero').value;
+  const mm = document.getElementById('inv-mm').value.trim();
+  const materialCaja = document.getElementById('inv-material-caja').value.trim();
+  const materialCorrea = document.getElementById('inv-material-correa').value.trim();
+  const colorEsfera = document.getElementById('inv-color-esfera').value.trim();
+  const movimiento = document.getElementById('inv-movimiento').value;
+  const agua = document.getElementById('inv-agua').value.trim();
+  const cristal = document.getElementById('inv-cristal').value.trim();
+  const color = document.getElementById('inv-color').value.trim();
+  const notas = document.getElementById('inv-notas').value.trim();
+  const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
+  const importacion = parseFloat(document.getElementById('inv-importacion').value) || 0;
+  const costoTotal = costo + importacion;
+  const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+  const estado = document.getElementById('inv-estado').value;
+  const foto = document.getElementById('inv-foto').value.trim();
+  const margen = costoTotal > 0 && precio > 0 ? Math.round(((precio - costoTotal) / precio) * 100) : 0;
+
+  if (!nombre) { alert('Escribe el modelo del producto.'); return; }
+
+  const item = { nombre, sku, coleccion, genero, mm, materialCaja, materialCorrea, colorEsfera, movimiento, agua, cristal, color, notas, costo, importacion, costoTotal, precio, margen, estado, foto, fecha: new Date().toLocaleDateString('es-MX') };
+
+  if (editIdx !== '') {
+    state.inventario[parseInt(editIdx)] = item;
+  } else {
+    state.inventario.unshift(item);
+  }
+  save('inventario');
+  limpiarFormulario();
+  renderInventario();
+}
+
+function limpiarFormulario() {
+  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa',
+   'inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas',
+   'inv-costo','inv-importacion','inv-precio','inv-foto'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('inv-genero').value = 'hombre';
+  document.getElementById('inv-movimiento').value = '';
+  document.getElementById('inv-estado').value = 'disponible';
+  document.getElementById('inv-edit-index').value = '';
+  document.getElementById('inv-foto-preview').textContent = '📷';
+  document.getElementById('inv-preview-costo').textContent = '$0.00';
+  document.getElementById('inv-preview-margen').textContent = '—';
+  document.getElementById('inv-preview-margen').style.color = 'var(--muted)';
+  document.getElementById('inv-form-title').textContent = 'Registrar unidad';
+  document.getElementById('inv-submit-btn').textContent = 'Registrar unidad';
+  document.getElementById('inv-cancel-btn').style.display = 'none';
+}
+
+function cancelarEdicion() { limpiarFormulario(); }
+
+function editarProducto(i) {
+  const p = state.inventario[i];
+  const fields = {
+    'inv-nombre': p.nombre, 'inv-sku': p.sku, 'inv-coleccion': p.coleccion,
+    'inv-mm': p.mm, 'inv-material-caja': p.materialCaja, 'inv-material-correa': p.materialCorrea,
+    'inv-color-esfera': p.colorEsfera, 'inv-agua': p.agua, 'inv-cristal': p.cristal,
+    'inv-color': p.color, 'inv-notas': p.notas, 'inv-costo': p.costo,
+    'inv-importacion': p.importacion, 'inv-precio': p.precio, 'inv-foto': p.foto
+  };
+  Object.entries(fields).forEach(function(e) {
+    var el = document.getElementById(e[0]);
+    if (el) el.value = e[1] || '';
+  });
+  document.getElementById('inv-genero').value = p.genero || 'hombre';
+  document.getElementById('inv-movimiento').value = p.movimiento || '';
+  document.getElementById('inv-estado').value = p.estado || 'disponible';
+  document.getElementById('inv-edit-index').value = i;
+  document.getElementById('inv-form-title').textContent = 'Editar unidad';
+  document.getElementById('inv-submit-btn').textContent = 'Guardar cambios';
+  document.getElementById('inv-cancel-btn').style.display = 'inline-flex';
+  calcularMargenPreview();
+  if (p.foto) previewFoto();
+  document.getElementById('inv-form-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  cerrarModal();
+}
+
+function verDetalle(i) {
+  const p = state.inventario[i];
+  const estados = { disponible: 'badge-green', transito: 'badge-blue', reservado: 'badge-gold', vendido: 'badge-red' };
+  const etiquetas = { disponible: 'Disponible', transito: 'En tránsito', reservado: 'Reservado', vendido: 'Vendido' };
+  const generos = { hombre: '♂ Hombre', mujer: '♀ Mujer', unisex: '⚥ Unisex' };
+  const margenColor = p.margen >= 30 ? 'var(--green)' : p.margen >= 15 ? 'var(--gold)' : 'var(--red)';
+
+  function spec(label, value) {
+    if (!value) return '';
+    return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:12px;color:var(--muted);">' + label + '</span>' +
+      '<span style="font-size:13px;color:var(--white);text-align:right;max-width:60%;">' + value + '</span>' +
+    '</div>';
+  }
+
+  const importPending = p.estado === 'transito' && !p.importacion;
+  const costoSection = '<div style="display:flex;gap:10px;flex-wrap:wrap;padding:16px 0;">' +
+    '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Costo unitario</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:16px;">$' + (p.costo || 0).toFixed(2) + '</div>' +
+    '</div>' +
+    '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Importación</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:16px;color:' + (importPending ? 'var(--blue)' : 'var(--white)') + ';">' + (importPending ? 'Pendiente' : '$' + (p.importacion || 0).toFixed(2)) + '</div>' +
+    '</div>' +
+    '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Costo total</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:16px;">' + (importPending ? '—' : '$' + (p.costoTotal || 0).toFixed(2)) + '</div>' +
+    '</div>' +
+    '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Precio venta</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:16px;color:var(--gold);">$' + (p.precio || 0).toLocaleString() + '</div>' +
+    '</div>' +
+    '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Margen</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:16px;color:' + (importPending ? 'var(--muted)' : margenColor) + ';">' + (importPending ? '—' : p.margen + '%') + '</div>' +
+    '</div>' +
+  '</div>';
+
+  const specsSection = (p.mm || p.materialCaja || p.materialCorrea || p.colorEsfera || p.movimiento || p.agua || p.cristal || p.color)
+    ? '<div style="padding:0 20px 4px;">' +
+        '<div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px;">Especificaciones técnicas</div>' +
+        spec('Diámetro', p.mm ? p.mm + ' mm' : '') +
+        spec('Material de caja', p.materialCaja) +
+        spec('Correa / brazalete', p.materialCorrea) +
+        spec('Color de esfera', p.colorEsfera) +
+        spec('Movimiento', p.movimiento) +
+        spec('Resistencia al agua', p.agua) +
+        spec('Cristal', p.cristal) +
+        spec('Color / variante', p.color) +
+      '</div>'
+    : '';
+
+  const notasSection = p.notas
+    ? '<div style="margin:0 20px 16px;background:var(--dark);border-radius:8px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6;">' + p.notas + '</div>'
+    : '';
+
+  document.getElementById('inv-modal-content').innerHTML =
+    (p.foto ? '<img src="' + p.foto + '" style="width:100%;height:220px;object-fit:cover;" onerror="this.remove()" />' : '') +
+    '<div style="padding:20px 20px 0;">' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+        '<div>' +
+          '<div style="font-family:DM Serif Display,serif;font-size:20px;color:var(--white);">' + p.nombre + '</div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' +
+            (p.coleccion ? 'Colección ' + p.coleccion + ' · ' : '') +
+            (p.sku ? p.sku + ' · ' : '') +
+            (p.genero ? generos[p.genero] || p.genero : '') +
+          '</div>' +
+        '</div>' +
+        '<span class="badge ' + (estados[p.estado] || 'badge-blue') + '" style="flex-shrink:0;">' + (etiquetas[p.estado] || p.estado) + '</span>' +
+      '</div>' +
+      costoSection +
+    '</div>' +
+    specsSection +
+    notasSection +
+    '<div style="display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);">' +
+      '<button class="btn btn-gold" style="flex:1;" onclick="editarProducto(' + i + ')">✏️ Editar</button>' +
+      '<button class="btn btn-outline" onclick="cerrarModal()">Cerrar</button>' +
+      '<button class="btn btn-danger" onclick="eliminarProducto(' + i + ')">✕ Eliminar</button>' +
+    '</div>';
+
+  document.getElementById('inv-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModal() {
+  document.getElementById('inv-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// Close modal on backdrop click
+document.getElementById('inv-modal').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+
+function renderInventario() {
+  const disponibles = state.inventario.filter(function(p) { return p.estado === 'disponible'; }).length;
+  const transito = state.inventario.filter(function(p) { return p.estado === 'transito'; }).length;
+  const valorStock = state.inventario.filter(function(p) { return p.estado === 'disponible'; }).reduce(function(a, p) { return a + (p.precio || 0); }, 0);
+
+  var elD = document.getElementById('inv-stat-disponibles');
+  var elT = document.getElementById('inv-stat-transito');
+  var elV = document.getElementById('inv-stat-valor');
   if (elD) elD.textContent = disponibles;
   if (elT) elT.textContent = transito;
   if (elV) elV.textContent = '$' + valorStock.toLocaleString();
-
-  // Update homepage stat
-  const statStock = document.getElementById('stat-stock');
+  var statStock = document.getElementById('stat-stock');
   if (statStock) statStock.textContent = disponibles;
 
   const lista = document.getElementById('inv-lista');
-  const query = (document.getElementById('inv-search') && document.getElementById('inv-search').value.toLowerCase()) || '';
+  const query = (document.getElementById('inv-search') ? document.getElementById('inv-search').value.toLowerCase() : '');
+  const estadosBadge = { disponible: 'badge-green', transito: 'badge-blue', reservado: 'badge-gold', vendido: 'badge-red' };
+  const etiquetas = { disponible: 'Disponible', transito: 'En tránsito', reservado: 'Reservado', vendido: 'Vendido' };
 
-  let items = state.inventario.filter((p, i) => {
-    const match = (p.nombre || '').toLowerCase().includes(query) || (p.sku || '').toLowerCase().includes(query);
-    return match;
+  var items = state.inventario.map(function(p, i) { return { p: p, i: i }; }).filter(function(x) {
+    return (x.p.nombre || '').toLowerCase().includes(query) ||
+           (x.p.sku || '').toLowerCase().includes(query) ||
+           (x.p.coleccion || '').toLowerCase().includes(query);
   });
 
   if (items.length === 0) {
@@ -1145,78 +1414,68 @@ function renderInventario() {
     return;
   }
 
-  const estados = { disponible: 'badge-green', transito: 'badge-blue', reservado: 'badge-gold', vendido: 'badge-red' };
-  const etiquetas = { disponible: 'Disponible', transito: 'En tránsito', reservado: 'Reservado', vendido: 'Vendido' };
-
   if (_vistaActual === 'modelo') {
-    // Group by model name
-    const grupos = {};
-    items.forEach((p, originalIdx) => {
-      const key = p.nombre;
+    var grupos = {};
+    items.forEach(function(x) {
+      var key = x.p.nombre;
       if (!grupos[key]) grupos[key] = [];
-      grupos[key].push({ ...p, _idx: state.inventario.indexOf(p) });
+      grupos[key].push(x);
     });
 
-    lista.innerHTML = Object.entries(grupos).map(([modelo, units]) => {
-      const totalUnits = units.length;
-      const disponiblesG = units.filter(u => u.estado === 'disponible').length;
-      const transitoG = units.filter(u => u.estado === 'transito').length;
-      const costoPromedio = units.filter(u => u.costoTotal > 0).reduce((a, u) => a + u.costoTotal, 0) / (units.filter(u => u.costoTotal > 0).length || 1);
-      const foto = units.find(u => u.foto) ? units.find(u => u.foto).foto : null;
-      const fotoHtml = makeFotoHtml(foto, 52);
+    lista.innerHTML = Object.entries(grupos).map(function(entry) {
+      var modelo = entry[0];
+      var units = entry[1];
+      var disp = units.filter(function(x) { return x.p.estado === 'disponible'; }).length;
+      var tran = units.filter(function(x) { return x.p.estado === 'transito'; }).length;
+      var conCosto = units.filter(function(x) { return x.p.costoTotal > 0; });
+      var promedio = conCosto.length ? conCosto.reduce(function(a, x) { return a + x.p.costoTotal; }, 0) / conCosto.length : 0;
+      var fotoSrc = '';
+      units.forEach(function(x) { if (!fotoSrc && x.p.foto) fotoSrc = x.p.foto; });
+      var fotoHtml = makeFotoHtml(fotoSrc, 52);
 
-      const unitsHtml = units.map(u => {
-        const costoLabel = u.estado === 'transito' && !u.importacion
-          ? '<span style="color:var(--blue)">Importación pendiente</span>'
-          : 'Costo total: $' + (u.costoTotal || 0).toFixed(2);
-        const margenLabel = u.costoTotal > 0 && u.precio > 0
-          ? ' · Margen: <span style="color:' + (u.margen >= 30 ? 'var(--green)' : u.margen >= 15 ? 'var(--gold)' : 'var(--red)') + '">' + u.margen + '%</span>'
-          : '';
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 8px 64px;border-top:1px solid var(--border);gap:8px;">' +
-          '<div>' +
-            '<div style="font-size:13px;color:var(--white);">' + costoLabel + margenLabel + '</div>' +
-            '<div style="font-size:11px;color:var(--muted);">Venta: $' + (u.precio || 0).toLocaleString() + ' · ' + u.fecha + '</div>' +
+      var unitsHtml = units.map(function(x) {
+        var imp = x.p.estado === 'transito' && !x.p.importacion;
+        var margenColor = x.p.margen >= 30 ? 'var(--green)' : x.p.margen >= 15 ? 'var(--gold)' : 'var(--red)';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0 8px 66px;border-top:1px solid var(--border);">' +
+          '<div style="flex:1;">' +
+            '<div style="font-size:12px;color:var(--white);">' + (imp ? '<span style="color:var(--blue)">🚢 Importación pendiente</span>' : 'Costo: $' + x.p.costoTotal.toFixed(2)) +
+              ((!imp && x.p.precio) ? ' · Margen: <span style="color:' + margenColor + '">' + x.p.margen + '%</span>' : '') + '</div>' +
+            '<div style="font-size:11px;color:var(--muted);">Venta: $' + (x.p.precio || 0).toLocaleString() + ' · ' + x.p.fecha + '</div>' +
           '</div>' +
-          '<span class="badge ' + (estados[u.estado] || 'badge-blue') + '">' + (etiquetas[u.estado] || u.estado) + '</span>' +
-          '<button class="btn btn-outline btn-sm" onclick="editarProducto(' + u._idx + ')">✏️</button>' +
-          '<button class="btn btn-danger" onclick="eliminarProducto(' + u._idx + ')">✕</button>' +
+          '<span class="badge ' + (estadosBadge[x.p.estado] || 'badge-blue') + '">' + (etiquetas[x.p.estado] || x.p.estado) + '</span>' +
+          '<button class="btn btn-outline btn-sm" onclick="verDetalle(' + x.i + ')" title="Ver detalle">👁</button>' +
+          '<button class="btn btn-outline btn-sm" onclick="editarProducto(' + x.i + ')" title="Editar">✏️</button>' +
+          '<button class="btn btn-danger" onclick="eliminarProducto(' + x.i + ')" title="Eliminar">✕</button>' +
         '</div>';
       }).join('');
 
       return '<div style="margin-bottom:4px;">' +
-        '<div class="list-item" style="gap:14px;padding-bottom:8px;">' +
+        '<div class="list-item" style="gap:14px;padding-bottom:8px;cursor:pointer;" onclick="verDetalle(' + units[0].i + ')">' +
           fotoHtml +
           '<div class="list-item-info">' +
-            '<div class="list-item-name">' + modelo + (units[0].sku ? ' <span style="color:var(--muted);font-size:12px;">· ' + units[0].sku + '</span>' : '') + '</div>' +
-            '<div class="list-item-sub">' + totalUnits + ' unidad(es) · ' + disponiblesG + ' disponible(s) · ' + transitoG + ' en tránsito · Costo prom: $' + costoPromedio.toFixed(2) + '</div>' +
+            '<div class="list-item-name">' + modelo + (units[0].p.sku ? ' <span style="color:var(--muted);font-size:12px;">· ' + units[0].p.sku + '</span>' : '') + '</div>' +
+            '<div class="list-item-sub">' + units.length + ' ud. · ' + disp + ' disponible · ' + tran + ' en tránsito' + (promedio ? ' · Costo prom. $' + promedio.toFixed(2) : '') + '</div>' +
           '</div>' +
-        '</div>' +
-        unitsHtml +
-      '</div>';
-    }).join('<div style="height:8px;"></div>');
+        '</div>' + unitsHtml + '</div>';
+    }).join('<div style="height:6px;"></div>');
 
   } else {
-    // Lista view
-    lista.innerHTML = items.map((p) => {
-      const i = state.inventario.indexOf(p);
-      const costoLabel = p.estado === 'transito' && !p.importacion
-        ? '<span style="color:var(--blue);font-size:12px;">🚢 Importación pendiente</span>'
-        : 'Costo: $' + (p.costoTotal || 0).toFixed(2);
-      const margenColor = p.margen >= 30 ? 'var(--green)' : p.margen >= 15 ? 'var(--gold)' : 'var(--red)';
-      const margenLabel = p.costoTotal > 0 && p.precio > 0
-        ? ' · Margen: <span style="color:' + margenColor + '">' + p.margen + '%</span>'
-        : '';
-      const fotoHtml = makeFotoHtml(p.foto, 52);
-
-      return '<div class="list-item" style="gap:14px;">' +
+    lista.innerHTML = items.map(function(x) {
+      var p = x.p; var i = x.i;
+      var imp = p.estado === 'transito' && !p.importacion;
+      var margenColor = p.margen >= 30 ? 'var(--green)' : p.margen >= 15 ? 'var(--gold)' : 'var(--red)';
+      var fotoHtml = makeFotoHtml(p.foto, 52);
+      return '<div class="list-item" style="gap:14px;cursor:pointer;" onclick="verDetalle(' + i + ')">' +
         fotoHtml +
         '<div class="list-item-info">' +
           '<div class="list-item-name">' + p.nombre + (p.sku ? ' <span style="color:var(--muted);font-size:12px;">· ' + p.sku + '</span>' : '') + '</div>' +
-          '<div class="list-item-sub">' + costoLabel + margenLabel + ' · Venta: $' + (p.precio || 0).toLocaleString() + ' · ' + p.fecha + '</div>' +
+          '<div class="list-item-sub">' + (imp ? '<span style="color:var(--blue)">🚢 Importación pendiente</span>' : 'Costo: $' + (p.costoTotal || 0).toFixed(2)) +
+            ((!imp && p.precio) ? ' · Margen: <span style="color:' + margenColor + '">' + p.margen + '%</span>' : '') +
+            ' · Venta: $' + (p.precio || 0).toLocaleString() + ' · ' + p.fecha + '</div>' +
         '</div>' +
-        '<span class="badge ' + (estados[p.estado] || 'badge-blue') + '">' + (etiquetas[p.estado] || p.estado) + '</span>' +
-        '<button class="btn btn-outline btn-sm" onclick="editarProducto(' + i + ')">✏️</button>' +
-        '<button class="btn btn-danger" onclick="eliminarProducto(' + i + ')">✕</button>' +
+        '<span class="badge ' + (estadosBadge[p.estado] || 'badge-blue') + '">' + (etiquetas[p.estado] || p.estado) + '</span>' +
+        '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto(' + i + ')" title="Editar">✏️</button>' +
+        '<button class="btn btn-danger" onclick="event.stopPropagation();eliminarProducto(' + i + ')" title="Eliminar">✕</button>' +
       '</div>';
     }).join('');
   }
@@ -1237,46 +1496,6 @@ function previewFoto() {
   }
 }
 
-function eliminarProducto(i) {
-  if (!confirm('¿Eliminar este producto?')) return;
-  state.inventario.splice(i, 1);
-  save('inventario');
-  renderInventario();
-}
-
-// =================== CONTENIDO ===================
-const weekPlan = [
-  { day: 'LUN', tasks: [{ text: 'Grabar 2-3 reels en batch', color: 'dot-gold' }] },
-  { day: 'MAR', tasks: [{ text: 'Editar & programar reels', color: 'dot-blue' }] },
-  { day: 'MIÉ', tasks: [{ text: 'Foto de producto + caption', color: 'dot-purple' }] },
-  { day: 'JUE', tasks: [{ text: 'Stories: inventario y encuesta', color: 'dot-green' }] },
-  { day: 'VIE', tasks: [{ text: 'Stories: precio y disponibilidad', color: 'dot-green' }] },
-  { day: 'SÁB', tasks: [{ text: 'Reel elaborado o unboxing', color: 'dot-gold' }] },
-  { day: 'DOM', tasks: [{ text: 'Planear contenido semana siguiente', color: 'dot-blue' }] },
-];
-
-const ideasBase = [
-  { text: '"El reloj más vendido de mi tienda"', nivel: '🟢', done: false },
-  { text: '"Este reloj por $X — ¿caro o barato?"', nivel: '🟢', done: false },
-  { text: 'Unboxing express', nivel: '🟢', done: false },
-  { text: '"3 cosas que no sabías del Invicta"', nivel: '🟢', done: false },
-  { text: 'Reloj en la muñeca, outfit del día', nivel: '🟢', done: false },
-  { text: '"Me llegó esto hoy" — inventario nuevo', nivel: '🟢', done: false },
-  { text: 'Comparativa: 2 modelos ¿cuál te llevas?', nivel: '🟢', done: false },
-  { text: '"El Invicta que parece de $500 y cuesta $X"', nivel: '🟡', done: false },
-  { text: '"¿Vale la pena comprar Invicta?"', nivel: '🟡', done: false },
-  { text: 'Antes y después — limpieza de reloj', nivel: '🟡', done: false },
-  { text: '"El reloj ideal según tu presupuesto"', nivel: '🟡', done: false },
-  { text: 'POV: estás eligiendo tu primer Invicta', nivel: '🟡', done: false },
-  { text: 'Top 3 Invicta para regalo', nivel: '🟡', done: false },
-  { text: '"Lo que nadie te dice antes de comprar un Invicta"', nivel: '🟡', done: false },
-  { text: 'Mini historia: cómo empecé la tienda', nivel: '🔴', done: false },
-  { text: '"Un día en mi tienda" — detrás de cámaras', nivel: '🔴', done: false },
-  { text: 'Testimonio de cliente feliz', nivel: '🔴', done: false },
-  { text: 'Reel de producto cinematográfico (sin hablar)', nivel: '🔴', done: false },
-  { text: '"Armé mi colección con $X"', nivel: '🔴', done: false },
-  { text: 'Respondo las preguntas más frecuentes', nivel: '🔴', done: false },
-];
 
 function renderContenido() {
   // Week
