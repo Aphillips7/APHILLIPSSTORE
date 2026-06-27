@@ -361,12 +361,12 @@
   <div class="nav-brand">⌚ Mi Tienda</div>
   <div id="nav-sync-indicator" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;padding:0 8px;display:none;"></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('inicio')">Inicio</button>
-    <button class="nav-tab" onclick="showPage('finanzas')">Finanzas</button>
-    <button class="nav-tab" onclick="showPage('inventario')">Inventario</button>
-    <button class="nav-tab" onclick="showPage('contenido')">Contenido</button>
-    <button class="nav-tab" onclick="showPage('clientes')">Clientes</button>
-    <button class="nav-tab" onclick="showPage('config')">⚙️ Sync</button>
+    <button class="nav-tab active" onclick="showPage(event,'inicio')">Inicio</button>
+    <button class="nav-tab" onclick="showPage(event,'finanzas')">Finanzas</button>
+    <button class="nav-tab" onclick="showPage(event,'inventario')">Inventario</button>
+    <button class="nav-tab" onclick="showPage(event,'contenido')">Contenido</button>
+    <button class="nav-tab" onclick="showPage(event,'clientes')">Clientes</button>
+    <button class="nav-tab" onclick="showPage(event,'config')">⚙️ Sync</button>
   </div>
 </nav>
 
@@ -775,21 +775,21 @@ function scheduleAutoSync() {
 }
 
 // =================== NAV ===================
-function showPage(name) {
+function showPage(ev, name) {
+  // Config requires PIN — intercept before showing anything
+  if (name === 'config') {
+    showPin();
+    return;
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  event.target.classList.add('active');
+  if (ev && ev.target) ev.target.classList.add('active');
   if (name === 'inicio') renderInicio();
   if (name === 'finanzas') renderFinanzas();
   if (name === 'inventario') renderInventario();
   if (name === 'contenido') renderContenido();
   if (name === 'clientes') renderClientes();
-  if (name === 'config') {
-    // Show PIN before entering config
-    showPin();
-    return; // Don't activate page yet — PIN callback will do it
-  }
 }
 
 function showInner(prefix, name) {
@@ -1326,24 +1326,23 @@ function pinDelete() {
 
 function pinCancel() {
   hidePin();
-  // Go back to inicio
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-inicio').classList.add('active');
   document.querySelector('.nav-tab').classList.add('active');
+  renderInicio();
 }
 
 function checkPin() {
   if (_pinBuffer === getPin()) {
     hidePin();
-    // Now actually open config page
+    // Open config page after PIN success
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('page-config').classList.add('active');
-    // Mark sync tab active
     document.querySelectorAll('.nav-tab').forEach(t => {
-      if (t.textContent.includes('Sync')) t.classList.add('active');
+      t.classList.remove('active');
+      if (t.textContent.trim().includes('Sync')) t.classList.add('active');
     });
+    document.getElementById('page-config').classList.add('active');
     const input = document.getElementById('script-url-input');
     if (input && SCRIPT_URL) input.value = SCRIPT_URL;
     const lastSync = localStorage.getItem('lastSync');
