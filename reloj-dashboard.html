@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Tienda de Relojes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --black: #0e0e0e;
+    --dark: #1a1a1a;
+    --card: #222222;
+    --border: #2e2e2e;
+    --gold: #c9a84c;
+    --gold-dim: #8a6f2e;
+    --gold-glow: rgba(201,168,76,0.12);
+    --white: #f0ece3;
+    --muted: #888;
+    --green: #4caf7d;
+    --red: #e05c5c;
+    --blue: #5c9ee0;
+    --purple: #9b7fe8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--dark);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+  }
+  .nav-tab:hover { color: var(--white); background: var(--border); }
+  .nav-tab.active { color: var(--gold); background: var(--gold-glow); }
+
+  /* PAGES */
+  .page { display: none; padding: 24px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .section-sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media(max-width: 600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* STAT BOXES */
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .stat-value { font-family: 'DM Mono', monospace; font-size: 26px; font-weight: 500; color: var(--white); }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.green { color: var(--green); }
+  .stat-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* FORM ELEMENTS */
+  input, select, textarea {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    width: 100%;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  select option { background: var(--dark); }
+  label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; }
+  .field { margin-bottom: 14px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-gold { background: var(--gold); color: var(--black); }
+  .btn-gold:hover { background: #d4b060; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); font-size: 12px; padding: 6px 12px; }
+  .btn-danger:hover { background: rgba(224,92,92,0.1); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+  /* TABLE / LIST */
+  .list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-item-info { flex: 1; }
+  .list-item-name { font-size: 14px; font-weight: 500; color: var(--white); }
+  .list-item-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .badge-green { background: rgba(76,175,125,0.15); color: var(--green); }
+  .badge-red { background: rgba(224,92,92,0.15); color: var(--red); }
+  .badge-gold { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .badge-blue { background: rgba(92,158,224,0.15); color: var(--blue); }
+
+  /* MONEY */
+  .money { font-family: 'DM Mono', monospace; }
+  .money.pos { color: var(--green); }
+  .money.neg { color: var(--red); }
+
+  /* PROGRESS BAR */
+  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; border-radius: 4px; background: var(--gold); transition: width 0.4s; }
+
+  /* CHECKLIST */
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item input[type=checkbox] {
+    width: 18px; height: 18px;
+    accent-color: var(--gold);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .check-item label {
+    margin: 0;
+    font-size: 14px;
+    color: var(--white);
+    cursor: pointer;
+  }
+  .check-item.done label { text-decoration: line-through; color: var(--muted); }
+
+  /* WEEK CALENDAR */
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .day-col { display: flex; flex-direction: column; gap: 6px; }
+  .day-header { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: center; margin-bottom: 4px; }
+  .day-task {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 8px;
+    font-size: 11px;
+    color: var(--white);
+    text-align: center;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .day-task:hover { border-color: var(--gold); }
+  .day-task.done { border-color: var(--green); opacity: 0.5; text-decoration: line-through; color: var(--muted); }
+  .day-task .task-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin: 0 auto 4px;
+  }
+  .dot-gold { background: var(--gold); }
+  .dot-blue { background: var(--blue); }
+  .dot-purple { background: var(--purple); }
+  .dot-green { background: var(--green); }
+
+  /* SEPARATOR */
+  .sep { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ALERT */
+  .alert {
+    background: var(--gold-glow);
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  /* RULE BOX */
+  .rule-box {
+    background: var(--dark);
+    border-left: 3px solid var(--gold);
+    padding: 14px 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 12px;
+  }
+  .rule-box-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: var(--gold); }
+  .rule-box-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+  .empty span { display: block; font-size: 28px; margin-bottom: 8px; }
+
+  /* TABS INSIDE PAGE */
+  .inner-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+  .inner-tab { font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; padding: 4px 0; border: none; background: none; position: relative; }
+  .inner-tab.active { color: var(--gold); }
+  .inner-tab.active::after { content: ''; position: absolute; bottom: -13px; left: 0; right: 0; height: 2px; background: var(--gold); }
+
+  .inner-page { display: none; }
+  .inner-page.active { display: block; }
+
+  /* CURRENCY INPUT */
+  .currency-wrap { position: relative; }
+  .currency-wrap::before { content: '$'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; z-index: 1; }
+  .currency-wrap input { padding-left: 24px; }
+
+  /* Tag */
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
+
+  /* Divider with text */
+  .divider-text { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0; }
+  .divider-text::before, .divider-text::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">⌚ Mi Tienda</div>
+  <div id="nav-sync-indicator" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;padding:0 8px;display:none;"></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('inicio')">Inicio</button>
+    <button class="nav-tab" onclick="showPage('finanzas')">Finanzas</button>
+    <button class="nav-tab" onclick="showPage('inventario')">Inventario</button>
+    <button class="nav-tab" onclick="showPage('contenido')">Contenido</button>
+    <button class="nav-tab" onclick="showPage('clientes')">Clientes</button>
+    <button class="nav-tab" onclick="showPage('config')">⚙️ Sync</button>
+  </div>
+</nav>
+
+<!-- =================== INICIO =================== -->
+<div id="page-inicio" class="page active">
+  <div class="section-title">Buenos días, Alberto 👋</div>
+  <div class="section-sub">Tu resumen de hoy — mantente enfocado</div>
+
+  <div class="grid-3">
+    <div class="stat-box">
+      <div class="stat-label">Ventas este mes</div>
+      <div class="stat-value gold money" id="stat-ventas-mes">$0</div>
+      <div class="stat-hint">0 ventas registradas</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Ganancia neta</div>
+      <div class="stat-value green money" id="stat-ganancia">$0</div>
+      <div class="stat-hint">después de costos</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Productos en stock</div>
+      <div class="stat-value" id="stat-stock">0</div>
+      <div class="stat-hint">unidades disponibles</div>
+    </div>
+  </div>
+
+  <!-- Meta del mes -->
+  <div class="card">
+    <div class="card-title">Meta del mes</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span id="meta-label" style="font-size:14px;">Sin meta definida</span>
+      <span id="meta-pct" class="money" style="color:var(--gold);font-family:'DM Mono',monospace;">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="meta-fill" style="width:0%"></div></div>
+    <div style="margin-top:16px;display:flex;gap:8px;align-items:flex-end;">
+      <div class="field" style="flex:1;margin:0;">
+        <label>Meta de ventas del mes ($)</label>
+        <div class="currency-wrap"><input type="number" id="meta-input" placeholder="Ej: 5000" /></div>
+      </div>
+      <button class="btn btn-gold btn-sm" onclick="guardarMeta()">Guardar</button>
+    </div>
+  </div>
+
+  <!-- Checklist diario -->
+  <div class="card">
+    <div class="card-title">Checklist del día</div>
+    <div id="checklist-container"></div>
+    <div style="margin-top:14px;display:flex;gap:8px;">
+      <input type="text" id="new-task" placeholder="Agregar tarea..." style="flex:1;" onkeydown="if(event.key==='Enter')addTask()" />
+      <button class="btn btn-gold btn-sm" onclick="addTask()">+ Agregar</button>
+    </div>
+  </div>
+
+  <!-- Reglas del negocio -->
+  <div class="card">
+    <div class="card-title">Tus reglas del negocio</div>
+    <div class="rule-box">
+      <div class="rule-box-title">Regla del 40-30-30</div>
+      <div class="rule-box-body">De cada venta: <strong style="color:var(--white)">40%</strong> reinversión en inventario · <strong style="color:var(--white)">30%</strong> tu ganancia · <strong style="color:var(--white)">30%</strong> fondo de operación</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">Regla de respuesta rápida</div>
+      <div class="rule-box-body">Responder mensajes en menos de <strong style="color:var(--white)">30 minutos</strong>. El que responde primero casi siempre gana la venta.</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">Regla de registro diario</div>
+      <div class="rule-box-body">Cada venta se apunta <strong style="color:var(--white)">ese mismo día</strong>. No después. Sin datos no hay decisiones.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== FINANZAS =================== -->
+<div id="page-finanzas" class="page">
+  <div class="section-title">Finanzas</div>
+  <div class="section-sub">Registra cada movimiento. El dinero que no controlas, desaparece.</div>
+
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showInner('fin','registrar')">Registrar</button>
+    <button class="inner-tab" onclick="showInner('fin','historial')">Historial</button>
+    <button class="inner-tab" onclick="showInner('fin','resumen')">Resumen</button>
+  </div>
+
+  <!-- Registrar -->
+  <div id="fin-registrar" class="inner-page active">
+    <div class="card">
+      <div class="card-title">Nuevo movimiento</div>
+      <div class="field">
+        <label>Tipo</label>
+        <select id="fin-tipo">
+          <option value="venta">💰 Venta</option>
+          <option value="compra">📦 Compra de inventario</option>
+          <option value="gasto">💸 Gasto operativo</option>
+          <option value="retiro">🏦 Retiro personal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <input type="text" id="fin-desc" placeholder="Ej: Invicta Pro Diver azul, cliente Juan" />
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Monto ($)</label>
+          <div class="currency-wrap"><input type="number" id="fin-monto" placeholder="0.00" /></div>
+        </div>
+        <div class="field">
+          <label>Canal</label>
+          <select id="fin-canal">
+            <option value="facebook">Facebook Marketplace</option>
+            <option value="mercadolibre">MercadoLibre</option>
+            <option value="instagram">Instagram</option>
+            <option value="directo">Venta directa</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Costo del producto (solo si es venta)</label>
+        <div class="currency-wrap"><input type="number" id="fin-costo" placeholder="¿Cuánto te costó?" /></div>
+      </div>
+      <button class="btn btn-gold" onclick="registrarMovimiento()">Registrar movimiento</button>
+    </div>
+
+    <div class="alert">
+      💡 Después de cada venta, recuerda aplicar el 40-30-30: anota cuánto va a reinversión, cuánto es tuyo, y cuánto al fondo.
+    </div>
+  </div>
+
+  <!-- Historial -->
+  <div id="fin-historial" class="inner-page">
+    <div class="card">
+      <div class="card-title">Movimientos registrados</div>
+      <div id="fin-lista"><div class="empty"><span>📊</span>Sin movimientos aún. Registra tu primera venta.</div></div>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div id="fin-resumen" class="inner-page">
+    <div class="grid-2">
+      <div class="stat-box">
+        <div class="stat-label">Total ventas</div>
+        <div class="stat-value gold money" id="res-ventas">$0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Ganancia neta</div>
+        <div class="stat-value green money" id="res-ganancia">$0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Reinversión (40%)</div>
+        <div class="stat-value money" id="res-reinversion" style="color:var(--blue)">$0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Tu dinero (30%)</div>
+        <div class="stat-value money" id="res-personal" style="color:var(--purple)">$0</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ventas por canal</div>
+      <div id="res-canales"><div class="empty"><span>📈</span>Sin datos aún</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== INVENTARIO =================== -->
+<div id="page-inventario" class="page">
+  <div class="section-title">Inventario</div>
+  <div class="section-sub">Sabe exactamente qué tienes, cuánto costó y cuánto vale.</div>
+
+  <div class="card">
+    <div class="card-title">Agregar producto</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Modelo / Nombre</label>
+        <input type="text" id="inv-nombre" placeholder="Ej: Invicta Pro Diver 8926OB" />
+      </div>
+      <div class="field">
+        <label>Referencia / SKU</label>
+        <input type="text" id="inv-sku" placeholder="Ej: INV-8926OB" />
+      </div>
+      <div class="field">
+        <label>Precio de compra ($)</label>
+        <div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" /></div>
+      </div>
+      <div class="field">
+        <label>Precio de venta ($)</label>
+        <div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" /></div>
+      </div>
+      <div class="field">
+        <label>Cantidad</label>
+        <input type="number" id="inv-cantidad" placeholder="1" min="1" />
+      </div>
+      <div class="field">
+        <label>Estado</label>
+        <select id="inv-estado">
+          <option value="disponible">✅ Disponible</option>
+          <option value="reservado">🟡 Reservado</option>
+          <option value="vendido">🔴 Vendido</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="agregarProducto()">Agregar al inventario</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Stock actual</div>
+    <div id="inv-lista"><div class="empty"><span>📦</span>Sin productos. Agrega tu inventario.</div></div>
+  </div>
+</div>
+
+<!-- =================== CONTENIDO =================== -->
+<div id="page-contenido" class="page">
+  <div class="section-title">Contenido</div>
+  <div class="section-sub">Tu plan semanal de Instagram. Consistencia es la clave.</div>
+
+  <div class="week-grid" id="week-calendar"></div>
+
+  <div class="sep"></div>
+
+  <div class="card">
+    <div class="card-title">Banco de ideas — 20 reels listos para grabar</div>
+    <div id="ideas-lista"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">Agregar idea propia</div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="new-idea" placeholder="Describe tu idea de reel..." style="flex:1;" onkeydown="if(event.key==='Enter')addIdea()" />
+      <button class="btn btn-gold btn-sm" onclick="addIdea()">+ Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- =================== CONFIG / SYNC =================== -->
+<div id="page-config" class="page">
+  <div class="section-title">Sincronización y Respaldo</div>
+  <div class="section-sub">Tus datos seguros en Google Sheets y en tu computadora.</div>
+
+  <!-- Status bar -->
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div class="card-title" style="margin-bottom:4px;">Estado</div>
+      <div id="sync-status" style="font-size:13px;color:var(--muted);">Sin sincronizar aún</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:12px;color:var(--green);background:rgba(76,175,125,0.1);border:1px solid rgba(76,175,125,0.3);padding:4px 10px;border-radius:20px;">⚡ Sync automático activo</span>
+      <button class="btn btn-gold btn-sm" onclick="syncToSheets()">⬆ Forzar sync ahora</button>
+      <button class="btn btn-outline btn-sm" onclick="loadFromSheets()">⬇ Cargar desde nube</button>
+    </div>
+  </div>
+
+  <!-- Google Sheets config -->
+  <div class="card">
+    <div class="card-title">Google Sheets — URL del Script</div>
+    <div class="field">
+      <label>Pega aquí tu URL de Google Apps Script</label>
+      <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/..." />
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="saveScriptUrl()">Guardar URL</button>
+
+    <div class="sep"></div>
+
+    <div class="card-title">Instrucciones de configuración</div>
+    <div class="rule-box">
+      <div class="rule-box-title">Paso 1 — Crea el Google Sheet</div>
+      <div class="rule-box-body">Ve a <strong style="color:var(--white)">sheets.google.com</strong> y crea un nuevo archivo. Nómbralo "Mi Tienda de Relojes". No necesitas crear hojas manualmente, el script las crea solo.</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">Paso 2 — Abre Apps Script</div>
+      <div class="rule-box-body">Dentro del Sheet ve a <strong style="color:var(--white)">Extensiones → Apps Script</strong>. Borra el código que aparece y pega el código que te dí (archivo <strong style="color:var(--white)">apps-script.gs</strong>).</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">Paso 3 — Despliega el script</div>
+      <div class="rule-box-body">Clic en <strong style="color:var(--white)">Implementar → Nueva implementación → Aplicación web</strong>. En "Ejecutar como" elige tu cuenta. En "Quién tiene acceso" elige <strong style="color:var(--white)">Cualquier usuario</strong>. Copia la URL que te da y pégala arriba.</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">Paso 4 — Autoriza y listo</div>
+      <div class="rule-box-body">La primera vez te pedirá autorización. Acepta los permisos con tu cuenta de Google. Después pega la URL aquí y presiona "Guardar en nube" para probar.</div>
+    </div>
+  </div>
+
+  <!-- JSON Backup -->
+  <div class="card">
+    <div class="card-title">Respaldo local (JSON)</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Como seguridad extra, puedes exportar todos tus datos como archivo en tu computadora y restaurarlos cuando quieras.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="exportarJSON()">⬇ Exportar respaldo</button>
+      <label class="btn btn-outline" style="cursor:pointer;margin:0;">
+        ⬆ Importar respaldo
+        <input type="file" accept=".json" style="display:none;width:auto;" onchange="importarJSON(event)" />
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- =================== CLIENTES =================== -->
+<div id="page-clientes" class="page">
+  <div class="section-title">Clientes</div>
+  <div class="section-sub">Cada cliente es un activo. Trátalo así.</div>
+
+  <div class="card">
+    <div class="card-title">Registrar cliente</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" id="cli-nombre" placeholder="Nombre completo" />
+      </div>
+      <div class="field">
+        <label>Teléfono / WhatsApp</label>
+        <input type="text" id="cli-tel" placeholder="+52 " />
+      </div>
+      <div class="field">
+        <label>Canal donde compró</label>
+        <select id="cli-canal">
+          <option value="facebook">Facebook Marketplace</option>
+          <option value="mercadolibre">MercadoLibre</option>
+          <option value="instagram">Instagram</option>
+          <option value="directo">Directo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Reloj que compró</label>
+        <input type="text" id="cli-producto" placeholder="Modelo del reloj" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Notas (intereses, detalles, etc.)</label>
+      <textarea id="cli-notas" rows="2" placeholder="Ej: Le interesa también el Pro Diver en negro, cumpleaños en julio..."></textarea>
+    </div>
+    <button class="btn btn-gold" onclick="registrarCliente()">Guardar cliente</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tus clientes</div>
+    <div id="cli-lista"><div class="empty"><span>👤</span>Sin clientes aún. Registra tu primera venta.</div></div>
+  </div>
+
+  <div class="card" style="margin-top:4px;">
+    <div class="card-title">Estrategia para conseguir más clientes</div>
+    <div class="rule-box">
+      <div class="rule-box-title">1 · Optimiza tu marketplace</div>
+      <div class="rule-box-body">Fotos limpias, descripción completa (modelo, resistencia al agua, garantía, envío), precio competitivo. El que tiene mejores fotos vende más.</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">2 · Pide reseñas siempre</div>
+      <div class="rule-box-body">Después de cada venta envía un mensaje: "¿Llegó bien tu reloj? Me ayudaría mucho si dejas una reseña ⭐". Las reseñas generan más ventas que cualquier anuncio.</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">3 · Reactivar clientes anteriores</div>
+      <div class="rule-box-body">A clientes que ya compraron, mándales un mensaje cuando llegue inventario nuevo. Ya confían en ti — es la venta más fácil.</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-box-title">4 · Instagram → marketplace</div>
+      <div class="rule-box-body">Tu Instagram debe llevar tráfico al marketplace. En cada post menciona que pueden ver más en el link de tu bio.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =================== STATE ===================
+const state = {
+  tasks: JSON.parse(localStorage.getItem('tasks') || '[]'),
+  movimientos: JSON.parse(localStorage.getItem('movimientos') || '[]'),
+  inventario: JSON.parse(localStorage.getItem('inventario') || '[]'),
+  clientes: JSON.parse(localStorage.getItem('clientes') || '[]'),
+  meta: parseFloat(localStorage.getItem('meta') || '0'),
+  weekTasks: JSON.parse(localStorage.getItem('weekTasks') || '{}'),
+  ideas: JSON.parse(localStorage.getItem('ideas') || '[]'),
+};
+
+// ---- Auto-sync con debounce ----
+// Guarda en localStorage de inmediato, sincroniza con Sheets 2s después del último cambio
+let _syncTimer = null;
+
+function save(key) {
+  localStorage.setItem(key, JSON.stringify(state[key]));
+  scheduleAutoSync();
+}
+function saveMeta() {
+  localStorage.setItem('meta', state.meta);
+  scheduleAutoSync();
+}
+
+function scheduleAutoSync() {
+  if (!SCRIPT_URL) return;
+  clearTimeout(_syncTimer);
+  setSyncStatus('⏳ Guardando...', 'var(--gold)');
+  _syncTimer = setTimeout(() => { syncToSheets(); }, 2000);
+}
+
+// =================== NAV ===================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'inicio') renderInicio();
+  if (name === 'finanzas') renderFinanzas();
+  if (name === 'inventario') renderInventario();
+  if (name === 'contenido') renderContenido();
+  if (name === 'clientes') renderClientes();
+  if (name === 'config') {
+    const input = document.getElementById('script-url-input');
+    if (input && SCRIPT_URL) input.value = SCRIPT_URL;
+    const lastSync = localStorage.getItem('lastSync');
+    if (lastSync) setSyncStatus('Última sync: ' + lastSync, 'var(--muted)');
+  }
+}
+
+function showInner(prefix, name) {
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(el => {
+    if (el.classList.contains('inner-page')) el.classList.remove('active');
+  });
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(prefix + '-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'resumen') renderResumen();
+  if (name === 'historial') renderHistorial();
+}
+
+// =================== INICIO ===================
+function renderInicio() {
+  // Stats
+  const ventas = state.movimientos.filter(m => m.tipo === 'venta');
+  const totalVentas = ventas.reduce((a, b) => a + b.monto, 0);
+  const totalGanancia = ventas.reduce((a, b) => a + (b.monto - (b.costo || 0)), 0);
+  const stock = state.inventario.filter(i => i.estado === 'disponible').reduce((a, b) => a + b.cantidad, 0);
+
+  document.getElementById('stat-ventas-mes').textContent = '$' + totalVentas.toLocaleString();
+  document.getElementById('stat-ganancia').textContent = '$' + totalGanancia.toLocaleString();
+  document.getElementById('stat-stock').textContent = stock;
+
+  // Meta
+  if (state.meta > 0) {
+    const pct = Math.min(Math.round((totalVentas / state.meta) * 100), 100);
+    document.getElementById('meta-label').textContent = `$${totalVentas.toLocaleString()} de $${state.meta.toLocaleString()} meta`;
+    document.getElementById('meta-pct').textContent = pct + '%';
+    document.getElementById('meta-fill').style.width = pct + '%';
+    document.getElementById('meta-input').value = state.meta;
+  }
+
+  // Checklist
+  renderChecklist();
+}
+
+function guardarMeta() {
+  const val = parseFloat(document.getElementById('meta-input').value);
+  if (!val || val <= 0) return;
+  state.meta = val;
+  saveMeta();
+  renderInicio();
+}
+
+// Default tasks
+const defaultTasks = [
+  'Revisar mensajes de clientes',
+  'Publicar story con inventario disponible',
+  'Apuntar ventas del día',
+  'Responder comentarios en marketplace',
+];
+
+function renderChecklist() {
+  const container = document.getElementById('checklist-container');
+  if (state.tasks.length === 0) {
+    defaultTasks.forEach(t => state.tasks.push({ text: t, done: false, id: Date.now() + Math.random() }));
+    save('tasks');
+  }
+  container.innerHTML = state.tasks.map((t, i) => `
+    <div class="check-item ${t.done ? 'done' : ''}" onclick="toggleTask(${i})">
+      <input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation();toggleTask(${i})" />
+      <label>${t.text}</label>
+      <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();removeTask(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function toggleTask(i) {
+  state.tasks[i].done = !state.tasks[i].done;
+  save('tasks');
+  renderChecklist();
+}
+function removeTask(i) {
+  state.tasks.splice(i, 1);
+  save('tasks');
+  renderChecklist();
+}
+function addTask() {
+  const input = document.getElementById('new-task');
+  if (!input.value.trim()) return;
+  state.tasks.push({ text: input.value.trim(), done: false, id: Date.now() });
+  input.value = '';
+  save('tasks');
+  renderChecklist();
+}
+
+// =================== FINANZAS ===================
+function registrarMovimiento() {
+  const tipo = document.getElementById('fin-tipo').value;
+  const desc = document.getElementById('fin-desc').value.trim();
+  const monto = parseFloat(document.getElementById('fin-monto').value);
+  const canal = document.getElementById('fin-canal').value;
+  const costo = parseFloat(document.getElementById('fin-costo').value) || 0;
+
+  if (!desc || !monto || monto <= 0) { alert('Completa descripción y monto.'); return; }
+
+  state.movimientos.unshift({ tipo, desc, monto, canal, costo, fecha: new Date().toLocaleDateString('es-MX') });
+  save('movimientos');
+
+  document.getElementById('fin-desc').value = '';
+  document.getElementById('fin-monto').value = '';
+  document.getElementById('fin-costo').value = '';
+
+  renderInicio();
+  alert('✅ Movimiento registrado.');
+}
+
+function renderHistorial() {
+  const lista = document.getElementById('fin-lista');
+  if (state.movimientos.length === 0) {
+    lista.innerHTML = '<div class="empty"><span>📊</span>Sin movimientos aún.</div>';
+    return;
+  }
+  lista.innerHTML = state.movimientos.map((m, i) => {
+    const tipos = { venta: ['badge-green','Venta'], compra: ['badge-blue','Compra'], gasto: ['badge-red','Gasto'], retiro: ['badge-gold','Retiro'] };
+    const [cls, label] = tipos[m.tipo] || ['badge-blue', m.tipo];
+    const ganancia = m.tipo === 'venta' ? ` · Ganancia: <span class="money pos">$${(m.monto - m.costo).toLocaleString()}</span>` : '';
+    return `
+      <div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-name">${m.desc}</div>
+          <div class="list-item-sub">${m.fecha} · ${m.canal}${ganancia}</div>
+        </div>
+        <span class="badge ${cls}">${label}</span>
+        <span class="money ${m.tipo==='venta'?'pos':m.tipo==='retiro'||m.tipo==='gasto'?'neg':''}" style="min-width:70px;text-align:right;">$${m.monto.toLocaleString()}</span>
+        <button class="btn btn-danger" onclick="eliminarMov(${i})">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function eliminarMov(i) {
+  if (!confirm('¿Eliminar este movimiento?')) return;
+  state.movimientos.splice(i, 1);
+  save('movimientos');
+  renderHistorial();
+  renderInicio();
+}
+
+function renderResumen() {
+  const ventas = state.movimientos.filter(m => m.tipo === 'venta');
+  const totalV = ventas.reduce((a, b) => a + b.monto, 0);
+  const totalG = ventas.reduce((a, b) => a + (b.monto - (b.costo || 0)), 0);
+
+  document.getElementById('res-ventas').textContent = '$' + totalV.toLocaleString();
+  document.getElementById('res-ganancia').textContent = '$' + totalG.toLocaleString();
+  document.getElementById('res-reinversion').textContent = '$' + Math.round(totalG * 0.4).toLocaleString();
+  document.getElementById('res-personal').textContent = '$' + Math.round(totalG * 0.3).toLocaleString();
+
+  // Por canal
+  const canales = {};
+  ventas.forEach(v => { canales[v.canal] = (canales[v.canal] || 0) + v.monto; });
+  const nombres = { facebook: 'Facebook', mercadolibre: 'MercadoLibre', instagram: 'Instagram', directo: 'Directo', otro: 'Otro' };
+  const resCanales = document.getElementById('res-canales');
+  if (Object.keys(canales).length === 0) {
+    resCanales.innerHTML = '<div class="empty"><span>📈</span>Sin datos aún</div>';
+  } else {
+    resCanales.innerHTML = Object.entries(canales).map(([k, v]) => `
+      <div class="list-item">
+        <div class="list-item-name">${nombres[k] || k}</div>
+        <span class="money pos">$${v.toLocaleString()}</span>
+      </div>`).join('');
+  }
+}
+
+function renderFinanzas() {
+  renderHistorial();
+}
+
+// =================== INVENTARIO ===================
+function agregarProducto() {
+  const nombre = document.getElementById('inv-nombre').value.trim();
+  const sku = document.getElementById('inv-sku').value.trim();
+  const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
+  const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+  const cantidad = parseInt(document.getElementById('inv-cantidad').value) || 1;
+  const estado = document.getElementById('inv-estado').value;
+
+  if (!nombre) { alert('Escribe el nombre del producto.'); return; }
+
+  state.inventario.unshift({ nombre, sku, costo, precio, cantidad, estado, fecha: new Date().toLocaleDateString('es-MX') });
+  save('inventario');
+
+  ['inv-nombre','inv-sku','inv-costo','inv-precio','inv-cantidad'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inv-estado').value = 'disponible';
+
+  renderInventario();
+}
+
+function renderInventario() {
+  const lista = document.getElementById('inv-lista');
+  if (state.inventario.length === 0) {
+    lista.innerHTML = '<div class="empty"><span>📦</span>Sin productos aún.</div>';
+    return;
+  }
+  lista.innerHTML = state.inventario.map((p, i) => {
+    const margen = p.precio && p.costo ? Math.round(((p.precio - p.costo) / p.precio) * 100) : 0;
+    const estados = { disponible: 'badge-green', reservado: 'badge-gold', vendido: 'badge-red' };
+    const etiquetas = { disponible: 'Disponible', reservado: 'Reservado', vendido: 'Vendido' };
+    return `
+      <div class="list-item">
+        <div class="list-item-info">
+          <div class="list-item-name">${p.nombre} ${p.sku ? '<span style="color:var(--muted);font-size:12px;">· ' + p.sku + '</span>' : ''}</div>
+          <div class="list-item-sub">Costo: $${p.costo.toLocaleString()} · Venta: $${p.precio.toLocaleString()} · Margen: ${margen}% · Qty: ${p.cantidad}</div>
+        </div>
+        <span class="badge ${estados[p.estado]}">${etiquetas[p.estado]}</span>
+        <button class="btn btn-danger" onclick="eliminarProducto(${i})">✕</button>
+      </div>`;
+  }).join('');
+
+  // Update stat
+  const stock = state.inventario.filter(i => i.estado === 'disponible').reduce((a, b) => a + b.cantidad, 0);
+  const el = document.getElementById('stat-stock');
+  if (el) el.textContent = stock;
+}
+
+function eliminarProducto(i) {
+  if (!confirm('¿Eliminar este producto?')) return;
+  state.inventario.splice(i, 1);
+  save('inventario');
+  renderInventario();
+}
+
+// =================== CONTENIDO ===================
+const weekPlan = [
+  { day: 'LUN', tasks: [{ text: 'Grabar 2-3 reels en batch', color: 'dot-gold' }] },
+  { day: 'MAR', tasks: [{ text: 'Editar & programar reels', color: 'dot-blue' }] },
+  { day: 'MIÉ', tasks: [{ text: 'Foto de producto + caption', color: 'dot-purple' }] },
+  { day: 'JUE', tasks: [{ text: 'Stories: inventario y encuesta', color: 'dot-green' }] },
+  { day: 'VIE', tasks: [{ text: 'Stories: precio y disponibilidad', color: 'dot-green' }] },
+  { day: 'SÁB', tasks: [{ text: 'Reel elaborado o unboxing', color: 'dot-gold' }] },
+  { day: 'DOM', tasks: [{ text: 'Planear contenido semana siguiente', color: 'dot-blue' }] },
+];
+
+const ideasBase = [
+  { text: '"El reloj más vendido de mi tienda"', nivel: '🟢', done: false },
+  { text: '"Este reloj por $X — ¿caro o barato?"', nivel: '🟢', done: false },
+  { text: 'Unboxing express', nivel: '🟢', done: false },
+  { text: '"3 cosas que no sabías del Invicta"', nivel: '🟢', done: false },
+  { text: 'Reloj en la muñeca, outfit del día', nivel: '🟢', done: false },
+  { text: '"Me llegó esto hoy" — inventario nuevo', nivel: '🟢', done: false },
+  { text: 'Comparativa: 2 modelos ¿cuál te llevas?', nivel: '🟢', done: false },
+  { text: '"El Invicta que parece de $500 y cuesta $X"', nivel: '🟡', done: false },
+  { text: '"¿Vale la pena comprar Invicta?"', nivel: '🟡', done: false },
+  { text: 'Antes y después — limpieza de reloj', nivel: '🟡', done: false },
+  { text: '"El reloj ideal según tu presupuesto"', nivel: '🟡', done: false },
+  { text: 'POV: estás eligiendo tu primer Invicta', nivel: '🟡', done: false },
+  { text: 'Top 3 Invicta para regalo', nivel: '🟡', done: false },
+  { text: '"Lo que nadie te dice antes de comprar un Invicta"', nivel: '🟡', done: false },
+  { text: 'Mini historia: cómo empecé la tienda', nivel: '🔴', done: false },
+  { text: '"Un día en mi tienda" — detrás de cámaras', nivel: '🔴', done: false },
+  { text: 'Testimonio de cliente feliz', nivel: '🔴', done: false },
+  { text: 'Reel de producto cinematográfico (sin hablar)', nivel: '🔴', done: false },
+  { text: '"Armé mi colección con $X"', nivel: '🔴', done: false },
+  { text: 'Respondo las preguntas más frecuentes', nivel: '🔴', done: false },
+];
+
+function renderContenido() {
+  // Week
+  const cal = document.getElementById('week-calendar');
+  cal.innerHTML = weekPlan.map(d => `
+    <div class="day-col">
+      <div class="day-header">${d.day}</div>
+      ${d.tasks.map(t => {
+        const key = `week-${d.day}-${t.text}`;
+        const done = state.weekTasks[key];
+        return `<div class="day-task ${done ? 'done' : ''}" onclick="toggleWeekTask('${key}', this)">
+          <div class="task-dot ${t.color}"></div>${t.text}
+        </div>`;
+      }).join('')}
+      <div class="day-task dot-green" style="font-size:10px;" onclick="toggleWeekTask('stories-${d.day}', this)">
+        <div class="task-dot dot-green"></div>Stories diarias
+      </div>
+    </div>
+  `).join('');
+
+  // Ideas
+  if (state.ideas.length === 0) {
+    state.ideas.push(...ideasBase);
+    save('ideas');
+  }
+  renderIdeas();
+}
+
+function toggleWeekTask(key, el) {
+  state.weekTasks[key] = !state.weekTasks[key];
+  localStorage.setItem('weekTasks', JSON.stringify(state.weekTasks));
+  el.classList.toggle('done');
+}
+
+function renderIdeas() {
+  const lista = document.getElementById('ideas-lista');
+  lista.innerHTML = state.ideas.map((idea, i) => `
+    <div class="check-item ${idea.done ? 'done' : ''}">
+      <input type="checkbox" ${idea.done ? 'checked' : ''} onchange="toggleIdea(${i})" />
+      <label onclick="toggleIdea(${i})">${idea.nivel || '💡'} ${idea.text}</label>
+      <button class="btn btn-danger" onclick="removeIdea(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function toggleIdea(i) {
+  state.ideas[i].done = !state.ideas[i].done;
+  save('ideas');
+  renderIdeas();
+}
+function removeIdea(i) {
+  state.ideas.splice(i, 1);
+  save('ideas');
+  renderIdeas();
+}
+function addIdea() {
+  const input = document.getElementById('new-idea');
+  if (!input.value.trim()) return;
+  state.ideas.push({ text: input.value.trim(), nivel: '💡', done: false });
+  input.value = '';
+  save('ideas');
+  renderIdeas();
+}
+
+// =================== CLIENTES ===================
+function registrarCliente() {
+  const nombre = document.getElementById('cli-nombre').value.trim();
+  const tel = document.getElementById('cli-tel').value.trim();
+  const canal = document.getElementById('cli-canal').value;
+  const producto = document.getElementById('cli-producto').value.trim();
+  const notas = document.getElementById('cli-notas').value.trim();
+
+  if (!nombre) { alert('Escribe el nombre del cliente.'); return; }
+
+  state.clientes.unshift({ nombre, tel, canal, producto, notas, fecha: new Date().toLocaleDateString('es-MX') });
+  save('clientes');
+
+  ['cli-nombre','cli-tel','cli-producto','cli-notas'].forEach(id => document.getElementById(id).value = '');
+  renderClientes();
+}
+
+function renderClientes() {
+  const lista = document.getElementById('cli-lista');
+  if (state.clientes.length === 0) {
+    lista.innerHTML = '<div class="empty"><span>👤</span>Sin clientes aún.</div>';
+    return;
+  }
+  const nombres = { facebook: 'Facebook', mercadolibre: 'MercadoLibre', instagram: 'Instagram', directo: 'Directo' };
+  lista.innerHTML = state.clientes.map((c, i) => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-name">${c.nombre} ${c.tel ? '<span style="color:var(--muted);font-size:12px;">· ' + c.tel + '</span>' : ''}</div>
+        <div class="list-item-sub">${c.producto || 'Sin producto registrado'} · ${c.fecha}${c.notas ? ' · ' + c.notas : ''}</div>
+      </div>
+      <span class="badge badge-blue">${nombres[c.canal] || c.canal}</span>
+      <button class="btn btn-danger" onclick="eliminarCliente(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function eliminarCliente(i) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  state.clientes.splice(i, 1);
+  save('clientes');
+  renderClientes();
+}
+
+// =================== GOOGLE SHEETS SYNC ===================
+let SCRIPT_URL = localStorage.getItem('scriptUrl') || '';
+
+function setSyncStatus(msg, color) {
+  const el = document.getElementById('sync-status');
+  if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
+  // Also update the nav indicator (visible from any tab)
+  const nav = document.getElementById('nav-sync-indicator');
+  if (nav) {
+    nav.textContent = msg;
+    nav.style.color = color || 'var(--muted)';
+    nav.style.display = 'block';
+  }
+}
+
+async function syncToSheets() {
+  if (!SCRIPT_URL) { alert('Primero configura tu URL de Google Apps Script en Configuración.'); return; }
+  setSyncStatus('⏳ Sincronizando...', 'var(--gold)');
+  try {
+    // Usamos GET con payload en base64 para evitar CORS preflight (compatible con GitHub Pages)
+    const data = {
+      movimientos: state.movimientos,
+      inventario: state.inventario,
+      clientes: state.clientes,
+      meta: state.meta,
+    };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    const url = SCRIPT_URL + '?action=saveAll&d=' + encodeURIComponent(encoded);
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.status === 'ok') {
+      const now = new Date().toLocaleTimeString('es-MX');
+      setSyncStatus('✅ Sincronizado · ' + now, 'var(--green)');
+      localStorage.setItem('lastSync', now);
+    } else {
+      setSyncStatus('⚠️ Error: ' + (json.msg || 'desconocido'), 'var(--red)');
+    }
+  } catch (e) {
+    setSyncStatus('⚠️ Sin conexión o URL incorrecta', 'var(--red)');
+  }
+}
+
+async function loadFromSheets() {
+  if (!SCRIPT_URL) { alert('Primero configura tu URL de Google Apps Script en Configuración.'); return; }
+  setSyncStatus('⏳ Cargando desde la nube...', 'var(--gold)');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=loadAll');
+    const json = await res.json();
+    if (json.status === 'ok') {
+      if (json.data.movimientos && json.data.movimientos.length) state.movimientos = json.data.movimientos;
+      if (json.data.inventario  && json.data.inventario.length)  state.inventario  = json.data.inventario;
+      if (json.data.clientes    && json.data.clientes.length)    state.clientes    = json.data.clientes;
+      if (json.data.meta) state.meta = parseFloat(json.data.meta) || 0;
+      ['movimientos','inventario','clientes'].forEach(k => save(k));
+      localStorage.setItem('meta', state.meta);
+      const now = new Date().toLocaleTimeString('es-MX');
+      setSyncStatus('✅ Datos cargados · ' + now, 'var(--green)');
+      localStorage.setItem('lastSync', now);
+      renderInicio();
+    } else {
+      setSyncStatus('⚠️ No se encontraron datos en la nube', 'var(--red)');
+    }
+  } catch (e) {
+    setSyncStatus('⚠️ Sin conexión o URL incorrecta', 'var(--red)');
+  }
+}
+
+function saveScriptUrl() {
+  const url = document.getElementById('script-url-input').value.trim();
+  if (!url.startsWith('https://')) { alert('La URL debe empezar con https://'); return; }
+  SCRIPT_URL = url;
+  localStorage.setItem('scriptUrl', url);
+  document.getElementById('script-url-input').value = url;
+  setSyncStatus('URL guardada. Listo para sincronizar.', 'var(--green)');
+  alert('✅ URL guardada. Ya puedes sincronizar.');
+}
+
+// =================== JSON BACKUP ===================
+function exportarJSON() {
+  const data = {
+    exportado: new Date().toISOString(),
+    movimientos: state.movimientos,
+    inventario: state.inventario,
+    clientes: state.clientes,
+    meta: state.meta,
+    ideas: state.ideas,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'respaldo-tienda-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importarJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.movimientos) state.movimientos = data.movimientos;
+      if (data.inventario) state.inventario = data.inventario;
+      if (data.clientes) state.clientes = data.clientes;
+      if (data.meta) state.meta = data.meta;
+      if (data.ideas) state.ideas = data.ideas;
+      ['movimientos','inventario','clientes','ideas'].forEach(k => save(k));
+      saveMeta();
+      renderInicio();
+      alert('✅ Datos restaurados correctamente.');
+    } catch {
+      alert('❌ Archivo inválido. Asegúrate de que sea un respaldo de esta app.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// =================== INIT ===================
+renderInicio();
+
+// Load saved URL
+if (SCRIPT_URL) {
+  const input = document.getElementById('script-url-input');
+  if (input) input.value = SCRIPT_URL;
+  const lastSync = localStorage.getItem('lastSync');
+  if (lastSync) setSyncStatus('Última sync: ' + lastSync, 'var(--muted)');
+}
+</script>
+</body>
+</html>
