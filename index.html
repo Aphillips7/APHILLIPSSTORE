@@ -987,9 +987,14 @@ function previewFoto() {
   const url = document.getElementById('inv-foto').value.trim();
   const preview = document.getElementById('inv-foto-preview');
   if (url) {
-    preview.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='❌'" />';
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    img.onerror = function() { preview.textContent = '❌'; };
+    preview.innerHTML = '';
+    preview.appendChild(img);
   } else {
-    preview.innerHTML = '📷';
+    preview.textContent = '📷';
     preview.style.background = 'var(--dark)';
   }
 }
