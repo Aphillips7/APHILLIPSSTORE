@@ -566,6 +566,18 @@
         </select>
       </div>
     </div>
+    <div class="field">
+      <label>Foto del producto</label>
+      <div style="display:flex;gap:8px;align-items:flex-start;">
+        <div style="flex:1;">
+          <input type="url" id="inv-foto" placeholder="Pega URL de imagen (Google Drive, Imgur, etc.)" oninput="previewFoto()" />
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+            💡 Sube la foto a <strong style="color:var(--white)">imgur.com</strong> gratis y pega el link directo aquí
+          </div>
+        </div>
+        <div id="inv-foto-preview" style="width:72px;height:72px;border-radius:8px;border:1px solid var(--border);background:var(--dark);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;">📷</div>
+      </div>
+    </div>
     <button class="btn btn-gold" onclick="agregarProducto()">Agregar al inventario</button>
   </div>
 
@@ -956,16 +968,30 @@ function agregarProducto() {
   const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
   const cantidad = parseInt(document.getElementById('inv-cantidad').value) || 1;
   const estado = document.getElementById('inv-estado').value;
+  const foto = document.getElementById('inv-foto').value.trim();
 
   if (!nombre) { alert('Escribe el nombre del producto.'); return; }
 
-  state.inventario.unshift({ nombre, sku, costo, precio, cantidad, estado, fecha: new Date().toLocaleDateString('es-MX') });
+  state.inventario.unshift({ nombre, sku, costo, precio, cantidad, estado, foto, fecha: new Date().toLocaleDateString('es-MX') });
   save('inventario');
 
-  ['inv-nombre','inv-sku','inv-costo','inv-precio','inv-cantidad'].forEach(id => document.getElementById(id).value = '');
+  ['inv-nombre','inv-sku','inv-costo','inv-precio','inv-cantidad','inv-foto'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('inv-estado').value = 'disponible';
+  document.getElementById('inv-foto-preview').innerHTML = '📷';
+  document.getElementById('inv-foto-preview').style.background = 'var(--dark)';
 
   renderInventario();
+}
+
+function previewFoto() {
+  const url = document.getElementById('inv-foto').value.trim();
+  const preview = document.getElementById('inv-foto-preview');
+  if (url) {
+    preview.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='❌'" />';
+  } else {
+    preview.innerHTML = '📷';
+    preview.style.background = 'var(--dark)';
+  }
 }
 
 function renderInventario() {
@@ -978,8 +1004,12 @@ function renderInventario() {
     const margen = p.precio && p.costo ? Math.round(((p.precio - p.costo) / p.precio) * 100) : 0;
     const estados = { disponible: 'badge-green', reservado: 'badge-gold', vendido: 'badge-red' };
     const etiquetas = { disponible: 'Disponible', reservado: 'Reservado', vendido: 'Vendido' };
+    const fotoHtml = p.foto
+      ? `<img src="${p.foto}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display='none'" />`
+      : `<div style="width:52px;height:52px;border-radius:8px;border:1px solid var(--border);background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">⌚</div>`;
     return `
-      <div class="list-item">
+      <div class="list-item" style="gap:14px;">
+        ${fotoHtml}
         <div class="list-item-info">
           <div class="list-item-name">${p.nombre} ${p.sku ? '<span style="color:var(--muted);font-size:12px;">· ' + p.sku + '</span>' : ''}</div>
           <div class="list-item-sub">Costo: $${p.costo.toLocaleString()} · Venta: $${p.precio.toLocaleString()} · Margen: ${margen}% · Qty: ${p.cantidad}</div>
