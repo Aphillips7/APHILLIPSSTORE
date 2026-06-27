@@ -532,58 +532,108 @@
 <!-- =================== INVENTARIO =================== -->
 <div id="page-inventario" class="page">
   <div class="section-title">Inventario</div>
-  <div class="section-sub">Sabe exactamente qué tienes, cuánto costó y cuánto vale.</div>
+  <div class="section-sub">Cada unidad registrada individualmente — control exacto de costos y márgenes.</div>
 
+  <!-- Summary stats -->
+  <div class="grid-3" id="inv-stats-row">
+    <div class="stat-box">
+      <div class="stat-label">Unidades disponibles</div>
+      <div class="stat-value" id="inv-stat-disponibles">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">En tránsito</div>
+      <div class="stat-value" style="color:var(--blue)" id="inv-stat-transito">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Valor en stock</div>
+      <div class="stat-value gold money" id="inv-stat-valor">$0</div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="card" style="padding:14px 20px;">
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span style="font-size:18px;">🔍</span>
+      <input type="text" id="inv-search" placeholder="Buscar por modelo o referencia..." oninput="renderInventario()" style="flex:1;border:none;background:transparent;padding:0;font-size:14px;" />
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('inv-search').value='';renderInventario()">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Add form -->
   <div class="card">
-    <div class="card-title">Agregar producto</div>
+    <div class="card-title" id="inv-form-title">Registrar unidad</div>
+    <input type="hidden" id="inv-edit-index" value="" />
     <div class="grid-2">
       <div class="field">
-        <label>Modelo / Nombre</label>
+        <label>Modelo</label>
         <input type="text" id="inv-nombre" placeholder="Ej: Invicta Pro Diver 8926OB" />
       </div>
       <div class="field">
-        <label>Referencia / SKU</label>
+        <label>Referencia</label>
         <input type="text" id="inv-sku" placeholder="Ej: INV-8926OB" />
       </div>
+    </div>
+    <div class="grid-2">
       <div class="field">
-        <label>Precio de compra ($)</label>
-        <div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" /></div>
+        <label>Costo unitario ($)</label>
+        <div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
       </div>
+      <div class="field">
+        <label>Gastos de importación ($) <span style="color:var(--muted);font-weight:400;">— dejar en 0 si está en tránsito</span></label>
+        <div class="currency-wrap"><input type="number" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
+      </div>
+    </div>
+    <!-- Auto-calculated row -->
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:120px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Costo total</div>
+        <div id="inv-preview-costo" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--white);">$0.00</div>
+      </div>
+      <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:120px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Margen estimado</div>
+        <div id="inv-preview-margen" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">—</div>
+      </div>
+    </div>
+    <div class="grid-2">
       <div class="field">
         <label>Precio de venta ($)</label>
-        <div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" /></div>
-      </div>
-      <div class="field">
-        <label>Cantidad</label>
-        <input type="number" id="inv-cantidad" placeholder="1" min="1" />
+        <div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
       </div>
       <div class="field">
         <label>Estado</label>
         <select id="inv-estado">
           <option value="disponible">✅ Disponible</option>
+          <option value="transito">🚢 En tránsito</option>
           <option value="reservado">🟡 Reservado</option>
           <option value="vendido">🔴 Vendido</option>
         </select>
       </div>
     </div>
     <div class="field">
-      <label>Foto del producto</label>
+      <label>Imagen del producto <span style="color:var(--muted);font-weight:400;">— URL directa (i.imgur.com/...jpg)</span></label>
       <div style="display:flex;gap:8px;align-items:flex-start;">
         <div style="flex:1;">
-          <input type="url" id="inv-foto" placeholder="Pega URL de imagen (Google Drive, Imgur, etc.)" oninput="previewFoto()" />
-          <div style="font-size:11px;color:var(--muted);margin-top:6px;">
-            💡 Sube la foto a <strong style="color:var(--white)">imgur.com</strong> gratis y pega el link directo aquí
-          </div>
+          <input type="url" id="inv-foto" placeholder="https://i.imgur.com/..." oninput="previewFoto()" />
         </div>
-        <div id="inv-foto-preview" style="width:72px;height:72px;border-radius:8px;border:1px solid var(--border);background:var(--dark);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;">📷</div>
+        <div id="inv-foto-preview" style="width:64px;height:64px;border-radius:8px;border:1px solid var(--border);background:var(--dark);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;">📷</div>
       </div>
     </div>
-    <button class="btn btn-gold" onclick="agregarProducto()">Agregar al inventario</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>
+      <button class="btn btn-outline" onclick="cancelarEdicion()" id="inv-cancel-btn" style="display:none;">Cancelar</button>
+    </div>
   </div>
 
+  <!-- List -->
   <div class="card">
-    <div class="card-title">Stock actual</div>
-    <div id="inv-lista"><div class="empty"><span>📦</span>Sin productos. Agrega tu inventario.</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-title" style="margin:0;">Unidades registradas</div>
+      <div id="inv-agrupado-toggle" style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="toggleVista('lista')" id="vista-lista" style="border-color:var(--gold);color:var(--gold);">Lista</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleVista('modelo')" id="vista-modelo">Por modelo</button>
+      </div>
+    </div>
+    <div id="inv-lista"><div class="empty"><span>📦</span>Sin unidades registradas aún.</div></div>
   </div>
 </div>
 
@@ -961,26 +1011,215 @@ function renderFinanzas() {
 }
 
 // =================== INVENTARIO ===================
+function calcularMargenPreview() {
+  const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
+  const importacion = parseFloat(document.getElementById('inv-importacion').value) || 0;
+  const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+  const total = costo + importacion;
+
+  document.getElementById('inv-preview-costo').textContent = '$' + total.toFixed(2);
+
+  if (total > 0 && precio > 0) {
+    const margen = Math.round(((precio - total) / precio) * 100);
+    const el = document.getElementById('inv-preview-margen');
+    el.textContent = margen + '%';
+    el.style.color = margen >= 30 ? 'var(--green)' : margen >= 15 ? 'var(--gold)' : 'var(--red)';
+  } else {
+    document.getElementById('inv-preview-margen').textContent = '—';
+    document.getElementById('inv-preview-margen').style.color = 'var(--muted)';
+  }
+}
+
+let _vistaActual = 'lista';
+function toggleVista(v) {
+  _vistaActual = v;
+  document.getElementById('vista-lista').style.borderColor = v === 'lista' ? 'var(--gold)' : 'var(--border)';
+  document.getElementById('vista-lista').style.color = v === 'lista' ? 'var(--gold)' : 'var(--muted)';
+  document.getElementById('vista-modelo').style.borderColor = v === 'modelo' ? 'var(--gold)' : 'var(--border)';
+  document.getElementById('vista-modelo').style.color = v === 'modelo' ? 'var(--gold)' : 'var(--muted)';
+  renderInventario();
+}
+
 function agregarProducto() {
+  const editIdx = document.getElementById('inv-edit-index').value;
   const nombre = document.getElementById('inv-nombre').value.trim();
   const sku = document.getElementById('inv-sku').value.trim();
   const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
+  const importacion = parseFloat(document.getElementById('inv-importacion').value) || 0;
   const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
-  const cantidad = parseInt(document.getElementById('inv-cantidad').value) || 1;
   const estado = document.getElementById('inv-estado').value;
   const foto = document.getElementById('inv-foto').value.trim();
+  const costoTotal = costo + importacion;
+  const margen = costoTotal > 0 && precio > 0 ? Math.round(((precio - costoTotal) / precio) * 100) : 0;
 
-  if (!nombre) { alert('Escribe el nombre del producto.'); return; }
+  if (!nombre) { alert('Escribe el modelo del producto.'); return; }
 
-  state.inventario.unshift({ nombre, sku, costo, precio, cantidad, estado, foto, fecha: new Date().toLocaleDateString('es-MX') });
+  const item = { nombre, sku, costo, importacion, costoTotal, precio, margen, estado, foto, fecha: new Date().toLocaleDateString('es-MX') };
+
+  if (editIdx !== '') {
+    state.inventario[parseInt(editIdx)] = item;
+  } else {
+    state.inventario.unshift(item);
+  }
+
   save('inventario');
-
-  ['inv-nombre','inv-sku','inv-costo','inv-precio','inv-cantidad','inv-foto'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('inv-estado').value = 'disponible';
-  document.getElementById('inv-foto-preview').innerHTML = '📷';
-  document.getElementById('inv-foto-preview').style.background = 'var(--dark)';
-
+  limpiarFormulario();
   renderInventario();
+}
+
+function limpiarFormulario() {
+  ['inv-nombre','inv-sku','inv-costo','inv-importacion','inv-precio','inv-foto'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('inv-estado').value = 'disponible';
+  document.getElementById('inv-edit-index').value = '';
+  document.getElementById('inv-foto-preview').textContent = '📷';
+  document.getElementById('inv-preview-costo').textContent = '$0.00';
+  document.getElementById('inv-preview-margen').textContent = '—';
+  document.getElementById('inv-preview-margen').style.color = 'var(--muted)';
+  document.getElementById('inv-form-title').textContent = 'Registrar unidad';
+  document.getElementById('inv-submit-btn').textContent = 'Registrar unidad';
+  document.getElementById('inv-cancel-btn').style.display = 'none';
+}
+
+function cancelarEdicion() {
+  limpiarFormulario();
+}
+
+function editarProducto(i) {
+  const p = state.inventario[i];
+  document.getElementById('inv-nombre').value = p.nombre || '';
+  document.getElementById('inv-sku').value = p.sku || '';
+  document.getElementById('inv-costo').value = p.costo || '';
+  document.getElementById('inv-importacion').value = p.importacion || '';
+  document.getElementById('inv-precio').value = p.precio || '';
+  document.getElementById('inv-estado').value = p.estado || 'disponible';
+  document.getElementById('inv-foto').value = p.foto || '';
+  document.getElementById('inv-edit-index').value = i;
+  document.getElementById('inv-form-title').textContent = 'Editar unidad';
+  document.getElementById('inv-submit-btn').textContent = 'Guardar cambios';
+  document.getElementById('inv-cancel-btn').style.display = 'inline-flex';
+  calcularMargenPreview();
+  if (p.foto) previewFoto();
+  document.getElementById('inv-form-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function makeFotoHtml(url, size) {
+  var s = size || 52;
+  var style = 'width:' + s + 'px;height:' + s + 'px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;';
+  if (url) {
+    return '<img src="' + url + '" style="' + style + '" onload="" onerror="this.remove()" />';
+  }
+  return '<div style="width:' + s + 'px;height:' + s + 'px;border-radius:8px;border:1px solid var(--border);background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">⌚</div>';
+}
+
+function renderInventario() {
+  // Update stats
+  const disponibles = state.inventario.filter(p => p.estado === 'disponible').length;
+  const transito = state.inventario.filter(p => p.estado === 'transito').length;
+  const valorStock = state.inventario
+    .filter(p => p.estado === 'disponible')
+    .reduce((a, p) => a + (p.precio || 0), 0);
+
+  const elD = document.getElementById('inv-stat-disponibles');
+  const elT = document.getElementById('inv-stat-transito');
+  const elV = document.getElementById('inv-stat-valor');
+  if (elD) elD.textContent = disponibles;
+  if (elT) elT.textContent = transito;
+  if (elV) elV.textContent = '$' + valorStock.toLocaleString();
+
+  // Update homepage stat
+  const statStock = document.getElementById('stat-stock');
+  if (statStock) statStock.textContent = disponibles;
+
+  const lista = document.getElementById('inv-lista');
+  const query = (document.getElementById('inv-search') && document.getElementById('inv-search').value.toLowerCase()) || '';
+
+  let items = state.inventario.filter((p, i) => {
+    const match = (p.nombre || '').toLowerCase().includes(query) || (p.sku || '').toLowerCase().includes(query);
+    return match;
+  });
+
+  if (items.length === 0) {
+    lista.innerHTML = '<div class="empty"><span>📦</span>' + (query ? 'Sin resultados para "' + query + '"' : 'Sin unidades registradas aún.') + '</div>';
+    return;
+  }
+
+  const estados = { disponible: 'badge-green', transito: 'badge-blue', reservado: 'badge-gold', vendido: 'badge-red' };
+  const etiquetas = { disponible: 'Disponible', transito: 'En tránsito', reservado: 'Reservado', vendido: 'Vendido' };
+
+  if (_vistaActual === 'modelo') {
+    // Group by model name
+    const grupos = {};
+    items.forEach((p, originalIdx) => {
+      const key = p.nombre;
+      if (!grupos[key]) grupos[key] = [];
+      grupos[key].push({ ...p, _idx: state.inventario.indexOf(p) });
+    });
+
+    lista.innerHTML = Object.entries(grupos).map(([modelo, units]) => {
+      const totalUnits = units.length;
+      const disponiblesG = units.filter(u => u.estado === 'disponible').length;
+      const transitoG = units.filter(u => u.estado === 'transito').length;
+      const costoPromedio = units.filter(u => u.costoTotal > 0).reduce((a, u) => a + u.costoTotal, 0) / (units.filter(u => u.costoTotal > 0).length || 1);
+      const foto = units.find(u => u.foto) ? units.find(u => u.foto).foto : null;
+      const fotoHtml = makeFotoHtml(foto, 52);
+
+      const unitsHtml = units.map(u => {
+        const costoLabel = u.estado === 'transito' && !u.importacion
+          ? '<span style="color:var(--blue)">Importación pendiente</span>'
+          : 'Costo total: $' + (u.costoTotal || 0).toFixed(2);
+        const margenLabel = u.costoTotal > 0 && u.precio > 0
+          ? ' · Margen: <span style="color:' + (u.margen >= 30 ? 'var(--green)' : u.margen >= 15 ? 'var(--gold)' : 'var(--red)') + '">' + u.margen + '%</span>'
+          : '';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 8px 64px;border-top:1px solid var(--border);gap:8px;">' +
+          '<div>' +
+            '<div style="font-size:13px;color:var(--white);">' + costoLabel + margenLabel + '</div>' +
+            '<div style="font-size:11px;color:var(--muted);">Venta: $' + (u.precio || 0).toLocaleString() + ' · ' + u.fecha + '</div>' +
+          '</div>' +
+          '<span class="badge ' + (estados[u.estado] || 'badge-blue') + '">' + (etiquetas[u.estado] || u.estado) + '</span>' +
+          '<button class="btn btn-outline btn-sm" onclick="editarProducto(' + u._idx + ')">✏️</button>' +
+          '<button class="btn btn-danger" onclick="eliminarProducto(' + u._idx + ')">✕</button>' +
+        '</div>';
+      }).join('');
+
+      return '<div style="margin-bottom:4px;">' +
+        '<div class="list-item" style="gap:14px;padding-bottom:8px;">' +
+          fotoHtml +
+          '<div class="list-item-info">' +
+            '<div class="list-item-name">' + modelo + (units[0].sku ? ' <span style="color:var(--muted);font-size:12px;">· ' + units[0].sku + '</span>' : '') + '</div>' +
+            '<div class="list-item-sub">' + totalUnits + ' unidad(es) · ' + disponiblesG + ' disponible(s) · ' + transitoG + ' en tránsito · Costo prom: $' + costoPromedio.toFixed(2) + '</div>' +
+          '</div>' +
+        '</div>' +
+        unitsHtml +
+      '</div>';
+    }).join('<div style="height:8px;"></div>');
+
+  } else {
+    // Lista view
+    lista.innerHTML = items.map((p) => {
+      const i = state.inventario.indexOf(p);
+      const costoLabel = p.estado === 'transito' && !p.importacion
+        ? '<span style="color:var(--blue);font-size:12px;">🚢 Importación pendiente</span>'
+        : 'Costo: $' + (p.costoTotal || 0).toFixed(2);
+      const margenColor = p.margen >= 30 ? 'var(--green)' : p.margen >= 15 ? 'var(--gold)' : 'var(--red)';
+      const margenLabel = p.costoTotal > 0 && p.precio > 0
+        ? ' · Margen: <span style="color:' + margenColor + '">' + p.margen + '%</span>'
+        : '';
+      const fotoHtml = makeFotoHtml(p.foto, 52);
+
+      return '<div class="list-item" style="gap:14px;">' +
+        fotoHtml +
+        '<div class="list-item-info">' +
+          '<div class="list-item-name">' + p.nombre + (p.sku ? ' <span style="color:var(--muted);font-size:12px;">· ' + p.sku + '</span>' : '') + '</div>' +
+          '<div class="list-item-sub">' + costoLabel + margenLabel + ' · Venta: $' + (p.precio || 0).toLocaleString() + ' · ' + p.fecha + '</div>' +
+        '</div>' +
+        '<span class="badge ' + (estados[p.estado] || 'badge-blue') + '">' + (etiquetas[p.estado] || p.estado) + '</span>' +
+        '<button class="btn btn-outline btn-sm" onclick="editarProducto(' + i + ')">✏️</button>' +
+        '<button class="btn btn-danger" onclick="eliminarProducto(' + i + ')">✕</button>' +
+      '</div>';
+    }).join('');
+  }
 }
 
 function previewFoto() {
@@ -995,39 +1234,7 @@ function previewFoto() {
     preview.appendChild(img);
   } else {
     preview.textContent = '📷';
-    preview.style.background = 'var(--dark)';
   }
-}
-
-function renderInventario() {
-  const lista = document.getElementById('inv-lista');
-  if (state.inventario.length === 0) {
-    lista.innerHTML = '<div class="empty"><span>📦</span>Sin productos aún.</div>';
-    return;
-  }
-  lista.innerHTML = state.inventario.map((p, i) => {
-    const margen = p.precio && p.costo ? Math.round(((p.precio - p.costo) / p.precio) * 100) : 0;
-    const estados = { disponible: 'badge-green', reservado: 'badge-gold', vendido: 'badge-red' };
-    const etiquetas = { disponible: 'Disponible', reservado: 'Reservado', vendido: 'Vendido' };
-    const fotoHtml = p.foto
-      ? `<img src="${p.foto}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display='none'" />`
-      : `<div style="width:52px;height:52px;border-radius:8px;border:1px solid var(--border);background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">⌚</div>`;
-    return `
-      <div class="list-item" style="gap:14px;">
-        ${fotoHtml}
-        <div class="list-item-info">
-          <div class="list-item-name">${p.nombre} ${p.sku ? '<span style="color:var(--muted);font-size:12px;">· ' + p.sku + '</span>' : ''}</div>
-          <div class="list-item-sub">Costo: $${p.costo.toLocaleString()} · Venta: $${p.precio.toLocaleString()} · Margen: ${margen}% · Qty: ${p.cantidad}</div>
-        </div>
-        <span class="badge ${estados[p.estado]}">${etiquetas[p.estado]}</span>
-        <button class="btn btn-danger" onclick="eliminarProducto(${i})">✕</button>
-      </div>`;
-  }).join('');
-
-  // Update stat
-  const stock = state.inventario.filter(i => i.estado === 'disponible').reduce((a, b) => a + b.cantidad, 0);
-  const el = document.getElementById('stat-stock');
-  if (el) el.textContent = stock;
 }
 
 function eliminarProducto(i) {
