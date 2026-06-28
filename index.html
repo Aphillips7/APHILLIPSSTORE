@@ -531,12 +531,18 @@
 
 <!-- =================== INVENTARIO =================== -->
 <div id="page-inventario" class="page">
-  <div class="section-title">Inventario</div>
-  <div class="section-sub">Cada unidad registrada individualmente — control exacto de costos, márgenes y especificaciones.</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px;">
+    <div>
+      <div class="section-title" style="margin-bottom:2px;">Inventario</div>
+      <div class="section-sub" style="margin-bottom:0;">Control exacto de cada unidad — costos, márgenes y especificaciones.</div>
+    </div>
+    <button class="btn btn-gold" onclick="toggleFormulario()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
+  </div>
 
-  <div class="grid-3" id="inv-stats-row">
+  <!-- Stats -->
+  <div class="grid-3" style="margin-top:20px;">
     <div class="stat-box">
-      <div class="stat-label">Unidades disponibles</div>
+      <div class="stat-label">Disponibles</div>
       <div class="stat-value" id="inv-stat-disponibles">0</div>
     </div>
     <div class="stat-box">
@@ -549,7 +555,8 @@
     </div>
   </div>
 
-  <div class="card" style="padding:14px 20px;">
+  <!-- Search -->
+  <div class="card" style="padding:14px 20px;margin-top:0;">
     <div style="display:flex;gap:10px;align-items:center;">
       <span style="font-size:18px;">🔍</span>
       <input type="text" id="inv-search" placeholder="Buscar por modelo, referencia o colección..." oninput="renderInventario()" style="flex:1;border:none;background:transparent;padding:0;font-size:14px;" />
@@ -557,134 +564,7 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title" id="inv-form-title">Registrar unidad</div>
-    <input type="hidden" id="inv-edit-index" value="" />
-
-    <div class="divider-text">Identificación</div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Modelo</label>
-        <input type="text" id="inv-nombre" placeholder="Ej: Invicta Pro Diver 8926OB" />
-      </div>
-      <div class="field">
-        <label>Referencia</label>
-        <input type="text" id="inv-sku" placeholder="Ej: INV-8926OB" />
-      </div>
-      <div class="field">
-        <label>Colección</label>
-        <input type="text" id="inv-coleccion" placeholder="Ej: Pro Diver, Bolt, Subaqua..." />
-      </div>
-      <div class="field">
-        <label>Género</label>
-        <select id="inv-genero">
-          <option value="hombre">Hombre</option>
-          <option value="mujer">Mujer</option>
-          <option value="unisex">Unisex</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="divider-text">Especificaciones técnicas</div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Diámetro de caja (mm)</label>
-        <input type="number" id="inv-mm" placeholder="Ej: 48" />
-      </div>
-      <div class="field">
-        <label>Material de caja</label>
-        <input type="text" id="inv-material-caja" placeholder="Ej: Acero inoxidable 316L" />
-      </div>
-      <div class="field">
-        <label>Material de correa / brazalete</label>
-        <input type="text" id="inv-material-correa" placeholder="Ej: Acero, silicona, cuero..." />
-      </div>
-      <div class="field">
-        <label>Color de esfera</label>
-        <input type="text" id="inv-color-esfera" placeholder="Ej: Azul, negro, blanco..." />
-      </div>
-      <div class="field">
-        <label>Tipo de movimiento</label>
-        <select id="inv-movimiento">
-          <option value="">— Seleccionar —</option>
-          <option value="Cuarzo japonés">Cuarzo japonés</option>
-          <option value="Automático">Automático</option>
-          <option value="Cronógrafo cuarzo">Cronógrafo cuarzo</option>
-          <option value="Solar">Solar</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Resistencia al agua</label>
-        <input type="text" id="inv-agua" placeholder="Ej: 200M, 100M..." />
-      </div>
-      <div class="field">
-        <label>Cristal</label>
-        <input type="text" id="inv-cristal" placeholder="Ej: Mineral, Zafiro, Flame Fusion..." />
-      </div>
-      <div class="field">
-        <label>Color / variante</label>
-        <input type="text" id="inv-color" placeholder="Ej: Dorado/negro, plateado..." />
-      </div>
-    </div>
-    <div class="field">
-      <label>Notas adicionales</label>
-      <textarea id="inv-notas" rows="2" placeholder="Características especiales, edición limitada, detalles relevantes..."></textarea>
-    </div>
-
-    <div class="divider-text">Costos y precio</div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Costo unitario ($)</label>
-        <div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
-      </div>
-      <div class="field">
-        <label>Gastos de importación ($) <span style="color:var(--muted);font-weight:400;">— dejar en 0 si está en tránsito</span></label>
-        <div class="currency-wrap"><input type="number" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
-      <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:120px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Costo total</div>
-        <div id="inv-preview-costo" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--white);">$0.00</div>
-      </div>
-      <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:120px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Margen estimado</div>
-        <div id="inv-preview-margen" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">—</div>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Precio de venta objetivo ($)</label>
-        <div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
-      </div>
-      <div class="field">
-        <label>Estado</label>
-        <select id="inv-estado">
-          <option value="disponible">✅ Disponible</option>
-          <option value="transito">🚢 En tránsito</option>
-          <option value="reservado">🟡 Reservado</option>
-          <option value="vendido">🔴 Vendido</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="divider-text">Imagen</div>
-    <div class="field">
-      <div style="display:flex;gap:8px;align-items:flex-start;">
-        <div style="flex:1;">
-          <input type="url" id="inv-foto" placeholder="https://i.imgur.com/...jpg — URL directa de imagen" oninput="previewFoto()" />
-          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Sube la foto a <strong style="color:var(--white)">imgur.com</strong>, clic derecho → copiar dirección de imagen</div>
-        </div>
-        <div id="inv-foto-preview" style="width:64px;height:64px;border-radius:8px;border:1px solid var(--border);background:var(--dark);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;">📷</div>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-      <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>
-      <button class="btn btn-outline" onclick="cancelarEdicion()" id="inv-cancel-btn" style="display:none;">Cancelar</button>
-    </div>
-  </div>
-
+  <!-- Lista -->
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div class="card-title" style="margin:0;">Unidades registradas</div>
@@ -694,6 +574,151 @@
       </div>
     </div>
     <div id="inv-lista"><div class="empty"><span>📦</span>Sin unidades registradas aún.</div></div>
+  </div>
+
+  <!-- FORMULARIO — oculto por defecto -->
+  <div id="inv-form-wrapper" style="display:none;">
+    <div class="card" style="border-color:var(--gold-dim);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="card-title" id="inv-form-title" style="margin:0;">Registrar unidad</div>
+        <button class="btn btn-outline btn-sm" onclick="toggleFormulario()">✕ Cerrar</button>
+      </div>
+      <input type="hidden" id="inv-edit-index" value="" />
+
+      <div class="divider-text">Identificación</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Modelo</label>
+          <input type="text" id="inv-nombre" placeholder="Ej: Invicta Pro Diver 8926OB" />
+        </div>
+        <div class="field">
+          <label>Referencia</label>
+          <input type="text" id="inv-sku" placeholder="Ej: INV-8926OB" />
+        </div>
+        <div class="field">
+          <label>Colección</label>
+          <input type="text" id="inv-coleccion" placeholder="Ej: Pro Diver, Bolt, Subaqua..." />
+        </div>
+        <div class="field">
+          <label>Género</label>
+          <select id="inv-genero">
+            <option value="hombre">Hombre</option>
+            <option value="mujer">Mujer</option>
+            <option value="unisex">Unisex</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider-text">Especificaciones técnicas</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Diámetro de caja (mm)</label>
+          <input type="number" id="inv-mm" placeholder="Ej: 48" />
+        </div>
+        <div class="field">
+          <label>Material de caja</label>
+          <input type="text" id="inv-material-caja" placeholder="Ej: Acero inoxidable 316L" />
+        </div>
+        <div class="field">
+          <label>Material de correa / brazalete</label>
+          <input type="text" id="inv-material-correa" placeholder="Ej: Acero, silicona, cuero..." />
+        </div>
+        <div class="field">
+          <label>Color de esfera</label>
+          <input type="text" id="inv-color-esfera" placeholder="Ej: Azul, negro, blanco..." />
+        </div>
+        <div class="field">
+          <label>Tipo de movimiento</label>
+          <select id="inv-movimiento">
+            <option value="">— Seleccionar —</option>
+            <option value="Cuarzo japonés">Cuarzo japonés</option>
+            <option value="Automático">Automático</option>
+            <option value="Cronógrafo cuarzo">Cronógrafo cuarzo</option>
+            <option value="Solar">Solar</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Resistencia al agua</label>
+          <input type="text" id="inv-agua" placeholder="Ej: 200M, 100M..." />
+        </div>
+        <div class="field">
+          <label>Cristal</label>
+          <input type="text" id="inv-cristal" placeholder="Ej: Mineral, Zafiro, Flame Fusion..." />
+        </div>
+        <div class="field">
+          <label>Color / variante</label>
+          <input type="text" id="inv-color" placeholder="Ej: Dorado/negro, plateado..." />
+        </div>
+      </div>
+      <div class="field">
+        <label>Notas adicionales</label>
+        <textarea id="inv-notas" rows="2" placeholder="Características especiales, edición limitada, detalles relevantes..."></textarea>
+      </div>
+
+      <div class="divider-text">Costos y precio</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Costo unitario ($)</label>
+          <div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
+        </div>
+        <div class="field">
+          <label>Gastos de importación ($) <span style="color:var(--muted);font-weight:400;">— 0 si está en tránsito</span></label>
+          <div class="currency-wrap"><input type="number" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
+        </div>
+      </div>
+
+      <!-- Costo total + margen preview -->
+      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:110px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Costo total</div>
+          <div id="inv-preview-costo" style="font-family:'DM Mono',monospace;font-size:18px;">$0.00</div>
+        </div>
+        <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:110px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Margen estimado</div>
+          <div id="inv-preview-margen" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">—</div>
+        </div>
+        <div style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:110px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Ganancia estimada</div>
+          <div id="inv-preview-ganancia" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">—</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Precio de venta objetivo ($)</label>
+          <div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
+        </div>
+        <div class="field">
+          <label>Precio mínimo aceptable ($) <span style="color:var(--muted);font-weight:400;">— no vender por debajo de esto</span></label>
+          <div class="currency-wrap"><input type="number" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div>
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <select id="inv-estado">
+            <option value="disponible">✅ Disponible</option>
+            <option value="transito">🚢 En tránsito</option>
+            <option value="reservado">🟡 Reservado</option>
+            <option value="vendido">🔴 Vendido</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider-text">Imagen</div>
+      <div class="field">
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="flex:1;">
+            <input type="url" id="inv-foto" placeholder="https://i.imgur.com/...jpg — URL directa" oninput="previewFoto()" />
+            <div style="font-size:11px;color:var(--muted);margin-top:5px;">Sube la foto a <strong style="color:var(--white)">imgur.com</strong>, clic derecho sobre la imagen → copiar dirección de imagen</div>
+          </div>
+          <div id="inv-foto-preview" style="width:64px;height:64px;border-radius:8px;border:1px solid var(--border);background:var(--dark);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;">📷</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>
+        <button class="btn btn-outline" onclick="cancelarEdicion()" id="inv-cancel-btn" style="display:none;">Cancelar edición</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1114,6 +1139,7 @@ function agregarProducto() {
   const importacion = parseFloat(document.getElementById('inv-importacion').value) || 0;
   const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
   const estado = document.getElementById('inv-estado').value;
+  const precioMin = parseFloat(document.getElementById('inv-precio-min').value) || 0;
   const foto = document.getElementById('inv-foto').value.trim();
   const costoTotal = costo + importacion;
   const margen = costoTotal > 0 && precio > 0 ? Math.round(((precio - costoTotal) / precio) * 100) : 0;
@@ -1181,16 +1207,37 @@ function calcularMargenPreview() {
   const costo = parseFloat(document.getElementById('inv-costo').value) || 0;
   const importacion = parseFloat(document.getElementById('inv-importacion').value) || 0;
   const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+  const precioMin = parseFloat(document.getElementById('inv-precio-min').value) || 0;
   const total = costo + importacion;
+
+  // Costo total
   document.getElementById('inv-preview-costo').textContent = '$' + total.toFixed(2);
+
+  // Margen y ganancia
   if (total > 0 && precio > 0) {
     const margen = Math.round(((precio - total) / precio) * 100);
-    const el = document.getElementById('inv-preview-margen');
-    el.textContent = margen + '%';
-    el.style.color = margen >= 30 ? 'var(--green)' : margen >= 15 ? 'var(--gold)' : 'var(--red)';
+    const ganancia = precio - total;
+    const elM = document.getElementById('inv-preview-margen');
+    const elG = document.getElementById('inv-preview-ganancia');
+    elM.textContent = margen + '%';
+    elM.style.color = margen >= 30 ? 'var(--green)' : margen >= 15 ? 'var(--gold)' : 'var(--red)';
+    elG.textContent = '$' + ganancia.toFixed(2);
+    elG.style.color = ganancia > 0 ? 'var(--green)' : 'var(--red)';
   } else {
-    document.getElementById('inv-preview-margen').textContent = '—';
-    document.getElementById('inv-preview-margen').style.color = 'var(--muted)';
+    ['inv-preview-margen','inv-preview-ganancia'].forEach(function(id) {
+      document.getElementById(id).textContent = '—';
+      document.getElementById(id).style.color = 'var(--muted)';
+    });
+  }
+
+  // Alerta precio mínimo
+  const minField = document.getElementById('inv-precio-min');
+  if (precioMin > 0 && total > 0 && precioMin < total) {
+    minField.style.borderColor = 'var(--red)';
+    minField.title = '⚠️ El precio mínimo está por debajo del costo total';
+  } else {
+    minField.style.borderColor = '';
+    minField.title = '';
   }
 }
 
@@ -1230,7 +1277,7 @@ function agregarProducto() {
 
   if (!nombre) { alert('Escribe el modelo del producto.'); return; }
 
-  const item = { nombre, sku, coleccion, genero, mm, materialCaja, materialCorrea, colorEsfera, movimiento, agua, cristal, color, notas, costo, importacion, costoTotal, precio, margen, estado, foto, fecha: new Date().toLocaleDateString('es-MX') };
+  const item = { nombre, sku, coleccion, genero, mm, materialCaja, materialCorrea, colorEsfera, movimiento, agua, cristal, color, notas, costo, importacion, costoTotal, precio, precioMin, margen, estado, foto, fecha: new Date().toLocaleDateString('es-MX') };
 
   if (editIdx !== '') {
     state.inventario[parseInt(editIdx)] = item;
@@ -1245,8 +1292,9 @@ function agregarProducto() {
 function limpiarFormulario() {
   ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa',
    'inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas',
-   'inv-costo','inv-importacion','inv-precio','inv-foto'].forEach(function(id) {
-    document.getElementById(id).value = '';
+   'inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
   });
   document.getElementById('inv-genero').value = 'hombre';
   document.getElementById('inv-movimiento').value = '';
@@ -1254,23 +1302,28 @@ function limpiarFormulario() {
   document.getElementById('inv-edit-index').value = '';
   document.getElementById('inv-foto-preview').textContent = '📷';
   document.getElementById('inv-preview-costo').textContent = '$0.00';
-  document.getElementById('inv-preview-margen').textContent = '—';
-  document.getElementById('inv-preview-margen').style.color = 'var(--muted)';
+  ['inv-preview-margen','inv-preview-ganancia'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.textContent = '—'; el.style.color = 'var(--muted)'; }
+  });
   document.getElementById('inv-form-title').textContent = 'Registrar unidad';
   document.getElementById('inv-submit-btn').textContent = 'Registrar unidad';
   document.getElementById('inv-cancel-btn').style.display = 'none';
+  // Close form and reset button
+  toggleFormulario(false);
 }
 
 function cancelarEdicion() { limpiarFormulario(); }
 
 function editarProducto(i) {
   const p = state.inventario[i];
+  toggleFormulario(true);
   const fields = {
     'inv-nombre': p.nombre, 'inv-sku': p.sku, 'inv-coleccion': p.coleccion,
     'inv-mm': p.mm, 'inv-material-caja': p.materialCaja, 'inv-material-correa': p.materialCorrea,
     'inv-color-esfera': p.colorEsfera, 'inv-agua': p.agua, 'inv-cristal': p.cristal,
     'inv-color': p.color, 'inv-notas': p.notas, 'inv-costo': p.costo,
-    'inv-importacion': p.importacion, 'inv-precio': p.precio, 'inv-foto': p.foto
+    'inv-importacion': p.importacion, 'inv-precio': p.precio, 'inv-precio-min': p.precioMin || '', 'inv-foto': p.foto
   };
   Object.entries(fields).forEach(function(e) {
     var el = document.getElementById(e[0]);
@@ -1285,7 +1338,6 @@ function editarProducto(i) {
   document.getElementById('inv-cancel-btn').style.display = 'inline-flex';
   calcularMargenPreview();
   if (p.foto) previewFoto();
-  document.getElementById('inv-form-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
   cerrarModal();
 }
 
@@ -1319,8 +1371,12 @@ function verDetalle(i) {
       '<div style="font-family:DM Mono,monospace;font-size:16px;">' + (importPending ? '—' : '$' + (p.costoTotal || 0).toFixed(2)) + '</div>' +
     '</div>' +
     '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
-      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Precio venta</div>' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Precio objetivo</div>' +
       '<div style="font-family:DM Mono,monospace;font-size:16px;color:var(--gold);">$' + (p.precio || 0).toLocaleString() + '</div>' +
+    '</div>' +
+    '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Precio mínimo</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:16px;color:var(--red);">' + (p.precioMin ? '$' + p.precioMin.toLocaleString() : '—') + '</div>' +
     '</div>' +
     '<div style="flex:1;min-width:100px;background:var(--dark);border-radius:8px;padding:12px;text-align:center;">' +
       '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;">Margen</div>' +
