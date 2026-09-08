@@ -1341,8 +1341,9 @@ async function autocompletarReloj() {
   mostrarAiStatus('Consultando informacion con IA...', 'loading');
 
   try {
-    const res = await fetch(WORKER_URL, {
+   const res = await fetch(WORKER_URL, {
       method: 'POST',
+      mode: 'cors', // <-- ¡ESTA ES LA LÍNEA MÁGICA QUE FALTA!
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ referencia: ref })
     });
