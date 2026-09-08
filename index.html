@@ -1407,6 +1407,59 @@ function mostrarAiStatus(mensaje, tipo) {
   el.style.background = c.bg;
   el.style.color = c.color;
 }
+  /* ============================================================
+   SUBIDA DE FOTOS A R2 (VIA EL MISMO WORKER)
+   ============================================================
+   Agrega este codigo junto al de autocompletar-groq-proxy.js
+   (usa la misma variable WORKER_URL que ya definiste ahi,
+   no la dupliques).
+
+   Tambien necesitas agregar un <input type="file"> en tu HTML,
+   ver instrucciones de chat para el paso exacto.
+   ============================================================ */
+
+/**
+ * Se llama cuando el usuario selecciona un archivo en el
+ * input de tipo file. Sube la imagen al Worker (que la guarda
+ * en R2) y coloca la URL resultante en el campo #inv-foto,
+ * reutilizando tu preview existente.
+ */
+async function subirFoto(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  mostrarAiStatus('Subiendo imagen...', 'loading');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(WORKER_URL + '/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      mostrarAiStatus('Error al subir la imagen: ' + (data.error || 'desconocido'), 'warn');
+      return;
+    }
+
+    document.getElementById('inv-foto').value = data.url;
+
+    // Si tu codigo original tiene una funcion previewFoto(), la reutilizamos
+    // para mostrar el thumbnail de 64x64 que ya tenias.
+    if (typeof previewFoto === 'function') {
+      previewFoto();
+    }
+
+    mostrarAiStatus('Imagen subida correctamente.', 'ok');
+
+  } catch (err) {
+    mostrarAiStatus('Error de conexion al subir la imagen.', 'warn');
+  }
+}
 
 // =================== CONTENIDO ===================
 const weekPlan=[
