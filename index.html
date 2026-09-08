@@ -1305,74 +1305,100 @@ function verDetalle(i){
 }
 function cerrarModal(){document.getElementById('inv-modal').style.display='none';document.body.style.overflow='';}
 
-// =================== AI AUTOFILL (DIRECTO CON GEMINI) ===================
-async function autocompletarReloj(){
-  var ref = document.getElementById('inv-sku').value.trim();
-  if(!ref){ mostrarAiStatus('Ingresa el numero de referencia primero.','warn'); return; }
-  
-  var btn = document.getElementById('btn-autocompletar'); 
-  btn.disabled = true; btn.textContent = 'Buscando...';
-  mostrarAiStatus('Consultando información con IA...','loading');
-  
-  const API_KEY = 'AQ.Ab8RN6Ik_KPHdGAhiiTLzYxM8sHh4SeHxxV2XHfluVOiqO3dzg';
-  const prompt = 'Eres un experto en relojería. Identifica este reloj: "' + ref + '". Devuelve un JSON exacto y plano sin comillas de bloque ni formato markdown (solo las llaves): {"encontrado":true,"nombre":"Modelo","coleccion":"Coleccion","genero":"hombre","mm":"42","material_caja":"Acero","material_correa":"Acero","color_esfera":"Negro","movimiento":"Automatico","agua":"200M","cristal":"Mineral","color":"Plata","notas":""}. Si no lo reconoces, devuelve exactamente: {"encontrado":false,"mensaje":"No encontrado"}';
+/* ============================================================
+   AUTOCOMPLETADO CON GROQ (VIA PROXY DE CLOUDFLARE WORKER)
+   ============================================================
+   Reemplaza tu bloque completo
+   "=== AUTOCOMPLETAR (GEMINI) ==="
+   por este codigo. Elimina tambien la linea con la API_KEY vieja
+   de Gemini: ya no la necesitas aqui, ahora vive en el Worker.
 
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' + API_KEY;
-  
-  const payload = {
-    "contents": [{"parts": [{"text": prompt}]}],
-    "generationConfig": { "temperature": 0.1 }
-  };
+   IMPORTANTE: cambia WORKER_URL por la URL real que te da
+   Cloudflare al desplegar tu Worker (ver instrucciones de chat).
+   ============================================================ */
+
+const WORKER_URL = 'aphillips-autocompleter.aphillipsstore.workers.dev'; // <-- CAMBIA ESTO
+
+async function autocompletarReloj() {
+  const ref = document.getElementById('inv-sku').value.trim();
+  const btn = document.getElementById('btn-autocompletar');
+
+  if (!ref) {
+    mostrarAiStatus('Ingresa el numero de referencia primero.', 'warn');
+    return;
+  }
+
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Buscando...';
+  mostrarAiStatus('Consultando informacion con IA...', 'loading');
 
   try {
-    var res = await fetch(url, {
+    const res = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ referencia: ref })
     });
-    
-    var data = await res.json();
-    
-    if (data.error) {
-      mostrarAiStatus('Error de la API: ' + data.error.message, 'error');
-      return;
-    }
-    
-    if (!data.candidates || !data.candidates[0].content) {
-      mostrarAiStatus('No se encontró información para esta referencia.', 'warn');
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      mostrarAiStatus(
+        'Error: ' + (data.error || 'no se pudo consultar la IA') + '. Llena los campos manualmente.',
+        'warn'
+      );
       return;
     }
 
-    let texto = data.candidates[0].content.parts[0].text;
-    texto = texto.replace(/```json/g, '').replace(/```/g, '').trim();
-    var json = JSON.parse(texto);
-    
-    if(json.encontrado){
-      var f=(id,v)=>{var el=document.getElementById(id);if(el&&v)el.value=v;};
-      
-      f('inv-nombre',json.nombre); f('inv-coleccion',json.coleccion); f('inv-mm',json.mm);
-      f('inv-material-caja',json.material_caja); f('inv-material-correa',json.material_correa);
-      f('inv-color-esfera',json.color_esfera); f('inv-agua',json.agua); f('inv-cristal',json.cristal);
-      f('inv-color',json.color); f('inv-notas',json.notas);
-      
-      if(json.genero){var sg=document.getElementById('inv-genero');if(sg)sg.value=json.genero;}
-      if(json.movimiento){var sm=document.getElementById('inv-movimiento');if(sm)sm.value=json.movimiento;}
-      
-      mostrarAiStatus('Campos completados con éxito.','ok');
-    } else {
-      mostrarAiStatus(json.mensaje || 'No reconocido. Llena los datos manualmente.','warn');
+    if (data.encontrado === false) {
+      mostrarAiStatus('La IA no reconocio ese modelo. Llena los campos manualmente.', 'warn');
+      return;
     }
-  } catch(e) {
-    mostrarAiStatus('Error de conexión con la IA.','error');
+
+    document.getElementById('inv-nombre').value = data.nombre || '';
+    document.getElementById('inv-coleccion').value = data.coleccion || '';
+    document.getElementById('inv-genero').value = data.genero || 'hombre';
+    document.getElementById('inv-mm').value = data.mm || '';
+    document.getElementById('inv-material-caja').value = data.materialCaja || '';
+    document.getElementById('inv-material-correa').value = data.materialCorrea || '';
+    document.getElementById('inv-color-esfera').value = data.colorEsfera || '';
+    document.getElementById('inv-movimiento').value = data.movimiento || '';
+    document.getElementById('inv-agua').value = data.agua || '';
+    document.getElementById('inv-cristal').value = data.cristal || '';
+    document.getElementById('inv-color').value = data.color || '';
+
+    mostrarAiStatus(
+      'Datos completados: ' + (data.nombre || ref) + '. Verifica que sean correctos antes de guardar.',
+      'ok'
+    );
+
+  } catch (err) {
+    mostrarAiStatus('Error de conexion. Intenta de nuevo o llena manualmente.', 'warn');
   } finally {
-    btn.disabled = false; btn.textContent = 'Auto-llenar';
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
   }
 }
-function mostrarAiStatus(msg,tipo){
-  var el=document.getElementById('ai-status');if(!el)return;
-  var s={loading:'background:var(--accent-light);color:var(--accent);border-left:3px solid var(--accent);',ok:'background:var(--green-bg);color:var(--green);border-left:3px solid var(--green);',warn:'background:var(--accent-light);color:#7a6000;border-left:3px solid var(--accent);',error:'background:var(--red-bg);color:var(--red);border-left:3px solid var(--red);'};
-  el.style.cssText='display:block;font-size:11px;margin-top:6px;padding:8px 12px;border-radius:2px;'+(s[tipo]||'');
-  el.textContent=msg;
+
+/**
+ * Muestra el mensaje de estado debajo del boton "Auto-llenar".
+ * Reutiliza el mismo div #ai-status que ya tenias.
+ * tipo: 'ok' | 'warn' | 'loading'
+ */
+function mostrarAiStatus(mensaje, tipo) {
+  const el = document.getElementById('ai-status');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = mensaje;
+
+  const colores = {
+    ok: { bg: 'var(--green-bg)', color: 'var(--green)' },
+    warn: { bg: 'var(--accent-light)', color: 'var(--accent)' },
+    loading: { bg: 'var(--bg2)', color: 'var(--muted)' }
+  };
+  const c = colores[tipo] || colores.warn;
+  el.style.background = c.bg;
+  el.style.color = c.color;
 }
 
 // =================== CONTENIDO ===================
