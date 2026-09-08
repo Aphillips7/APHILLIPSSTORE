@@ -460,12 +460,19 @@
         <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
         <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
       </div>
-      <div class="divider-text">Imagen</div>
+<div class="divider-text">Imagen</div>
       <div class="field">
         <div style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="flex:1;"><input type="url" id="inv-foto" placeholder="https://i.imgur.com/...jpg" oninput="previewFoto()" /><div style="font-size:11px;color:var(--muted);margin-top:5px;">Sube la foto a <strong style="color:var(--black)">imgur.com</strong>, clic derecho sobre la imagen, copiar direccion de imagen</div></div>
-          <div id="inv-foto-preview" style="width:64px;height:64px;border:1px solid var(--border);background:var(--bg2);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-align:center;"></div>
-        </div>
+          <div style="flex:1;">
+            
+            <!-- AQUÍ AGREGASTE EL BOTÓN PARA SUBIR ARCHIVOS -->
+            <input type="file" id="inv-foto-input" accept="image/*" onchange="subirFoto(this)" style="margin-bottom:8px;" />
+            
+            <!-- ESTE ES TU INPUT VIEJO (SE QUEDA DE RESPALDO) -->
+            <input type="url" id="inv-foto" placeholder="https://i.imgur.com/...jpg" oninput="previewFoto()" />
+            
+            <div style="font-size:11px;color:var(--muted);margin-top:5px;">Sube la foto a <strong style="color:var(--black)">imgur.com</strong>, clic derecho sobre la imagen, copiar direccion de imagen</div>
+          </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>
