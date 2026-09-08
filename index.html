@@ -1317,7 +1317,7 @@ async function autocompletarReloj(){
   const API_KEY = 'AQ.Ab8RN6Ik_KPHdGAhiiTLzYxM8sHh4SeHxxV2XHfluVOiqO3dzg';
   const prompt = 'Eres un experto en relojería. Identifica este reloj: "' + ref + '". Devuelve un JSON exacto y plano sin comillas de bloque ni formato markdown (solo las llaves): {"encontrado":true,"nombre":"Modelo","coleccion":"Coleccion","genero":"hombre","mm":"42","material_caja":"Acero","material_correa":"Acero","color_esfera":"Negro","movimiento":"Automatico","agua":"200M","cristal":"Mineral","color":"Plata","notas":""}. Si no lo reconoces, devuelve exactamente: {"encontrado":false,"mensaje":"No encontrado"}';
 
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + API_KEY;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' + API_KEY;
   
   const payload = {
     "contents": [{"parts": [{"text": prompt}]}],
