@@ -1303,21 +1303,50 @@ function verDetalle(i){
 }
 function cerrarModal(){document.getElementById('inv-modal').style.display='none';document.body.style.overflow='';}
 
-// =================== AI AUTOFILL ===================
+// =================== AI AUTOFILL (DIRECTO CON GEMINI) ===================
 async function autocompletarReloj(){
   var ref = document.getElementById('inv-sku').value.trim();
   if(!ref){ mostrarAiStatus('Ingresa el numero de referencia primero.','warn'); return; }
   
   var btn = document.getElementById('btn-autocompletar'); 
   btn.disabled = true; btn.textContent = 'Buscando...';
-  mostrarAiStatus('Consultando informacion de forma segura con IA...','loading');
+  mostrarAiStatus('Consultando información con IA...','loading');
   
+  // Tu API Key exacta integrada directo en el navegador
+  const API_KEY = 'AQ.Ab8RN6Ik_KPHdGAhiiTLzYxM8sHh4SeHxxV2XHfluVOiqO3dzg';
+  const prompt = 'Eres un experto en relojería. Identifica este reloj: "' + ref + '". Devuelve un JSON exacto y plano sin comillas de bloque ni formato markdown (solo las llaves): {"encontrado":true,"nombre":"Modelo","coleccion":"Coleccion","genero":"hombre","mm":"42","material_caja":"Acero","material_correa":"Acero","color_esfera":"Negro","movimiento":"Automatico","agua":"200M","cristal":"Mineral","color":"Plata","notas":""}. Si no lo reconoces, devuelve exactamente: {"encontrado":false,"mensaje":"No encontrado"}';
+
+  const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + API_KEY;
+  
+  const payload = {
+    "contents": [{"parts": [{"text": prompt}]}],
+    "generationConfig": { "temperature": 0.1 }
+  };
+
   try {
-    var res = await fetch(SCRIPT_URL + '?action=autocompletar&ref=' + encodeURIComponent(ref));
-    var jsonRes = await res.json();
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
     
-    if(jsonRes.status === 'ok' && jsonRes.data.encontrado){
-      var json = jsonRes.data;
+    var data = await res.json();
+    
+    if (data.error) {
+      mostrarAiStatus('Error de la API: ' + data.error.message, 'error');
+      return;
+    }
+    
+    if (!data.candidates || !data.candidates[0].content) {
+      mostrarAiStatus('No se encontró información para esta referencia.', 'warn');
+      return;
+    }
+
+    let texto = data.candidates[0].content.parts[0].text;
+    texto = texto.replace(/```json/g, '').replace(/```/g, '').trim();
+    var json = JSON.parse(texto);
+    
+    if(json.encontrado){
       var f=(id,v)=>{var el=document.getElementById(id);if(el&&v)el.value=v;};
       
       f('inv-nombre',json.nombre); f('inv-coleccion',json.coleccion); f('inv-mm',json.mm);
@@ -1328,21 +1357,15 @@ async function autocompletarReloj(){
       if(json.genero){var sg=document.getElementById('inv-genero');if(sg)sg.value=json.genero;}
       if(json.movimiento){var sm=document.getElementById('inv-movimiento');if(sm)sm.value=json.movimiento;}
       
-      mostrarAiStatus('Campos completados. Revisa y ajusta manualmente si es necesario.','ok');
+      mostrarAiStatus('Campos completados con éxito.','ok');
     } else {
-      mostrarAiStatus(jsonRes.msg || 'No reconocido. Llena los datos manualmente.','warn');
+      mostrarAiStatus(json.mensaje || 'No reconocido. Llena los datos manualmente.','warn');
     }
   } catch(e) {
-    mostrarAiStatus('Error de conexion. Puedes llenar el formulario manual.','error');
+    mostrarAiStatus('Error de conexión con la IA.','error');
   } finally {
     btn.disabled = false; btn.textContent = 'Auto-llenar';
   }
-}
-function mostrarAiStatus(msg,tipo){
-  var el=document.getElementById('ai-status');if(!el)return;
-  var s={loading:'background:var(--accent-light);color:var(--accent);border-left:3px solid var(--accent);',ok:'background:var(--green-bg);color:var(--green);border-left:3px solid var(--green);',warn:'background:var(--accent-light);color:#7a6000;border-left:3px solid var(--accent);',error:'background:var(--red-bg);color:var(--red);border-left:3px solid var(--red);'};
-  el.style.cssText='display:block;font-size:11px;margin-top:6px;padding:8px 12px;border-radius:2px;'+(s[tipo]||'');
-  el.textContent=msg;
 }
 
 // =================== CONTENIDO ===================
