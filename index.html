@@ -424,11 +424,7 @@
       <div class="grid-2">
         <div class="field"><label>Modelo</label><input type="text" id="inv-nombre" placeholder="Ej: Invicta Pro Diver 8926OB" /></div>
         <div class="field"><label>Referencia</label>
-          <div style="display:flex;gap:8px;align-items:flex-start;">
-            <input type="text" id="inv-sku" placeholder="Ej: 8926OB..." style="flex:1;" />
-            <button class="btn btn-gold btn-sm" onclick="autocompletarReloj()" id="btn-autocompletar" style="white-space:nowrap;flex-shrink:0;">Auto-llenar</button>
-          </div>
-          <div id="ai-status" style="display:none;font-size:11px;margin-top:6px;padding:8px 12px;border-radius:2px;"></div>
+          <input type="text" id="inv-sku" placeholder="Ej: 8926OB..." />
         </div>
         <div class="field"><label>Coleccion</label><input type="text" id="inv-coleccion" placeholder="Ej: Pro Diver, Bolt..." /></div>
         <div class="field"><label>Genero</label><select id="inv-genero"><option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="unisex">Unisex</option></select></div>
@@ -462,17 +458,14 @@
       </div>
 <div class="divider-text">Imagen</div>
       <div class="field">
-        <div style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="flex:1;">
-            
-            <!-- AQUÍ AGREGASTE EL BOTÓN PARA SUBIR ARCHIVOS -->
-            <input type="file" id="inv-foto-input" accept="image/*" onchange="subirFoto(this)" style="margin-bottom:8px;" />
-            
-            <!-- ESTE ES TU INPUT VIEJO (SE QUEDA DE RESPALDO) -->
-            <input type="url" id="inv-foto" placeholder="https://i.imgur.com/...jpg" oninput="previewFoto()" />
-            
-            <div style="font-size:11px;color:var(--muted);margin-top:5px;">Sube la foto a <strong style="color:var(--black)">imgur.com</strong>, clic derecho sobre la imagen, copiar direccion de imagen</div>
+        <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+          <div id="inv-foto-preview" style="width:72px;height:72px;border-radius:2px;border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);flex-shrink:0;overflow:hidden;text-align:center;">Sin foto</div>
+          <div style="flex:1;min-width:180px;">
+            <input type="file" id="inv-foto-input" accept="image/*" onchange="subirFotoLocal(this)" />
+            <input type="hidden" id="inv-foto" />
+            <div id="inv-foto-status" style="font-size:11px;color:var(--muted);margin-top:6px;">Puedes tomar una foto o elegirla de tu galeria, en cualquier formato (JPG, PNG, etc). Se guarda directo en el dispositivo, sin depender de internet ni de enlaces.</div>
           </div>
+        </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>
@@ -1227,8 +1220,9 @@ function renderInventario(){
 function previewFoto(){
   var url=document.getElementById('inv-foto').value.trim();
   var preview=document.getElementById('inv-foto-preview');
+  if(!preview)return;
   if(url){var img=document.createElement('img');img.src=url;img.style.cssText='width:100%;height:100%;object-fit:cover;';img.onerror=()=>{preview.textContent='?';};preview.innerHTML='';preview.appendChild(img);}
-  else{preview.textContent='';}
+  else{preview.textContent='Sin foto';}
 }
 
 // =================== VENTA MODAL ===================
@@ -1313,152 +1307,54 @@ function verDetalle(i){
 function cerrarModal(){document.getElementById('inv-modal').style.display='none';document.body.style.overflow='';}
 
 /* ============================================================
-   AUTOCOMPLETADO CON GROQ (VIA PROXY DE CLOUDFLARE WORKER)
+   SUBIDA DE FOTOS LOCAL (SIN IA, SIN URL, SIN INTERNET)
    ============================================================
-   Reemplaza tu bloque completo
-   "=== AUTOCOMPLETAR (GEMINI) ==="
-   por este codigo. Elimina tambien la linea con la API_KEY vieja
-   de Gemini: ya no la necesitas aqui, ahora vive en el Worker.
-
-   IMPORTANTE: cambia WORKER_URL por la URL real que te da
-   Cloudflare al desplegar tu Worker (ver instrucciones de chat).
+   Funciona desde cualquier dispositivo (PC, tablet, celular) y
+   con cualquier formato de imagen comun (JPG, PNG, WEBP, etc).
+   La imagen se lee directo del dispositivo, se comprime un poco
+   para no llenar el almacenamiento local, y se guarda como texto
+   (base64) dentro del mismo campo #inv-foto que ya usaba el resto
+   del codigo (el picker, el listado, el detalle, etc siguen
+   funcionando igual).
    ============================================================ */
 
-const WORKER_URL = 'https://aphillips-autocomplear.aphillipsstore.workers.dev/'; // <-- CAMBIA ESTO
-
-async function autocompletarReloj() {
-  const ref = document.getElementById('inv-sku').value.trim();
-  const btn = document.getElementById('btn-autocompletar');
-
-  if (!ref) {
-    mostrarAiStatus('Ingresa el numero de referencia primero.', 'warn');
-    return;
-  }
-
-  const textoOriginal = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Buscando...';
-  mostrarAiStatus('Consultando informacion con IA...', 'loading');
-
-  try {
-   const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      mode: 'cors', // <-- ¡ESTA ES LA LÍNEA MÁGICA QUE FALTA!
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ referencia: ref })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || data.error) {
-      mostrarAiStatus(
-        'Error: ' + (data.error || 'no se pudo consultar la IA') + '. Llena los campos manualmente.',
-        'warn'
-      );
-      return;
-    }
-
-    if (data.encontrado === false) {
-      mostrarAiStatus('La IA no reconocio ese modelo. Llena los campos manualmente.', 'warn');
-      return;
-    }
-
-    document.getElementById('inv-nombre').value = data.nombre || '';
-    document.getElementById('inv-coleccion').value = data.coleccion || '';
-    document.getElementById('inv-genero').value = data.genero || 'hombre';
-    document.getElementById('inv-mm').value = data.mm || '';
-    document.getElementById('inv-material-caja').value = data.materialCaja || '';
-    document.getElementById('inv-material-correa').value = data.materialCorrea || '';
-    document.getElementById('inv-color-esfera').value = data.colorEsfera || '';
-    document.getElementById('inv-movimiento').value = data.movimiento || '';
-    document.getElementById('inv-agua').value = data.agua || '';
-    document.getElementById('inv-cristal').value = data.cristal || '';
-    document.getElementById('inv-color').value = data.color || '';
-
-    mostrarAiStatus(
-      'Datos completados: ' + (data.nombre || ref) + '. Verifica que sean correctos antes de guardar.',
-      'ok'
-    );
-
-  } catch (err) {
-    mostrarAiStatus('Error de conexion. Intenta de nuevo o llena manualmente.', 'warn');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = textoOriginal;
-  }
-}
-
-/**
- * Muestra el mensaje de estado debajo del boton "Auto-llenar".
- * Reutiliza el mismo div #ai-status que ya tenias.
- * tipo: 'ok' | 'warn' | 'loading'
- */
-function mostrarAiStatus(mensaje, tipo) {
-  const el = document.getElementById('ai-status');
-  if (!el) return;
-  el.style.display = 'block';
-  el.textContent = mensaje;
-
-  const colores = {
-    ok: { bg: 'var(--green-bg)', color: 'var(--green)' },
-    warn: { bg: 'var(--accent-light)', color: 'var(--accent)' },
-    loading: { bg: 'var(--bg2)', color: 'var(--muted)' }
-  };
-  const c = colores[tipo] || colores.warn;
-  el.style.background = c.bg;
-  el.style.color = c.color;
-}
-  /* ============================================================
-   SUBIDA DE FOTOS A R2 (VIA EL MISMO WORKER)
-   ============================================================
-   Agrega este codigo junto al de autocompletar-groq-proxy.js
-   (usa la misma variable WORKER_URL que ya definiste ahi,
-   no la dupliques).
-
-   Tambien necesitas agregar un <input type="file"> en tu HTML,
-   ver instrucciones de chat para el paso exacto.
-   ============================================================ */
-
-/**
- * Se llama cuando el usuario selecciona un archivo en el
- * input de tipo file. Sube la imagen al Worker (que la guarda
- * en R2) y coloca la URL resultante en el campo #inv-foto,
- * reutilizando tu preview existente.
- */
-async function subirFoto(input) {
+async function subirFotoLocal(input) {
   const file = input.files && input.files[0];
   if (!file) return;
 
-  mostrarAiStatus('Subiendo imagen...', 'loading');
-
-  const formData = new FormData();
-  formData.append('file', file);
+  const status = document.getElementById('inv-foto-status');
+  if (status) { status.style.color = 'var(--muted)'; status.textContent = 'Procesando imagen...'; }
 
   try {
-    const res = await fetch(WORKER_URL + '/upload', {
-      method: 'POST',
-      body: formData
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 900;
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => reject(new Error('No se pudo leer la imagen'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+      reader.readAsDataURL(file);
     });
 
-    const data = await res.json();
+    document.getElementById('inv-foto').value = dataUrl;
+    if (typeof previewFoto === 'function') previewFoto();
 
-    if (!res.ok || data.error) {
-      mostrarAiStatus('Error al subir la imagen: ' + (data.error || 'desconocido'), 'warn');
-      return;
-    }
-
-    document.getElementById('inv-foto').value = data.url;
-
-    // Si tu codigo original tiene una funcion previewFoto(), la reutilizamos
-    // para mostrar el thumbnail de 64x64 que ya tenias.
-    if (typeof previewFoto === 'function') {
-      previewFoto();
-    }
-
-    mostrarAiStatus('Imagen subida correctamente.', 'ok');
-
+    if (status) { status.style.color = 'var(--green)'; status.textContent = 'Imagen lista.'; }
   } catch (err) {
-    mostrarAiStatus('Error de conexion al subir la imagen.', 'warn');
+    if (status) { status.style.color = 'var(--red)'; status.textContent = 'No se pudo procesar la imagen. Intenta con otra.'; }
   }
 }
 
