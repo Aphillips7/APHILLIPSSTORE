@@ -520,24 +520,19 @@
 <!-- SYNC -->
 <div id="page-config" class="page">
   <div class="section-title">Sincronizacion y Respaldo</div>
-  <div class="section-sub">Tus datos seguros en Google Sheets y en tu computadora.</div>
+  <div class="section-sub">Tus datos en la nube (Firebase), visibles en todos tus dispositivos en tiempo real.</div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-    <div><div class="card-title" style="margin-bottom:4px;">Estado</div><div id="sync-status" style="font-size:13px;color:var(--muted);">Sin sincronizar aun</div></div>
+    <div><div class="card-title" style="margin-bottom:4px;">Estado</div><div id="sync-status" style="font-size:13px;color:var(--muted);">Conectando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <span style="font-size:12px;color:var(--green);background:var(--green-bg);border:1px solid var(--green);padding:4px 10px;border-radius:2px;">Sync automatico activo</span>
-      <button class="btn btn-gold btn-sm" onclick="syncToSheets()">Forzar sync</button>
-      <button class="btn btn-outline btn-sm" onclick="loadFromSheets()">Cargar nube</button>
+      <button class="btn btn-gold btn-sm" onclick="forzarSyncTodo()">Forzar sync</button>
     </div>
   </div>
   <div class="card">
-    <div class="card-title">Google Sheets</div>
-    <div class="field"><label>URL de Apps Script</label><input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/..." /></div>
-    <button class="btn btn-gold btn-sm" onclick="saveScriptUrl()">Guardar URL</button>
-    <div class="sep"></div>
-    <div class="rule-box"><div class="rule-box-title">Paso 1</div><div class="rule-box-body">Ve a sheets.google.com, crea un archivo nuevo. El script crea las hojas automaticamente.</div></div>
-    <div class="rule-box"><div class="rule-box-title">Paso 2</div><div class="rule-box-body">Extensiones → Apps Script. Pega el codigo del archivo apps-script.gs.</div></div>
-    <div class="rule-box"><div class="rule-box-title">Paso 3</div><div class="rule-box-body">Implementar → Nueva implementacion → Aplicacion web → Acceso: Cualquier usuario. Copia la URL.</div></div>
-    <div class="rule-box"><div class="rule-box-title">Paso 4</div><div class="rule-box-body">Pega la URL aqui arriba, guarda y presiona Forzar sync para probar.</div></div>
+    <div class="card-title">Como funciona</div>
+    <div class="rule-box"><div class="rule-box-title">Automatico</div><div class="rule-box-body">Cada cambio que hagas (agregar reloj, registrar venta, agregar cliente) se guarda solo, unos segundos despues de hacerlo. No necesitas hacer nada mas.</div></div>
+    <div class="rule-box"><div class="rule-box-title">Multiples dispositivos</div><div class="rule-box-body">Abre este mismo enlace en tu PC, tablet o celular y veras los mismos datos, actualizados en tiempo real.</div></div>
+    <div class="rule-box"><div class="rule-box-title">Sin internet</div><div class="rule-box-body">Si te quedas sin conexion, puedes seguir trabajando: los cambios se guardan en tu dispositivo y se sincronizan solos en cuanto vuelva la señal.</div></div>
   </div>
   <div class="card">
     <div class="card-title">Seguridad — PIN de acceso</div>
@@ -599,6 +594,23 @@
     </div>
   </div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script>
+// =================== FIREBASE ===================
+const firebaseConfig = {
+  apiKey: "AIzaSyCz8cHrafrPGYvp-x9iv1ccFQSobJrFmxo",
+  authDomain: "aphillips-store-733df.firebaseapp.com",
+  projectId: "aphillips-store-733df",
+  storageBucket: "aphillips-store-733df.firebasestorage.app",
+  messagingSenderId: "679941981880",
+  appId: "1:679941981880:web:f7332e914647ee624dd64d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+try { db.enablePersistence({ synchronizeTabs: true }).catch(function(){}); } catch(e){}
+</script>
 <script>
 // =================== STATE ===================
 const state = {
@@ -611,22 +623,26 @@ const state = {
   ideas: JSON.parse(localStorage.getItem('ideas') || '[]'),
 };
 
-let SCRIPT_URL = localStorage.getItem('scriptUrl') || '';
-let _syncTimer = null;
+const COLECCIONES = ['inventario', 'movimientos', 'clientes'];
+let _remoteIds = { inventario: new Set(), movimientos: new Set(), clientes: new Set() };
+let _syncTimers = {};
+let _firebaseListo = false;
 
 function save(key) {
   localStorage.setItem(key, JSON.stringify(state[key]));
-  scheduleAutoSync();
+  if (COLECCIONES.includes(key)) { scheduleSync(key); }
+  else { scheduleSync('config'); }
 }
 function saveMeta() {
   localStorage.setItem('meta', state.meta);
-  scheduleAutoSync();
+  scheduleSync('config');
 }
-function scheduleAutoSync() {
-  if (!SCRIPT_URL) return;
-  clearTimeout(_syncTimer);
+function scheduleSync(key) {
+  clearTimeout(_syncTimers[key]);
   setSyncStatus('Guardando...', 'var(--accent)');
-  _syncTimer = setTimeout(syncToSheets, 2000);
+  _syncTimers[key] = setTimeout(function () {
+    if (key === 'config') { syncConfig(); } else { syncColeccion(key); }
+  }, 1200);
 }
 
 // =================== NAV ===================
@@ -1415,44 +1431,134 @@ function renderClientes(){
 }
 function eliminarCliente(i){if(!confirm('Eliminar este cliente?'))return;state.clientes.splice(i,1);save('clientes');renderClientes();}
 
-// =================== SYNC ===================
+// =================== SYNC (FIREBASE / FIRESTORE) ===================
 function setSyncStatus(msg,color){
   var el=document.getElementById('sync-status');if(el){el.textContent=msg;el.style.color=color||'var(--muted)';}
   var nav=document.getElementById('nav-sync-indicator');if(nav){nav.textContent=msg;nav.style.color=color||'rgba(255,255,255,0.55)';nav.style.display='block';}
 }
-async function syncToSheets(){
-  if(!SCRIPT_URL)return;
+
+function idAleatorio(prefijo){
+  return prefijo+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
+}
+
+function asegurarIds(key){
+  state[key].forEach(function(item){
+    if(!item.id) item.id=idAleatorio(key.slice(0,3));
+    if(!item._ts) item._ts=Date.now();
+  });
+}
+
+async function syncColeccion(key){
+  if(!_firebaseListo) return;
+  asegurarIds(key);
   setSyncStatus('Sincronizando...','var(--accent)');
   try{
-    var data={movimientos:state.movimientos,inventario:state.inventario,clientes:state.clientes,meta:state.meta};
-    var encoded=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-    var url=SCRIPT_URL+'?action=saveAll&d='+encodeURIComponent(encoded);
-    var res=await fetch(url);var json=await res.json();
-    if(json.status==='ok'){var now=new Date().toLocaleTimeString('es-MX');setSyncStatus('Sincronizado · '+now,'var(--green)');localStorage.setItem('lastSync',now);}
-    else{setSyncStatus('Error: '+(json.msg||'desconocido'),'var(--red)');}
-  }catch(e){setSyncStatus('Sin conexion o URL incorrecta','var(--red)');}
+    var batch=db.batch();
+    var coll=db.collection(key);
+    var idsActuales=new Set();
+    state[key].forEach(function(item){
+      idsActuales.add(item.id);
+      batch.set(coll.doc(item.id),item);
+    });
+    _remoteIds[key].forEach(function(id){
+      if(!idsActuales.has(id)) batch.delete(coll.doc(id));
+    });
+    _remoteIds[key]=idsActuales;
+    await batch.commit();
+    var now=new Date().toLocaleTimeString('es-MX');
+    setSyncStatus('Sincronizado · '+now,'var(--green)');
+    localStorage.setItem('lastSync',now);
+  }catch(e){
+    setSyncStatus('Error de sincronizacion','var(--red)');
+  }
 }
-async function loadFromSheets(){
-  if(!SCRIPT_URL){alert('Configura la URL de Apps Script en Sync.');return;}
-  setSyncStatus('Cargando desde nube...','var(--accent)');
+
+async function syncConfig(){
+  if(!_firebaseListo) return;
+  setSyncStatus('Guardando...','var(--accent)');
   try{
-    var res=await fetch(SCRIPT_URL+'?action=loadAll');var json=await res.json();
-    if(json.status==='ok'){
-      if(json.data.movimientos&&json.data.movimientos.length)state.movimientos=json.data.movimientos;
-      if(json.data.inventario&&json.data.inventario.length)state.inventario=json.data.inventario;
-      if(json.data.clientes&&json.data.clientes.length)state.clientes=json.data.clientes;
-      if(json.data.meta)state.meta=parseFloat(json.data.meta)||0;
-      ['movimientos','inventario','clientes'].forEach(k=>save(k));localStorage.setItem('meta',state.meta);
-      var now=new Date().toLocaleTimeString('es-MX');setSyncStatus('Datos cargados · '+now,'var(--green)');localStorage.setItem('lastSync',now);
-      renderInicio();
-    }else{setSyncStatus('No se encontraron datos en la nube','var(--red)');}
-  }catch(e){setSyncStatus('Sin conexion o URL incorrecta','var(--red)');}
+    await db.collection('config').doc('main').set({
+      meta: state.meta,
+      tasks: state.tasks,
+      weekTasks: state.weekTasks,
+      ideas: state.ideas
+    });
+    var now=new Date().toLocaleTimeString('es-MX');
+    setSyncStatus('Sincronizado · '+now,'var(--green)');
+    localStorage.setItem('lastSync',now);
+  }catch(e){
+    setSyncStatus('Error de sincronizacion','var(--red)');
+  }
 }
-function saveScriptUrl(){
-  var url=document.getElementById('script-url-input').value.trim();
-  if(!url.startsWith('https://')){alert('La URL debe empezar con https://');return;}
-  SCRIPT_URL=url;localStorage.setItem('scriptUrl',url);
-  setSyncStatus('URL guardada. Listo para sincronizar.','var(--green)');alert('URL guardada. Ya puedes sincronizar.');
+
+function refrescarVista(key){
+  try{ renderInicio(); }catch(e){}
+  if(key==='inventario'){
+    try{ renderInventario(); }catch(e){}
+    try{ renderPicker(); }catch(e){}
+    try{ renderPickerCompra(); }catch(e){}
+  }else if(key==='movimientos'){
+    try{ renderHistorial(); }catch(e){}
+    try{ renderResumen(); }catch(e){}
+    try{ renderAnalisis(); }catch(e){}
+  }else if(key==='clientes'){
+    try{ renderClientes(); }catch(e){}
+  }else if(key==='config'){
+    try{ renderResumen(); }catch(e){}
+    try{ renderChecklist(); }catch(e){}
+    try{ renderIdeas(); }catch(e){}
+    try{ renderContenido(); }catch(e){}
+  }
+}
+
+function iniciarSincronizacionFirebase(){
+  firebase.auth().signInAnonymously().catch(function(){
+    setSyncStatus('No se pudo conectar','var(--red)');
+  });
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user) return;
+    _firebaseListo=true;
+
+    COLECCIONES.forEach(function(key){
+      db.collection(key).onSnapshot(function(snap){
+        var items=[];
+        var ids=new Set();
+        snap.forEach(function(doc){
+          var data=doc.data();
+          data.id=doc.id;
+          items.push(data);
+          ids.add(doc.id);
+        });
+        items.sort(function(a,b){return (b._ts||0)-(a._ts||0);});
+        _remoteIds[key]=ids;
+        state[key]=items;
+        localStorage.setItem(key,JSON.stringify(items));
+        refrescarVista(key);
+      }, function(){
+        setSyncStatus('Sin conexion','var(--red)');
+      });
+    });
+
+    db.collection('config').doc('main').onSnapshot(function(doc){
+      if(!doc.exists) return;
+      var data=doc.data();
+      if(typeof data.meta==='number'){ state.meta=data.meta; localStorage.setItem('meta',state.meta); }
+      if(Array.isArray(data.tasks)){ state.tasks=data.tasks; localStorage.setItem('tasks',JSON.stringify(state.tasks)); }
+      if(data.weekTasks){ state.weekTasks=data.weekTasks; localStorage.setItem('weekTasks',JSON.stringify(state.weekTasks)); }
+      if(Array.isArray(data.ideas)){ state.ideas=data.ideas; localStorage.setItem('ideas',JSON.stringify(state.ideas)); }
+      refrescarVista('config');
+    }, function(){
+      setSyncStatus('Sin conexion','var(--red)');
+    });
+
+    setSyncStatus('Conectado','var(--green)');
+  });
+}
+
+function forzarSyncTodo(){
+  if(!_firebaseListo){ alert('Aun conectando con la nube, espera un momento.'); return; }
+  COLECCIONES.forEach(function(key){ syncColeccion(key); });
+  syncConfig();
 }
 function exportarJSON(){
   var data={exportado:new Date().toISOString(),movimientos:state.movimientos,inventario:state.inventario,clientes:state.clientes,meta:state.meta,ideas:state.ideas};
@@ -1480,8 +1586,7 @@ function checkPin(){
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(t=>{t.classList.remove('active');if(t.textContent.trim()==='Sync')t.classList.add('active');});
     document.getElementById('page-config').classList.add('active');
-    var input=document.getElementById('script-url-input');if(input&&SCRIPT_URL)input.value=SCRIPT_URL;
-    var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');
+    var lastSync=localStorage.getItem('lastSync');if(lastSync&&!_firebaseListo)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');
   }else{
     var box=document.getElementById('pin-box');box.classList.add('pin-shake');
     document.querySelectorAll('.pin-dot').forEach(d=>d.classList.add('error'));
@@ -1501,7 +1606,8 @@ var invModal=document.getElementById('inv-modal');
 if(invModal)invModal.addEventListener('click',function(e){if(e.target===this)cerrarModal();});
 var ventaOverlay=document.getElementById('venta-overlay');
 if(ventaOverlay)ventaOverlay.addEventListener('click',function(e){if(e.target===this)cerrarVentaModal();});
-if(SCRIPT_URL){var sinput=document.getElementById('script-url-input');if(sinput)sinput.value=SCRIPT_URL;var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');}
+var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');
+iniciarSincronizacionFirebase();
 renderInicio();
 </script>
 </body>
