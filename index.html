@@ -1021,7 +1021,27 @@ function renderAnalisis(){
   finSetEl('an-ticket','$'+(ventas.length?Math.round(sumV/ventas.length):0).toLocaleString());
 }
 function setAnMes(key,btn){_anMesKey=key;document.querySelectorAll('#an-meses-btns .fin-mes-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderAnalisis();}
-function renderFinanzas(){renderHistorial();var s=localStorage.getItem('finSaldo');var el=document.getElementById('fin-saldo');if(el&&s)el.value=s;renderPicker();renderPickerCompra();}
+function renderFinanzas() {
+  renderHistorial();
+  renderPicker();
+  renderPickerCompra();
+
+  // Calcular total de entradas (Ventas)
+  var totalIngresos = state.movimientos.filter(m => m.tipo === 'venta').reduce((a, b) => a + b.monto, 0);
+  
+  // Calcular total de salidas (Compras, Gastos, Retiros)
+  var totalEgresos = state.movimientos.filter(m => m.tipo === 'compra' || m.tipo === 'gasto' || m.tipo === 'retiro').reduce((a, b) => a + b.monto, 0);
+  
+  // Balance real
+  var saldoReal = totalIngresos - totalEgresos;
+
+  var el = document.getElementById('fin-saldo');
+  if (el) {
+    el.value = saldoReal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    // Poner el texto en rojo si hay más gastos que ingresos
+    el.style.color = saldoReal >= 0 ? 'var(--black)' : 'var(--red)';
+  }
+}
 
 // =================== INVENTARIO ===================
 var _filtroEstado='';
