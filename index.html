@@ -163,6 +163,10 @@
   /* Venta overlay */
   #venta-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;}
   #venta-overlay.open{display:flex;}
+  #reserva-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+  #reserva-overlay.open{display:flex;}
+  #abono-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+  #abono-overlay.open{display:flex;}
 </style>
 </head>
 <body>
@@ -267,6 +271,12 @@
           <select id="fin-canal"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="mercadolibre">MercadoLibre</option><option value="otro">Otro</option></select>
         </div>
       </div>
+      <div class="field"><label>Metodo de pago</label>
+        <select id="fin-metodo"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+      </div>
+      <div class="field"><label>Cliente (opcional)</label>
+        <select id="fin-cliente"><option value="">Sin cliente registrado</option></select>
+      </div>
       <input type="hidden" id="fin-costo" value="0" />
       <input type="hidden" id="fin-inv-index" value="" />
       <button class="btn btn-gold" id="btn-registrar-mov" onclick="registrarMovimiento()" style="width:100%;margin-top:14px;">Registrar venta</button>
@@ -284,6 +294,9 @@
         </div>
       </div>
       <div class="field" style="margin-top:14px;margin-bottom:0;"><label>Costo total pagado ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-compra" placeholder="0.00" /></div></div>
+      <div class="field"><label>Metodo de pago</label>
+        <select id="fin-metodo-compra"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+      </div>
       <input type="hidden" id="fin-compra-index" value="" />
       <button class="btn btn-gold" id="btn-registrar-compra" onclick="registrarCompra()" style="width:100%;margin-top:14px;">Registrar compra</button>
     </div>
@@ -291,8 +304,14 @@
     <!-- GASTO/RETIRO BLOCK -->
     <div id="bloque-otro" style="display:none;margin-bottom:16px;" class="card">
       <div class="card-title" style="margin-bottom:14px;" id="bloque-otro-title">Gasto operativo</div>
+      <div class="field" id="fin-categoria-wrap"><label>Categoria</label>
+        <select id="fin-categoria"><option value="Marketing">Marketing</option><option value="Logistica/Envios">Logistica / Envios</option><option value="Empaque">Empaque</option><option value="Herramientas">Herramientas</option><option value="Otro">Otro</option></select>
+      </div>
       <div class="field"><label>Descripcion</label><input type="text" id="fin-desc-otro" placeholder="Ej: Empaque, publicidad, envio..." /></div>
       <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-otro" placeholder="0.00" /></div></div>
+      <div class="field"><label>Metodo de pago</label>
+        <select id="fin-metodo-otro"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+      </div>
       <button class="btn btn-gold" id="btn-registrar-otro" onclick="registrarOtro()" style="width:100%;margin-top:4px;">Registrar</button>
     </div>
 
@@ -303,7 +322,11 @@
           <div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Saldo en caja / cuenta</div>
           <div class="currency-wrap"><input type="text" id="fin-saldo" placeholder="0.00" readonly style="border:none;background:transparent;padding:0;font-size:20px;font-family:'DM Mono',monospace;width:100%;outline:none;user-select:none;" /></div>
         </div>
-        <div style="font-size:11px;color:var(--muted);max-width:160px;line-height:1.5;">Calculado automaticamente (Ventas - Compras - Gastos - Retiros).</div>
+        <div style="font-size:11px;color:var(--muted);max-width:160px;line-height:1.5;">Calculado automaticamente (Ventas + Abonos - Compras - Gastos - Retiros).</div>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Liquidez por metodo de pago</div>
+        <div id="fin-saldo-metodos" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
       </div>
     </div>
   </div>
@@ -314,7 +337,7 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select id="fil-mes" onchange="renderHistorial()" style="width:auto;"><option value="">Todos los meses</option></select>
         <select id="fil-tipo" onchange="renderHistorial()" style="width:auto;">
-          <option value="">Todos</option><option value="venta">Ventas</option>
+          <option value="">Todos</option><option value="venta">Ventas</option><option value="abono">Abonos</option>
           <option value="compra">Compras</option><option value="gasto">Gastos</option><option value="retiro">Retiros</option>
         </select>
         <div id="fil-balance" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);"></div>
@@ -370,6 +393,7 @@
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="an-meses-btns"></div>
     <div class="card" style="margin-bottom:16px;"><div class="card-title" style="margin-bottom:16px;">Ventas por mes</div><div id="fin-chart-barras" style="display:flex;align-items:flex-end;gap:6px;height:140px;padding-bottom:24px;overflow-x:auto;"></div></div>
     <div class="card" style="margin-bottom:16px;"><div class="card-title" style="margin-bottom:12px;">Ingresos vs Salidas</div><div id="fin-ing-sal"></div></div>
+    <div class="card" style="margin-bottom:16px;"><div class="card-title" style="margin-bottom:12px;">Gastos por categoria</div><div id="fin-gastos-categoria"></div></div>
     <div class="grid-2">
       <div class="stat-box"><div class="stat-label">Margen promedio</div><div class="stat-value gold" id="an-margen-prom">0%</div><div class="stat-hint">de todas las ventas</div></div>
       <div class="stat-box"><div class="stat-label">Ticket promedio</div><div class="stat-value money" id="an-ticket">$0</div><div class="stat-hint">por venta</div></div>
@@ -441,6 +465,11 @@
         <div class="field"><label>Color / variante</label><input type="text" id="inv-color" placeholder="Ej: Dorado/negro..." /></div>
       </div>
       <div class="field"><label>Notas adicionales</label><textarea id="inv-notas" rows="2" placeholder="Caracteristicas especiales, edicion limitada..."></textarea></div>
+      <div class="divider-text">Trazabilidad (uso interno)</div>
+      <div class="grid-2">
+        <div class="field"><label>Numero de serie</label><input type="text" id="inv-serie" placeholder="Ej: SN-849213" /></div>
+        <div class="field"><label>Proveedor <span style="font-weight:300;text-transform:none;letter-spacing:0;">— no se muestra al cliente</span></label><input type="text" id="inv-proveedor" placeholder="Ej: Jomashop, Amazon, distribuidor..." /></div>
+      </div>
       <div class="divider-text">Costos y precio</div>
       <div class="grid-2">
         <div class="field"><label>Costo unitario ($)</label><div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
@@ -489,6 +518,10 @@
     <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="venta-modal-precio" placeholder="0.00" style="font-size:18px;" onkeydown="if(event.key==='Enter')confirmarVentaModal()" /></div>
     <label>Canal de venta</label>
     <select id="venta-modal-canal" style="margin-bottom:16px;"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="mercadolibre">MercadoLibre</option><option value="otro">Otro</option></select>
+    <label>Metodo de pago</label>
+    <select id="venta-modal-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+    <label>Cliente (opcional)</label>
+    <select id="venta-modal-cliente" style="margin-bottom:16px;"><option value="">Sin cliente registrado</option></select>
     <div id="venta-modal-preview" style="display:none;background:var(--bg2);border-radius:2px;padding:10px 14px;margin-bottom:16px;">
       <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Distribucion 40-30-30</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -501,6 +534,43 @@
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline" onclick="cerrarVentaModal()" style="flex:1;">Cancelar</button>
       <button class="btn btn-gold" onclick="confirmarVentaModal()" style="flex:2;">Confirmar venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESERVA / ABONO MODAL -->
+<div id="reserva-overlay">
+  <div style="background:var(--card);border-radius:4px;border-top:3px solid var(--blue);padding:24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:4px;">Reservar con abono</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="reserva-modal-nombre"></div>
+    <label>Cliente</label>
+    <select id="reserva-cliente" style="margin-bottom:4px;"><option value="">Selecciona un cliente</option></select>
+    <div style="font-size:11px;color:var(--muted);margin:0 0 12px;">Si el cliente no aparece, agregalo primero en la seccion Clientes.</div>
+    <label>Precio acordado ($)</label>
+    <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="reserva-precio" placeholder="0.00" /></div>
+    <label>Abono inicial ($)</label>
+    <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="reserva-abono" placeholder="0.00" /></div>
+    <label>Metodo de pago</label>
+    <select id="reserva-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline" onclick="cerrarReservaModal()" style="flex:1;">Cancelar</button>
+      <button class="btn btn-gold" onclick="confirmarReserva()" style="flex:2;">Confirmar reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ABONO ADICIONAL MODAL -->
+<div id="abono-overlay">
+  <div style="background:var(--card);border-radius:4px;border-top:3px solid var(--blue);padding:24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:4px;">Agregar abono</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="abono-modal-info"></div>
+    <label>Monto del abono ($)</label>
+    <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="abono-monto" placeholder="0.00" /></div>
+    <label>Metodo de pago</label>
+    <select id="abono-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline" onclick="cerrarAbonoModal()" style="flex:1;">Cancelar</button>
+      <button class="btn btn-gold" onclick="confirmarAbono()" style="flex:2;">Registrar abono</button>
     </div>
   </div>
 </div>
@@ -763,12 +833,15 @@ function selTipo(tipo, btn) {
     if (bc) bc.style.display = 'none';
     if (bo) bo.style.display = '';
     if (bt) bt.textContent = tipo === 'retiro' ? 'Retiro personal' : 'Gasto operativo';
+    var catWrap = document.getElementById('fin-categoria-wrap');
+    if (catWrap) catWrap.style.display = tipo === 'retiro' ? 'none' : '';
   }
 }
 
 // =================== INVENTORY PICKER (VENTAS) ===================
 var _pickerIdx = null;
 function renderPicker() {
+  poblarSelectClientes('fin-cliente');
   var grid = document.getElementById('inv-picker-grid');
   if (!grid) return;
   var q = (document.getElementById('picker-search') ? document.getElementById('picker-search').value.toLowerCase() : '');
@@ -843,8 +916,11 @@ function registrarMovimiento() {
   var p = state.inventario[i];
   var monto = parseFloat(document.getElementById('fin-monto').value);
   var canal = document.getElementById('fin-canal').value;
+  var metodoPago = document.getElementById('fin-metodo') ? document.getElementById('fin-metodo').value : '';
+  var clienteId = document.getElementById('fin-cliente') ? document.getElementById('fin-cliente').value : '';
+  var cliente = clienteId ? state.clientes.find(c=>c.id===clienteId) : null;
   if (!monto || monto <= 0) { alert('Ingresa el precio de venta.'); return; }
-  state.movimientos.unshift({ tipo:'venta', desc: p.nombre + (p.sku ? ' · Ref. '+p.sku : ''), monto: monto, canal: canal, costo: p.costoTotal || 0, fecha: new Date().toLocaleDateString('es-MX') });
+  state.movimientos.unshift({ id:idAleatorio('mov'), _ts:Date.now(), tipo:'venta', desc: p.nombre + (p.sku ? ' · Ref. '+p.sku : ''), monto: monto, canal: canal, metodoPago: metodoPago, costo: p.costoTotal || 0, precioObjetivo: p.precio||0, clienteId: clienteId||null, clienteNombre: cliente?cliente.nombre:'', fecha: new Date().toLocaleDateString('es-MX') });
   save('movimientos');
   state.inventario[i].estado = 'vendido';
   state.inventario[i].precioVenta = monto;
@@ -904,11 +980,12 @@ function registrarCompra() {
   if(idx===''){alert('Selecciona un reloj primero.');return;}
   var i=parseInt(idx), p=state.inventario[i];
   var monto=parseFloat(document.getElementById('fin-monto-compra').value);
+  var metodoPago=document.getElementById('fin-metodo-compra')?document.getElementById('fin-metodo-compra').value:'';
   if(!monto||monto<=0){alert('Ingresa el costo pagado.');return;}
   state.inventario[i].costoTotal=monto;
   if(state.inventario[i].estado==='transito') state.inventario[i].estado='disponible';
   save('inventario');
-  state.movimientos.unshift({tipo:'compra',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:monto,canal:'compra',costo:0,fecha:new Date().toLocaleDateString('es-MX')});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:monto,canal:'compra',metodoPago:metodoPago,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   limpiarSeleccionCompra(); renderInicio();
   var btn=document.getElementById('btn-registrar-compra');
@@ -920,14 +997,26 @@ function registrarOtro() {
   var tipo=document.getElementById('fin-tipo').value;
   var desc=document.getElementById('fin-desc-otro').value.trim();
   var monto=parseFloat(document.getElementById('fin-monto-otro').value);
+  var metodoPago=document.getElementById('fin-metodo-otro')?document.getElementById('fin-metodo-otro').value:'';
+  var categoria=(tipo==='gasto'&&document.getElementById('fin-categoria'))?document.getElementById('fin-categoria').value:'';
   if(!desc||!monto||monto<=0){alert('Completa descripcion y monto.');return;}
-  state.movimientos.unshift({tipo,desc,monto,canal:tipo,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo,desc,monto,canal:tipo,metodoPago:metodoPago,categoria:categoria,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   document.getElementById('fin-desc-otro').value='';
   document.getElementById('fin-monto-otro').value='';
   renderInicio();
   var btn=document.getElementById('btn-registrar-otro');
   if(btn){var orig=btn.textContent;btn.textContent='Registrado';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1800);}
+}
+
+function poblarSelectClientes(selectId, valorActual) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  var actual = valorActual !== undefined ? valorActual : sel.value;
+  sel.innerHTML = '<option value="">Sin cliente registrado</option>' + state.clientes.map(function(c){
+    return '<option value="'+c.id+'">'+c.nombre+'</option>';
+  }).join('');
+  if (actual) sel.value = actual;
 }
 
 function autoRegistrarCompraInv(producto) {
@@ -953,19 +1042,26 @@ function renderHistorial() {
   var mesFil=filMes?filMes.value:'';
   var tipoFil=document.getElementById('fil-tipo')?document.getElementById('fil-tipo').value:'';
   var movs=state.movimientos.filter(m=>(!mesFil||finMesKey(m.fecha)===mesFil)&&(!tipoFil||m.tipo===tipoFil));
-  var ent=movs.filter(m=>m.tipo==='venta'||m.tipo==='compra').reduce((a,b)=>a+b.monto,0);
+  var ent=movs.filter(m=>m.tipo==='venta'||m.tipo==='compra'||m.tipo==='abono').reduce((a,b)=>a+b.monto,0);
   var sal=movs.filter(m=>m.tipo==='gasto'||m.tipo==='retiro').reduce((a,b)=>a+b.monto,0);
   var bal=document.getElementById('fil-balance');
   if(bal) bal.innerHTML='Entradas <span style="color:var(--green)">$'+ent.toLocaleString()+'</span> &nbsp; Salidas <span style="color:var(--red)">$'+sal.toLocaleString()+'</span> &nbsp; Neto <span style="color:'+(ent-sal>=0?'var(--green)':'var(--red)')+'">$'+(ent-sal).toLocaleString()+'</span>';
   var lista=document.getElementById('fin-lista');
   if(movs.length===0){lista.innerHTML='<div class="empty"><span></span>Sin movimientos para este filtro.</div>';return;}
-  var tipos={venta:['badge-green','Venta'],compra:['badge-blue','Compra'],gasto:['badge-red','Gasto'],retiro:['badge-gold','Retiro']};
+  var tipos={venta:['badge-green','Venta'],compra:['badge-blue','Compra'],gasto:['badge-red','Gasto'],retiro:['badge-gold','Retiro'],abono:['badge-blue','Abono']};
   lista.innerHTML=movs.map(m=>{
     var ri=state.movimientos.indexOf(m);
     var t=tipos[m.tipo]||['badge-blue',m.tipo];
     var gan=m.tipo==='venta'?' · Gan: <span class="money pos">$'+(m.monto-(m.costo||0)).toLocaleString()+'</span>':'';
-    var mc=m.tipo==='venta'?'pos':(m.tipo==='gasto'||m.tipo==='retiro')?'neg':'';
-    return '<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+m.desc+'</div><div class="list-item-sub">'+m.fecha+' · '+(m.canal||'')+gan+'</div></div><span class="badge '+t[0]+'">'+t[1]+'</span><span class="money '+mc+'" style="min-width:70px;text-align:right;">$'+m.monto.toLocaleString()+'</span><button class="btn btn-danger" onclick="eliminarMov('+ri+')">&#128465;</button></div>';
+    var mc=(m.tipo==='venta'||m.tipo==='abono')?'pos':(m.tipo==='gasto'||m.tipo==='retiro')?'neg':'';
+    var descuento='';
+    if(m.tipo==='venta'&&m.precioObjetivo&&m.precioObjetivo>m.monto){
+      var difPct=Math.round(((m.precioObjetivo-m.monto)/m.precioObjetivo)*100);
+      descuento=' · Pedido: $'+m.precioObjetivo.toLocaleString()+' <span style="color:var(--red)">(-'+difPct+'%)</span>';
+    }
+    var clienteTxt=m.clienteNombre?' · '+m.clienteNombre:'';
+    var metodoTxt=m.metodoPago?' · '+({efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',paypal:'PayPal/Zelle',otro:'Otro'}[m.metodoPago]||m.metodoPago):'';
+    return '<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+m.desc+'</div><div class="list-item-sub">'+m.fecha+' · '+(m.canal||'')+metodoTxt+clienteTxt+gan+descuento+'</div></div><span class="badge '+t[0]+'">'+t[1]+'</span><span class="money '+mc+'" style="min-width:70px;text-align:right;">$'+m.monto.toLocaleString()+'</span><button class="btn btn-danger" onclick="eliminarMov('+ri+')">&#128465;</button></div>';
   }).join('');
 }
 function eliminarMov(i){if(!confirm('Eliminar este movimiento?'))return;state.movimientos.splice(i,1);save('movimientos');renderHistorial();renderInicio();}
@@ -1013,10 +1109,17 @@ function renderAnalisis(){
   if(chart&&allMeses.length){var maxV=0;var md=allMeses.map(k=>{var v=state.movimientos.filter(m=>m.tipo==='venta'&&finMesKey(m.fecha)===k).reduce((a,b)=>a+b.monto,0);if(v>maxV)maxV=v;return{k,v};});chart.innerHTML=md.map(d=>{var h=maxV>0?Math.max(4,Math.round((d.v/maxV)*100)):4;var active=!_anMesKey||d.k===_anMesKey;return'<div class="fin-bar-col" data-key="'+d.k+'" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:32px;cursor:pointer;"><span style="font-size:10px;color:var(--muted);font-family:DM Mono,monospace;">$'+(d.v>=1000?Math.round(d.v/1000)+'k':d.v)+'</span><div style="width:100%;max-width:36px;height:'+h+'px;background:'+(active?'var(--accent)':'var(--border)')+';border-radius:2px 2px 0 0;transition:all 0.3s;"></div><span style="font-size:9px;color:var(--muted);">'+finMesLabel(d.k).substring(0,3)+'</span></div>';}).join('');chart.querySelectorAll('.fin-bar-col').forEach(b=>b.addEventListener('click',function(){setAnMes(this.dataset.key,this);}));}
   var movs=_anMesKey?state.movimientos.filter(m=>finMesKey(m.fecha)===_anMesKey):state.movimientos;
   var ventas=movs.filter(m=>m.tipo==='venta');
-  var sumV=ventas.reduce((a,b)=>a+b.monto,0),sumC=movs.filter(m=>m.tipo==='compra').reduce((a,b)=>a+b.monto,0),sumG=movs.filter(m=>m.tipo==='gasto').reduce((a,b)=>a+b.monto,0),sumR=movs.filter(m=>m.tipo==='retiro').reduce((a,b)=>a+b.monto,0);
-  var maxIS=Math.max(sumV,sumC,sumG,sumR,1);
+  var sumV=ventas.reduce((a,b)=>a+b.monto,0),sumC=movs.filter(m=>m.tipo==='compra').reduce((a,b)=>a+b.monto,0),sumG=movs.filter(m=>m.tipo==='gasto').reduce((a,b)=>a+b.monto,0),sumR=movs.filter(m=>m.tipo==='retiro').reduce((a,b)=>a+b.monto,0),sumA=movs.filter(m=>m.tipo==='abono').reduce((a,b)=>a+b.monto,0);
+  var maxIS=Math.max(sumV,sumC,sumG,sumR,sumA,1);
   var isCont=document.getElementById('fin-ing-sal');
-  if(isCont)isCont.innerHTML=[{label:'Ventas',val:sumV,color:'var(--green)'},{label:'Compras inv.',val:sumC,color:'var(--blue)'},{label:'Gastos op.',val:sumG,color:'var(--red)'},{label:'Retiros',val:sumR,color:'var(--accent)'}].map(r=>{var p2=Math.round((r.val/maxIS)*100);return'<div class="fin-bar-row"><span class="fin-bar-label">'+r.label+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+p2+'%;background:'+r.color+';"></div></div><span class="fin-bar-val" style="color:'+r.color+';">$'+r.val.toLocaleString()+'</span></div>';}).join('');
+  if(isCont)isCont.innerHTML=[{label:'Ventas',val:sumV,color:'var(--green)'},{label:'Abonos',val:sumA,color:'var(--accent)'},{label:'Compras inv.',val:sumC,color:'var(--blue)'},{label:'Gastos op.',val:sumG,color:'var(--red)'},{label:'Retiros',val:sumR,color:'var(--muted)'}].map(r=>{var p2=Math.round((r.val/maxIS)*100);return'<div class="fin-bar-row"><span class="fin-bar-label">'+r.label+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+p2+'%;background:'+r.color+';"></div></div><span class="fin-bar-val" style="color:'+r.color+';">$'+r.val.toLocaleString()+'</span></div>';}).join('');
+  var catGastos={};movs.filter(m=>m.tipo==='gasto').forEach(function(m){var c=m.categoria||'Sin categoria';catGastos[c]=(catGastos[c]||0)+m.monto;});
+  var catCont=document.getElementById('fin-gastos-categoria');
+  if(catCont){
+    var entradas=Object.entries(catGastos).sort((a,b)=>b[1]-a[1]);
+    if(!entradas.length){catCont.innerHTML='<div class="empty"><span></span>Sin gastos registrados aun</div>';}
+    else{var maxCat=Math.max(...entradas.map(e=>e[1]));catCont.innerHTML=entradas.map(([k,v])=>{var p3=Math.round((v/maxCat)*100);return'<div class="fin-bar-row"><span class="fin-bar-label">'+k+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+p3+'%;background:var(--red);"></div></div><span class="fin-bar-val" style="color:var(--red);">$'+v.toLocaleString()+'</span></div>';}).join('');}
+  }
   var tG=ventas.reduce((a,b)=>a+(b.monto-(b.costo||0)),0);
   finSetEl('an-margen-prom',(sumV>0?Math.round((tG/sumV)*100):0)+'%');
   finSetEl('an-ticket','$'+(ventas.length?Math.round(sumV/ventas.length):0).toLocaleString());
@@ -1027,12 +1130,12 @@ function renderFinanzas() {
   renderPicker();
   renderPickerCompra();
 
-  // Calcular total de entradas (Ventas)
-  var totalIngresos = state.movimientos.filter(m => m.tipo === 'venta').reduce((a, b) => a + b.monto, 0);
-  
+  // Calcular total de entradas (Ventas + Abonos)
+  var totalIngresos = state.movimientos.filter(m => m.tipo === 'venta' || m.tipo === 'abono').reduce((a, b) => a + b.monto, 0);
+
   // Calcular total de salidas (Compras, Gastos, Retiros)
   var totalEgresos = state.movimientos.filter(m => m.tipo === 'compra' || m.tipo === 'gasto' || m.tipo === 'retiro').reduce((a, b) => a + b.monto, 0);
-  
+
   // Balance real
   var saldoReal = totalIngresos - totalEgresos;
 
@@ -1042,6 +1145,24 @@ function renderFinanzas() {
     // Poner el texto en rojo si hay más gastos que ingresos
     el.style.color = saldoReal >= 0 ? 'var(--black)' : 'var(--red)';
   }
+
+  renderSaldoPorMetodo();
+}
+
+function renderSaldoPorMetodo(){
+  var cont=document.getElementById('fin-saldo-metodos');
+  if(!cont)return;
+  var metodos={efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',paypal:'PayPal / Zelle',otro:'Otro'};
+  var saldos={};
+  Object.keys(metodos).forEach(function(k){saldos[k]=0;});
+  state.movimientos.forEach(function(m){
+    if(!m.metodoPago||!(m.metodoPago in saldos))return;
+    if(m.tipo==='venta'||m.tipo==='abono')saldos[m.metodoPago]+=m.monto;
+    else if(m.tipo==='compra'||m.tipo==='gasto'||m.tipo==='retiro')saldos[m.metodoPago]-=m.monto;
+  });
+  var conDatos=Object.entries(saldos).filter(([k,v])=>v!==0);
+  if(!conDatos.length){cont.innerHTML='<div style="font-size:11px;color:var(--muted);">Aun no hay movimientos con metodo de pago asignado.</div>';return;}
+  cont.innerHTML=conDatos.map(([k,v])=>'<div style="flex:1;min-width:90px;background:var(--bg2);border-radius:2px;padding:8px 10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:3px;">'+metodos[k]+'</div><div style="font-family:DM Mono,monospace;font-size:13px;color:'+(v>=0?'var(--black)':'var(--red)')+';">$'+v.toLocaleString()+'</div></div>').join('');
 }
 
 // =================== INVENTARIO ===================
@@ -1107,6 +1228,8 @@ function agregarProducto(){
     cristal:document.getElementById('inv-cristal').value.trim(),
     color:document.getElementById('inv-color').value.trim(),
     notas:document.getElementById('inv-notas').value.trim(),
+    serie:document.getElementById('inv-serie').value.trim(),
+    proveedor:document.getElementById('inv-proveedor').value.trim(),
     costo, importacion:imp, costoTotal, precio,
     precioMin:parseFloat(document.getElementById('inv-precio-min').value)||0,
     margen, estado,
@@ -1115,7 +1238,14 @@ function agregarProducto(){
   };
   var esEdicion=editIdx!=='';
   var estadoAntes=esEdicion?(state.inventario[parseInt(editIdx)]?state.inventario[parseInt(editIdx)].estado:null):null;
-  if(esEdicion){state.inventario[parseInt(editIdx)]=item;}else{state.inventario.unshift(item);}
+  if(esEdicion){
+    var existente=state.inventario[parseInt(editIdx)];
+    if(existente){ item.id=existente.id; item._ts=existente._ts; if(existente.reserva)item.reserva=existente.reserva; if(existente.precioVenta!==undefined)item.precioVenta=existente.precioVenta; if(existente.fechaVenta)item.fechaVenta=existente.fechaVenta; }
+    state.inventario[parseInt(editIdx)]=item;
+  }else{
+    item.id=idAleatorio('inv'); item._ts=Date.now();
+    state.inventario.unshift(item);
+  }
   save('inventario');
   if(!esEdicion&&estado==='disponible'){
     autoRegistrarCompraInv(item);
@@ -1127,7 +1257,7 @@ function agregarProducto(){
   renderInicio();
 }
 function limpiarFormulario(){
-  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-serie','inv-proveedor','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-genero').value='hombre';
   document.getElementById('inv-movimiento').value='';
   document.getElementById('inv-estado').value='disponible';
@@ -1143,7 +1273,7 @@ function limpiarFormulario(){
 function cancelarEdicion(){limpiarFormulario();}
 function editarProducto(i){
   var p=state.inventario[i];
-  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
+  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
   Object.entries(fields).forEach(([id,v])=>{var el=document.getElementById(id);if(el)el.value=v||'';});
   document.getElementById('inv-genero').value=p.genero||'hombre';
   document.getElementById('inv-movimiento').value=p.movimiento||'';
@@ -1165,7 +1295,14 @@ function cambiarEstado(i,val){
   if(val==='vendido'&&state.inventario[i].estado!=='vendido'){
     abrirVentaModal(i); return;
   }
+  if(val==='reservado'&&state.inventario[i].estado!=='reservado'){
+    abrirReservaModal(i); return;
+  }
   var antes=state.inventario[i].estado;
+  if(antes==='reservado'&&val!=='reservado'){
+    if(!confirm('Este reloj tiene una reserva activa con '+(state.inventario[i].reserva?state.inventario[i].reserva.clienteNombre:'un cliente')+'. ¿Deseas quitar la reserva? Usa "Cancelar reserva" desde el detalle si quieres decidir que pasa con el abono.')) { renderInventario(); return; }
+    delete state.inventario[i].reserva;
+  }
   state.inventario[i].estado=val;
   save('inventario');
   if(antes==='transito'&&val==='disponible'){autoRegistrarCompraInv(state.inventario[i]);}
@@ -1180,8 +1317,8 @@ function diasEnInventario(fecha){
 function diasBadge(dias){
   if(dias===null)return'';
   if(dias<=14)return'<span class="dias-alerta dias-ok">'+dias+'d</span>';
-  if(dias<=30)return'<span class="dias-alerta dias-warn">'+dias+'d</span>';
-  return'<span class="dias-alerta dias-danger">'+dias+'d !</span>';
+  if(dias<=45)return'<span class="dias-alerta dias-warn">'+dias+'d</span>';
+  return'<span class="dias-alerta dias-danger">'+dias+'d · Rebajar</span>';
 }
 function makeFotoHtml(url,size){
   var s=size||52;
@@ -1240,11 +1377,17 @@ function renderInventario(){
       var mc=p.margen>=30?'var(--green)':p.margen>=15?'var(--accent)':'var(--red)';
       var dias=p.estado!=='vendido'?diasEnInventario(p.fecha):null;
       var opts=['disponible','transito','reservado','vendido'].map(e=>'<option value="'+e+'"'+(p.estado===e?' selected':'')+'>'+({disponible:'Disponible',transito:'En transito',reservado:'Reservado',vendido:'Vendido'}[e]||e)+'</option>').join('');
+      var subLinea=imp?'<span style="color:var(--blue)">Importacion pendiente</span>':'Costo: $'+(p.costoTotal||0).toFixed(2);
+      if(p.estado==='reservado'&&p.reserva){
+        subLinea='Reservado por <strong>'+p.reserva.clienteNombre+'</strong> · Saldo: $'+saldoPendienteReserva(p).toLocaleString();
+      } else {
+        subLinea+=((!imp&&p.precio)?' · Margen: <span style="color:'+mc+'">'+p.margen+'%</span>':'')+' · Venta: $'+(p.precio||0).toLocaleString();
+      }
       return'<div class="list-item" style="gap:12px;cursor:pointer;" onclick="verDetalle('+i+')">'+
         makeFotoHtml(p.foto,52)+
         '<div class="list-item-info">'+
-          '<div class="list-item-name" style="display:flex;align-items:center;gap:8px;">'+p.nombre+(p.sku?' <span style="color:var(--muted);font-size:12px;">· '+p.sku+'</span>':'')+(dias!==null?diasBadge(dias):'')+' </div>'+
-          '<div class="list-item-sub">'+(imp?'<span style="color:var(--blue)">Importacion pendiente</span>':'Costo: $'+(p.costoTotal||0).toFixed(2))+((!imp&&p.precio)?' · Margen: <span style="color:'+mc+'">'+p.margen+'%</span>':'')+' · Venta: $'+(p.precio||0).toLocaleString()+'</div>'+
+          '<div class="list-item-name" style="display:flex;align-items:center;gap:8px;">'+p.nombre+(p.sku?' <span style="color:var(--muted);font-size:12px;">· '+p.sku+'</span>':'')+(dias!==null&&p.estado==='disponible'?diasBadge(dias):'')+' </div>'+
+          '<div class="list-item-sub">'+subLinea+'</div>'+
         '</div>'+
         '<select class="cambio-estado-select" onclick="event.stopPropagation()" onchange="cambiarEstado('+i+',this.value)">'+opts+'</select>'+
         '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto('+i+')" title="Editar">&#9998;</button>'+
@@ -1265,6 +1408,7 @@ function previewFoto(){
 var _ventaModalIdx=null;
 function abrirVentaModal(i){
   _ventaModalIdx=i;var p=state.inventario[i];
+  poblarSelectClientes('venta-modal-cliente');
   document.getElementById('venta-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('venta-modal-costo').textContent='$'+(p.costoTotal||0).toLocaleString();
   var precioEl=document.getElementById('venta-modal-precio');
@@ -1291,12 +1435,119 @@ function confirmarVentaModal(){
   var precio=parseFloat(document.getElementById('venta-modal-precio').value);
   if(!precio||precio<=0){document.getElementById('venta-modal-precio').style.borderColor='var(--red)';document.getElementById('venta-modal-precio').focus();return;}
   var canal=document.getElementById('venta-modal-canal').value;
+  var metodoPago=document.getElementById('venta-modal-metodo')?document.getElementById('venta-modal-metodo').value:'';
+  var clienteId=document.getElementById('venta-modal-cliente')?document.getElementById('venta-modal-cliente').value:'';
+  var cliente=clienteId?state.clientes.find(c=>c.id===clienteId):null;
   var i=_ventaModalIdx;var p=state.inventario[i];
   state.inventario[i].estado='vendido';state.inventario[i].precioVenta=precio;state.inventario[i].fechaVenta=new Date().toLocaleDateString('es-MX');
   save('inventario');
-  state.movimientos.unshift({tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,costo:p.costoTotal||0,fecha:new Date().toLocaleDateString('es-MX')});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,metodoPago:metodoPago,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:clienteId||null,clienteNombre:cliente?cliente.nombre:'',fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   cerrarVentaModal();renderInicio();
+}
+
+// =================== RESERVAS Y ABONOS ===================
+function totalAbonadoReserva(p){
+  if(!p||!p.reserva||!p.reserva.abonos)return 0;
+  return p.reserva.abonos.reduce(function(a,b){return a+(b.monto||0);},0);
+}
+function saldoPendienteReserva(p){
+  if(!p||!p.reserva)return 0;
+  return Math.max(0,(p.reserva.precioAcordado||0)-totalAbonadoReserva(p));
+}
+
+var _reservaModalIdx=null;
+function abrirReservaModal(i){
+  _reservaModalIdx=i;var p=state.inventario[i];
+  poblarSelectClientes('reserva-cliente');
+  document.getElementById('reserva-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
+  document.getElementById('reserva-precio').value=p.precio||'';
+  document.getElementById('reserva-abono').value='';
+  document.getElementById('reserva-overlay').classList.add('open');
+}
+function cerrarReservaModal(){document.getElementById('reserva-overlay').classList.remove('open');_reservaModalIdx=null;renderInventario();}
+function confirmarReserva(){
+  if(_reservaModalIdx===null)return;
+  var clienteId=document.getElementById('reserva-cliente').value;
+  if(!clienteId){alert('Selecciona el cliente que reserva este reloj.');return;}
+  var cliente=state.clientes.find(function(c){return c.id===clienteId;});
+  var precioAcordado=parseFloat(document.getElementById('reserva-precio').value);
+  if(!precioAcordado||precioAcordado<=0){alert('Ingresa el precio acordado.');return;}
+  var abono=parseFloat(document.getElementById('reserva-abono').value)||0;
+  if(abono<0||abono>precioAcordado){alert('El abono no puede ser mayor al precio acordado.');return;}
+  var metodoPago=document.getElementById('reserva-metodo').value;
+  var i=_reservaModalIdx;var p=state.inventario[i];
+  var hoy=new Date().toLocaleDateString('es-MX');
+  p.estado='reservado';
+  p.reserva={clienteId:clienteId,clienteNombre:cliente.nombre,precioAcordado:precioAcordado,fechaInicio:hoy,abonos: abono>0?[{monto:abono,fecha:hoy,metodoPago:metodoPago}]:[]};
+  save('inventario');
+  if(abono>0){
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'abono',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Abono de '+cliente.nombre,monto:abono,canal:'abono',metodoPago:metodoPago,costo:0,clienteId:clienteId,clienteNombre:cliente.nombre,fecha:hoy});
+    save('movimientos');
+  }
+  cerrarReservaModal();renderInicio();
+}
+
+var _abonoModalIdx=null;
+function abrirAbonoModal(i){
+  _abonoModalIdx=i;var p=state.inventario[i];
+  document.getElementById('abono-modal-info').textContent=p.nombre+' · '+p.reserva.clienteNombre+' · Saldo pendiente: $'+saldoPendienteReserva(p).toLocaleString();
+  document.getElementById('abono-monto').value='';
+  document.getElementById('abono-overlay').classList.add('open');
+}
+function cerrarAbonoModal(){document.getElementById('abono-overlay').classList.remove('open');_abonoModalIdx=null;}
+function confirmarAbono(){
+  if(_abonoModalIdx===null)return;
+  var i=_abonoModalIdx;var p=state.inventario[i];
+  var monto=parseFloat(document.getElementById('abono-monto').value);
+  var saldo=saldoPendienteReserva(p);
+  if(!monto||monto<=0){alert('Ingresa el monto del abono.');return;}
+  if(monto>saldo){alert('Ese monto es mayor al saldo pendiente ($'+saldo.toLocaleString()+'). Si quiere completar la venta, usa "Completar venta".');return;}
+  var metodoPago=document.getElementById('abono-metodo').value;
+  var hoy=new Date().toLocaleDateString('es-MX');
+  p.reserva.abonos.push({monto:monto,fecha:hoy,metodoPago:metodoPago});
+  save('inventario');
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'abono',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Abono de '+p.reserva.clienteNombre,monto:monto,canal:'abono',metodoPago:metodoPago,costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
+  save('movimientos');
+  cerrarAbonoModal();
+  cerrarModal();
+  renderInventario();renderInicio();
+}
+
+function completarVentaReserva(i){
+  var p=state.inventario[i];
+  if(!p.reserva)return;
+  var saldo=saldoPendienteReserva(p);
+  if(!confirm('Completar la venta de '+p.nombre+' a '+p.reserva.clienteNombre+' por el precio acordado de $'+p.reserva.precioAcordado.toLocaleString()+(saldo>0?(' (falta cobrar $'+saldo.toLocaleString()+')'):' (ya esta pagado por completo')+'?')) return;
+  var hoy=new Date().toLocaleDateString('es-MX');
+  if(saldo>0){
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Saldo final de '+p.reserva.clienteNombre,monto:saldo,canal:'directo',metodoPago:'',costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
+  } else {
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Venta completada con '+p.reserva.clienteNombre,monto:0,canal:'directo',metodoPago:'',costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy,_soloRegistro:true});
+  }
+  save('movimientos');
+  p.estado='vendido';p.precioVenta=p.reserva.precioAcordado;p.fechaVenta=hoy;
+  delete p.reserva;
+  save('inventario');
+  cerrarModal();renderInventario();renderInicio();
+}
+
+function cancelarReserva(i){
+  var p=state.inventario[i];
+  if(!p.reserva)return;
+  if(!confirm('¿Cancelar la reserva de este reloj? El reloj volvera a estar disponible.'))return;
+  var totalAbonado=totalAbonadoReserva(p);
+  if(totalAbonado>0){
+    var devolver=confirm('Se recibieron $'+totalAbonado.toLocaleString()+' en abono de '+p.reserva.clienteNombre+'.\n\nPulsa Aceptar para DEVOLVER ese dinero al cliente (se registra como gasto).\nPulsa Cancelar para QUEDARTE con el abono (no se devuelve, el dinero ya registrado se queda).');
+    if(devolver){
+      state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:totalAbonado,canal:'reembolso',categoria:'Reembolso',metodoPago:'',costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
+      save('movimientos');
+    }
+  }
+  p.estado='disponible';
+  delete p.reserva;
+  save('inventario');
+  cerrarModal();renderInventario();renderInicio();
 }
 
 // =================== DETALLE MODAL ===================
@@ -1316,13 +1567,34 @@ function verDetalle(i){
     (p.precioMin?'<div style="flex:1;min-width:90px;background:var(--bg2);border-radius:2px;padding:10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px;">Precio minimo</div><div style="font-family:DM Mono,monospace;font-size:14px;color:var(--red);">$'+p.precioMin.toLocaleString()+'</div></div>':'')+
     '<div style="flex:1;min-width:90px;background:var(--bg2);border-radius:2px;padding:10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px;">Margen</div><div style="font-family:DM Mono,monospace;font-size:14px;color:'+(imp?'var(--muted)':mc)+'">'+(imp?'--':p.margen+'%')+'</div></div>'+
   '</div>';
-  var specsHtml=(p.mm||p.materialCaja||p.materialCorrea||p.colorEsfera||p.movimiento||p.agua||p.cristal||p.color)?
+  var specsHtml=(p.mm||p.materialCaja||p.materialCorrea||p.colorEsfera||p.movimiento||p.agua||p.cristal||p.color||p.serie)?
     '<div style="padding:0 20px 4px;"><div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px;">Especificaciones</div>'+
       spec('Diametro',p.mm?p.mm+' mm':'')+spec('Material caja',p.materialCaja)+spec('Correa / brazalete',p.materialCorrea)+
       spec('Color esfera',p.colorEsfera)+spec('Movimiento',p.movimiento)+spec('Resistencia agua',p.agua)+
-      spec('Cristal',p.cristal)+spec('Color / variante',p.color)+
+      spec('Cristal',p.cristal)+spec('Color / variante',p.color)+spec('Numero de serie',p.serie)+
     '</div>':'';
   var notasHtml=p.notas?'<div style="margin:0 20px 16px;background:var(--bg2);border-radius:2px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6;">'+p.notas+'</div>':'';
+  var internoHtml=p.proveedor?'<div style="margin:0 20px 16px;border:1px dashed var(--border2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);"><strong style="color:var(--black);">Interno — no visible al cliente:</strong> Proveedor: '+p.proveedor+'</div>':'';
+  var reservaHtml='';
+  if(p.estado==='reservado'&&p.reserva){
+    var abonado=totalAbonadoReserva(p);var saldo=saldoPendienteReserva(p);
+    var abonosLista=(p.reserva.abonos||[]).map(function(a){return'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:4px 0;"><span>'+a.fecha+' · '+(a.metodoPago||'')+'</span><span style="color:var(--black);">$'+a.monto.toLocaleString()+'</span></div>';}).join('');
+    reservaHtml='<div style="margin:0 20px 16px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:2px;padding:14px;">'+
+      '<div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;">Reserva activa</div>'+
+      '<div style="font-size:13px;color:var(--black);margin-bottom:6px;">Cliente: <strong>'+p.reserva.clienteNombre+'</strong></div>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">'+
+        '<div style="font-size:12px;color:var(--muted);">Precio acordado: <strong style="color:var(--black);">$'+p.reserva.precioAcordado.toLocaleString()+'</strong></div>'+
+        '<div style="font-size:12px;color:var(--muted);">Abonado: <strong style="color:var(--green);">$'+abonado.toLocaleString()+'</strong></div>'+
+        '<div style="font-size:12px;color:var(--muted);">Saldo: <strong style="color:'+(saldo>0?'var(--red)':'var(--green)')+';">$'+saldo.toLocaleString()+'</strong></div>'+
+      '</div>'+
+      (abonosLista?'<div style="border-top:1px solid var(--blue);padding-top:6px;margin-bottom:10px;">'+abonosLista+'</div>':'')+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
+        '<button class="btn btn-outline btn-sm" onclick="abrirAbonoModal('+i+')">Agregar abono</button>'+
+        '<button class="btn btn-gold btn-sm" onclick="completarVentaReserva('+i+')">Completar venta</button>'+
+        '<button class="btn btn-danger btn-sm" onclick="cancelarReserva('+i+')">Cancelar reserva</button>'+
+      '</div>'+
+    '</div>';
+  }
   document.getElementById('inv-modal-content').innerHTML=
     (p.foto?'<div style="width:100%;height:300px;background:var(--bg2);display:flex;align-items:center;justify-content:center;overflow:hidden;"><img src="'+p.foto+'" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.remove()" /></div>':'')+
     '<div style="padding:20px 20px 0;">'+
@@ -1331,7 +1603,7 @@ function verDetalle(i){
           '<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+(p.coleccion?'Coleccion '+p.coleccion+' · ':'')+(p.sku?p.sku+' · ':'')+(generos[p.genero]||p.genero||'')+'</div></div>'+
         '<span class="badge '+(estados[p.estado]||'badge-blue')+'" style="flex-shrink:0;">'+(etiquetas[p.estado]||p.estado)+'</span>'+
       '</div>'+costoSection+
-    '</div>'+specsHtml+notasHtml+
+    '</div>'+specsHtml+notasHtml+internoHtml+reservaHtml+
     '<div style="display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);">'+
       '<button class="btn btn-gold" style="flex:1;" onclick="editarProducto('+i+')">Editar</button>'+
       '<button class="btn btn-outline" onclick="cerrarModal()">Cerrar</button>'+
@@ -1438,7 +1710,7 @@ function addIdea(){var input=document.getElementById('new-idea');if(!input.value
 function registrarCliente(){
   var nombre=document.getElementById('cli-nombre').value.trim();
   if(!nombre){alert('Escribe el nombre del cliente.');return;}
-  state.clientes.unshift({nombre,tel:document.getElementById('cli-tel').value.trim(),canal:document.getElementById('cli-canal').value,producto:document.getElementById('cli-producto').value.trim(),notas:document.getElementById('cli-notas').value.trim(),fecha:new Date().toLocaleDateString('es-MX')});
+  state.clientes.unshift({id:idAleatorio('cli'),_ts:Date.now(),nombre,tel:document.getElementById('cli-tel').value.trim(),canal:document.getElementById('cli-canal').value,producto:document.getElementById('cli-producto').value.trim(),notas:document.getElementById('cli-notas').value.trim(),fecha:new Date().toLocaleDateString('es-MX')});
   save('clientes');
   ['cli-nombre','cli-tel','cli-producto','cli-notas'].forEach(id=>document.getElementById(id).value='');
   renderClientes();
@@ -1447,7 +1719,60 @@ function renderClientes(){
   var lista=document.getElementById('cli-lista');
   if(state.clientes.length===0){lista.innerHTML='<div class="empty"><span></span>Sin clientes aun.</div>';return;}
   var nombres={facebook:'Facebook',mercadolibre:'MercadoLibre',instagram:'Instagram',directo:'Directo'};
-  lista.innerHTML=state.clientes.map((c,i)=>'<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+c.nombre+(c.tel?' <span style="color:var(--muted);font-size:12px;">· '+c.tel+'</span>':'')+' </div><div class="list-item-sub">'+(c.producto||'Sin producto')+' · '+c.fecha+(c.notas?' · '+c.notas:'')+' </div></div><span class="badge badge-blue">'+(nombres[c.canal]||c.canal)+'</span><button class="btn btn-danger" onclick="eliminarCliente('+i+')">x</button></div>').join('');
+  lista.innerHTML=state.clientes.map((c,i)=>{
+    var saldo=saldoPendienteCliente(c.id);
+    var totalComprado=totalCompradoCliente(c.id);
+    var subInfo=(c.producto||'Sin producto')+' · '+c.fecha+(totalComprado>0?' · Comprado: $'+totalComprado.toLocaleString():'')+(c.notas?' · '+c.notas:'');
+    var badgeSaldo=saldo>0?'<span class="badge badge-red" style="margin-right:4px;" title="Saldo pendiente por abono">Debe $'+saldo.toLocaleString()+'</span>':'';
+    return '<div class="list-item" style="cursor:pointer;" onclick="verDetalleCliente('+i+')"><div class="list-item-info"><div class="list-item-name">'+c.nombre+(c.tel?' <span style="color:var(--muted);font-size:12px;">· '+c.tel+'</span>':'')+' </div><div class="list-item-sub">'+subInfo+' </div></div>'+badgeSaldo+'<span class="badge badge-blue">'+(nombres[c.canal]||c.canal)+'</span><button class="btn btn-danger" onclick="event.stopPropagation();eliminarCliente('+i+')">x</button></div>';
+  }).join('');
+}
+function saldoPendienteCliente(clienteId){
+  if(!clienteId)return 0;
+  return state.inventario.filter(p=>p.estado==='reservado'&&p.reserva&&p.reserva.clienteId===clienteId).reduce((a,p)=>a+saldoPendienteReserva(p),0);
+}
+function totalCompradoCliente(clienteId){
+  if(!clienteId)return 0;
+  return state.movimientos.filter(m=>m.tipo==='venta'&&m.clienteId===clienteId).reduce((a,m)=>a+m.monto,0);
+}
+function historialComprasCliente(clienteId){
+  if(!clienteId)return [];
+  return state.movimientos.filter(m=>(m.tipo==='venta'||m.tipo==='abono')&&m.clienteId===clienteId).sort((a,b)=>(b._ts||0)-(a._ts||0));
+}
+function verDetalleCliente(i){
+  var c=state.clientes[i];
+  var nombres={facebook:'Facebook',mercadolibre:'MercadoLibre',instagram:'Instagram',directo:'Directo'};
+  var saldo=saldoPendienteCliente(c.id);
+  var totalComprado=totalCompradoCliente(c.id);
+  var historial=historialComprasCliente(c.id);
+  var histHtml=historial.length?historial.map(function(m){
+    var tipoLbl=m.tipo==='abono'?'Abono':'Venta';
+    return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;"><span>'+m.fecha+' · '+tipoLbl+' · '+m.desc+'</span><span style="color:var(--black);font-family:DM Mono,monospace;">$'+m.monto.toLocaleString()+'</span></div>';
+  }).join(''):'<div style="font-size:12px;color:var(--muted);padding:8px 0;">Sin compras registradas aun.</div>';
+  var reservasActivas=state.inventario.filter(p=>p.estado==='reservado'&&p.reserva&&p.reserva.clienteId===c.id);
+  var reservasHtml=reservasActivas.length?reservasActivas.map(function(p){
+    return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;"><span>'+p.nombre+' · Reservado</span><span style="color:var(--red);font-family:DM Mono,monospace;">Debe $'+saldoPendienteReserva(p).toLocaleString()+'</span></div>';
+  }).join(''):'';
+  document.getElementById('inv-modal-content').innerHTML=
+    '<div style="padding:20px;">'+
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">'+
+        '<div><div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:300;color:var(--black);">'+c.nombre+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+(c.tel?c.tel+' · ':'')+(nombres[c.canal]||c.canal||'')+' · Desde '+c.fecha+'</div></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;">'+
+        '<div style="flex:1;min-width:100px;background:var(--bg2);border-radius:2px;padding:10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px;">Total comprado</div><div style="font-family:DM Mono,monospace;font-size:14px;color:var(--green);">$'+totalComprado.toLocaleString()+'</div></div>'+
+        '<div style="flex:1;min-width:100px;background:var(--bg2);border-radius:2px;padding:10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px;">Saldo pendiente</div><div style="font-family:DM Mono,monospace;font-size:14px;color:'+(saldo>0?'var(--red)':'var(--black)')+';">$'+saldo.toLocaleString()+'</div></div>'+
+      '</div>'+
+      (c.notas?'<div style="background:var(--bg2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:16px;">'+c.notas+'</div>':'')+
+      (reservasHtml?'<div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Reservas activas</div>'+reservasHtml:'')+
+      '<div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px;">Historial de compras</div>'+histHtml+
+    '</div>'+
+    '<div style="display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);">'+
+      '<button class="btn btn-outline" style="flex:1;" onclick="cerrarModal()">Cerrar</button>'+
+      '<button class="btn btn-danger" onclick="eliminarCliente('+i+');cerrarModal();">Eliminar cliente</button>'+
+    '</div>';
+  document.getElementById('inv-modal').style.display='block';
+  document.body.style.overflow='hidden';
 }
 function eliminarCliente(i){if(!confirm('Eliminar este cliente?'))return;state.clientes.splice(i,1);save('clientes');renderClientes();}
 
@@ -1521,8 +1846,11 @@ function refrescarVista(key){
     try{ renderHistorial(); }catch(e){}
     try{ renderResumen(); }catch(e){}
     try{ renderAnalisis(); }catch(e){}
+    try{ renderFinanzas(); }catch(e){}
   }else if(key==='clientes'){
     try{ renderClientes(); }catch(e){}
+    try{ poblarSelectClientes('fin-cliente'); }catch(e){}
+    try{ poblarSelectClientes('reserva-cliente'); }catch(e){}
   }else if(key==='config'){
     try{ renderResumen(); }catch(e){}
     try{ renderChecklist(); }catch(e){}
@@ -1626,6 +1954,10 @@ var invModal=document.getElementById('inv-modal');
 if(invModal)invModal.addEventListener('click',function(e){if(e.target===this)cerrarModal();});
 var ventaOverlay=document.getElementById('venta-overlay');
 if(ventaOverlay)ventaOverlay.addEventListener('click',function(e){if(e.target===this)cerrarVentaModal();});
+var reservaOverlay=document.getElementById('reserva-overlay');
+if(reservaOverlay)reservaOverlay.addEventListener('click',function(e){if(e.target===this)cerrarReservaModal();});
+var abonoOverlay=document.getElementById('abono-overlay');
+if(abonoOverlay)abonoOverlay.addEventListener('click',function(e){if(e.target===this)cerrarAbonoModal();});
 var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');
 iniciarSincronizacionFirebase();
 renderInicio();
