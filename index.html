@@ -297,17 +297,16 @@
       <button class="btn btn-gold" id="btn-registrar-otro" onclick="registrarOtro()" style="width:100%;margin-top:4px;">Registrar</button>
     </div>
 
-    <div class="card" style="padding:14px 20px;">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:160px;">
-          <div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Saldo en caja / cuenta</div>
-          <div class="currency-wrap"><input type="number" id="fin-saldo" placeholder="0.00" oninput="localStorage.setItem('finSaldo',this.value)" style="border:none;background:transparent;padding:0;font-size:20px;font-family:'DM Mono',monospace;width:100%;" /></div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);max-width:160px;line-height:1.5;">Actualiza este numero despues de cada movimiento.</div>
-      </div>
+   <div class="card" style="padding:14px 20px;">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:160px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Saldo en caja / cuenta</div>
+      <!-- Agregamos 'readonly' y quitamos el evento oninput para que no sea editable -->
+      <div class="currency-wrap"><input type="text" id="fin-saldo" placeholder="0.00" readonly style="border:none;background:transparent;padding:0;font-size:20px;font-family:'DM Mono',monospace;width:100%;outline:none;user-select:none;" /></div>
     </div>
+    <div style="font-size:11px;color:var(--muted);max-width:160px;line-height:1.5;">Calculado automáticamente (Ventas - Compras - Gastos - Retiros).</div>
   </div>
-
+</div>
   <!-- HISTORIAL -->
   <div id="fin-historial" class="inner-page">
     <div class="card" style="padding:14px 20px;margin-bottom:0;">
