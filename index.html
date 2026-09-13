@@ -1009,7 +1009,6 @@ function registrarCompra() {
   var metodoPago=document.getElementById('fin-metodo-compra')?document.getElementById('fin-metodo-compra').value:'';
   if(!monto||monto<=0){alert('Ingresa el costo pagado.');return;}
   state.inventario[i].costoTotal=monto;
-  if(state.inventario[i].estado==='transito') state.inventario[i].estado='disponible';
   save('inventario');
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:monto,canal:'compra',metodoPago:metodoPago,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
