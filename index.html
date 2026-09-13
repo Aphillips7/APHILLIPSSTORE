@@ -76,6 +76,8 @@
   .check-item.done label{text-decoration:line-through;color:var(--muted2);}
   .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
   .day-col{display:flex;flex-direction:column;gap:6px;}
+  .day-col.today{background:var(--accent-light);border-radius:4px;padding:6px 4px;margin:-6px -4px;}
+  .day-col.today .day-header{color:var(--accent);}
   .day-header{font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:4px;}
   .day-task{background:var(--card);border:1px solid var(--border);border-radius:2px;padding:8px 6px;font-size:11px;color:var(--text);text-align:center;line-height:1.4;cursor:pointer;transition:all 0.2s;}
   .day-task:hover{border-color:var(--accent);color:var(--accent);}
@@ -646,11 +648,29 @@
 <div id="page-contenido" class="page">
   <div class="section-title">Contenido</div>
   <div class="section-sub">Tu plan semanal de Instagram. Consistencia es la clave.</div>
+  <div style="margin-bottom:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);">Progreso de esta semana</span>
+      <span id="week-progress-label" class="money" style="font-size:12px;color:var(--accent);">0/0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="week-progress-fill" style="width:0%"></div></div>
+  </div>
   <div class="week-grid" id="week-calendar"></div>
   <div class="sep"></div>
-  <div class="card"><div class="card-title">Banco de ideas — 20 reels listos para grabar</div><div id="ideas-lista"></div></div>
+  <div class="card">
+    <div class="card-title">Banco de ideas — reels de relojes</div>
+    <div id="idea-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+    <div id="ideas-lista"></div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-outline btn-sm" onclick="reponerIdeas()">Reponer banco de ideas</button>
+    </div>
+  </div>
   <div class="card" style="margin-top:16px;"><div class="card-title">Agregar idea propia</div>
-    <div style="display:flex;gap:8px;"><input type="text" id="new-idea" placeholder="Describe tu idea de reel..." style="flex:1;" onkeydown="if(event.key==='Enter')addIdea()" /><button class="btn btn-gold btn-sm" onclick="addIdea()">+ Agregar</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <input type="text" id="new-idea" placeholder="Describe tu idea de reel..." style="flex:1;min-width:160px;" onkeydown="if(event.key==='Enter')addIdea()" />
+      <select id="new-idea-nivel" style="max-width:130px;"><option value="Facil">Facil</option><option value="Medio">Medio</option><option value="Elaborado">Elaborado</option></select>
+      <button class="btn btn-gold btn-sm" onclick="addIdea()">+ Agregar</button>
+    </div>
   </div>
 </div>
 
@@ -1950,23 +1970,109 @@ const ideasBase=[
   {text:'Testimonio de cliente feliz',nivel:'Elaborado',done:false},{text:'Reel cinematografico sin hablar',nivel:'Elaborado',done:false},
   {text:'"Arme mi coleccion con $X"',nivel:'Elaborado',done:false},{text:'Respondo las preguntas mas frecuentes',nivel:'Elaborado',done:false},
 ];
+function getWeekKey(d){
+  d = d || new Date();
+  var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  var dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  var yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  var weekNo = Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+  return date.getUTCFullYear() + '-W' + String(weekNo).padStart(2,'0');
+}
 function renderContenido(){
+  var weekKey = getWeekKey();
+  var diasCodigo = ['DOM','LUN','MAR','MIE','JUE','VIE','SAB'];
+  var hoyCodigo = diasCodigo[new Date().getDay()];
   const cal=document.getElementById('week-calendar');
-  cal.innerHTML=weekPlan.map(d=>'<div class="day-col"><div class="day-header">'+d.day+'</div>'+
-    d.tasks.map(t=>{var key='week-'+d.day+'-'+t.text;var done=state.weekTasks[key];return'<div class="day-task '+(done?'done':'')+'" onclick="toggleWeekTask(\''+key+'\', this)"><div class="task-dot '+t.color+'"></div>'+t.text+'</div>';}).join('')+
-    '<div class="day-task" style="font-size:10px;" onclick="toggleWeekTask(\'stories-'+d.day+'\', this)"><div class="task-dot dot-green"></div>Stories diarias</div>'+
-  '</div>').join('');
-  if(state.ideas.length===0){state.ideas.push(...ideasBase);save('ideas');}
+  var totalTareas = 0, hechasTareas = 0;
+  cal.innerHTML = weekPlan.map(function(d){
+    var esHoy = d.day === hoyCodigo;
+    var tareasHtml = d.tasks.map(function(t){
+      var key = 'week-' + weekKey + '-' + d.day + '-' + t.text;
+      var done = !!state.weekTasks[key];
+      totalTareas++; if (done) hechasTareas++;
+      return '<div class="day-task '+(done?'done':'')+'" onclick="toggleWeekTask(\''+key+'\', this)"><div class="task-dot '+t.color+'"></div>'+t.text+'</div>';
+    }).join('');
+    var storiesKey = 'stories-' + weekKey + '-' + d.day;
+    var storiesDone = !!state.weekTasks[storiesKey];
+    totalTareas++; if (storiesDone) hechasTareas++;
+    var storiesHtml = '<div class="day-task '+(storiesDone?'done':'')+'" style="font-size:10px;" onclick="toggleWeekTask(\''+storiesKey+'\', this)"><div class="task-dot dot-green"></div>Stories diarias</div>';
+    return '<div class="day-col'+(esHoy?' today':'')+'"><div class="day-header">'+d.day+(esHoy?' · Hoy':'')+'</div>'+tareasHtml+storiesHtml+'</div>';
+  }).join('');
+
+  var pct = totalTareas > 0 ? Math.round((hechasTareas/totalTareas)*100) : 0;
+  var progLabel = document.getElementById('week-progress-label');
+  var progFill = document.getElementById('week-progress-fill');
+  if (progLabel) progLabel.textContent = hechasTareas + '/' + totalTareas;
+  if (progFill) progFill.style.width = pct + '%';
+
+  if (state.ideas.length === 0) { state.ideas.push(...ideasBase); save('ideas'); }
   renderIdeas();
 }
-function toggleWeekTask(key,el){state.weekTasks[key]=!state.weekTasks[key];localStorage.setItem('weekTasks',JSON.stringify(state.weekTasks));el.classList.toggle('done');}
+function toggleWeekTask(key, el) {
+  state.weekTasks[key] = !state.weekTasks[key];
+  localStorage.setItem('weekTasks', JSON.stringify(state.weekTasks));
+  renderContenido();
+}
+var _filtroNivelIdea = '';
+function nivelBadgeClass(nivel) {
+  if (nivel === 'Facil') return 'badge-green';
+  if (nivel === 'Medio') return 'badge-gold';
+  if (nivel === 'Elaborado') return 'badge-blue';
+  return '';
+}
+function ideaRowHtml(idea, i) {
+  var badge = idea.nivel ? '<span class="badge '+nivelBadgeClass(idea.nivel)+'" style="margin-right:8px;flex-shrink:0;">'+idea.nivel+'</span>' : '';
+  return '<div class="check-item '+(idea.done?'done':'')+'"><input type="checkbox" '+(idea.done?'checked':'')+' onchange="toggleIdea('+i+')" />'+badge+'<label onclick="toggleIdea('+i+')" style="flex:1;">'+idea.text+'</label><button class="btn btn-danger" onclick="removeIdea('+i+')">x</button></div>';
+}
 function renderIdeas(){
   const lista=document.getElementById('ideas-lista');
-  lista.innerHTML=state.ideas.map((idea,i)=>'<div class="check-item '+(idea.done?'done':'')+'"><input type="checkbox" '+(idea.done?'checked':'')+' onchange="toggleIdea('+i+')" /><label onclick="toggleIdea('+i+')">'+(idea.nivel||'')+' '+idea.text+'</label><button class="btn btn-danger" onclick="removeIdea('+i+')">x</button></div>').join('');
+  var todas = state.ideas.map(function(idea,i){ return {idea:idea, i:i}; });
+  var filtradas = _filtroNivelIdea ? todas.filter(function(x){ return x.idea.nivel === _filtroNivelIdea; }) : todas;
+  var pendientes = filtradas.filter(function(x){ return !x.idea.done; });
+  var hechas = filtradas.filter(function(x){ return x.idea.done; });
+
+  var htmlPend = pendientes.length ? pendientes.map(function(x){ return ideaRowHtml(x.idea, x.i); }).join('') :
+    '<div class="empty" style="padding:14px 0;"><span></span>Sin ideas pendientes'+(_filtroNivelIdea?' de nivel '+_filtroNivelIdea:'')+'.</div>';
+  var htmlHechas = hechas.length ?
+    '<div class="sep" style="margin:16px 0 10px;"></div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;">Ya grabadas ('+hechas.length+')</div>' +
+    hechas.map(function(x){ return ideaRowHtml(x.idea, x.i); }).join('') : '';
+
+  lista.innerHTML = htmlPend + htmlHechas;
+  renderIdeaFiltros();
 }
+function renderIdeaFiltros(){
+  var cont = document.getElementById('idea-filtros');
+  if (!cont) return;
+  var niveles = ['', 'Facil', 'Medio', 'Elaborado'];
+  cont.innerHTML = niveles.map(function(n){
+    var count = n ? state.ideas.filter(function(x){ return x.nivel === n && !x.done; }).length : state.ideas.filter(function(x){ return !x.done; }).length;
+    return '<button class="fin-mes-btn'+(n===_filtroNivelIdea?' active':'')+'" data-nivel="'+n+'">'+(n||'Todas')+' ('+count+')</button>';
+  }).join('');
+  cont.querySelectorAll('.fin-mes-btn').forEach(function(b){
+    b.addEventListener('click', function(){ setFiltroNivelIdea(this.dataset.nivel); });
+  });
+}
+function setFiltroNivelIdea(nivel){ _filtroNivelIdea = nivel; renderIdeas(); }
 function toggleIdea(i){state.ideas[i].done=!state.ideas[i].done;save('ideas');renderIdeas();}
 function removeIdea(i){state.ideas.splice(i,1);save('ideas');renderIdeas();}
-function addIdea(){var input=document.getElementById('new-idea');if(!input.value.trim())return;state.ideas.push({text:input.value.trim(),nivel:'',done:false});input.value='';save('ideas');renderIdeas();}
+function addIdea(){
+  var input=document.getElementById('new-idea');
+  if(!input.value.trim())return;
+  var nivelSel = document.getElementById('new-idea-nivel');
+  state.ideas.push({text:input.value.trim(), nivel: nivelSel?nivelSel.value:'', done:false});
+  input.value='';
+  save('ideas');
+  renderIdeas();
+}
+function reponerIdeas(){
+  var textosExistentes = state.ideas.map(function(x){ return x.text; });
+  var faltantes = ideasBase.filter(function(b){ return textosExistentes.indexOf(b.text) === -1; });
+  if (!faltantes.length) { alert('Ya tienes todas las ideas base en tu banco.'); return; }
+  faltantes.forEach(function(f){ state.ideas.push({text:f.text, nivel:f.nivel, done:false}); });
+  save('ideas');
+  renderIdeas();
+}
 
 // =================== CLIENTES ===================
 function registrarCliente(){
