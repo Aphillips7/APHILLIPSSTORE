@@ -422,7 +422,7 @@
 <div id="page-inventario" class="page">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px;">
     <div><div class="section-title" style="margin-bottom:2px;">Inventario</div><div class="section-sub" style="margin-bottom:0;"></div></div>
-    <button class="btn btn-gold" onclick="toggleFormulario()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
+    <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
   </div>
   <div class="grid-3" style="margin-top:20px;">
     <div class="stat-box"><div class="stat-label">Disponibles</div><div class="stat-value" id="inv-stat-disponibles">0</div></div>
@@ -458,7 +458,7 @@
     <div class="card" style="border-color:var(--accent);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div class="card-title" id="inv-form-title" style="margin:0;">Registrar unidad</div>
-        <button class="btn btn-outline btn-sm" onclick="toggleFormulario()">Cerrar</button>
+        <button class="btn btn-outline btn-sm" onclick="cancelarEdicion()">Cerrar</button>
       </div>
       <input type="hidden" id="inv-edit-index" value="" />
       <div class="divider-text">Identificacion</div>
@@ -1303,6 +1303,10 @@ function agregarProducto(){
   renderInicio();
 }
 function limpiarFormulario(){
+  resetCamposFormulario();
+  toggleFormulario(false);
+}
+function resetCamposFormulario(){
   ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-serie','inv-proveedor','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-genero').value='hombre';
   document.getElementById('inv-movimiento').value='';
@@ -1314,7 +1318,12 @@ function limpiarFormulario(){
   document.getElementById('inv-form-title').textContent='Registrar unidad';
   document.getElementById('inv-submit-btn').textContent='Registrar unidad';
   var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='none';
-  toggleFormulario(false);
+}
+function abrirFormularioNuevo(){
+  var wrapper=document.getElementById('inv-form-wrapper');
+  var yaAbierto=wrapper&&wrapper.style.display==='block';
+  resetCamposFormulario();
+  toggleFormulario(!yaAbierto);
 }
 function cancelarEdicion(){limpiarFormulario();}
 function editarProducto(i){
