@@ -1574,7 +1574,7 @@ function verDetalle(i){
       spec('Cristal',p.cristal)+spec('Color / variante',p.color)+spec('Numero de serie',p.serie)+
     '</div>':'';
   var notasHtml=p.notas?'<div style="margin:0 20px 16px;background:var(--bg2);border-radius:2px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6;">'+p.notas+'</div>':'';
-  var internoHtml=p.proveedor?'<div style="margin:0 20px 16px;border:1px dashed var(--border2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);"><strong style="color:var(--black);">Interno — no visible al cliente:</strong> Proveedor: '+p.proveedor+'</div>':'';
+  var internoHtml=p.proveedor?'<div style="margin:0 20px 16px;border:1px dashed var(--border2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);"><strong style="color:var(--black);"></strong> Proveedor: '+p.proveedor+'</div>':'';
   var reservaHtml='';
   if(p.estado==='reservado'&&p.reserva){
     var abonado=totalAbonadoReserva(p);var saldo=saldoPendienteReserva(p);
