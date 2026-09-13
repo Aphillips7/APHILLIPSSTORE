@@ -241,6 +241,7 @@
         <button type="button" class="fin-tipo-chip" onclick="selTipo('compra',this)">Compra</button>
         <button type="button" class="fin-tipo-chip" onclick="selTipo('gasto',this)">Gasto</button>
         <button type="button" class="fin-tipo-chip" onclick="selTipo('retiro',this)">Retiro</button>
+        <button type="button" class="fin-tipo-chip" onclick="selTipo('traspaso',this)">Traspaso interno</button>
       </div>
       <input type="hidden" id="fin-tipo" value="venta" />
     </div>
@@ -268,11 +269,11 @@
       <div class="grid-2" style="margin-top:14px;">
         <div class="field" style="margin:0;"><label>Precio de venta ($)</label><div class="currency-wrap"><input type="number" id="fin-monto" placeholder="0.00" oninput="actualizarPreview()" /></div></div>
         <div class="field" style="margin:0;"><label>Canal de venta</label>
-          <select id="fin-canal"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="mercadolibre">MercadoLibre</option><option value="otro">Otro</option></select>
+          <select id="fin-canal"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="otro">Otro</option></select>
         </div>
       </div>
       <div class="field"><label>Metodo de pago</label>
-        <select id="fin-metodo"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+        <select id="fin-metodo"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
       <div class="field"><label>Cliente (opcional)</label>
         <select id="fin-cliente"><option value="">Sin cliente registrado</option></select>
@@ -295,7 +296,7 @@
       </div>
       <div class="field" style="margin-top:14px;margin-bottom:0;"><label>Costo total pagado ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-compra" placeholder="0.00" /></div></div>
       <div class="field"><label>Metodo de pago</label>
-        <select id="fin-metodo-compra"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+        <select id="fin-metodo-compra"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
       <input type="hidden" id="fin-compra-index" value="" />
       <button class="btn btn-gold" id="btn-registrar-compra" onclick="registrarCompra()" style="width:100%;margin-top:14px;">Registrar compra</button>
@@ -310,9 +311,25 @@
       <div class="field"><label>Descripcion</label><input type="text" id="fin-desc-otro" placeholder="Ej: Empaque, publicidad, envio..." /></div>
       <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-otro" placeholder="0.00" /></div></div>
       <div class="field"><label>Metodo de pago</label>
-        <select id="fin-metodo-otro"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+        <select id="fin-metodo-otro"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
       <button class="btn btn-gold" id="btn-registrar-otro" onclick="registrarOtro()" style="width:100%;margin-top:4px;">Registrar</button>
+    </div>
+
+    <!-- TRASPASO INTERNO BLOCK -->
+    <div id="bloque-traspaso" style="display:none;margin-bottom:16px;" class="card">
+      <div class="card-title" style="margin-bottom:6px;">Traspaso interno</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Usa esto cuando muevas dinero que ya es tuyo entre metodos (ej: pasar efectivo a Yappy). No se cuenta como venta ni gasto, solo mueve el saldo de un lado a otro.</div>
+      <div class="grid-2">
+        <div class="field" style="margin:0;"><label>De donde sale</label>
+          <select id="traspaso-origen"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+        </div>
+        <div class="field" style="margin:0;"><label>A donde entra</label>
+          <select id="traspaso-destino"><option value="yappy">Yappy</option><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="traspaso-monto" placeholder="0.00" /></div></div>
+      <button class="btn btn-gold" id="btn-registrar-traspaso" onclick="registrarTraspaso()" style="width:100%;margin-top:4px;">Registrar traspaso</button>
     </div>
 
     <!-- SALDO AUTOMATICO -->
@@ -338,7 +355,7 @@
         <select id="fil-mes" onchange="renderHistorial()" style="width:auto;"><option value="">Todos los meses</option></select>
         <select id="fil-tipo" onchange="renderHistorial()" style="width:auto;">
           <option value="">Todos</option><option value="venta">Ventas</option><option value="abono">Abonos</option>
-          <option value="compra">Compras</option><option value="gasto">Gastos</option><option value="retiro">Retiros</option>
+          <option value="compra">Compras</option><option value="gasto">Gastos</option><option value="retiro">Retiros</option><option value="traspaso">Traspasos</option>
         </select>
         <div id="fil-balance" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);"></div>
       </div>
@@ -517,9 +534,9 @@
     <label>Precio de venta real ($)</label>
     <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="venta-modal-precio" placeholder="0.00" style="font-size:18px;" onkeydown="if(event.key==='Enter')confirmarVentaModal()" /></div>
     <label>Canal de venta</label>
-    <select id="venta-modal-canal" style="margin-bottom:16px;"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="mercadolibre">MercadoLibre</option><option value="otro">Otro</option></select>
+    <select id="venta-modal-canal" style="margin-bottom:16px;"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="otro">Otro</option></select>
     <label>Metodo de pago</label>
-    <select id="venta-modal-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+    <select id="venta-modal-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
     <label>Cliente (opcional)</label>
     <select id="venta-modal-cliente" style="margin-bottom:16px;"><option value="">Sin cliente registrado</option></select>
     <div id="venta-modal-preview" style="display:none;background:var(--bg2);border-radius:2px;padding:10px 14px;margin-bottom:16px;">
@@ -551,7 +568,7 @@
     <label>Abono inicial ($)</label>
     <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="reserva-abono" placeholder="0.00" /></div>
     <label>Metodo de pago</label>
-    <select id="reserva-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+    <select id="reserva-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline" onclick="cerrarReservaModal()" style="flex:1;">Cancelar</button>
       <button class="btn btn-gold" onclick="confirmarReserva()" style="flex:2;">Confirmar reserva</button>
@@ -567,7 +584,7 @@
     <label>Monto del abono ($)</label>
     <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="abono-monto" placeholder="0.00" /></div>
     <label>Metodo de pago</label>
-    <select id="abono-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="paypal">PayPal / Zelle</option><option value="otro">Otro</option></select>
+    <select id="abono-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline" onclick="cerrarAbonoModal()" style="flex:1;">Cancelar</button>
       <button class="btn btn-gold" onclick="confirmarAbono()" style="flex:2;">Registrar abono</button>
@@ -628,7 +645,7 @@
     <div class="grid-2">
       <div class="field"><label>Nombre</label><input type="text" id="cli-nombre" placeholder="Nombre completo" /></div>
       <div class="field"><label>Telefono / WhatsApp</label><input type="text" id="cli-tel" placeholder="+507 " /></div>
-      <div class="field"><label>Canal donde compro</label><select id="cli-canal"><option value="facebook">Facebook</option><option value="mercadolibre">MercadoLibre</option><option value="instagram">Instagram</option><option value="directo">Directo</option></select></div>
+      <div class="field"><label>Canal donde compro</label><select id="cli-canal"><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="instagram">Instagram</option><option value="directo">Directo</option></select></div>
       <div class="field"><label>Reloj que compro</label><input type="text" id="cli-producto" placeholder="Modelo del reloj" /></div>
     </div>
     <div class="field"><label>Notas</label><textarea id="cli-notas" rows="2" placeholder="Ej: Le interesa el Pro Diver en negro..."></textarea></div>
@@ -810,28 +827,37 @@ function finSetEl(id, v) { var el = document.getElementById(id); if (el) el.text
 // =================== FINANZAS TIPO CHIPS ===================
 function selTipo(tipo, btn) {
   document.getElementById('fin-tipo').value = tipo;
-  var map = { venta:'sel-venta', compra:'sel-compra', gasto:'sel-gasto', retiro:'sel-retiro' };
+  var map = { venta:'sel-venta', compra:'sel-compra', gasto:'sel-gasto', retiro:'sel-retiro', traspaso:'sel-retiro' };
   document.querySelectorAll('.fin-tipo-chip').forEach(b => {
     b.className = 'fin-tipo-chip' + (b === btn ? ' ' + (map[tipo]||'') : '');
   });
   var bv = document.getElementById('bloque-venta');
   var bc = document.getElementById('bloque-compra');
   var bo = document.getElementById('bloque-otro');
+  var bp = document.getElementById('bloque-traspaso');
   var bt = document.getElementById('bloque-otro-title');
   if (tipo === 'venta') {
     if (bv) bv.style.display = '';
     if (bc) bc.style.display = 'none';
     if (bo) bo.style.display = 'none';
+    if (bp) bp.style.display = 'none';
     renderPicker();
   } else if (tipo === 'compra') {
     if (bv) bv.style.display = 'none';
     if (bc) bc.style.display = '';
     if (bo) bo.style.display = 'none';
+    if (bp) bp.style.display = 'none';
     renderPickerCompra();
+  } else if (tipo === 'traspaso') {
+    if (bv) bv.style.display = 'none';
+    if (bc) bc.style.display = 'none';
+    if (bo) bo.style.display = 'none';
+    if (bp) bp.style.display = '';
   } else {
     if (bv) bv.style.display = 'none';
     if (bc) bc.style.display = 'none';
     if (bo) bo.style.display = '';
+    if (bp) bp.style.display = 'none';
     if (bt) bt.textContent = tipo === 'retiro' ? 'Retiro personal' : 'Gasto operativo';
     var catWrap = document.getElementById('fin-categoria-wrap');
     if (catWrap) catWrap.style.display = tipo === 'retiro' ? 'none' : '';
@@ -1009,6 +1035,21 @@ function registrarOtro() {
   if(btn){var orig=btn.textContent;btn.textContent='Registrado';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1800);}
 }
 
+function registrarTraspaso(){
+  var origen=document.getElementById('traspaso-origen').value;
+  var destino=document.getElementById('traspaso-destino').value;
+  var monto=parseFloat(document.getElementById('traspaso-monto').value);
+  if(!monto||monto<=0){alert('Ingresa el monto a traspasar.');return;}
+  if(origen===destino){alert('El origen y el destino deben ser diferentes.');return;}
+  var metodos={efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',tarjeta:'Tarjeta',otro:'Otro'};
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'traspaso',desc:'Traspaso: '+metodos[origen]+' \u2192 '+metodos[destino],monto:monto,canal:'traspaso',metodoOrigen:origen,metodoDestino:destino,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
+  save('movimientos');
+  document.getElementById('traspaso-monto').value='';
+  renderInicio();
+  var btn=document.getElementById('btn-registrar-traspaso');
+  if(btn){var orig=btn.textContent;btn.textContent='Traspaso registrado';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1800);}
+}
+
 function poblarSelectClientes(selectId, valorActual) {
   var sel = document.getElementById(selectId);
   if (!sel) return;
@@ -1048,7 +1089,7 @@ function renderHistorial() {
   if(bal) bal.innerHTML='Entradas <span style="color:var(--green)">$'+ent.toLocaleString()+'</span> &nbsp; Salidas <span style="color:var(--red)">$'+sal.toLocaleString()+'</span> &nbsp; Neto <span style="color:'+(ent-sal>=0?'var(--green)':'var(--red)')+'">$'+(ent-sal).toLocaleString()+'</span>';
   var lista=document.getElementById('fin-lista');
   if(movs.length===0){lista.innerHTML='<div class="empty"><span></span>Sin movimientos para este filtro.</div>';return;}
-  var tipos={venta:['badge-green','Venta'],compra:['badge-blue','Compra'],gasto:['badge-red','Gasto'],retiro:['badge-gold','Retiro'],abono:['badge-blue','Abono']};
+  var tipos={venta:['badge-green','Venta'],compra:['badge-blue','Compra'],gasto:['badge-red','Gasto'],retiro:['badge-gold','Retiro'],abono:['badge-blue','Abono'],traspaso:['badge-gold','Traspaso']};
   lista.innerHTML=movs.map(m=>{
     var ri=state.movimientos.indexOf(m);
     var t=tipos[m.tipo]||['badge-blue',m.tipo];
@@ -1060,7 +1101,7 @@ function renderHistorial() {
       descuento=' · Pedido: $'+m.precioObjetivo.toLocaleString()+' <span style="color:var(--red)">(-'+difPct+'%)</span>';
     }
     var clienteTxt=m.clienteNombre?' · '+m.clienteNombre:'';
-    var metodoTxt=m.metodoPago?' · '+({efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',paypal:'PayPal/Zelle',otro:'Otro'}[m.metodoPago]||m.metodoPago):'';
+    var metodoTxt=m.metodoPago?' · '+({efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',tarjeta:'Tarjeta',otro:'Otro'}[m.metodoPago]||m.metodoPago):'';
     return '<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+m.desc+'</div><div class="list-item-sub">'+m.fecha+' · '+(m.canal||'')+metodoTxt+clienteTxt+gan+descuento+'</div></div><span class="badge '+t[0]+'">'+t[1]+'</span><span class="money '+mc+'" style="min-width:70px;text-align:right;">$'+m.monto.toLocaleString()+'</span><button class="btn btn-danger" onclick="eliminarMov('+ri+')">&#128465;</button></div>';
   }).join('');
 }
@@ -1092,7 +1133,7 @@ function renderResumen(){
   if(bc)bc.innerHTML=[{label:'Reinversion',val:Math.round(totalG*0.4),color:'var(--blue)',pct:totalG>0?40:0},{label:'Tu dinero',val:Math.round(totalG*0.3),color:'var(--green)',pct:totalG>0?30:0},{label:'Fondo op.',val:Math.round(totalG*0.3),color:'var(--accent)',pct:totalG>0?30:0}].map(b=>'<div class="fin-bar-row"><span class="fin-bar-label">'+b.label+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+b.pct+'%;background:'+b.color+';"></div></div><span class="fin-bar-val" style="color:'+b.color+';">$'+b.val.toLocaleString()+'</span></div>').join('');
   var ag=document.getElementById('fin-alerta-gasto');if(ag)ag.style.display=(totalV>0&&totalGastos/totalV>0.2)?'block':'none';
   var canales={};ventas.forEach(v=>{canales[v.canal]=(canales[v.canal]||0)+v.monto;});
-  var nombres={facebook:'Facebook',mercadolibre:'MercadoLibre',instagram:'Instagram',directo:'Directo',otro:'Otro'};
+  var nombres={facebook:'Facebook',whatsapp:'WhatsApp',instagram:'Instagram',directo:'Directo',otro:'Otro'};
   var rc=document.getElementById('res-canales');
   if(rc){if(!Object.keys(canales).length){rc.innerHTML='<div class="empty"><span></span>Sin datos aun</div>';}else{var maxC=Math.max(...Object.values(canales));rc.innerHTML=Object.entries(canales).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{var p2=Math.round((v/maxC)*100);return'<div class="fin-bar-row"><span class="fin-bar-label">'+(nombres[k]||k)+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+p2+'%;background:var(--accent);"></div></div><span class="fin-bar-val money pos">$'+v.toLocaleString()+'</span></div>';}).join('');}}
 }
@@ -1152,10 +1193,15 @@ function renderFinanzas() {
 function renderSaldoPorMetodo(){
   var cont=document.getElementById('fin-saldo-metodos');
   if(!cont)return;
-  var metodos={efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',paypal:'PayPal / Zelle',otro:'Otro'};
+  var metodos={efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',tarjeta:'Tarjeta',otro:'Otro'};
   var saldos={};
   Object.keys(metodos).forEach(function(k){saldos[k]=0;});
   state.movimientos.forEach(function(m){
+    if(m.tipo==='traspaso'){
+      if(m.metodoOrigen&&(m.metodoOrigen in saldos))saldos[m.metodoOrigen]-=m.monto;
+      if(m.metodoDestino&&(m.metodoDestino in saldos))saldos[m.metodoDestino]+=m.monto;
+      return;
+    }
     if(!m.metodoPago||!(m.metodoPago in saldos))return;
     if(m.tipo==='venta'||m.tipo==='abono')saldos[m.metodoPago]+=m.monto;
     else if(m.tipo==='compra'||m.tipo==='gasto'||m.tipo==='retiro')saldos[m.metodoPago]-=m.monto;
@@ -1574,7 +1620,7 @@ function verDetalle(i){
       spec('Cristal',p.cristal)+spec('Color / variante',p.color)+spec('Numero de serie',p.serie)+
     '</div>':'';
   var notasHtml=p.notas?'<div style="margin:0 20px 16px;background:var(--bg2);border-radius:2px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6;">'+p.notas+'</div>':'';
-  var internoHtml=p.proveedor?'<div style="margin:0 20px 16px;border:1px dashed var(--border2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);"><strong style="color:var(--black);"></strong> Proveedor: '+p.proveedor+'</div>':'';
+  var internoHtml=p.proveedor?'<div style="margin:0 20px 16px;border:1px dashed var(--border2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);"><strong style="color:var(--black);">Interno — no visible al cliente:</strong> Proveedor: '+p.proveedor+'</div>':'';
   var reservaHtml='';
   if(p.estado==='reservado'&&p.reserva){
     var abonado=totalAbonadoReserva(p);var saldo=saldoPendienteReserva(p);
@@ -1718,7 +1764,7 @@ function registrarCliente(){
 function renderClientes(){
   var lista=document.getElementById('cli-lista');
   if(state.clientes.length===0){lista.innerHTML='<div class="empty"><span></span>Sin clientes aun.</div>';return;}
-  var nombres={facebook:'Facebook',mercadolibre:'MercadoLibre',instagram:'Instagram',directo:'Directo'};
+  var nombres={facebook:'Facebook',whatsapp:'WhatsApp',instagram:'Instagram',directo:'Directo'};
   lista.innerHTML=state.clientes.map((c,i)=>{
     var saldo=saldoPendienteCliente(c.id);
     var totalComprado=totalCompradoCliente(c.id);
@@ -1741,7 +1787,7 @@ function historialComprasCliente(clienteId){
 }
 function verDetalleCliente(i){
   var c=state.clientes[i];
-  var nombres={facebook:'Facebook',mercadolibre:'MercadoLibre',instagram:'Instagram',directo:'Directo'};
+  var nombres={facebook:'Facebook',whatsapp:'WhatsApp',instagram:'Instagram',directo:'Directo'};
   var saldo=saldoPendienteCliente(c.id);
   var totalComprado=totalCompradoCliente(c.id);
   var historial=historialComprasCliente(c.id);
