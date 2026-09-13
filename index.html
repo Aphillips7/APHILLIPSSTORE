@@ -167,6 +167,8 @@
   #reserva-overlay.open{display:flex;}
   #abono-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
   #abono-overlay.open{display:flex;}
+  #reglas-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+  #reglas-overlay.open{display:flex;}
 </style>
 </head>
 <body>
@@ -188,13 +190,44 @@
 
 <!-- INICIO -->
 <div id="page-inicio" class="page active">
-  <div class="section-title">Buenos dias, Alberto</div>
-  <div class="section-sub">Tu resumen de hoy — mantente enfocado</div>
-  <div class="grid-3">
-    <div class="stat-box"><div class="stat-label">Ventas este mes</div><div class="stat-value gold money" id="stat-ventas-mes">$0</div><div class="stat-hint" id="stat-hint-ventas">0 ventas</div></div>
-    <div class="stat-box"><div class="stat-label">Ganancia neta</div><div class="stat-value green money" id="stat-ganancia">$0</div><div class="stat-hint">despues de costos</div></div>
-    <div class="stat-box"><div class="stat-label">Productos en stock</div><div class="stat-value" id="stat-stock">0</div><div class="stat-hint">unidades disponibles</div></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div class="section-title">Buenos dias, Alberto</div>
+      <div class="section-sub"><span id="inicio-mes-label">—</span> — mantente enfocado</div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="abrirReglasModal()" style="margin-top:4px;">Ver reglas del negocio</button>
   </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <button class="btn btn-gold" onclick="irARegistrar('venta')" style="width:100%;">+ Registrar venta</button>
+    <button class="btn btn-outline" onclick="irARegistrar('compra')" style="width:100%;">+ Registrar compra</button>
+  </div>
+
+  <div class="grid-3">
+    <div class="stat-box">
+      <div class="stat-label">Ventas este mes</div>
+      <div class="stat-value gold money" id="stat-ventas-mes">$0</div>
+      <div class="stat-hint" id="stat-hint-ventas">0 ventas</div>
+      <div class="stat-hint" id="trend-ventas" style="margin-top:2px;"></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Ganancia neta</div>
+      <div class="stat-value green money" id="stat-ganancia">$0</div>
+      <div class="stat-hint">despues de costos</div>
+      <div class="stat-hint" id="trend-ganancia" style="margin-top:2px;"></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Productos en stock</div>
+      <div class="stat-value" id="stat-stock">0</div>
+      <div class="stat-hint">unidades disponibles</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pendientes y alertas</div>
+    <div id="pendientes-container"></div>
+  </div>
+
   <div class="card">
     <div class="card-title">Meta del mes</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -202,11 +235,18 @@
       <span id="meta-pct" class="money" style="color:var(--accent);">0%</span>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="meta-fill" style="width:0%"></div></div>
+    <div class="stat-hint" id="meta-dias-restantes" style="margin-top:8px;"></div>
     <div style="margin-top:16px;display:flex;gap:8px;align-items:flex-end;">
       <div class="field" style="flex:1;margin:0;"><label>Meta de ventas ($)</label><div class="currency-wrap"><input type="number" id="meta-input" placeholder="Ej: 5000" /></div></div>
       <button class="btn btn-gold btn-sm" onclick="guardarMeta()">Guardar</button>
     </div>
   </div>
+
+  <div class="card">
+    <div class="card-title">Ventas de los ultimos 7 dias</div>
+    <div id="mini-chart-container"></div>
+  </div>
+
   <div class="card">
     <div class="card-title">Checklist del dia</div>
     <div id="checklist-container"></div>
@@ -215,11 +255,21 @@
       <button class="btn btn-gold btn-sm" onclick="addTask()">+ Agregar</button>
     </div>
   </div>
+
   <div class="card">
-    <div class="card-title">Reglas del negocio</div>
+    <div class="card-title">Actividad reciente</div>
+    <div id="recientes-container"></div>
+  </div>
+</div>
+
+<!-- REGLAS DEL NEGOCIO MODAL -->
+<div id="reglas-overlay">
+  <div style="background:var(--card);border-radius:4px;border-top:3px solid var(--accent);padding:24px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:16px;">Reglas del negocio</div>
     <div class="rule-box"><div class="rule-box-title">Regla del 40-30-30</div><div class="rule-box-body">De cada venta: <strong style="color:var(--black)">40%</strong> reinversion en inventario · <strong style="color:var(--black)">30%</strong> tu ganancia · <strong style="color:var(--black)">30%</strong> fondo de operacion</div></div>
     <div class="rule-box"><div class="rule-box-title">Regla de respuesta rapida</div><div class="rule-box-body">Responder mensajes en menos de <strong style="color:var(--black)">30 minutos</strong>. El que responde primero casi siempre gana la venta.</div></div>
-    <div class="rule-box"><div class="rule-box-title">Regla de registro diario</div><div class="rule-box-body">Cada venta se apunta <strong style="color:var(--black)">ese mismo dia</strong>. Sin datos no hay decisiones.</div></div>
+    <div class="rule-box" style="margin-bottom:16px;"><div class="rule-box-title">Regla de registro diario</div><div class="rule-box-body">Cada venta se apunta <strong style="color:var(--black)">ese mismo dia</strong>. Sin datos no hay decisiones.</div></div>
+    <button class="btn btn-outline" onclick="cerrarReglasModal()" style="width:100%;">Cerrar</button>
   </div>
 </div>
 
@@ -759,22 +809,180 @@ function showInner(prefix, name) {
 
 // =================== INICIO ===================
 function renderInicio() {
-  const ventas = state.movimientos.filter(m => m.tipo === 'venta');
+  var hoy = new Date();
+  var mesActualKey = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
+  var mesAntDate = new Date(hoy.getFullYear(), hoy.getMonth()-1, 1);
+  var mesAnteriorKey = mesAntDate.getFullYear() + '-' + String(mesAntDate.getMonth()+1).padStart(2,'0');
+
+  const ventas = state.movimientos.filter(m => m.tipo === 'venta' && finMesKey(m.fecha) === mesActualKey);
+  const ventasMesAnt = state.movimientos.filter(m => m.tipo === 'venta' && finMesKey(m.fecha) === mesAnteriorKey);
   const totalVentas = ventas.reduce((a, b) => a + b.monto, 0);
+  const totalVentasAnt = ventasMesAnt.reduce((a, b) => a + b.monto, 0);
   const totalGanancia = ventas.reduce((a, b) => a + (b.monto - (b.costo || 0)), 0);
+  const totalGananciaAnt = ventasMesAnt.reduce((a, b) => a + (b.monto - (b.costo || 0)), 0);
   const stock = state.inventario.filter(i => i.estado === 'disponible').length;
+
   document.getElementById('stat-ventas-mes').textContent = '$' + totalVentas.toLocaleString();
   document.getElementById('stat-ganancia').textContent = '$' + totalGanancia.toLocaleString();
   document.getElementById('stat-stock').textContent = stock;
+  document.getElementById('stat-hint-ventas').textContent = ventas.length + ' venta' + (ventas.length !== 1 ? 's' : '');
+  setTrendInicio('trend-ventas', totalVentas, totalVentasAnt);
+  setTrendInicio('trend-ganancia', totalGanancia, totalGananciaAnt);
+
+  var mesesNombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var mesLabelEl = document.getElementById('inicio-mes-label');
+  if (mesLabelEl) mesLabelEl.textContent = 'Tu resumen de ' + mesesNombres[hoy.getMonth()] + ' ' + hoy.getFullYear();
+
+  var diasRestEl = document.getElementById('meta-dias-restantes');
   if (state.meta > 0) {
     const pct = Math.min(Math.round((totalVentas / state.meta) * 100), 100);
     document.getElementById('meta-label').textContent = '$' + totalVentas.toLocaleString() + ' de $' + state.meta.toLocaleString() + ' meta';
     document.getElementById('meta-pct').textContent = pct + '%';
     document.getElementById('meta-fill').style.width = pct + '%';
     document.getElementById('meta-input').value = state.meta;
+    if (diasRestEl) {
+      var diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).getDate();
+      var diasRestantes = diasEnMes - hoy.getDate();
+      diasRestEl.textContent = diasRestantes > 0 ? diasRestantes + ' dia' + (diasRestantes !== 1 ? 's' : '') + ' restantes este mes' : 'Ultimo dia del mes';
+    }
+  } else {
+    document.getElementById('meta-label').textContent = 'Sin meta definida';
+    document.getElementById('meta-pct').textContent = '0%';
+    document.getElementById('meta-fill').style.width = '0%';
+    if (diasRestEl) diasRestEl.textContent = '';
   }
+
   renderChecklist();
+  renderPendientesInicio();
+  renderMiniChartInicio();
+  renderRecientesInicio();
 }
+function setTrendInicio(id, actual, anterior) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!anterior || anterior <= 0) { el.textContent = ''; return; }
+  var diff = Math.round(((actual - anterior) / anterior) * 100);
+  var arrow = diff >= 0 ? '\u25B2' : '\u25BC';
+  var color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  el.innerHTML = '<span style="color:'+color+';font-weight:500;">'+arrow+' '+Math.abs(diff)+'%</span> vs mes anterior';
+}
+function renderPendientesInicio() {
+  var cont = document.getElementById('pendientes-container');
+  if (!cont) return;
+  var items = [];
+  state.inventario.forEach(function(p) {
+    if (p.estado === 'reservado' && p.reserva) {
+      var saldo = saldoPendienteReserva(p);
+      if (saldo > 0) {
+        items.push({ orden: 1, html:
+          '<div class="list-item" style="padding:10px 0;">'+
+            '<div class="list-item-info"><div class="list-item-name">'+p.nombre+'</div>'+
+            '<div class="list-item-sub">Reservado por '+(p.reserva.clienteNombre||'—')+' · Saldo pendiente</div></div>'+
+            '<span class="badge badge-gold">$'+saldo.toLocaleString()+'</span></div>' });
+      }
+    } else if (p.estado === 'transito') {
+      var dT = diasEnInventario(p.fecha);
+      if (dT !== null && dT > 20) {
+        items.push({ orden: 2, html:
+          '<div class="list-item" style="padding:10px 0;">'+
+            '<div class="list-item-info"><div class="list-item-name">'+p.nombre+'</div>'+
+            '<div class="list-item-sub">En transito hace '+dT+' dias</div></div>'+
+            '<span class="badge badge-blue">Revisar envio</span></div>' });
+      }
+    } else if (p.estado === 'disponible') {
+      var dD = diasEnInventario(p.fecha);
+      if (dD !== null && dD > 45) {
+        items.push({ orden: 3, html:
+          '<div class="list-item" style="padding:10px 0;">'+
+            '<div class="list-item-info"><div class="list-item-name">'+p.nombre+'</div>'+
+            '<div class="list-item-sub">'+dD+' dias en inventario sin venderse</div></div>'+
+            '<span class="badge badge-red">Rebajar</span></div>' });
+      }
+    }
+  });
+  items.sort(function(a,b){ return a.orden - b.orden; });
+  cont.innerHTML = items.length ? items.map(function(x){ return x.html; }).join('') :
+    '<div class="empty" style="padding:20px 0;"><span></span>Todo al dia, sin pendientes por ahora.</div>';
+}
+function renderMiniChartInicio() {
+  var cont = document.getElementById('mini-chart-container');
+  if (!cont) return;
+  var diasNombres = ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+  var dias = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    dias.push(d);
+  }
+  var datos = dias.map(function(d) {
+    var key = d.toLocaleDateString('es-MX');
+    var total = state.movimientos.filter(function(m){ return m.tipo === 'venta' && m.fecha === key; })
+      .reduce(function(a,b){ return a + b.monto; }, 0);
+    return { label: diasNombres[d.getDay()], total: total };
+  });
+  var max = Math.max.apply(null, datos.map(function(x){ return x.total; }).concat([1]));
+  cont.innerHTML = datos.map(function(x) {
+    var pct = Math.round((x.total / max) * 100);
+    return '<div class="fin-bar-row"><span class="fin-bar-label">'+x.label+'</span>'+
+      '<div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+pct+'%;background:var(--accent);"></div></div>'+
+      '<span class="fin-bar-val money'+(x.total>0?' pos':'')+'">$'+x.total.toLocaleString()+'</span></div>';
+  }).join('');
+}
+function renderRecientesInicio() {
+  var cont = document.getElementById('recientes-container');
+  if (!cont) return;
+  var ventasRecientes = state.movimientos.filter(function(m){ return m.tipo === 'venta' && !m._soloRegistro; })
+    .slice().sort(function(a,b){ return (b._ts||0) - (a._ts||0); }).slice(0,4);
+  var htmlVentas = ventasRecientes.length ? ventasRecientes.map(function(v) {
+    return '<div class="list-item" style="padding:8px 0;">'+
+      '<div class="list-item-info"><div class="list-item-name">'+v.desc+'</div>'+
+      '<div class="list-item-sub">'+(v.clienteNombre||'Sin cliente')+' · '+v.fecha+'</div></div>'+
+      '<span class="money pos">$'+v.monto.toLocaleString()+'</span></div>';
+  }).join('') : '<div class="empty" style="padding:16px 0;"><span></span>Aun no hay ventas registradas.</div>';
+
+  var hoy = new Date();
+  var mesActualKey = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
+  var porCliente = {};
+  state.movimientos.filter(function(m){ return m.tipo === 'venta' && finMesKey(m.fecha) === mesActualKey; }).forEach(function(v) {
+    if (!v.clienteNombre) return;
+    porCliente[v.clienteNombre] = (porCliente[v.clienteNombre]||0) + v.monto;
+  });
+  var topArr = Object.entries(porCliente).sort(function(a,b){ return b[1]-a[1]; });
+  var topCliente = topArr.length ? topArr[0][0] : '—';
+
+  var reservasActivas = state.inventario.filter(function(p){ return p.estado === 'reservado' && p.reserva; });
+  var saldoTotal = reservasActivas.reduce(function(a,p){ return a + saldoPendienteReserva(p); }, 0);
+
+  var htmlExtra = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">'+
+    '<div class="fin-3030-box" style="background:var(--bg2);"><div class="fin-3030-label">Cliente top del mes</div><div class="fin-3030-val" style="font-size:14px;">'+topCliente+'</div></div>'+
+    '<div class="fin-3030-box" style="background:var(--accent-light);"><div class="fin-3030-label">Reservas activas</div><div class="fin-3030-val" style="color:var(--accent);">'+reservasActivas.length+'</div></div>'+
+    '<div class="fin-3030-box" style="background:var(--blue-bg);"><div class="fin-3030-label">Saldo por cobrar</div><div class="fin-3030-val" style="color:var(--blue);">$'+saldoTotal.toLocaleString()+'</div></div>'+
+  '</div>';
+
+  cont.innerHTML = htmlVentas + htmlExtra;
+}
+function irARegistrar(tipo) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  var pageFin = document.getElementById('page-finanzas');
+  if (pageFin) pageFin.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(function(t) {
+    if ((t.getAttribute('onclick')||'').indexOf("'finanzas'") !== -1) t.classList.add('active');
+  });
+  renderFinanzas();
+  document.querySelectorAll('.inner-page').forEach(function(el){ el.classList.remove('active'); });
+  var regPage = document.getElementById('fin-registrar');
+  if (regPage) regPage.classList.add('active');
+  document.querySelectorAll('#page-finanzas .inner-tab').forEach(function(t, idx){ t.classList.remove('active'); if (idx===0) t.classList.add('active'); });
+  var chipBtn = null;
+  document.querySelectorAll('.fin-tipo-chip').forEach(function(b) {
+    if ((b.getAttribute('onclick')||'').indexOf("selTipo('"+tipo+"'") !== -1) chipBtn = b;
+  });
+  selTipo(tipo, chipBtn);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function abrirReglasModal() { document.getElementById('reglas-overlay').classList.add('open'); }
+function cerrarReglasModal() { document.getElementById('reglas-overlay').classList.remove('open'); }
 function guardarMeta() {
   const val = parseFloat(document.getElementById('meta-input').value);
   if (!val || val <= 0) return;
@@ -2012,6 +2220,8 @@ var reservaOverlay=document.getElementById('reserva-overlay');
 if(reservaOverlay)reservaOverlay.addEventListener('click',function(e){if(e.target===this)cerrarReservaModal();});
 var abonoOverlay=document.getElementById('abono-overlay');
 if(abonoOverlay)abonoOverlay.addEventListener('click',function(e){if(e.target===this)cerrarAbonoModal();});
+var reglasOverlay=document.getElementById('reglas-overlay');
+if(reglasOverlay)reglasOverlay.addEventListener('click',function(e){if(e.target===this)cerrarReglasModal();});
 var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');
 iniciarSincronizacionFirebase();
 renderInicio();
