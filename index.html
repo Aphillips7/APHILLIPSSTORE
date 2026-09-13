@@ -688,6 +688,18 @@
     </div>
   </div>
   <div class="card">
+    <div class="card-title" style="margin-bottom:10px;">Espacio usado en la nube</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+      <span id="espacio-texto" style="font-size:13px;color:var(--muted);">Calculando...</span>
+      <span id="espacio-pct" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;"></span>
+    </div>
+    <div style="width:100%;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;">
+      <div id="espacio-barra" style="height:100%;width:0%;background:var(--green);transition:width 0.3s;"></div>
+    </div>
+    <div id="espacio-detalle" style="font-size:11px;color:var(--muted);margin-top:8px;"></div>
+    <div id="espacio-aviso" style="display:none;font-size:12px;padding:8px 10px;border-radius:2px;margin-top:10px;"></div>
+  </div>
+  <div class="card">
     <div class="card-title">Como funciona</div>
     <div class="rule-box"><div class="rule-box-title">Automatico</div><div class="rule-box-body">Cada cambio que hagas (agregar reloj, registrar venta, agregar cliente) se guarda solo, unos segundos despues de hacerlo. No necesitas hacer nada mas.</div></div>
     <div class="rule-box"><div class="rule-box-title">Multiples dispositivos</div><div class="rule-box-body">Abre este mismo enlace en tu PC, tablet o celular y veras los mismos datos, actualizados en tiempo real.</div></div>
@@ -789,9 +801,9 @@ try { db.enablePersistence({ synchronizeTabs: true }).catch(function(){}); } cat
 // =================== STATE ===================
 const state = {
   tasks: JSON.parse(localStorage.getItem('tasks') || '[]'),
-  movimientos: JSON.parse(localStorage.getItem('movimientos') || '[]'),
-  inventario: JSON.parse(localStorage.getItem('inventario') || '[]'),
-  clientes: JSON.parse(localStorage.getItem('clientes') || '[]'),
+  movimientos: [],
+  inventario: [],
+  clientes: [],
   meta: parseFloat(localStorage.getItem('meta') || '0'),
   weekTasks: JSON.parse(localStorage.getItem('weekTasks') || '{}'),
   ideas: JSON.parse(localStorage.getItem('ideas') || '[]'),
@@ -804,7 +816,7 @@ let _syncTimers = {};
 let _firebaseListo = false;
 
 function save(key) {
-  localStorage.setItem(key, JSON.stringify(state[key]));
+  if (!COLECCIONES.includes(key)) { localStorage.setItem(key, JSON.stringify(state[key])); }
   if (COLECCIONES.includes(key)) { scheduleSync(key); }
   else { scheduleSync('config'); }
 }
@@ -2283,6 +2295,56 @@ function eliminarCliente(id){
 }
 
 // =================== SYNC (FIREBASE / FIRESTORE) ===================
+// =================== ESPACIO USADO (FIRESTORE 1GB GRATIS) ===================
+var LIMITE_FIRESTORE_BYTES = 1024*1024*1024; // 1 GiB
+function calcularEspacioUsado(){
+  var totalBytes=0;
+  var porColeccion={inventario:0,movimientos:0,clientes:0};
+  ['inventario','movimientos','clientes'].forEach(function(key){
+    (state[key]||[]).forEach(function(item){
+      var bytes=new Blob([JSON.stringify(item)]).size;
+      porColeccion[key]+=bytes;
+      totalBytes+=bytes;
+    });
+  });
+  return {totalBytes:totalBytes,porColeccion:porColeccion};
+}
+function formatoMB(bytes){
+  var mb=bytes/(1024*1024);
+  if(mb<1)return (bytes/1024).toFixed(0)+' KB';
+  return mb.toFixed(mb<10?2:1)+' MB';
+}
+function renderEspacioUsado(){
+  var txt=document.getElementById('espacio-texto');
+  if(!txt)return;
+  var r=calcularEspacioUsado();
+  var pct=(r.totalBytes/LIMITE_FIRESTORE_BYTES)*100;
+  var pctMostrar=pct<0.01?'<0.01':pct.toFixed(pct<1?2:1);
+  txt.textContent='Usando '+formatoMB(r.totalBytes)+' de 1024 MB gratis';
+  var pctEl=document.getElementById('espacio-pct');
+  if(pctEl)pctEl.textContent=pctMostrar+'%';
+  var barra=document.getElementById('espacio-barra');
+  var color=pct<60?'var(--green)':pct<85?'var(--accent)':'var(--red)';
+  if(barra){barra.style.width=Math.min(100,pct)+'%';barra.style.background=color;}
+  var detalle=document.getElementById('espacio-detalle');
+  if(detalle){
+    detalle.textContent='Inventario: '+formatoMB(r.porColeccion.inventario)+' · Historial: '+formatoMB(r.porColeccion.movimientos)+' · Clientes: '+formatoMB(r.porColeccion.clientes);
+  }
+  var aviso=document.getElementById('espacio-aviso');
+  if(aviso){
+    if(pct>=85){
+      aviso.style.display='block';
+      aviso.style.background='var(--red-bg)';aviso.style.color='var(--red)';aviso.style.border='1px solid var(--red)';
+      aviso.textContent='Te estas acercando al limite gratis de 1 GB. Cuando lo alcances, la sincronizacion dejara de guardar nueva informacion hasta que actives el plan de pago (Blaze) o liberes espacio (por ejemplo, comprimiendo o quitando fotos antiguas).';
+    }else if(pct>=60){
+      aviso.style.display='block';
+      aviso.style.background='var(--bg2)';aviso.style.color='var(--muted)';aviso.style.border='1px solid var(--border2)';
+      aviso.textContent='Vas usando mas de la mitad del espacio gratis. Todavia no es urgente, pero es buen momento para tenerlo en mente si sigues agregando muchas fotos.';
+    }else{
+      aviso.style.display='none';
+    }
+  }
+}
 function setSyncStatus(msg,color){
   var el=document.getElementById('sync-status');if(el){el.textContent=msg;el.style.color=color||'var(--muted)';}
   var nav=document.getElementById('nav-sync-indicator');if(nav){nav.textContent=msg;nav.style.color=color||'rgba(255,255,255,0.55)';nav.style.display='block';}
@@ -2299,23 +2361,41 @@ function asegurarIds(key){
   });
 }
 
+let _lastSynced = { inventario:{}, movimientos:{}, clientes:{} };
+
 async function syncColeccion(key){
   if(!_firebaseListo) return;
   asegurarIds(key);
   setSyncStatus('Sincronizando...','var(--accent)');
   try{
-    var batch=db.batch();
     var coll=db.collection(key);
     var idsActuales=new Set();
+    var cache=_lastSynced[key];
+    var ops=[];
     state[key].forEach(function(item){
       idsActuales.add(item.id);
-      batch.set(coll.doc(item.id),item);
+      var json=JSON.stringify(item);
+      if(cache[item.id]!==json){
+        ops.push({tipo:'set',id:item.id,item:item,json:json});
+      }
     });
     _remoteIds[key].forEach(function(id){
-      if(!idsActuales.has(id)) batch.delete(coll.doc(id));
+      if(!idsActuales.has(id)) ops.push({tipo:'delete',id:id});
     });
     _remoteIds[key]=idsActuales;
-    await batch.commit();
+    for(var i=0;i<ops.length;i+=450){
+      var chunk=ops.slice(i,i+450);
+      var batch=db.batch();
+      chunk.forEach(function(op){
+        if(op.tipo==='set'){ batch.set(coll.doc(op.id),op.item); }
+        else { batch.delete(coll.doc(op.id)); }
+      });
+      await batch.commit();
+      chunk.forEach(function(op){
+        if(op.tipo==='set'){ cache[op.id]=op.json; }
+        else { delete cache[op.id]; }
+      });
+    }
     var now=new Date().toLocaleTimeString('es-MX');
     setSyncStatus('Sincronizado · '+now,'var(--green)');
     localStorage.setItem('lastSync',now);
@@ -2344,6 +2424,7 @@ async function syncConfig(){
 
 function refrescarVista(key){
   try{ renderInicio(); }catch(e){}
+  try{ renderEspacioUsado(); }catch(e){}
   if(key==='inventario'){
     try{ renderInventario(); }catch(e){}
     try{ renderPicker(); }catch(e){}
@@ -2379,16 +2460,18 @@ function iniciarSincronizacionFirebase(){
       db.collection(key).onSnapshot(function(snap){
         var items=[];
         var ids=new Set();
+        var cache=_lastSynced[key];
         snap.forEach(function(doc){
           var data=doc.data();
           data.id=doc.id;
           items.push(data);
           ids.add(doc.id);
+          cache[doc.id]=JSON.stringify(data);
         });
+        Object.keys(cache).forEach(function(id){ if(!ids.has(id)) delete cache[id]; });
         items.sort(function(a,b){return (b._ts||0)-(a._ts||0);});
         _remoteIds[key]=ids;
         state[key]=items;
-        localStorage.setItem(key,JSON.stringify(items));
         refrescarVista(key);
       }, function(){
         setSyncStatus('Sin conexion','var(--red)');
