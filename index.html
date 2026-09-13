@@ -144,13 +144,13 @@
   .inv-picker-sub{font-size:10px;color:var(--muted);}
   .inv-picker-precio{font-size:11px;font-family:'DM Mono',monospace;color:var(--green);margin-top:4px;font-weight:500;}
   .inv-picker-empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0;}
-  /* PIN */
-  .pin-overlay{position:fixed;inset:0;background:rgba(249,248,246,0.96);backdrop-filter:blur(12px);z-index:999;display:flex;align-items:center;justify-content:center;}
-  .pin-box{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--accent);padding:40px 36px;text-align:center;width:320px;box-shadow:0 8px 40px rgba(0,0,0,0.1);border-radius:2px;}
+  /* AUTENTICACION (TOTP) */
+  .pin-overlay{position:fixed;inset:0;background:rgba(249,248,246,0.96);backdrop-filter:blur(12px);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
+  .pin-box{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--accent);padding:36px 32px;text-align:center;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,0.1);border-radius:2px;margin:auto;}
   .pin-icon{font-size:28px;margin-bottom:14px;opacity:0.5;}
   .pin-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;font-style:italic;margin-bottom:4px;color:var(--black);}
   .pin-sub{font-size:12px;color:var(--muted);margin-bottom:28px;letter-spacing:0.04em;font-weight:300;}
-  .pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:28px;}
+  .pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:28px;}
   .pin-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--border2);transition:all 0.2s;}
   .pin-dot.filled{background:var(--black);border-color:var(--black);}
   .pin-dot.error{background:var(--red);border-color:var(--red);}
@@ -160,6 +160,11 @@
   .pin-btn:active{transform:scale(0.95);}
   .pin-btn.del{font-size:12px;font-family:'Jost',sans-serif;letter-spacing:0.08em;color:var(--muted);font-weight:500;text-transform:uppercase;}
   .pin-shake{animation:shake 0.4s ease;}
+  .auth-link{font-size:12px;color:var(--accent);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'Jost',sans-serif;margin-top:16px;display:inline-block;}
+  .auth-qr-wrap{display:flex;justify-content:center;margin-bottom:16px;}
+  .auth-qr-wrap > div{background:#fff;padding:10px;border-radius:4px;}
+  .auth-secreto{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.05em;background:var(--bg2);padding:10px;border-radius:2px;margin-bottom:16px;word-break:break-all;}
+  .auth-codigos-lista{background:var(--bg2);border-radius:2px;padding:14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
   @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
   /* Modal */
   #inv-modal{display:none;position:fixed;inset:0;background:rgba(249,248,246,0.88);backdrop-filter:blur(10px);z-index:200;overflow-y:auto;padding:32px 16px;}
@@ -188,7 +193,7 @@
     <button class="nav-tab" onclick="showPage(event,'inventario')">Inventario</button>
     <button class="nav-tab" onclick="showPage(event,'contenido')">Contenido</button>
     <button class="nav-tab" onclick="showPage(event,'clientes')">Clientes</button>
-    <button class="nav-tab" onclick="showPage(event,'config')">Sync</button>
+    <button class="nav-tab" onclick="showPage(event,'config')">Sync <span id="nav-sync-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-left:4px;vertical-align:middle;"></span></button>
   </div>
 </nav>
 
@@ -684,6 +689,7 @@
     <div><div class="card-title" style="margin-bottom:4px;">Estado</div><div id="sync-status" style="font-size:13px;color:var(--muted);">Conectando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <span style="font-size:12px;color:var(--green);background:var(--green-bg);border:1px solid var(--green);padding:4px 10px;border-radius:2px;">Sync automatico activo</span>
+      <button class="btn btn-outline btn-sm" id="btn-reintentar-sync" style="display:none;color:var(--red);border-color:var(--red);" onclick="reintentarSync()">Reintentar</button>
       <button class="btn btn-gold btn-sm" onclick="forzarSyncTodo()">Forzar sync</button>
     </div>
   </div>
@@ -700,22 +706,28 @@
     <div id="espacio-aviso" style="display:none;font-size:12px;padding:8px 10px;border-radius:2px;margin-top:10px;"></div>
   </div>
   <div class="card">
-    <div class="card-title">Como funciona</div>
-    <div class="rule-box"><div class="rule-box-title">Automatico</div><div class="rule-box-body">Cada cambio que hagas (agregar reloj, registrar venta, agregar cliente) se guarda solo, unos segundos despues de hacerlo. No necesitas hacer nada mas.</div></div>
-    <div class="rule-box"><div class="rule-box-title">Multiples dispositivos</div><div class="rule-box-body">Abre este mismo enlace en tu PC, tablet o celular y veras los mismos datos, actualizados en tiempo real.</div></div>
-    <div class="rule-box"><div class="rule-box-title">Sin internet</div><div class="rule-box-body">Si te quedas sin conexion, puedes seguir trabajando: los cambios se guardan en tu dispositivo y se sincronizan solos en cuanto vuelva la señal.</div></div>
+    <div class="card-title" style="margin-bottom:10px;">Diagnostico</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ultimos eventos de sincronizacion</div>
+    <div id="sync-history-lista"></div>
   </div>
   <div class="card">
-    <div class="card-title">Seguridad — PIN de acceso</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">PIN por defecto: <strong style="color:var(--accent);font-family:'DM Mono',monospace;">1234</strong></p>
-    <button class="btn btn-outline" onclick="changePin()">Cambiar PIN</button>
+    <div class="card-title">Seguridad — Codigo de autenticacion</div>
+    <div id="auth-estado-info" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Cargando...</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="generarNuevosBackupCodes()">Generar nuevos codigos de respaldo</button>
+      <button class="btn btn-outline" onclick="reiniciarAuth()">Reiniciar codigo de autenticacion</button>
+    </div>
   </div>
   <div class="card">
     <div class="card-title">Respaldo local (JSON)</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Exporta todos tus datos como archivo y restauralos cuando quieras.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Exporta todos tus datos como archivo y restauralos cuando quieras.</p>
+    <div id="respaldo-info" style="margin-bottom:6px;"></div>
+    <div id="respaldo-conteo" style="font-size:11px;color:var(--muted);margin-bottom:16px;"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn btn-outline" onclick="exportarJSON()">Exportar respaldo</button>
       <label class="btn btn-outline" style="cursor:pointer;margin:0;">Importar respaldo<input type="file" accept=".json" style="display:none;width:auto;" onchange="importarJSON(event)" /></label>
+      <button class="btn btn-outline" onclick="copiarRespaldoComoTexto()">Copiar respaldo como texto</button>
+      <button class="btn btn-outline" style="color:var(--red);border-color:var(--red);" onclick="borrarYRecargarDesdeNube()">Borrar datos locales y recargar desde la nube</button>
     </div>
   </div>
 </div>
@@ -760,29 +772,64 @@
   </div>
 </div>
 
-<!-- PIN OVERLAY -->
-<div class="pin-overlay" id="pin-overlay" style="display:none;">
-  <div class="pin-box" id="pin-box">
-    <div class="pin-icon">&#128274;</div>
-    <div class="pin-title">Acceso restringido</div>
-    <div class="pin-sub">Ingresa tu PIN para continuar</div>
-    <div class="pin-dots">
-      <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
-      <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
+<!-- AUTH OVERLAY (CODIGO DE AUTENTICACION / TOTP) -->
+<div class="pin-overlay" id="auth-overlay" style="display:none;">
+  <div class="pin-box" id="auth-box">
+
+    <div id="auth-view-code">
+      <div class="pin-icon">&#128274;</div>
+      <div class="pin-title">Acceso restringido</div>
+      <div class="pin-sub">Ingresa el codigo de tu app de autenticacion</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="auth-dot-0"></div><div class="pin-dot" id="auth-dot-1"></div>
+        <div class="pin-dot" id="auth-dot-2"></div><div class="pin-dot" id="auth-dot-3"></div>
+        <div class="pin-dot" id="auth-dot-4"></div><div class="pin-dot" id="auth-dot-5"></div>
+      </div>
+      <div class="pin-grid">
+        <button class="pin-btn" onclick="authPress('1')">1</button><button class="pin-btn" onclick="authPress('2')">2</button><button class="pin-btn" onclick="authPress('3')">3</button>
+        <button class="pin-btn" onclick="authPress('4')">4</button><button class="pin-btn" onclick="authPress('5')">5</button><button class="pin-btn" onclick="authPress('6')">6</button>
+        <button class="pin-btn" onclick="authPress('7')">7</button><button class="pin-btn" onclick="authPress('8')">8</button><button class="pin-btn" onclick="authPress('9')">9</button>
+        <button class="pin-btn del" onclick="authCancel()">Cancelar</button>
+        <button class="pin-btn" onclick="authPress('0')">0</button>
+        <button class="pin-btn del" onclick="authDelete()">&#9003;</button>
+      </div>
+      <button type="button" class="auth-link" onclick="irABackupCode()">Perdi acceso a mi app · usar codigo de respaldo</button>
     </div>
-    <div class="pin-grid">
-      <button class="pin-btn" onclick="pinPress('1')">1</button><button class="pin-btn" onclick="pinPress('2')">2</button><button class="pin-btn" onclick="pinPress('3')">3</button>
-      <button class="pin-btn" onclick="pinPress('4')">4</button><button class="pin-btn" onclick="pinPress('5')">5</button><button class="pin-btn" onclick="pinPress('6')">6</button>
-      <button class="pin-btn" onclick="pinPress('7')">7</button><button class="pin-btn" onclick="pinPress('8')">8</button><button class="pin-btn" onclick="pinPress('9')">9</button>
-      <button class="pin-btn del" onclick="pinCancel()">Cancelar</button>
-      <button class="pin-btn" onclick="pinPress('0')">0</button>
-      <button class="pin-btn del" onclick="pinDelete()">&#9003;</button>
+
+    <div id="auth-view-backup" style="display:none;">
+      <div class="pin-icon">&#128273;</div>
+      <div class="pin-title">Codigo de respaldo</div>
+      <div class="pin-sub">Ingresa uno de tus codigos de un solo uso</div>
+      <div class="field" style="text-align:left;"><input type="text" id="auth-backup-input" placeholder="XXXX-XXXX" style="text-transform:uppercase;text-align:center;font-family:'DM Mono',monospace;letter-spacing:0.1em;" /></div>
+      <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="verificarBackupCodeIngresado()">Verificar</button>
+      <button type="button" class="auth-link" onclick="volverACodigoAuth()">Volver al codigo de 6 digitos</button>
     </div>
+
+    <div id="auth-view-setup" style="display:none;">
+      <div class="pin-title">Configura tu codigo de autenticacion</div>
+      <div class="pin-sub">Escanea este QR con Google Authenticator, Authy u otra app similar</div>
+      <div class="auth-qr-wrap" id="auth-qr"></div>
+      <div class="pin-sub" style="margin-bottom:6px;">O ingresa este codigo manualmente:</div>
+      <div class="auth-secreto" id="auth-secreto-manual"></div>
+      <div class="field" style="text-align:left;"><label>Codigo de 6 digitos de tu app</label><input type="text" id="auth-setup-input" placeholder="000000" style="text-align:center;font-family:'DM Mono',monospace;letter-spacing:0.15em;" /></div>
+      <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="confirmarConfiguracionAuth()">Activar</button>
+    </div>
+
+    <div id="auth-view-codigos-generados" style="display:none;">
+      <div class="pin-icon">&#9888;</div>
+      <div class="pin-title">Guarda tus codigos de respaldo</div>
+      <div class="pin-sub">Cada uno funciona una sola vez. Guardalos en un lugar seguro — no se volveran a mostrar.</div>
+      <div class="auth-codigos-lista" id="auth-codigos-lista"></div>
+      <button class="btn btn-gold" style="width:100%;" onclick="confirmarCodigosGuardados()">Ya los guarde, continuar</button>
+    </div>
+
   </div>
+</div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // =================== FIREBASE ===================
 const firebaseConfig = {
@@ -819,6 +866,8 @@ function save(key) {
   if (!COLECCIONES.includes(key)) { localStorage.setItem(key, JSON.stringify(state[key])); }
   if (COLECCIONES.includes(key)) { scheduleSync(key); }
   else { scheduleSync('config'); }
+  try{ renderEspacioUsado(); }catch(e){}
+  try{ renderResumenRespaldo(); }catch(e){}
 }
 function saveMeta() {
   localStorage.setItem('meta', state.meta);
@@ -834,7 +883,7 @@ function scheduleSync(key) {
 
 // =================== NAV ===================
 function showPage(ev, name) {
-  if (name === 'config') { showPin(); return; }
+  if (name === 'config') { showAuth(); return; }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
@@ -2345,10 +2394,45 @@ function renderEspacioUsado(){
     }
   }
 }
-function setSyncStatus(msg,color){
+function setSyncStatus(msg,color,tipo){
   var el=document.getElementById('sync-status');if(el){el.textContent=msg;el.style.color=color||'var(--muted)';}
   var nav=document.getElementById('nav-sync-indicator');if(nav){nav.textContent=msg;nav.style.color=color||'rgba(255,255,255,0.55)';nav.style.display='block';}
+  var dot=document.getElementById('nav-sync-dot');
+  if(dot){ dot.style.background = tipo==='error'?'var(--red)':tipo==='warn'?'var(--accent)':tipo==='ok'?'var(--green)':'var(--muted)'; }
+  var btnRetry=document.getElementById('btn-reintentar-sync');
+  if(btnRetry) btnRetry.style.display = tipo==='error' ? 'inline-block' : 'none';
+  if(tipo==='ok'||tipo==='error'){ registrarEventoSync(msg,tipo); }
 }
+function registrarEventoSync(msg,tipo){
+  try{
+    var hist=JSON.parse(localStorage.getItem('syncHistory')||'[]');
+    hist.unshift({hora:new Date().toLocaleTimeString('es-MX'),msg:msg,tipo:tipo||'info'});
+    hist=hist.slice(0,5);
+    localStorage.setItem('syncHistory',JSON.stringify(hist));
+    renderSyncHistory();
+  }catch(e){}
+}
+function renderSyncHistory(){
+  var cont=document.getElementById('sync-history-lista');
+  if(!cont)return;
+  var hist=JSON.parse(localStorage.getItem('syncHistory')||'[]');
+  if(!hist.length){ cont.innerHTML='<div style="font-size:12px;color:var(--muted);">Sin eventos recientes.</div>'; return; }
+  cont.innerHTML=hist.map(function(h){
+    var color=h.tipo==='error'?'var(--red)':h.tipo==='ok'?'var(--green)':'var(--muted)';
+    return '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border);"><span style="color:'+color+';">'+h.msg+'</span><span style="color:var(--muted);font-family:\'DM Mono\',monospace;">'+h.hora+'</span></div>';
+  }).join('');
+}
+function reintentarSync(){
+  if(!navigator.onLine){ alert('Tu dispositivo no tiene conexion a internet en este momento.'); return; }
+  forzarSyncTodo();
+}
+window.addEventListener('offline', function(){
+  setSyncStatus('Sin internet en este dispositivo','var(--red)','error');
+});
+window.addEventListener('online', function(){
+  setSyncStatus('Conexion recuperada, sincronizando...','var(--accent)','warn');
+  forzarSyncTodo();
+});
 
 function idAleatorio(prefijo){
   return prefijo+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
@@ -2366,7 +2450,7 @@ let _lastSynced = { inventario:{}, movimientos:{}, clientes:{} };
 async function syncColeccion(key){
   if(!_firebaseListo) return;
   asegurarIds(key);
-  setSyncStatus('Sincronizando...','var(--accent)');
+  setSyncStatus('Sincronizando...','var(--accent)','warn');
   try{
     var coll=db.collection(key);
     var idsActuales=new Set();
@@ -2397,16 +2481,16 @@ async function syncColeccion(key){
       });
     }
     var now=new Date().toLocaleTimeString('es-MX');
-    setSyncStatus('Sincronizado · '+now,'var(--green)');
+    setSyncStatus('Sincronizado · '+now,'var(--green)','ok');
     localStorage.setItem('lastSync',now);
   }catch(e){
-    setSyncStatus('Error de sincronizacion','var(--red)');
+    setSyncStatus('Error de sincronizacion','var(--red)','error');
   }
 }
 
 async function syncConfig(){
   if(!_firebaseListo) return;
-  setSyncStatus('Guardando...','var(--accent)');
+  setSyncStatus('Guardando...','var(--accent)','warn');
   try{
     await db.collection('config').doc('main').set({
       meta: state.meta,
@@ -2415,10 +2499,10 @@ async function syncConfig(){
       ideas: state.ideas
     });
     var now=new Date().toLocaleTimeString('es-MX');
-    setSyncStatus('Sincronizado · '+now,'var(--green)');
+    setSyncStatus('Sincronizado · '+now,'var(--green)','ok');
     localStorage.setItem('lastSync',now);
   }catch(e){
-    setSyncStatus('Error de sincronizacion','var(--red)');
+    setSyncStatus('Error de sincronizacion','var(--red)','error');
   }
 }
 
@@ -2445,12 +2529,13 @@ function refrescarVista(key){
     try{ renderChecklist(); }catch(e){}
     try{ renderIdeas(); }catch(e){}
     try{ renderContenido(); }catch(e){}
+    try{ renderConfigPage(); }catch(e){}
   }
 }
 
 function iniciarSincronizacionFirebase(){
   firebase.auth().signInAnonymously().catch(function(){
-    setSyncStatus('No se pudo conectar','var(--red)');
+    setSyncStatus('No se pudo conectar','var(--red)','error');
   });
   firebase.auth().onAuthStateChanged(function(user){
     if(!user) return;
@@ -2474,7 +2559,7 @@ function iniciarSincronizacionFirebase(){
         state[key]=items;
         refrescarVista(key);
       }, function(){
-        setSyncStatus('Sin conexion','var(--red)');
+        setSyncStatus('Sin conexion','var(--red)','error');
       });
     });
 
@@ -2487,10 +2572,10 @@ function iniciarSincronizacionFirebase(){
       if(Array.isArray(data.ideas)){ state.ideas=data.ideas; localStorage.setItem('ideas',JSON.stringify(state.ideas)); }
       refrescarVista('config');
     }, function(){
-      setSyncStatus('Sin conexion','var(--red)');
+      setSyncStatus('Sin conexion','var(--red)','error');
     });
 
-    setSyncStatus('Conectado','var(--green)');
+    setSyncStatus('Conectado','var(--green)','ok');
   });
 }
 
@@ -2499,45 +2584,353 @@ function forzarSyncTodo(){
   COLECCIONES.forEach(function(key){ syncColeccion(key); });
   syncConfig();
 }
-function exportarJSON(){
-  var data={exportado:new Date().toISOString(),movimientos:state.movimientos,inventario:state.inventario,clientes:state.clientes,meta:state.meta,ideas:state.ideas};
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='respaldo-tienda-'+new Date().toISOString().slice(0,10)+'.json';a.click();
-}
-function importarJSON(e){
-  var file=e.target.files[0];if(!file)return;
-  var reader=new FileReader();
-  reader.onload=(ev)=>{try{var data=JSON.parse(ev.target.result);if(data.movimientos)state.movimientos=data.movimientos;if(data.inventario)state.inventario=data.inventario;if(data.clientes)state.clientes=data.clientes;if(data.meta)state.meta=data.meta;if(data.ideas)state.ideas=data.ideas;['movimientos','inventario','clientes','ideas'].forEach(k=>save(k));saveMeta();renderInicio();alert('Datos restaurados correctamente.');}catch{alert('Archivo invalido.');}};
-  reader.readAsText(file);
-}
 
-// =================== PIN ===================
-const DEFAULT_PIN='1234';let _pinBuffer='';
-function getPin(){return localStorage.getItem('userPin')||DEFAULT_PIN;}
-function showPin(){_pinBuffer='';updatePinDots();document.getElementById('pin-overlay').style.display='flex';document.getElementById('pin-box').classList.remove('pin-shake');}
-function hidePin(){document.getElementById('pin-overlay').style.display='none';_pinBuffer='';}
-function pinPress(digit){if(_pinBuffer.length>=4)return;_pinBuffer+=digit;updatePinDots();if(_pinBuffer.length===4)setTimeout(checkPin,150);}
-function pinDelete(){_pinBuffer=_pinBuffer.slice(0,-1);updatePinDots();}
-function pinCancel(){hidePin();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-inicio').classList.add('active');document.querySelector('.nav-tab').classList.add('active');renderInicio();}
-function checkPin(){
-  if(_pinBuffer===getPin()){
-    hidePin();
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t=>{t.classList.remove('active');if(t.textContent.trim()==='Sync')t.classList.add('active');});
-    document.getElementById('page-config').classList.add('active');
-    var lastSync=localStorage.getItem('lastSync');if(lastSync&&!_firebaseListo)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');
-  }else{
-    var box=document.getElementById('pin-box');box.classList.add('pin-shake');
-    document.querySelectorAll('.pin-dot').forEach(d=>d.classList.add('error'));
-    setTimeout(()=>{box.classList.remove('pin-shake');_pinBuffer='';updatePinDots();},600);
+// =================== RESPALDO (JSON) ===================
+function construirDatosRespaldo(){
+  return {
+    exportado:new Date().toISOString(),
+    movimientos:state.movimientos,
+    inventario:state.inventario,
+    clientes:state.clientes,
+    meta:state.meta,
+    ideas:state.ideas,
+    tasks:state.tasks,
+    weekTasks:state.weekTasks
+  };
+}
+function renderResumenRespaldo(){
+  var el=document.getElementById('respaldo-info');
+  if(el){
+    var last=localStorage.getItem('lastExportISO');
+    var texto, color='var(--muted)';
+    if(last){
+      var d=new Date(last);
+      var dias=Math.floor((Date.now()-d.getTime())/86400000);
+      texto='Ultimo respaldo exportado: '+d.toLocaleDateString('es-MX')+' '+d.toLocaleTimeString('es-MX');
+      if(dias>=7){ color='var(--red)'; texto+=' — han pasado '+dias+' dias, se recomienda exportar uno nuevo.'; }
+    } else {
+      texto='Aun no has exportado ningun respaldo local.';
+      color='var(--red)';
+    }
+    el.innerHTML='<span style="font-size:12px;color:'+color+';">'+texto+'</span>';
+  }
+  var conteo=document.getElementById('respaldo-conteo');
+  if(conteo){
+    conteo.textContent=state.inventario.length+' relojes · '+state.movimientos.length+' movimientos · '+state.clientes.length+' clientes';
   }
 }
-function updatePinDots(){for(var i=0;i<4;i++){var dot=document.getElementById('dot-'+i);dot.classList.remove('filled','error');if(i<_pinBuffer.length)dot.classList.add('filled');}}
-function changePin(){
-  var current=prompt('Ingresa tu PIN actual:');if(current!==getPin()){alert('PIN incorrecto.');return;}
-  var newPin=prompt('Ingresa tu nuevo PIN (4 digitos):');if(!newPin||!/^\d{4}$/.test(newPin)){alert('El PIN debe ser 4 digitos.');return;}
-  var confirmPin=prompt('Confirma tu nuevo PIN:');if(newPin!==confirmPin){alert('Los PINs no coinciden.');return;}
-  localStorage.setItem('userPin',newPin);alert('PIN cambiado correctamente.');
+function exportarJSON(){
+  var data=construirDatosRespaldo();
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='respaldo-tienda-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.json';
+  a.click();
+  localStorage.setItem('lastExportISO',new Date().toISOString());
+  renderResumenRespaldo();
+}
+async function copiarRespaldoComoTexto(){
+  var data=construirDatosRespaldo();
+  var texto=JSON.stringify(data);
+  try{
+    await navigator.clipboard.writeText(texto);
+    localStorage.setItem('lastExportISO',new Date().toISOString());
+    renderResumenRespaldo();
+    alert('Respaldo copiado al portapapeles. Pegalo en WhatsApp, Notas o donde prefieras guardarlo.');
+  }catch(e){
+    alert('No se pudo copiar automaticamente en este dispositivo. Usa el boton "Exportar respaldo" en su lugar.');
+  }
+}
+function borrarYRecargarDesdeNube(){
+  if(!confirm('Esto borra los datos guardados en ESTE dispositivo (no en la nube) y los vuelve a descargar desde Firebase. Usalo solo si ves algo raro o desactualizado en este dispositivo. Continuar?'))return;
+  ['inventario','movimientos','clientes','tasks','meta','weekTasks','ideas','lastSync','syncHistory'].forEach(function(k){ localStorage.removeItem(k); });
+  location.reload();
+}
+function importarJSON(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=async function(ev){
+    var data;
+    try{ data=JSON.parse(ev.target.result); }
+    catch(err){ alert('El archivo no es un JSON valido.'); e.target.value=''; return; }
+
+    var esValido = data && typeof data==='object' &&
+      (data.movimientos===undefined||Array.isArray(data.movimientos)) &&
+      (data.inventario===undefined||Array.isArray(data.inventario)) &&
+      (data.clientes===undefined||Array.isArray(data.clientes)) &&
+      (data.ideas===undefined||Array.isArray(data.ideas)) &&
+      (data.tasks===undefined||Array.isArray(data.tasks));
+    if(!esValido){ alert('El archivo no tiene el formato esperado de un respaldo de esta tienda.'); e.target.value=''; return; }
+
+    var resumen='Vas a reemplazar TODOS los datos actuales con este respaldo';
+    if(data.exportado){ resumen+=' (exportado el '+new Date(data.exportado).toLocaleString('es-MX')+')'; }
+    resumen+='.\n\nEsta accion no se puede deshacer. Deseas continuar?';
+    if(!confirm(resumen)){ e.target.value=''; return; }
+
+    if(Array.isArray(data.movimientos)) state.movimientos=data.movimientos;
+    if(Array.isArray(data.inventario)) state.inventario=data.inventario;
+    if(Array.isArray(data.clientes)) state.clientes=data.clientes;
+    if(typeof data.meta==='number') state.meta=data.meta;
+    if(Array.isArray(data.ideas)) state.ideas=data.ideas;
+    if(Array.isArray(data.tasks)) state.tasks=data.tasks;
+    if(data.weekTasks && typeof data.weekTasks==='object') state.weekTasks=data.weekTasks;
+
+    ['inventario','movimientos','clientes'].forEach(function(k){ asegurarIds(k); });
+    ['movimientos','inventario','clientes','ideas','tasks','weekTasks'].forEach(function(k){ save(k); });
+    saveMeta();
+
+    refrescarVistaCompleta();
+    e.target.value='';
+    alert('Datos restaurados correctamente.');
+  };
+  reader.onerror=function(){ alert('No se pudo leer el archivo.'); e.target.value=''; };
+  reader.readAsText(file);
+}
+function refrescarVistaCompleta(){
+  ['inventario','movimientos','clientes','config'].forEach(function(k){ try{ refrescarVista(k); }catch(e){} });
+}
+
+// =================== AUTENTICACION (TOTP) ===================
+const B32_CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Encode(bytes){
+  var bits='',output='';
+  for(var i=0;i<bytes.length;i++){ bits+=bytes[i].toString(2).padStart(8,'0'); }
+  for(i=0;i+5<=bits.length;i+=5){ output+=B32_CHARS[parseInt(bits.substr(i,5),2)]; }
+  if(bits.length%5!==0){
+    var rem=bits.length%5;
+    var last=bits.substr(bits.length-rem).padEnd(5,'0');
+    output+=B32_CHARS[parseInt(last,2)];
+  }
+  return output;
+}
+function base32Decode(str){
+  str=str.replace(/=+$/,'').toUpperCase().replace(/[^A-Z2-7]/g,'');
+  var bits='';
+  for(var i=0;i<str.length;i++){
+    var val=B32_CHARS.indexOf(str[i]);
+    if(val===-1)continue;
+    bits+=val.toString(2).padStart(5,'0');
+  }
+  var bytes=[];
+  for(i=0;i+8<=bits.length;i+=8){ bytes.push(parseInt(bits.substr(i,8),2)); }
+  return new Uint8Array(bytes);
+}
+function generarSecretoTotp(){
+  var bytes=new Uint8Array(20);
+  crypto.getRandomValues(bytes);
+  return base32Encode(bytes);
+}
+async function totpCodigoParaPaso(secretBase32,step){
+  var keyBytes=base32Decode(secretBase32);
+  var key=await crypto.subtle.importKey('raw',keyBytes,{name:'HMAC',hash:'SHA-1'},false,['sign']);
+  var counter=new ArrayBuffer(8);
+  var view=new DataView(counter);
+  view.setUint32(4,step>>>0,false);
+  view.setUint32(0,Math.floor(step/4294967296),false);
+  var sigBuf=await crypto.subtle.sign('HMAC',key,counter);
+  var sig=new Uint8Array(sigBuf);
+  var offset=sig[sig.length-1]&0xf;
+  var bin=((sig[offset]&0x7f)<<24)|((sig[offset+1]&0xff)<<16)|((sig[offset+2]&0xff)<<8)|(sig[offset+3]&0xff);
+  return (bin%1000000).toString().padStart(6,'0');
+}
+async function totpVerificar(secretBase32,codigoIngresado){
+  if(!secretBase32||!/^\d{6}$/.test(codigoIngresado))return false;
+  var pasoActual=Math.floor(Date.now()/1000/30);
+  for(var delta=-1;delta<=1;delta++){
+    var c=await totpCodigoParaPaso(secretBase32,pasoActual+delta);
+    if(c===codigoIngresado)return true;
+  }
+  return false;
+}
+function getTotpSecret(){ return localStorage.getItem('authTotpSecret')||''; }
+
+// --- Codigos de respaldo ---
+function generarCodigoRespaldo(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var rnd=new Uint8Array(8);
+  crypto.getRandomValues(rnd);
+  var s='';
+  for(var i=0;i<8;i++){ s+=chars[rnd[i]%chars.length]; if(i===3)s+='-'; }
+  return s;
+}
+async function sha256Hex(texto){
+  var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(texto));
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+async function generarLoteCodigosRespaldo(n){
+  n=n||8;
+  var codigos=[],hashes=[];
+  for(var i=0;i<n;i++){
+    var c=generarCodigoRespaldo();
+    codigos.push(c);
+    hashes.push({hash:await sha256Hex(c),usado:false});
+  }
+  localStorage.setItem('authBackupCodes',JSON.stringify(hashes));
+  return codigos;
+}
+async function verificarCodigoRespaldo(codigoIngresado){
+  var lista=JSON.parse(localStorage.getItem('authBackupCodes')||'[]');
+  var hashIngresado=await sha256Hex(codigoIngresado.trim().toUpperCase());
+  for(var i=0;i<lista.length;i++){
+    if(lista[i].hash===hashIngresado && !lista[i].usado){
+      lista[i].usado=true;
+      localStorage.setItem('authBackupCodes',JSON.stringify(lista));
+      return {ok:true,restantes:lista.filter(function(x){return !x.usado;}).length};
+    }
+  }
+  return {ok:false};
+}
+function contarBackupInfo(){
+  var lista=JSON.parse(localStorage.getItem('authBackupCodes')||'[]');
+  return {restantes:lista.filter(function(x){return !x.usado;}).length,total:lista.length};
+}
+
+// --- Overlay: navegacion entre vistas ---
+var _authBuffer='';
+var _secretoTemporal='';
+function mostrarVistaAuth(vista){
+  ['code','backup','setup','codigos-generados'].forEach(function(v){
+    var el=document.getElementById('auth-view-'+v);
+    if(el)el.style.display=(v===vista)?'block':'none';
+  });
+}
+function showAuth(){
+  if(!getTotpSecret()){
+    iniciarConfiguracionAuth();
+  }else{
+    _authBuffer='';
+    actualizarPuntosAuth();
+    mostrarVistaAuth('code');
+    document.getElementById('auth-overlay').style.display='flex';
+  }
+}
+function hideAuth(){ document.getElementById('auth-overlay').style.display='none'; _authBuffer=''; }
+function authCancel(){
+  hideAuth();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-inicio').classList.add('active');
+  document.querySelector('.nav-tab').classList.add('active');
+  renderInicio();
+}
+function authPress(digit){
+  if(_authBuffer.length>=6)return;
+  _authBuffer+=digit;
+  actualizarPuntosAuth();
+  if(_authBuffer.length===6)setTimeout(checkAuthCode,150);
+}
+function authDelete(){ _authBuffer=_authBuffer.slice(0,-1); actualizarPuntosAuth(); }
+function actualizarPuntosAuth(){
+  for(var i=0;i<6;i++){
+    var dot=document.getElementById('auth-dot-'+i);
+    if(!dot)continue;
+    dot.classList.remove('filled','error');
+    if(i<_authBuffer.length)dot.classList.add('filled');
+  }
+}
+async function checkAuthCode(){
+  var ok=await totpVerificar(getTotpSecret(),_authBuffer);
+  if(ok){
+    onAuthSuccess();
+  }else{
+    var box=document.getElementById('auth-box');
+    box.classList.add('pin-shake');
+    document.querySelectorAll('#auth-view-code .pin-dot').forEach(function(d){d.classList.add('error');});
+    setTimeout(function(){ box.classList.remove('pin-shake'); _authBuffer=''; actualizarPuntosAuth(); },600);
+  }
+}
+function onAuthSuccess(){
+  hideAuth();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); if(t.textContent.trim()==='Sync')t.classList.add('active'); });
+  document.getElementById('page-config').classList.add('active');
+  var lastSync=localStorage.getItem('lastSync');if(lastSync&&!_firebaseListo)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)','info');
+  renderConfigPage();
+}
+function irABackupCode(){ mostrarVistaAuth('backup'); document.getElementById('auth-backup-input').value=''; }
+function volverACodigoAuth(){ _authBuffer=''; actualizarPuntosAuth(); mostrarVistaAuth('code'); }
+async function verificarBackupCodeIngresado(){
+  var val=document.getElementById('auth-backup-input').value.trim();
+  if(!val)return;
+  var res=await verificarCodigoRespaldo(val);
+  if(res.ok){
+    if(res.restantes<=2){ alert('Advertencia: te quedan '+res.restantes+' codigos de respaldo. Genera nuevos desde Sync > Seguridad cuando puedas.'); }
+    onAuthSuccess();
+  }else{
+    alert('Codigo de respaldo invalido o ya usado.');
+  }
+}
+
+// --- Configuracion inicial (enrolamiento) ---
+async function iniciarConfiguracionAuth(){
+  _secretoTemporal=generarSecretoTotp();
+  var cuenta='AphillipsStore:tienda';
+  var uri='otpauth://totp/'+encodeURIComponent(cuenta)+'?secret='+_secretoTemporal+'&issuer=AphillipsStore&digits=6&period=30';
+  var qrEl=document.getElementById('auth-qr');
+  qrEl.innerHTML='';
+  try{ new QRCode(qrEl,{text:uri,width:170,height:170,colorDark:'#1a1a1a',colorLight:'#ffffff'}); }catch(e){}
+  document.getElementById('auth-secreto-manual').textContent=_secretoTemporal.match(/.{1,4}/g).join(' ');
+  document.getElementById('auth-setup-input').value='';
+  mostrarVistaAuth('setup');
+  document.getElementById('auth-overlay').style.display='flex';
+}
+async function confirmarConfiguracionAuth(){
+  var codigo=document.getElementById('auth-setup-input').value.trim();
+  if(!/^\d{6}$/.test(codigo)){ alert('Ingresa el codigo de 6 digitos que muestra tu app de autenticacion.'); return; }
+  var ok=await totpVerificar(_secretoTemporal,codigo);
+  if(!ok){ alert('El codigo no coincide. Verifica que escaneaste bien el QR e intenta de nuevo.'); return; }
+  localStorage.setItem('authTotpSecret',_secretoTemporal);
+  var codigos=await generarLoteCodigosRespaldo(8);
+  mostrarCodigosRespaldoGenerados(codigos,function(){ onAuthSuccess(); });
+}
+function mostrarCodigosRespaldoGenerados(codigos,alTerminar){
+  document.getElementById('auth-codigos-lista').innerHTML=codigos.map(function(c){
+    return '<div style="font-family:\'DM Mono\',monospace;font-size:14px;">'+c+'</div>';
+  }).join('');
+  window._alTerminarCodigosAuth=alTerminar;
+  mostrarVistaAuth('codigos-generados');
+}
+function confirmarCodigosGuardados(){
+  if(!confirm('Confirmas que guardaste tus codigos de respaldo en un lugar seguro? No se volveran a mostrar.'))return;
+  if(window._alTerminarCodigosAuth)window._alTerminarCodigosAuth();
+}
+
+// --- Gestion desde la pantalla de Sync (ya autenticado) ---
+function renderSeguridadAuth(){
+  var el=document.getElementById('auth-estado-info');
+  if(!el)return;
+  if(getTotpSecret()){
+    var info=contarBackupInfo();
+    el.innerHTML='Codigo de autenticacion activo · <strong style="color:var(--black);">'+info.restantes+' de '+info.total+'</strong> codigos de respaldo disponibles.'+(info.restantes<=2?' <span style="color:var(--red);">Te quedan pocos, genera nuevos.</span>':'');
+  }else{
+    el.textContent='Aun no configurado.';
+  }
+}
+async function generarNuevosBackupCodes(){
+  var actual=prompt('Ingresa tu codigo actual de 6 digitos para generar nuevos codigos de respaldo:');
+  if(!actual)return;
+  var ok=await totpVerificar(getTotpSecret(),actual.trim());
+  if(!ok){ alert('Codigo incorrecto.'); return; }
+  var codigos=await generarLoteCodigosRespaldo(8);
+  document.getElementById('auth-overlay').style.display='flex';
+  mostrarCodigosRespaldoGenerados(codigos,function(){ hideAuth(); renderSeguridadAuth(); });
+}
+async function reiniciarAuth(){
+  var actual=prompt('Para reiniciar, ingresa tu codigo actual de 6 digitos:');
+  if(!actual)return;
+  var ok=await totpVerificar(getTotpSecret(),actual.trim());
+  if(!ok){ alert('Codigo incorrecto.'); return; }
+  if(!confirm('Esto invalidara tu codigo actual y tus codigos de respaldo. Tendras que escanear un nuevo QR con tu app de autenticacion. Continuar?'))return;
+  localStorage.removeItem('authTotpSecret');
+  localStorage.removeItem('authBackupCodes');
+  iniciarConfiguracionAuth();
+}
+function renderConfigPage(){
+  try{ renderEspacioUsado(); }catch(e){}
+  try{ renderResumenRespaldo(); }catch(e){}
+  try{ renderSeguridadAuth(); }catch(e){}
+  try{ renderSyncHistory(); }catch(e){}
 }
 
 // =================== INIT ===================
@@ -2551,7 +2944,8 @@ var abonoOverlay=document.getElementById('abono-overlay');
 if(abonoOverlay)abonoOverlay.addEventListener('click',function(e){if(e.target===this)cerrarAbonoModal();});
 var reglasOverlay=document.getElementById('reglas-overlay');
 if(reglasOverlay)reglasOverlay.addEventListener('click',function(e){if(e.target===this)cerrarReglasModal();});
-var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)');
+var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)','info');
+renderSyncHistory();
 iniciarSincronizacionFirebase();
 renderInicio();
 </script>
