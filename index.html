@@ -108,6 +108,8 @@
   /* Finance */
   .filtro-estado{background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:11px;padding:5px 12px;font-family:'Jost',sans-serif;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border-radius:2px;cursor:pointer;}
   .filtro-estado.active{background:var(--black);color:var(--white);border-color:var(--black);}
+  .filtro-cliente{background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:11px;padding:5px 12px;font-family:'Jost',sans-serif;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border-radius:2px;cursor:pointer;}
+  .filtro-cliente.active{background:var(--black);color:var(--white);border-color:var(--black);}
   .dias-alerta{font-size:10px;font-weight:600;padding:2px 7px;border-radius:2px;letter-spacing:0.06em;white-space:nowrap;}
   .dias-ok{background:var(--green-bg);color:var(--green);}
   .dias-warn{background:var(--accent-light);color:#7a6000;}
@@ -711,23 +713,38 @@
   <div class="section-title">Clientes</div>
   <div class="section-sub"></div>
   <div class="card">
-    <div class="card-title">Registrar cliente</div>
+    <div class="card-title" id="cli-form-title">Registrar cliente</div>
+    <input type="hidden" id="cli-edit-id" value="" />
     <div class="grid-2">
       <div class="field"><label>Nombre</label><input type="text" id="cli-nombre" placeholder="Nombre completo" /></div>
       <div class="field"><label>Telefono / WhatsApp</label><input type="text" id="cli-tel" placeholder="+507 " /></div>
       <div class="field"><label>Canal donde compro</label><select id="cli-canal"><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="instagram">Instagram</option><option value="directo">Directo</option></select></div>
-      <div class="field"><label>Reloj que compro</label><input type="text" id="cli-producto" placeholder="Modelo del reloj" /></div>
+      <div class="field"><label>Reloj de interes / que compro</label><input type="text" id="cli-producto" placeholder="Modelo del reloj" /></div>
     </div>
     <div class="field"><label>Notas</label><textarea id="cli-notas" rows="2" placeholder="Ej: Le interesa el Pro Diver en negro..."></textarea></div>
-    <button class="btn btn-gold" onclick="registrarCliente()">Guardar cliente</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-gold" id="cli-submit-btn" onclick="registrarCliente()" style="flex:1;">Guardar cliente</button>
+      <button class="btn btn-outline" id="cli-cancel-btn" onclick="cancelarEdicionCliente()" style="display:none;">Cancelar</button>
+    </div>
   </div>
-  <div class="card"><div class="card-title">Tus clientes</div><div id="cli-lista"><div class="empty"><span></span>Sin clientes aun.</div></div></div>
+  <div class="card" style="padding:14px 20px;">
+    <div id="cli-stats" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+  </div>
   <div class="card">
-    <div class="card-title">Estrategia para conseguir mas clientes</div>
-    <div class="rule-box"><div class="rule-box-title">1 · Optimiza tu marketplace</div><div class="rule-box-body">Fotos limpias, descripcion completa, precio competitivo. El que tiene mejores fotos vende mas.</div></div>
-    <div class="rule-box"><div class="rule-box-title">2 · Pide resenas siempre</div><div class="rule-box-body">Despues de cada venta: "Llego bien tu reloj? Me ayudaria mucho si dejas una resena." Las resenas generan mas ventas que cualquier anuncio.</div></div>
-    <div class="rule-box"><div class="rule-box-title">3 · Reactivar clientes anteriores</div><div class="rule-box-body">Cuando llegue inventario nuevo, contacta a clientes que ya compraron. Ya confian en ti.</div></div>
-    <div class="rule-box"><div class="rule-box-title">4 · Instagram hacia marketplace</div><div class="rule-box-body">En cada post menciona el link de tu bio para ver mas.</div></div>
+    <div class="card-title" style="margin-bottom:10px;">Tus clientes</div>
+    <input type="text" id="cli-search" placeholder="Buscar por nombre o telefono..." oninput="renderClientes()" style="margin-bottom:10px;" />
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+      <button type="button" class="btn btn-sm filtro-cliente active" onclick="setFiltroCliente(this,'todos')">Todos</button>
+      <button type="button" class="btn btn-sm filtro-cliente" onclick="setFiltroCliente(this,'saldo')" style="color:var(--red);border-color:var(--red);">Con saldo pendiente</button>
+      <button type="button" class="btn btn-sm filtro-cliente" onclick="setFiltroCliente(this,'prospecto')" style="color:var(--blue);border-color:var(--blue);">Prospectos</button>
+      <button type="button" class="btn btn-sm filtro-cliente" onclick="setFiltroCliente(this,'cliente')" style="color:var(--green);border-color:var(--green);">Ya compraron</button>
+      <select id="cli-orden" onchange="renderClientes()" style="width:auto;margin-left:auto;">
+        <option value="reciente">Mas reciente</option>
+        <option value="alfabetico">Alfabetico (A-Z)</option>
+        <option value="gasto">Mayor gasto</option>
+      </select>
+    </div>
+    <div id="cli-lista"><div class="empty"><span></span>Sin clientes aun.</div></div>
   </div>
 </div>
 
@@ -781,6 +798,7 @@ const state = {
 };
 
 const COLECCIONES = ['inventario', 'movimientos', 'clientes'];
+function idxCliente(id){ return state.clientes.findIndex(function(x){return x.id===id;}); }
 let _remoteIds = { inventario: new Set(), movimientos: new Set(), clientes: new Set() };
 let _syncTimers = {};
 let _firebaseListo = false;
@@ -1819,12 +1837,19 @@ function cancelarReserva(i){
   if(!p.reserva)return;
   if(!confirm('¿Cancelar la reserva de este reloj? El reloj volvera a estar disponible.'))return;
   var totalAbonado=totalAbonadoReserva(p);
+  var clienteIdRes=p.reserva.clienteId,clienteNombreRes=p.reserva.clienteNombre;
+  var seDevolvio=false;
   if(totalAbonado>0){
     var devolver=confirm('Se recibieron $'+totalAbonado.toLocaleString()+' en abono de '+p.reserva.clienteNombre+'.\n\nPulsa Aceptar para DEVOLVER ese dinero al cliente (se registra como gasto).\nPulsa Cancelar para QUEDARTE con el abono (no se devuelve, el dinero ya registrado se queda).');
     if(devolver){
+      seDevolvio=true;
       state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:totalAbonado,canal:'reembolso',categoria:'Reembolso',metodoPago:'',costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
       save('movimientos');
     }
+  }
+  if(clienteIdRes){
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'reserva_cancelada',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+(totalAbonado>0?(seDevolvio?' · Abono devuelto':' · Abono retenido'):''),monto:0,canal:'reserva_cancelada',clienteId:clienteIdRes,clienteNombre:clienteNombreRes,fecha:new Date().toLocaleDateString('es-MX')});
+    save('movimientos');
   }
   p.estado='disponible';
   delete p.reserva;
@@ -2075,25 +2100,119 @@ function reponerIdeas(){
 }
 
 // =================== CLIENTES ===================
+function whatsappLink(tel){
+  if(!tel)return'';
+  var limpio=tel.replace(/[^0-9]/g,'');
+  if(!limpio)return'';
+  return'https://wa.me/'+limpio;
+}
 function registrarCliente(){
   var nombre=document.getElementById('cli-nombre').value.trim();
   if(!nombre){alert('Escribe el nombre del cliente.');return;}
-  state.clientes.unshift({id:idAleatorio('cli'),_ts:Date.now(),nombre,tel:document.getElementById('cli-tel').value.trim(),canal:document.getElementById('cli-canal').value,producto:document.getElementById('cli-producto').value.trim(),notas:document.getElementById('cli-notas').value.trim(),fecha:new Date().toLocaleDateString('es-MX')});
+  var tel=document.getElementById('cli-tel').value.trim();
+  var editId=document.getElementById('cli-edit-id').value;
+  if(editId){
+    var i=idxCliente(editId);
+    if(i===-1){alert('Este cliente ya no existe (puede que se haya eliminado en otro dispositivo).');cancelarEdicionCliente();return;}
+    var c=state.clientes[i];
+    c.nombre=nombre;c.tel=tel;c.canal=document.getElementById('cli-canal').value;
+    c.producto=document.getElementById('cli-producto').value.trim();
+    c.notas=document.getElementById('cli-notas').value.trim();
+    save('clientes');
+    cancelarEdicionCliente();
+    renderClientes();
+    return;
+  }
+  if(tel){
+    var dup=state.clientes.find(function(c){return c.tel&&c.tel.replace(/[^0-9]/g,'')===tel.replace(/[^0-9]/g,'')&&tel.replace(/[^0-9]/g,'')!=='';});
+    if(dup&&!confirm('Ya existe un cliente con este telefono: "'+dup.nombre+'". ¿Registrar de todos modos?'))return;
+  }
+  state.clientes.unshift({id:idAleatorio('cli'),_ts:Date.now(),nombre,tel,canal:document.getElementById('cli-canal').value,producto:document.getElementById('cli-producto').value.trim(),notas:document.getElementById('cli-notas').value.trim(),fecha:new Date().toLocaleDateString('es-MX')});
   save('clientes');
   ['cli-nombre','cli-tel','cli-producto','cli-notas'].forEach(id=>document.getElementById(id).value='');
   renderClientes();
 }
+function editarCliente(id){
+  var i=idxCliente(id);
+  if(i===-1){alert('Este cliente ya no existe.');renderClientes();return;}
+  var c=state.clientes[i];
+  document.getElementById('cli-nombre').value=c.nombre||'';
+  document.getElementById('cli-tel').value=c.tel||'';
+  document.getElementById('cli-canal').value=c.canal||'facebook';
+  document.getElementById('cli-producto').value=c.producto||'';
+  document.getElementById('cli-notas').value=c.notas||'';
+  document.getElementById('cli-edit-id').value=c.id;
+  document.getElementById('cli-form-title').textContent='Editar cliente';
+  document.getElementById('cli-submit-btn').textContent='Guardar cambios';
+  document.getElementById('cli-cancel-btn').style.display='inline-flex';
+  cerrarModal();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelarEdicionCliente(){
+  document.getElementById('cli-edit-id').value='';
+  ['cli-nombre','cli-tel','cli-producto','cli-notas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cli-canal').value='facebook';
+  document.getElementById('cli-form-title').textContent='Registrar cliente';
+  document.getElementById('cli-submit-btn').textContent='Guardar cliente';
+  document.getElementById('cli-cancel-btn').style.display='none';
+}
+function marcarContactado(id){
+  var i=idxCliente(id);
+  if(i===-1)return;
+  state.clientes[i].ultimoContacto=new Date().toLocaleDateString('es-MX');
+  save('clientes');
+  verDetalleCliente(id);
+  renderClientes();
+}
+function diasDesdeContacto(fechaStr){
+  if(!fechaStr)return null;
+  var p=fechaStr.split('/');if(p.length!==3)return null;
+  var d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+  return Math.floor((Date.now()-d.getTime())/86400000);
+}
+var _filtroCliente='todos';
+function setFiltroCliente(btn,f){_filtroCliente=f;document.querySelectorAll('.filtro-cliente').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderClientes();}
 function renderClientes(){
   var lista=document.getElementById('cli-lista');
-  if(state.clientes.length===0){lista.innerHTML='<div class="empty"><span></span>Sin clientes aun.</div>';return;}
   var nombres={facebook:'Facebook',whatsapp:'WhatsApp',instagram:'Instagram',directo:'Directo'};
-  lista.innerHTML=state.clientes.map((c,i)=>{
+  renderStatsClientes();
+  if(state.clientes.length===0){lista.innerHTML='<div class="empty"><span></span>Sin clientes aun.</div>';return;}
+  var q=(document.getElementById('cli-search')?document.getElementById('cli-search').value.toLowerCase():'');
+  var orden=document.getElementById('cli-orden')?document.getElementById('cli-orden').value:'reciente';
+  var items=state.clientes.filter(function(c){
+    var mQ=!q||(c.nombre||'').toLowerCase().includes(q)||(c.tel||'').toLowerCase().includes(q);
+    if(!mQ)return false;
+    var saldo=saldoPendienteCliente(c.id);
+    var comprado=totalCompradoCliente(c.id);
+    if(_filtroCliente==='saldo')return saldo>0;
+    if(_filtroCliente==='prospecto')return comprado<=0;
+    if(_filtroCliente==='cliente')return comprado>0;
+    return true;
+  });
+  if(orden==='alfabetico')items=items.slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  else if(orden==='gasto')items=items.slice().sort((a,b)=>totalCompradoCliente(b.id)-totalCompradoCliente(a.id));
+  else items=items.slice().sort((a,b)=>(b._ts||0)-(a._ts||0));
+  if(items.length===0){lista.innerHTML='<div class="empty"><span></span>Sin resultados para este filtro.</div>';return;}
+  lista.innerHTML=items.map((c)=>{
     var saldo=saldoPendienteCliente(c.id);
     var totalComprado=totalCompradoCliente(c.id);
-    var subInfo=(c.producto||'Sin producto')+' · '+c.fecha+(totalComprado>0?' · Comprado: $'+totalComprado.toLocaleString():'')+(c.notas?' · '+c.notas:'');
+    var subInfo=(c.producto?'Interesado en: '+c.producto:'Sin producto de interes')+' · '+c.fecha+(totalComprado>0?' · Comprado: $'+totalComprado.toLocaleString():'');
     var badgeSaldo=saldo>0?'<span class="badge badge-red" style="margin-right:4px;" title="Saldo pendiente por abono">Debe $'+saldo.toLocaleString()+'</span>':'';
-    return '<div class="list-item" style="cursor:pointer;" onclick="verDetalleCliente('+i+')"><div class="list-item-info"><div class="list-item-name">'+c.nombre+(c.tel?' <span style="color:var(--muted);font-size:12px;">· '+c.tel+'</span>':'')+' </div><div class="list-item-sub">'+subInfo+' </div></div>'+badgeSaldo+'<span class="badge badge-blue">'+(nombres[c.canal]||c.canal)+'</span><button class="btn btn-danger" onclick="event.stopPropagation();eliminarCliente('+i+')">x</button></div>';
+    var badgeTipo=totalComprado>0?'<span class="badge badge-green" style="margin-right:4px;">Cliente</span>':'<span class="badge badge-blue" style="margin-right:4px;">Prospecto</span>';
+    var wa=whatsappLink(c.tel);
+    var waBtn=wa?'<a href="'+wa+'" target="_blank" rel="noopener" onclick="event.stopPropagation();" class="btn btn-outline btn-sm" title="Escribir por WhatsApp" style="text-decoration:none;">&#128172;</a>':'';
+    return '<div class="list-item" style="cursor:pointer;" onclick="verDetalleCliente(\''+c.id+'\')"><div class="list-item-info"><div class="list-item-name">'+c.nombre+(c.tel?' <span style="color:var(--muted);font-size:12px;">· '+c.tel+'</span>':'')+' </div><div class="list-item-sub">'+subInfo+' </div></div>'+badgeTipo+badgeSaldo+'<span class="badge badge-blue">'+(nombres[c.canal]||c.canal)+'</span>'+waBtn+'<button class="btn btn-danger" onclick="event.stopPropagation();eliminarCliente(\''+c.id+'\')">x</button></div>';
   }).join('');
+}
+function renderStatsClientes(){
+  var cont=document.getElementById('cli-stats');
+  if(!cont)return;
+  if(!state.clientes.length){cont.innerHTML='<div style="font-size:11px;color:var(--muted);">Aun no tienes clientes registrados.</div>';return;}
+  var totalClientes=state.clientes.length;
+  var conSaldo=state.clientes.filter(c=>saldoPendienteCliente(c.id)>0).length;
+  var mejor=state.clientes.map(c=>({c,t:totalCompradoCliente(c.id)})).sort((a,b)=>b.t-a.t)[0];
+  function box(label,val,color){return'<div style="flex:1;min-width:100px;background:var(--bg2);border-radius:2px;padding:10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px;">'+label+'</div><div style="font-family:DM Mono,monospace;font-size:14px;color:'+(color||'var(--black)')+';">'+val+'</div></div>';}
+  cont.innerHTML=box('Total clientes',totalClientes)+box('Con saldo pendiente',conSaldo,conSaldo>0?'var(--red)':'var(--black)')+(mejor&&mejor.t>0?box('Mejor cliente',mejor.c.nombre+' ($'+mejor.t.toLocaleString()+')','var(--green)'):box('Mejor cliente','--'));
 }
 function saldoPendienteCliente(clienteId){
   if(!clienteId)return 0;
@@ -2105,44 +2224,63 @@ function totalCompradoCliente(clienteId){
 }
 function historialComprasCliente(clienteId){
   if(!clienteId)return [];
-  return state.movimientos.filter(m=>(m.tipo==='venta'||m.tipo==='abono')&&m.clienteId===clienteId).sort((a,b)=>(b._ts||0)-(a._ts||0));
+  return state.movimientos.filter(m=>(m.tipo==='venta'||m.tipo==='abono'||m.tipo==='reserva_cancelada')&&m.clienteId===clienteId).sort((a,b)=>(b._ts||0)-(a._ts||0));
 }
-function verDetalleCliente(i){
+function verDetalleCliente(id){
+  var i=idxCliente(id);
+  if(i===-1){alert('Este cliente ya no existe (puede que se haya eliminado en otro dispositivo).');cerrarModal();renderClientes();return;}
   var c=state.clientes[i];
   var nombres={facebook:'Facebook',whatsapp:'WhatsApp',instagram:'Instagram',directo:'Directo'};
   var saldo=saldoPendienteCliente(c.id);
   var totalComprado=totalCompradoCliente(c.id);
   var historial=historialComprasCliente(c.id);
   var histHtml=historial.length?historial.map(function(m){
-    var tipoLbl=m.tipo==='abono'?'Abono':'Venta';
-    return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;"><span>'+m.fecha+' · '+tipoLbl+' · '+m.desc+'</span><span style="color:var(--black);font-family:DM Mono,monospace;">$'+m.monto.toLocaleString()+'</span></div>';
+    var tipoLbl=m.tipo==='abono'?'Abono':m.tipo==='reserva_cancelada'?'Reserva cancelada':'Venta';
+    var color=m.tipo==='reserva_cancelada'?'var(--muted)':'var(--black)';
+    return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;"><span>'+m.fecha+' · '+tipoLbl+' · '+m.desc+'</span><span style="color:'+color+';font-family:DM Mono,monospace;">'+(m.tipo==='reserva_cancelada'?'--':'$'+m.monto.toLocaleString())+'</span></div>';
   }).join(''):'<div style="font-size:12px;color:var(--muted);padding:8px 0;">Sin compras registradas aun.</div>';
   var reservasActivas=state.inventario.filter(p=>p.estado==='reservado'&&p.reserva&&p.reserva.clienteId===c.id);
   var reservasHtml=reservasActivas.length?reservasActivas.map(function(p){
     return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;"><span>'+p.nombre+' · Reservado</span><span style="color:var(--red);font-family:DM Mono,monospace;">Debe $'+saldoPendienteReserva(p).toLocaleString()+'</span></div>';
   }).join(''):'';
+  var wa=whatsappLink(c.tel);
+  var dias=diasDesdeContacto(c.ultimoContacto);
+  var contactoHtml='<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Ultimo contacto: '+(c.ultimoContacto?c.ultimoContacto+(dias!==null?' (hace '+dias+' dia'+(dias===1?'':'s')+')':''):'Sin registrar')+'</div>';
   document.getElementById('inv-modal-content').innerHTML=
     '<div style="padding:20px;">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">'+
         '<div><div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:300;color:var(--black);">'+c.nombre+'</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-top:2px;">'+(c.tel?c.tel+' · ':'')+(nombres[c.canal]||c.canal||'')+' · Desde '+c.fecha+'</div></div>'+
+        (totalComprado>0?'<span class="badge badge-green">Cliente</span>':'<span class="badge badge-blue">Prospecto</span>')+
       '</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;">'+
         '<div style="flex:1;min-width:100px;background:var(--bg2);border-radius:2px;padding:10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px;">Total comprado</div><div style="font-family:DM Mono,monospace;font-size:14px;color:var(--green);">$'+totalComprado.toLocaleString()+'</div></div>'+
         '<div style="flex:1;min-width:100px;background:var(--bg2);border-radius:2px;padding:10px;text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px;">Saldo pendiente</div><div style="font-family:DM Mono,monospace;font-size:14px;color:'+(saldo>0?'var(--red)':'var(--black)')+';">$'+saldo.toLocaleString()+'</div></div>'+
       '</div>'+
+      contactoHtml+
+      (c.producto?'<div style="font-size:12px;margin-bottom:10px;"><strong>Interesado en / compro:</strong> '+c.producto+'</div>':'')+
       (c.notas?'<div style="background:var(--bg2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:16px;">'+c.notas+'</div>':'')+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">'+
+        (wa?'<a href="'+wa+'" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="text-decoration:none;">Escribir por WhatsApp</a>':'')+
+        '<button class="btn btn-outline btn-sm" onclick="marcarContactado(\''+c.id+'\')">Marcar contactado hoy</button>'+
+        '<button class="btn btn-outline btn-sm" onclick="editarCliente(\''+c.id+'\')">Editar</button>'+
+      '</div>'+
       (reservasHtml?'<div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Reservas activas</div>'+reservasHtml:'')+
-      '<div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px;">Historial de compras</div>'+histHtml+
+      '<div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px;">Historial</div>'+histHtml+
     '</div>'+
     '<div style="display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);">'+
       '<button class="btn btn-outline" style="flex:1;" onclick="cerrarModal()">Cerrar</button>'+
-      '<button class="btn btn-danger" onclick="eliminarCliente('+i+');cerrarModal();">Eliminar cliente</button>'+
+      '<button class="btn btn-danger" onclick="eliminarCliente(\''+c.id+'\');cerrarModal();">Eliminar cliente</button>'+
     '</div>';
   document.getElementById('inv-modal').style.display='block';
   document.body.style.overflow='hidden';
 }
-function eliminarCliente(i){if(!confirm('Eliminar este cliente?'))return;state.clientes.splice(i,1);save('clientes');renderClientes();}
+function eliminarCliente(id){
+  if(!confirm('Eliminar este cliente?'))return;
+  var i=idxCliente(id);
+  if(i===-1){renderClientes();return;}
+  state.clientes.splice(i,1);save('clientes');renderClientes();
+}
 
 // =================== SYNC (FIREBASE / FIRESTORE) ===================
 function setSyncStatus(msg,color){
@@ -2210,11 +2348,13 @@ function refrescarVista(key){
     try{ renderInventario(); }catch(e){}
     try{ renderPicker(); }catch(e){}
     try{ renderPickerCompra(); }catch(e){}
+    try{ renderClientes(); }catch(e){}
   }else if(key==='movimientos'){
     try{ renderHistorial(); }catch(e){}
     try{ renderResumen(); }catch(e){}
     try{ renderAnalisis(); }catch(e){}
     try{ renderFinanzas(); }catch(e){}
+    try{ renderClientes(); }catch(e){}
   }else if(key==='clientes'){
     try{ renderClientes(); }catch(e){}
     try{ poblarSelectClientes('fin-cliente'); }catch(e){}
