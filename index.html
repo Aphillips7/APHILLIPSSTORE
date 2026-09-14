@@ -182,6 +182,24 @@
 </head>
 <body>
 
+<!-- LOGIN GATE — bloquea TODA la app hasta iniciar sesion -->
+<div id="login-gate" style="position:fixed;inset:0;background:var(--black);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:380px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:30px;color:var(--white);letter-spacing:0.02em;">Aphillips Store</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.15em;margin-top:4px;">Panel privado</div>
+    </div>
+    <div id="login-loading" style="text-align:center;color:rgba(255,255,255,0.5);font-size:13px;padding:24px 0;">Verificando sesion...</div>
+    <div id="login-form-wrap" style="display:none;background:var(--white);border-radius:2px;border-top:3px solid var(--accent);padding:32px 28px;box-shadow:0 8px 40px rgba(0,0,0,0.3);">
+      <div id="login-error" style="display:none;background:var(--red-bg);color:var(--red);font-size:12px;padding:10px 12px;border-radius:2px;margin-bottom:16px;"></div>
+      <div class="field"><label>Correo</label><input type="email" id="login-email" placeholder="tucorreo@ejemplo.com" onkeydown="if(event.key==='Enter'){document.getElementById('login-pass').focus();}" /></div>
+      <div class="field"><label>Contrasena</label><input type="password" id="login-pass" placeholder="********" onkeydown="if(event.key==='Enter')iniciarSesion();" /></div>
+      <button class="btn btn-gold" id="login-btn" style="width:100%;margin-top:6px;" onclick="iniciarSesion()">Iniciar sesion</button>
+      <button type="button" class="auth-link" style="display:block;text-align:center;margin-top:16px;" onclick="recuperarContrasenaLogin()">Olvide mi contrasena</button>
+    </div>
+  </div>
+</div>
+
 <nav>
   <div class="nav-brand">
     <span class="nav-fallback">APHILLIPS STORE</span>
@@ -690,6 +708,10 @@
 <div id="page-config" class="page">
   <div class="section-title">Sincronizacion y Respaldo</div>
   <div class="section-sub">Tus datos en la nube (Firebase), visibles en todos tus dispositivos en tiempo real.</div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div><div class="card-title" style="margin-bottom:4px;">Sesion activa</div><div id="sesion-usuario-email" style="font-size:13px;color:var(--muted);">—</div></div>
+    <button class="btn btn-outline btn-sm" onclick="cerrarSesion()">Cerrar sesion</button>
+  </div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div><div class="card-title" style="margin-bottom:4px;">Estado</div><div id="sync-status" style="font-size:13px;color:var(--muted);">Conectando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -2548,56 +2570,113 @@ function refrescarVista(key){
   }
 }
 
-function iniciarSincronizacionFirebase(){
-  firebase.auth().signInAnonymously().catch(function(){
-    setSyncStatus('No se pudo conectar','var(--red)','error');
-  });
-  firebase.auth().onAuthStateChanged(function(user){
-    if(!user) return;
-    _firebaseListo=true;
+function iniciarListenersFirebase(){
+  if(_firebaseListo) return;
+  _firebaseListo=true;
 
-    COLECCIONES.forEach(function(key){
-      db.collection(key).onSnapshot(function(snap){
-        var items=[];
-        var ids=new Set();
-        var cache=_lastSynced[key];
-        snap.forEach(function(doc){
-          var data=doc.data();
-          data.id=doc.id;
-          items.push(data);
-          ids.add(doc.id);
-          cache[doc.id]=JSON.stringify(data);
-        });
-        Object.keys(cache).forEach(function(id){ if(!ids.has(id)) delete cache[id]; });
-        items.sort(function(a,b){return (b._ts||0)-(a._ts||0);});
-        _remoteIds[key]=ids;
-        state[key]=items;
-        refrescarVista(key);
-      }, function(){
-        setSyncStatus('Sin conexion','var(--red)','error');
+  COLECCIONES.forEach(function(key){
+    db.collection(key).onSnapshot(function(snap){
+      var items=[];
+      var ids=new Set();
+      var cache=_lastSynced[key];
+      snap.forEach(function(doc){
+        var data=doc.data();
+        data.id=doc.id;
+        items.push(data);
+        ids.add(doc.id);
+        cache[doc.id]=JSON.stringify(data);
       });
-    });
-
-    db.collection('config').doc('main').onSnapshot(function(doc){
-      if(!doc.exists) return;
-      var data=doc.data();
-      if(typeof data.meta==='number'){ state.meta=data.meta; localStorage.setItem('meta',state.meta); }
-      if(Array.isArray(data.tasks)){ state.tasks=data.tasks; localStorage.setItem('tasks',JSON.stringify(state.tasks)); }
-      if(data.weekTasks){ state.weekTasks=data.weekTasks; localStorage.setItem('weekTasks',JSON.stringify(state.weekTasks)); }
-      if(Array.isArray(data.ideas)){ state.ideas=data.ideas; localStorage.setItem('ideas',JSON.stringify(state.ideas)); }
-      refrescarVista('config');
+      Object.keys(cache).forEach(function(id){ if(!ids.has(id)) delete cache[id]; });
+      items.sort(function(a,b){return (b._ts||0)-(a._ts||0);});
+      _remoteIds[key]=ids;
+      state[key]=items;
+      refrescarVista(key);
     }, function(){
       setSyncStatus('Sin conexion','var(--red)','error');
     });
-
-    setSyncStatus('Conectado','var(--green)','ok');
   });
+
+  db.collection('config').doc('main').onSnapshot(function(doc){
+    if(!doc.exists) return;
+    var data=doc.data();
+    if(typeof data.meta==='number'){ state.meta=data.meta; localStorage.setItem('meta',state.meta); }
+    if(Array.isArray(data.tasks)){ state.tasks=data.tasks; localStorage.setItem('tasks',JSON.stringify(state.tasks)); }
+    if(data.weekTasks){ state.weekTasks=data.weekTasks; localStorage.setItem('weekTasks',JSON.stringify(state.weekTasks)); }
+    if(Array.isArray(data.ideas)){ state.ideas=data.ideas; localStorage.setItem('ideas',JSON.stringify(state.ideas)); }
+    refrescarVista('config');
+  }, function(){
+    setSyncStatus('Sin conexion','var(--red)','error');
+  });
+
+  setSyncStatus('Conectado','var(--green)','ok');
 }
 
 function forzarSyncTodo(){
   if(!_firebaseListo){ alert('Aun conectando con la nube, espera un momento.'); return; }
   COLECCIONES.forEach(function(key){ syncColeccion(key); });
   syncConfig();
+}
+
+// =================== SESION (LOGIN REAL) ===================
+function mostrarLoginGate(){
+  var gate=document.getElementById('login-gate');
+  if(gate) gate.style.display='flex';
+  var loading=document.getElementById('login-loading');
+  if(loading) loading.style.display='none';
+  var form=document.getElementById('login-form-wrap');
+  if(form) form.style.display='block';
+}
+function ocultarLoginGate(){
+  var gate=document.getElementById('login-gate');
+  if(gate) gate.style.display='none';
+}
+function vigilarSesion(){
+  firebase.auth().onAuthStateChanged(function(user){
+    if(user && !user.isAnonymous){
+      ocultarLoginGate();
+      var elEmail=document.getElementById('sesion-usuario-email');
+      if(elEmail) elEmail.textContent=user.email||'';
+      iniciarListenersFirebase();
+    }else{
+      _firebaseListo=false;
+      mostrarLoginGate();
+    }
+  });
+}
+async function iniciarSesion(){
+  var email=document.getElementById('login-email').value.trim();
+  var pass=document.getElementById('login-pass').value;
+  var errEl=document.getElementById('login-error');
+  errEl.style.display='none';
+  if(!email||!pass){ errEl.textContent='Ingresa tu correo y contrasena.'; errEl.style.display='block'; return; }
+  var btn=document.getElementById('login-btn');
+  btn.disabled=true; btn.textContent='Entrando...';
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email,pass);
+    document.getElementById('login-pass').value='';
+  }catch(e){
+    var msg='No se pudo iniciar sesion. Verifica tu correo y contrasena.';
+    if(e && e.code==='auth/too-many-requests') msg='Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.';
+    if(e && e.code==='auth/user-disabled') msg='Esta cuenta esta deshabilitada.';
+    if(e && e.code==='auth/invalid-email') msg='El correo no tiene un formato valido.';
+    errEl.textContent=msg;
+    errEl.style.display='block';
+  }
+  btn.disabled=false; btn.textContent='Iniciar sesion';
+}
+async function recuperarContrasenaLogin(){
+  var email=document.getElementById('login-email').value.trim();
+  if(!email){ alert('Escribe tu correo arriba primero, luego presiona este enlace.'); return; }
+  try{
+    await firebase.auth().sendPasswordResetEmail(email);
+    alert('Te enviamos un enlace para restablecer tu contrasena a '+email+'. Revisa tu bandeja de entrada (y la carpeta de spam).');
+  }catch(e){
+    alert('No se pudo enviar el correo. Verifica que este bien escrito y que la cuenta exista.');
+  }
+}
+function cerrarSesion(){
+  if(!confirm('Cerrar sesion en este dispositivo?'))return;
+  firebase.auth().signOut();
 }
 
 // =================== RESPALDO (JSON) ===================
@@ -2980,7 +3059,7 @@ var reglasOverlay=document.getElementById('reglas-overlay');
 if(reglasOverlay)reglasOverlay.addEventListener('click',function(e){if(e.target===this)cerrarReglasModal();});
 var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)','info');
 renderSyncHistory();
-iniciarSincronizacionFirebase();
+vigilarSesion();
 renderInicio();
 </script>
 </body>
