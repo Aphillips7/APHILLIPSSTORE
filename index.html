@@ -546,6 +546,11 @@
         <div class="field"><label>Numero de serie</label><input type="text" id="inv-serie" placeholder="Ej: SN-849213" /></div>
         <div class="field"><label>Proveedor <span style="font-weight:300;text-transform:none;letter-spacing:0;">— no se muestra al cliente</span></label><input type="text" id="inv-proveedor" placeholder="Ej: Jomashop, Amazon, distribuidor..." /></div>
       </div>
+      <div class="grid-2">
+        <div class="field"><label>Paqueteria <span style="font-weight:300;text-transform:none;letter-spacing:0;">— si esta en transito</span></label><input type="text" id="inv-paqueteria" placeholder="Ej: DHL, USPS, FedEx..." /></div>
+        <div class="field"><label>Numero de guia / tracking</label><input type="text" id="inv-tracking" placeholder="Ej: 1Z999AA10123456784" /></div>
+      </div>
+      <div class="field"><label>Fecha estimada de llegada</label><input type="date" id="inv-eta" /></div>
       <div class="divider-text">Costos y precio</div>
       <div class="grid-2">
         <div class="field"><label>Costo unitario ($)</label><div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
@@ -983,10 +988,11 @@ function renderPendientesInicio() {
     } else if (p.estado === 'transito') {
       var dT = diasEnInventario(p.fecha);
       if (dT !== null && dT > 20) {
+        var subTransito = 'En transito hace ' + dT + ' dias' + (p.paqueteria ? ' · ' + p.paqueteria : '') + (p.tracking ? ' · Guia: ' + p.tracking : '');
         items.push({ orden: 2, html:
           '<div class="list-item" style="padding:10px 0;">'+
             '<div class="list-item-info"><div class="list-item-name">'+p.nombre+'</div>'+
-            '<div class="list-item-sub">En transito hace '+dT+' dias</div></div>'+
+            '<div class="list-item-sub">'+subTransito+'</div></div>'+
             '<span class="badge badge-blue">Revisar envio</span></div>' });
       }
     } else if (p.estado === 'disponible') {
@@ -1583,6 +1589,9 @@ function agregarProducto(){
     notas:document.getElementById('inv-notas').value.trim(),
     serie:document.getElementById('inv-serie').value.trim(),
     proveedor:document.getElementById('inv-proveedor').value.trim(),
+    paqueteria:document.getElementById('inv-paqueteria').value.trim(),
+    tracking:document.getElementById('inv-tracking').value.trim(),
+    eta:document.getElementById('inv-eta').value,
     costo, importacion:imp, costoTotal, precio,
     precioMin:parseFloat(document.getElementById('inv-precio-min').value)||0,
     margen, estado,
@@ -1614,7 +1623,7 @@ function limpiarFormulario(){
   toggleFormulario(false);
 }
 function resetCamposFormulario(){
-  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-serie','inv-proveedor','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-genero').value='hombre';
   document.getElementById('inv-movimiento').value='';
   document.getElementById('inv-estado').value='disponible';
@@ -1635,7 +1644,7 @@ function abrirFormularioNuevo(){
 function cancelarEdicion(){limpiarFormulario();}
 function editarProducto(i){
   var p=state.inventario[i];
-  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
+  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
   Object.entries(fields).forEach(([id,v])=>{var el=document.getElementById(id);if(el)el.value=v||'';});
   document.getElementById('inv-genero').value=p.genero||'hombre';
   document.getElementById('inv-movimiento').value=p.movimiento||'';
@@ -1700,7 +1709,7 @@ function renderInventario(){
   var estadosBadge={disponible:'badge-green',transito:'badge-blue',reservado:'badge-gold',vendido:'badge-red'};
   var etiquetas={disponible:'Disponible',transito:'En transito',reservado:'Reservado',vendido:'Vendido'};
   var items=state.inventario.map((p,i)=>({p,i})).filter(x=>{
-    var mQ=(x.p.nombre||'').toLowerCase().includes(query)||(x.p.sku||'').toLowerCase().includes(query)||(x.p.coleccion||'').toLowerCase().includes(query);
+    var mQ=(x.p.nombre||'').toLowerCase().includes(query)||(x.p.sku||'').toLowerCase().includes(query)||(x.p.coleccion||'').toLowerCase().includes(query)||(x.p.tracking||'').toLowerCase().includes(query);
     var mE=!_filtroEstado||x.p.estado===_filtroEstado;
     return mQ&&mE;
   });
@@ -1943,7 +1952,12 @@ function verDetalle(i){
       spec('Cristal',p.cristal)+spec('Color / variante',p.color)+spec('Numero de serie',p.serie)+
     '</div>':'';
   var notasHtml=p.notas?'<div style="margin:0 20px 16px;background:var(--bg2);border-radius:2px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6;">'+p.notas+'</div>':'';
-  var internoHtml=p.proveedor?'<div style="margin:0 20px 16px;border:1px dashed var(--border2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);"><strong style="color:var(--black);">Interno — no visible al cliente:</strong> Proveedor: '+p.proveedor+'</div>':'';
+  var infoInternaPartes=[];
+  if(p.proveedor) infoInternaPartes.push('Proveedor: '+p.proveedor);
+  if(p.paqueteria) infoInternaPartes.push('Paqueteria: '+p.paqueteria);
+  if(p.tracking) infoInternaPartes.push('Guia: '+p.tracking);
+  if(p.eta){ var etaD=new Date(p.eta+'T00:00:00'); infoInternaPartes.push('Llegada estimada: '+etaD.toLocaleDateString('es-MX')); }
+  var internoHtml=infoInternaPartes.length?'<div style="margin:0 20px 16px;border:1px dashed var(--border2);border-radius:2px;padding:10px 12px;font-size:12px;color:var(--muted);"><strong style="color:var(--black);">Interno — no visible al cliente:</strong> '+infoInternaPartes.join(' · ')+'</div>':'';
   var reservaHtml='';
   if(p.estado==='reservado'&&p.reserva){
     var abonado=totalAbonadoReserva(p);var saldo=saldoPendienteReserva(p);
