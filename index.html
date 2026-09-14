@@ -205,13 +205,19 @@
     <span class="nav-fallback">APHILLIPS STORE</span>
   </div>
   <div id="nav-sync-indicator" style="display:none;"></div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage(event,'inicio')">Inicio</button>
-    <button class="nav-tab" onclick="showPage(event,'finanzas')">Finanzas</button>
-    <button class="nav-tab" onclick="showPage(event,'inventario')">Inventario</button>
-    <button class="nav-tab" onclick="showPage(event,'contenido')">Contenido</button>
-    <button class="nav-tab" onclick="showPage(event,'clientes')">Clientes</button>
-    <button class="nav-tab" onclick="showPage(event,'config')">Sync <span id="nav-sync-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-left:4px;vertical-align:middle;"></span></button>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage(event,'inicio')">Inicio</button>
+      <button class="nav-tab" onclick="showPage(event,'finanzas')">Finanzas</button>
+      <button class="nav-tab" onclick="showPage(event,'inventario')">Inventario</button>
+      <button class="nav-tab" onclick="showPage(event,'contenido')">Contenido</button>
+      <button class="nav-tab" onclick="showPage(event,'clientes')">Clientes</button>
+      <button class="nav-tab" id="nav-tab-sync" onclick="showPage(event,'config')" style="display:none;">Sync <span id="nav-sync-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-left:4px;vertical-align:middle;"></span></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;border-left:1px solid rgba(255,255,255,0.15);padding-left:16px;">
+      <span id="nav-sesion-email" style="font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;"></span>
+      <button onclick="cerrarSesion()" style="background:none;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:6px 12px;border-radius:2px;cursor:pointer;font-family:'Jost',sans-serif;">Salir</button>
+    </div>
   </div>
 </nav>
 
@@ -889,6 +895,14 @@ function idxCliente(id){ return state.clientes.findIndex(function(x){return x.id
 let _remoteIds = { inventario: new Set(), movimientos: new Set(), clientes: new Set() };
 let _syncTimers = {};
 let _firebaseListo = false;
+
+const OWNER_EMAIL = 'aphillipsstore@gmail.com';
+let _totpSecretCache = null;
+let _backupCodesCache = null;
+function esPropietario(){
+  var u = firebase.auth().currentUser;
+  return !!(u && u.email === OWNER_EMAIL);
+}
 
 function save(key) {
   if (!COLECCIONES.includes(key)) { localStorage.setItem(key, JSON.stringify(state[key])); }
@@ -2636,9 +2650,15 @@ function vigilarSesion(){
       ocultarLoginGate();
       var elEmail=document.getElementById('sesion-usuario-email');
       if(elEmail) elEmail.textContent=user.email||'';
+      var navEmail=document.getElementById('nav-sesion-email');
+      if(navEmail) navEmail.textContent=user.email||'';
+      var tabSync=document.getElementById('nav-tab-sync');
+      if(tabSync) tabSync.style.display = esPropietario() ? '' : 'none';
       iniciarListenersFirebase();
     }else{
       _firebaseListo=false;
+      _totpSecretCache=null;
+      _backupCodesCache=null;
       mostrarLoginGate();
     }
   });
@@ -2837,7 +2857,32 @@ async function totpVerificar(secretBase32,codigoIngresado){
   }
   return false;
 }
-function getTotpSecret(){ return localStorage.getItem('authTotpSecret')||''; }
+function getTotpSecret(){ return _totpSecretCache||''; }
+async function cargarAuthSettingsNube(){
+  var u=firebase.auth().currentUser;
+  if(!u){ _totpSecretCache=''; _backupCodesCache=[]; return; }
+  try{
+    var doc=await db.collection('authSettings').doc(u.uid).get();
+    if(doc.exists){
+      var data=doc.data();
+      _totpSecretCache=data.secret||'';
+      _backupCodesCache=data.backupCodes||[];
+    }else{
+      _totpSecretCache='';
+      _backupCodesCache=[];
+    }
+  }catch(e){
+    _totpSecretCache='';
+    _backupCodesCache=[];
+  }
+}
+async function guardarAuthSettingsNube(secret,backupCodes){
+  var u=firebase.auth().currentUser;
+  if(!u)return;
+  await db.collection('authSettings').doc(u.uid).set({secret:secret,backupCodes:backupCodes,actualizado:Date.now()});
+  _totpSecretCache=secret;
+  _backupCodesCache=backupCodes;
+}
 
 // --- Codigos de respaldo ---
 function generarCodigoRespaldo(){
@@ -2860,23 +2905,22 @@ async function generarLoteCodigosRespaldo(n){
     codigos.push(c);
     hashes.push({hash:await sha256Hex(c),usado:false});
   }
-  localStorage.setItem('authBackupCodes',JSON.stringify(hashes));
-  return codigos;
+  return {codigos:codigos,hashes:hashes};
 }
 async function verificarCodigoRespaldo(codigoIngresado){
-  var lista=JSON.parse(localStorage.getItem('authBackupCodes')||'[]');
+  var lista=_backupCodesCache||[];
   var hashIngresado=await sha256Hex(codigoIngresado.trim().toUpperCase());
   for(var i=0;i<lista.length;i++){
     if(lista[i].hash===hashIngresado && !lista[i].usado){
       lista[i].usado=true;
-      localStorage.setItem('authBackupCodes',JSON.stringify(lista));
+      await guardarAuthSettingsNube(getTotpSecret(),lista);
       return {ok:true,restantes:lista.filter(function(x){return !x.usado;}).length};
     }
   }
   return {ok:false};
 }
 function contarBackupInfo(){
-  var lista=JSON.parse(localStorage.getItem('authBackupCodes')||'[]');
+  var lista=_backupCodesCache||[];
   return {restantes:lista.filter(function(x){return !x.usado;}).length,total:lista.length};
 }
 
@@ -2889,11 +2933,16 @@ function mostrarVistaAuth(vista){
     if(el)el.style.display=(v===vista)?'block':'none';
   });
 }
-function showAuth(){
+async function showAuth(){
+  if(!esPropietario()){
+    alert('Esta seccion es unicamente para el propietario de la tienda.');
+    return;
+  }
   if(!navegadorSoportaAuth()){
     alert('Este navegador no puede verificar codigos de autenticacion aqui. Esto pasa si abres el archivo directamente (doble clic) en vez de visitarlo desde una direccion https:// o localhost. Abre la app desde el enlace publicado (Firebase Hosting) e intenta de nuevo.');
     return;
   }
+  await cargarAuthSettingsNube();
   if(!getTotpSecret()){
     iniciarConfiguracionAuth();
   }else{
@@ -2992,10 +3041,10 @@ async function confirmarConfiguracionAuth(){
   if(!/^\d{6}$/.test(codigo)){ alert('Ingresa el codigo de 6 digitos que muestra tu app de autenticacion.'); return; }
   var ok=await totpVerificar(_secretoTemporal,codigo);
   if(!ok){ alert('El codigo no coincide.\n\nRevisa:\n1. Que la hora de tu telefono este en automatico (fecha y hora automatica activada).\n2. Que escaneaste este mismo QR (si cambiaste de app y la pagina se recargo, puede haberse generado uno nuevo; usa "Generar otro QR" y escanea de nuevo).\n3. Que no haya pasado mas de 30-60 segundos desde que viste el codigo.'); return; }
-  localStorage.setItem('authTotpSecret',_secretoTemporal);
+  var lote=await generarLoteCodigosRespaldo(8);
+  await guardarAuthSettingsNube(_secretoTemporal,lote.hashes);
   localStorage.removeItem('authTotpPendiente');
-  var codigos=await generarLoteCodigosRespaldo(8);
-  mostrarCodigosRespaldoGenerados(codigos,function(){ onAuthSuccess(); });
+  mostrarCodigosRespaldoGenerados(lote.codigos,function(){ onAuthSuccess(); });
 }
 function mostrarCodigosRespaldoGenerados(codigos,alTerminar){
   document.getElementById('auth-codigos-lista').innerHTML=codigos.map(function(c){
@@ -3015,7 +3064,7 @@ function renderSeguridadAuth(){
   if(!el)return;
   if(getTotpSecret()){
     var info=contarBackupInfo();
-    el.innerHTML='Codigo de autenticacion activo · <strong style="color:var(--black);">'+info.restantes+' de '+info.total+'</strong> codigos de respaldo disponibles.'+(info.restantes<=2?' <span style="color:var(--red);">Te quedan pocos, genera nuevos.</span>':'');
+    el.innerHTML='Codigo de autenticacion activo (guardado en la nube, funciona en todos tus dispositivos) · <strong style="color:var(--black);">'+info.restantes+' de '+info.total+'</strong> codigos de respaldo disponibles.'+(info.restantes<=2?' <span style="color:var(--red);">Te quedan pocos, genera nuevos.</span>':'');
   }else{
     el.textContent='Aun no configurado.';
   }
@@ -3025,9 +3074,10 @@ async function generarNuevosBackupCodes(){
   if(!actual)return;
   var ok=await totpVerificar(getTotpSecret(),actual.trim());
   if(!ok){ alert('Codigo incorrecto.'); return; }
-  var codigos=await generarLoteCodigosRespaldo(8);
+  var lote=await generarLoteCodigosRespaldo(8);
+  await guardarAuthSettingsNube(getTotpSecret(),lote.hashes);
   document.getElementById('auth-overlay').style.display='flex';
-  mostrarCodigosRespaldoGenerados(codigos,function(){ hideAuth(); renderSeguridadAuth(); });
+  mostrarCodigosRespaldoGenerados(lote.codigos,function(){ hideAuth(); renderSeguridadAuth(); });
 }
 async function reiniciarAuth(){
   var actual=prompt('Para reiniciar, ingresa tu codigo actual de 6 digitos:');
@@ -3035,8 +3085,7 @@ async function reiniciarAuth(){
   var ok=await totpVerificar(getTotpSecret(),actual.trim());
   if(!ok){ alert('Codigo incorrecto.'); return; }
   if(!confirm('Esto invalidara tu codigo actual y tus codigos de respaldo. Tendras que escanear un nuevo QR con tu app de autenticacion. Continuar?'))return;
-  localStorage.removeItem('authTotpSecret');
-  localStorage.removeItem('authBackupCodes');
+  await guardarAuthSettingsNube('',[]);
   iniciarConfiguracionAuth();
 }
 function renderConfigPage(){
