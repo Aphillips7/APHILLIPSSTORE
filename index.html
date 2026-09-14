@@ -813,6 +813,7 @@
       <div class="auth-secreto" id="auth-secreto-manual"></div>
       <div class="field" style="text-align:left;"><label>Codigo de 6 digitos de tu app</label><input type="text" id="auth-setup-input" placeholder="000000" style="text-align:center;font-family:'DM Mono',monospace;letter-spacing:0.15em;" /></div>
       <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="confirmarConfiguracionAuth()">Activar</button>
+      <button type="button" class="auth-link" onclick="generarOtroQrAuth()">¿No te funciona? Generar otro QR</button>
     </div>
 
     <div id="auth-view-codigos-generados" style="display:none;">
@@ -2737,7 +2738,7 @@ async function totpCodigoParaPaso(secretBase32,step){
 async function totpVerificar(secretBase32,codigoIngresado){
   if(!secretBase32||!/^\d{6}$/.test(codigoIngresado))return false;
   var pasoActual=Math.floor(Date.now()/1000/30);
-  for(var delta=-1;delta<=1;delta++){
+  for(var delta=-2;delta<=2;delta++){
     var c=await totpCodigoParaPaso(secretBase32,pasoActual+delta);
     if(c===codigoIngresado)return true;
   }
@@ -2796,6 +2797,10 @@ function mostrarVistaAuth(vista){
   });
 }
 function showAuth(){
+  if(!navegadorSoportaAuth()){
+    alert('Este navegador no puede verificar codigos de autenticacion aqui. Esto pasa si abres el archivo directamente (doble clic) en vez de visitarlo desde una direccion https:// o localhost. Abre la app desde el enlace publicado (Firebase Hosting) e intenta de nuevo.');
+    return;
+  }
   if(!getTotpSecret()){
     iniciarConfiguracionAuth();
   }else{
@@ -2863,8 +2868,17 @@ async function verificarBackupCodeIngresado(){
 }
 
 // --- Configuracion inicial (enrolamiento) ---
+function navegadorSoportaAuth(){
+  return !!(window.crypto && window.crypto.subtle && window.isSecureContext);
+}
 async function iniciarConfiguracionAuth(){
-  _secretoTemporal=generarSecretoTotp();
+  if(!navegadorSoportaAuth()){
+    alert('Este navegador no puede generar codigos de autenticacion aqui. Esto pasa si abres el archivo directamente (doble clic) en vez de visitarlo desde una direccion https:// o localhost. Abre la app desde el enlace publicado (Firebase Hosting) e intenta de nuevo.');
+    return;
+  }
+  var pendiente=localStorage.getItem('authTotpPendiente');
+  _secretoTemporal = pendiente || generarSecretoTotp();
+  if(!pendiente) localStorage.setItem('authTotpPendiente',_secretoTemporal);
   var cuenta='AphillipsStore:tienda';
   var uri='otpauth://totp/'+encodeURIComponent(cuenta)+'?secret='+_secretoTemporal+'&issuer=AphillipsStore&digits=6&period=30';
   var qrEl=document.getElementById('auth-qr');
@@ -2875,12 +2889,18 @@ async function iniciarConfiguracionAuth(){
   mostrarVistaAuth('setup');
   document.getElementById('auth-overlay').style.display='flex';
 }
+function generarOtroQrAuth(){
+  if(!confirm('Esto genera un QR nuevo. Tendras que escanearlo de nuevo en tu app (borra el anterior si ya lo agregaste). Continuar?'))return;
+  localStorage.removeItem('authTotpPendiente');
+  iniciarConfiguracionAuth();
+}
 async function confirmarConfiguracionAuth(){
   var codigo=document.getElementById('auth-setup-input').value.trim();
   if(!/^\d{6}$/.test(codigo)){ alert('Ingresa el codigo de 6 digitos que muestra tu app de autenticacion.'); return; }
   var ok=await totpVerificar(_secretoTemporal,codigo);
-  if(!ok){ alert('El codigo no coincide. Verifica que escaneaste bien el QR e intenta de nuevo.'); return; }
+  if(!ok){ alert('El codigo no coincide.\n\nRevisa:\n1. Que la hora de tu telefono este en automatico (fecha y hora automatica activada).\n2. Que escaneaste este mismo QR (si cambiaste de app y la pagina se recargo, puede haberse generado uno nuevo; usa "Generar otro QR" y escanea de nuevo).\n3. Que no haya pasado mas de 30-60 segundos desde que viste el codigo.'); return; }
   localStorage.setItem('authTotpSecret',_secretoTemporal);
+  localStorage.removeItem('authTotpPendiente');
   var codigos=await generarLoteCodigosRespaldo(8);
   mostrarCodigosRespaldoGenerados(codigos,function(){ onAuthSuccess(); });
 }
