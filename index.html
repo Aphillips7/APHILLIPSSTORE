@@ -202,6 +202,20 @@
     /* 6. Mejorar espacios generales */
     .page { padding: 16px; width: 100%; }
     .section-title { font-size: 28px; line-height: 1.2; margin-bottom: 6px; }
+
+    /* 7. Evitar que las filas de listas (inventario, clientes, historial) se corten */
+    .list-item { flex-wrap: wrap; row-gap: 10px; }
+    .list-item-info { flex: 1 1 140px; min-width: 0; }
+    .list-item-name { white-space: normal; word-break: break-word; }
+    .list-item-sub { white-space: normal; word-break: break-word; }
+    .list-item .badge, .list-item .btn, .list-item a.btn, .list-item .cambio-estado-select { flex-shrink: 0; }
+
+    /* 8. Calendario semanal (Contenido): scroll horizontal en vez de recortarse */
+    .week-grid { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; gap: 10px; padding-bottom: 6px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+    .week-grid .day-col { flex: 0 0 150px; scroll-snap-align: start; }
+
+    /* 9. Filtros y chips que no quepan en una linea, que bajen ordenadamente */
+    .filtro-estado, .filtro-cliente, .fin-tipo-chip { margin-bottom: 4px; }
   }
   </style>
 </head>
