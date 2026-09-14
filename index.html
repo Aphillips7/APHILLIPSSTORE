@@ -181,17 +181,22 @@
 
   /* AJUSTES PARA CELULAR */
   @media (max-width: 600px) {
-    nav { padding: 12px 16px; flex-direction: column; height: auto; gap: 12px; }
-    .nav-tabs { width: 100%; overflow-x: auto; white-space: nowrap; padding-bottom: 4px; }
+    /* 1. Arreglar la barra de arriba (Nav) para que no se salga de la pantalla */
+    nav { flex-direction: column; height: auto; padding: 16px 0 0 0; gap: 12px; }
+    nav > div:last-child { flex-direction: column; width: 100%; padding: 0; align-items: stretch; gap: 0; }
+    .nav-tabs { padding: 0 16px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
     .nav-tabs::-webkit-scrollbar { display: none; }
-    .page { padding: 16px 12px; }
-    .section-title { font-size: 26px; }
-    .card { padding: 16px; }
+    nav > div:last-child > div:last-child { border-left: none; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between; }
+    
+    /* 2. Despegar "Buenos dias" y el boton de reglas */
+    #page-inicio > div:first-child { flex-direction: column; margin-bottom: 24px; gap: 16px; }
+    #page-inicio > div:first-child > button { width: 100%; margin-top: 0 !important; justify-content: center; }
+    
+    /* 3. Mejorar espacios generales */
+    .page { padding: 20px 16px; }
+    .section-title { font-size: 32px; line-height: 1.1; margin-bottom: 8px; }
+    .section-sub { line-height: 1.4; margin-bottom: 0; }
   }
-
-</style>
-</head>
-<body> 
 <!-- LOGIN GATE — bloquea TODA la app hasta iniciar sesion -->
 <div id="login-gate" style="position:fixed;inset:0;background:var(--black);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;">
