@@ -181,21 +181,27 @@
 
   /* AJUSTES PARA CELULAR */
   @media (max-width: 600px) {
-    /* 1. Arreglar la barra de arriba (Nav) para que no se salga de la pantalla */
-    nav { flex-direction: column; height: auto; padding: 16px 0 0 0; gap: 12px; }
-    nav > div:last-child { flex-direction: column; width: 100%; padding: 0; align-items: stretch; gap: 0; }
-    .nav-tabs { padding: 0 16px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    nav > div:last-child > div:last-child { border-left: none; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between; }
+    /* 1. Bloquear el espacio en blanco a la derecha */
+    html, body { overflow-x: hidden; }
+
+    /* 2. Menú superior centrado y adaptado */
+    nav { flex-direction: column; height: auto; padding: 16px; gap: 12px; }
     
-    /* 2. Despegar "Buenos dias" y el boton de reglas */
-    #page-inicio > div:first-child { flex-direction: column; margin-bottom: 24px; gap: 16px; }
+    /* 3. Pestañas (Inicio, Sync...) en varias líneas para que se vean todas juntas */
+    nav > div:last-child { flex-direction: column; width: 100%; padding: 0; align-items: center; gap: 12px; }
+    .nav-tabs { flex-wrap: wrap; justify-content: center; gap: 4px; padding: 0; }
+    .nav-tab { padding: 6px 10px; }
+    
+    /* 4. Quitar el cuadro feo del correo y centrarlo */
+    nav > div:last-child > div:last-child { border: none !important; padding: 0 !important; justify-content: center; width: 100%; }
+    
+    /* 5. Despegar "Buenos dias" y los botones */
+    #page-inicio > div:first-child { flex-direction: column; margin-bottom: 24px; gap: 12px; }
     #page-inicio > div:first-child > button { width: 100%; margin-top: 0 !important; justify-content: center; }
     
-    /* 3. Mejorar espacios generales */
-    .page { padding: 20px 16px; }
-    .section-title { font-size: 32px; line-height: 1.1; margin-bottom: 8px; }
-    .section-sub { line-height: 1.4; margin-bottom: 0; }
+    /* 6. Mejorar espacios generales */
+    .page { padding: 16px; width: 100%; }
+    .section-title { font-size: 28px; line-height: 1.2; margin-bottom: 6px; }
   }
   </style>
 </head>
