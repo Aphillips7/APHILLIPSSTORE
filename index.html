@@ -987,6 +987,8 @@ const state = {
 
 const COLECCIONES = ['inventario', 'movimientos', 'clientes'];
 function idxCliente(id){ return state.clientes.findIndex(function(x){return x.id===id;}); }
+function idxInv(id){ return state.inventario.findIndex(function(x){return x.id===id;}); }
+function invNoExiste(){ alert('Ese reloj ya no esta en la lista (pudo actualizarse en otro dispositivo). Refresca e intenta de nuevo.'); try{renderInventario();}catch(e){} }
 let _remoteIds = { inventario: new Set(), movimientos: new Set(), clientes: new Set() };
 let _syncTimers = {};
 let _firebaseListo = false;
@@ -1325,9 +1327,9 @@ function renderPicker() {
     return;
   }
   grid.innerHTML = disponibles.map(({p,i}) => {
-    var sel = _pickerIdx === i ? ' selected' : '';
+    var sel = _pickerIdx === p.id ? ' selected' : '';
     var foto = p.foto ? '<img src="'+p.foto+'" style="width:100%;height:56px;object-fit:cover;border-radius:6px;margin-bottom:6px;" onerror="this.remove()" />' : '';
-    return '<div class="inv-picker-card'+sel+'" onclick="seleccionarReloj('+i+')">' + foto +
+    return '<div class="inv-picker-card'+sel+'" onclick="seleccionarReloj(\''+p.id+'\')">' + foto +
       '<div class="inv-picker-nombre">' + (p.nombre||'Sin nombre') + '</div>' +
       (p.sku ? '<div class="inv-picker-sub">Ref. '+p.sku+'</div>' : '') +
       '<div class="inv-picker-precio">Costo: $'+(p.costoTotal||0).toLocaleString()+'</div>' +
@@ -1335,11 +1337,13 @@ function renderPicker() {
   }).join('');
 }
 function filtrarPicker() { renderPicker(); }
-function seleccionarReloj(i) {
-  _pickerIdx = i;
+function seleccionarReloj(id) {
+  var i = idxInv(id);
+  if (i === -1) { invNoExiste(); renderPicker(); return; }
+  _pickerIdx = id;
   var p = state.inventario[i];
   document.getElementById('fin-costo').value = p.costoTotal || 0;
-  document.getElementById('fin-inv-index').value = i;
+  document.getElementById('fin-inv-index').value = id;
   var selDiv = document.getElementById('picker-selected');
   var grid = document.getElementById('inv-picker-grid');
   var search = document.getElementById('picker-search');
@@ -1383,7 +1387,8 @@ function actualizarPreview() {
 function registrarMovimiento() {
   var invIdx = document.getElementById('fin-inv-index').value;
   if (invIdx === '') { alert('Selecciona un reloj del inventario primero.'); return; }
-  var i = parseInt(invIdx);
+  var i = idxInv(invIdx);
+  if (i === -1) { invNoExiste(); limpiarSeleccion(); return; }
   var p = state.inventario[i];
   var monto = parseFloat(document.getElementById('fin-monto').value);
   var canal = document.getElementById('fin-canal').value;
@@ -1415,10 +1420,10 @@ function renderPickerCompra() {
   );
   if (!items.length) { grid.innerHTML = '<div class="inv-picker-empty">'+(q?'Sin resultados':'No hay relojes en inventario')+'</div>'; return; }
   grid.innerHTML = items.map(({p,i}) => {
-    var sel = _compraPicIdx===i?' selected':'';
+    var sel = _compraPicIdx===p.id?' selected':'';
     var badge = p.estado==='transito' ? '<span style="font-size:9px;background:var(--blue-bg);color:var(--blue);padding:1px 5px;border-radius:6px;font-weight:600;">EN TRANSITO</span>' : '';
     var foto = p.foto ? '<img src="'+p.foto+'" style="width:100%;height:52px;object-fit:cover;border-radius:6px;margin-bottom:5px;" onerror="this.remove()" />' : '';
-    return '<div class="inv-picker-card'+sel+'" onclick="seleccionarCompra('+i+')">' + foto + badge +
+    return '<div class="inv-picker-card'+sel+'" onclick="seleccionarCompra(\''+p.id+'\')">' + foto + badge +
       '<div class="inv-picker-nombre" style="margin-top:3px;">'+p.nombre+'</div>' +
       (p.sku?'<div class="inv-picker-sub">Ref. '+p.sku+'</div>':'')+
       '<div class="inv-picker-precio">Costo reg: $'+(p.costoTotal||0).toLocaleString()+'</div>'+
@@ -1426,12 +1431,14 @@ function renderPickerCompra() {
   }).join('');
 }
 function filtrarPickerCompra() { renderPickerCompra(); }
-function seleccionarCompra(i) {
-  _compraPicIdx = i;
+function seleccionarCompra(id) {
+  var i = idxInv(id);
+  if (i === -1) { invNoExiste(); renderPickerCompra(); return; }
+  _compraPicIdx = id;
   var p = state.inventario[i];
   document.getElementById('compra-sel-nombre').textContent = p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('compra-sel-sub').textContent = 'Estado: '+({disponible:'Disponible',transito:'En transito'}[p.estado]||p.estado);
-  document.getElementById('fin-compra-index').value = i;
+  document.getElementById('fin-compra-index').value = id;
   var mc=document.getElementById('fin-monto-compra'); if(mc){ mc.value=p.costoTotal||''; mc.focus(); }
   var sel=document.getElementById('compra-selected'); if(sel) sel.style.display='block';
   var grid=document.getElementById('compra-picker-grid'); if(grid) grid.style.display='none';
@@ -1449,13 +1456,16 @@ function limpiarSeleccionCompra() {
 function registrarCompra() {
   var idx=document.getElementById('fin-compra-index').value;
   if(idx===''){alert('Selecciona un reloj primero.');return;}
-  var i=parseInt(idx), p=state.inventario[i];
+  var i=idxInv(idx);
+  if(i===-1){ invNoExiste(); limpiarSeleccionCompra(); return; }
+  var p=state.inventario[i];
+  if(existeCompraDe(p)&&!confirm('Ya hay una compra registrada para "'+p.nombre+'". ¿Registrar otra de todos modos?')) return;
   var monto=parseFloat(document.getElementById('fin-monto-compra').value);
   var metodoPago=document.getElementById('fin-metodo-compra')?document.getElementById('fin-metodo-compra').value:'';
   if(!monto||monto<=0){alert('Ingresa el costo pagado.');return;}
   state.inventario[i].costoTotal=monto;
   save('inventario');
-  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:monto,canal:'compra',metodoPago:metodoPago,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',invId:p.id||null,desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:monto,canal:'compra',metodoPago:metodoPago,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   limpiarSeleccionCompra(); renderInicio();
   var btn=document.getElementById('btn-registrar-compra');
@@ -1504,15 +1514,22 @@ function poblarSelectClientes(selectId, valorActual) {
   if (actual) sel.value = actual;
 }
 
+function existeCompraDe(producto){
+  if(!producto) return false;
+  var desc = producto.nombre + (producto.sku ? ' · Ref. ' + producto.sku : '');
+  return state.movimientos.some(function(m){
+    if(m.tipo!=='compra') return false;
+    if(m.invId && producto.id) return m.invId===producto.id;
+    return m.desc===desc;
+  });
+}
 function autoRegistrarCompraInv(producto) {
   if (!producto || producto.estado !== 'disponible') return;
   var costo = producto.costoTotal || 0;
   if (!costo || costo <= 0) return;
+  if (existeCompraDe(producto)) return;
   var desc = producto.nombre + (producto.sku ? ' · Ref. ' + producto.sku : '');
-  var hoy = new Date().toLocaleDateString('es-MX');
-  var existe = state.movimientos.some(m => m.tipo==='compra' && m.desc===desc && m.fecha===hoy && m.monto===costo);
-  if (existe) return;
-  state.movimientos.unshift({tipo:'compra',desc,monto:costo,canal:'compra',costo:0,fecha:hoy});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',invId:producto.id||null,desc:desc,monto:costo,canal:'compra',costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
 }
 
@@ -1730,19 +1747,23 @@ function agregarProducto(){
     fecha:new Date().toLocaleDateString('es-MX')
   };
   var esEdicion=editIdx!=='';
-  var estadoAntes=esEdicion?(state.inventario[parseInt(editIdx)]?state.inventario[parseInt(editIdx)].estado:null):null;
+  var idxActual=esEdicion?idxInv(editIdx):-1;
+  if(esEdicion&&idxActual===-1){ invNoExiste(); return; }
+  var estadoAntes=esEdicion?state.inventario[idxActual].estado:null;
   if(esEdicion){
-    var existente=state.inventario[parseInt(editIdx)];
-    if(existente){ item.id=existente.id; item._ts=existente._ts; if(existente.reserva)item.reserva=existente.reserva; if(existente.precioVenta!==undefined)item.precioVenta=existente.precioVenta; if(existente.fechaVenta)item.fechaVenta=existente.fechaVenta; }
-    state.inventario[parseInt(editIdx)]=item;
+    var existente=state.inventario[idxActual];
+    item.id=existente.id; item._ts=existente._ts;
+    if(existente.fecha)item.fecha=existente.fecha;
+    if(existente.reserva)item.reserva=existente.reserva;
+    if(existente.precioVenta!==undefined)item.precioVenta=existente.precioVenta;
+    if(existente.fechaVenta)item.fechaVenta=existente.fechaVenta;
+    state.inventario[idxActual]=item;
   }else{
     item.id=idAleatorio('inv'); item._ts=Date.now();
     state.inventario.unshift(item);
   }
   save('inventario');
   if(!esEdicion&&estado==='disponible'){
-    autoRegistrarCompraInv(item);
-  } else if(esEdicion&&estadoAntes==='transito'&&estado==='disponible'){
     autoRegistrarCompraInv(item);
   }
   limpiarFormulario();
@@ -1773,14 +1794,16 @@ function abrirFormularioNuevo(){
   toggleFormulario(!yaAbierto);
 }
 function cancelarEdicion(){limpiarFormulario();}
-function editarProducto(i){
+function editarProducto(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); return; }
   var p=state.inventario[i];
   var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
   Object.entries(fields).forEach(([id,v])=>{var el=document.getElementById(id);if(el)el.value=v||'';});
   document.getElementById('inv-genero').value=p.genero||'hombre';
   document.getElementById('inv-movimiento').value=p.movimiento||'';
   document.getElementById('inv-estado').value=p.estado||'disponible';
-  document.getElementById('inv-edit-index').value=i;
+  document.getElementById('inv-edit-index').value=p.id;
   document.getElementById('inv-form-title').textContent='Editar unidad';
   document.getElementById('inv-submit-btn').textContent='Guardar cambios';
   var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='inline-flex';
@@ -1789,16 +1812,47 @@ function editarProducto(i){
   toggleFormulario(true);
   cerrarModal();
 }
-function eliminarProducto(i){
+function duplicarProducto(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); return; }
+  var p=state.inventario[i];
+  resetCamposFormulario();
+  // Copiamos las especificaciones del modelo (lo que no cambia entre unidades)
+  var copiar={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,
+    'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,
+    'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,
+    'inv-proveedor':p.proveedor,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
+  Object.entries(copiar).forEach(function(e){var el=document.getElementById(e[0]);if(el)el.value=e[1]||'';});
+  document.getElementById('inv-genero').value=p.genero||'hombre';
+  document.getElementById('inv-movimiento').value=p.movimiento||'';
+  // Lo que SI es propio de cada unidad queda en blanco: costo, serie, tracking
+  document.getElementById('inv-estado').value='transito';
+  document.getElementById('inv-edit-index').value='';
+  document.getElementById('inv-form-title').textContent='Nueva unidad de '+(p.nombre||'este modelo');
+  document.getElementById('inv-submit-btn').textContent='Registrar unidad';
+  var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='inline-flex';
+  if(p.foto)previewFoto();
+  calcularMargenPreview();
+  cerrarModal();
+  toggleFormulario(true);
+  var cEl=document.getElementById('inv-costo');
+  if(cEl){ cEl.focus(); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function eliminarProducto(id){
   if(!confirm('Eliminar esta unidad?'))return;
+  var i=idxInv(id);
+  if(i===-1){ renderInventario(); return; }
   state.inventario.splice(i,1);save('inventario');renderInventario();
 }
-function cambiarEstado(i,val){
+function cambiarEstado(id,val){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); return; }
   if(val==='vendido'&&state.inventario[i].estado!=='vendido'){
-    abrirVentaModal(i); return;
+    abrirVentaModal(id); return;
   }
   if(val==='reservado'&&state.inventario[i].estado!=='reservado'){
-    abrirReservaModal(i); return;
+    abrirReservaModal(id); return;
   }
   var antes=state.inventario[i].estado;
   if(antes==='reservado'&&val!=='reservado'){
@@ -1807,7 +1861,7 @@ function cambiarEstado(i,val){
   }
   state.inventario[i].estado=val;
   save('inventario');
-  if(antes==='transito'&&val==='disponible'){autoRegistrarCompraInv(state.inventario[i]);}
+  if(antes==='transito'&&val==='disponible'&&!existeCompraDe(state.inventario[i])){autoRegistrarCompraInv(state.inventario[i]);}
   renderInventario();
 }
 function diasEnInventario(fecha){
@@ -1861,13 +1915,13 @@ function renderInventario(){
           '<div style="flex:1;"><div style="font-size:12px;color:var(--black);">'+(imp?'<span style="color:var(--blue)">Importacion pendiente</span>':'Costo: $'+x.p.costoTotal.toFixed(2))+((!imp&&x.p.precio)?' · Margen: <span style="color:'+mc+'">'+x.p.margen+'%</span>':'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);">Venta: $'+(x.p.precio||0).toLocaleString()+' · '+x.p.fecha+'</div></div>'+
           '<span class="badge '+(estadosBadge[x.p.estado]||'badge-blue')+'">'+(etiquetas[x.p.estado]||x.p.estado)+'</span>'+
-          '<button class="btn btn-outline btn-sm" onclick="verDetalle('+x.i+')" title="Ver">&#128065;</button>'+
-          '<button class="btn btn-outline btn-sm" onclick="editarProducto('+x.i+')" title="Editar">&#9998;</button>'+
-          '<button class="btn btn-danger" onclick="eliminarProducto('+x.i+')" title="Eliminar">&#128465;</button>'+
+          '<button class="btn btn-outline btn-sm" onclick="verDetalle(\''+x.p.id+'\')" title="Ver">&#128065;</button>'+
+          '<button class="btn btn-outline btn-sm" onclick="editarProducto(\''+x.p.id+'\')" title="Editar">&#9998;</button>'+
+          '<button class="btn btn-danger" onclick="eliminarProducto(\''+x.p.id+'\')" title="Eliminar">&#128465;</button>'+
         '</div>';
       }).join('');
       return'<div style="margin-bottom:4px;">'+
-        '<div class="list-item" style="gap:14px;padding-bottom:8px;cursor:pointer;" onclick="verDetalle('+units[0].i+')">'+
+        '<div class="list-item" style="gap:14px;padding-bottom:8px;cursor:pointer;" onclick="verDetalle(\''+units[0].p.id+'\')">'+
           makeFotoHtml(fotoSrc,52)+
           '<div class="list-item-info"><div class="list-item-name">'+modelo+(units[0].p.sku?' <span style="color:var(--muted);font-size:12px;">· '+units[0].p.sku+'</span>':'')+' </div>'+
           '<div class="list-item-sub">'+units.length+' ud. · '+disp+' disponible · '+tran+' en transito'+(promedio?' · Costo prom. $'+promedio.toFixed(2):'')+' </div></div>'+
@@ -1885,15 +1939,15 @@ function renderInventario(){
       } else {
         subLinea+=((!imp&&p.precio)?' · Margen: <span style="color:'+mc+'">'+p.margen+'%</span>':'')+' · Venta: $'+(p.precio||0).toLocaleString();
       }
-      return'<div class="list-item" style="gap:12px;cursor:pointer;" onclick="verDetalle('+i+')">'+
+      return'<div class="list-item" style="gap:12px;cursor:pointer;" onclick="verDetalle(\''+p.id+'\')">'+
         makeFotoHtml(p.foto,52)+
         '<div class="list-item-info">'+
           '<div class="list-item-name" style="display:flex;align-items:center;gap:8px;">'+p.nombre+(p.sku?' <span style="color:var(--muted);font-size:12px;">· '+p.sku+'</span>':'')+(dias!==null&&p.estado==='disponible'?diasBadge(dias):'')+' </div>'+
           '<div class="list-item-sub">'+subLinea+'</div>'+
         '</div>'+
-        '<select class="cambio-estado-select" onclick="event.stopPropagation()" onchange="cambiarEstado('+i+',this.value)">'+opts+'</select>'+
-        '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto('+i+')" title="Editar">&#9998;</button>'+
-        '<button class="btn btn-danger" onclick="event.stopPropagation();eliminarProducto('+i+')" title="Eliminar">&#128465;</button>'+
+        '<select class="cambio-estado-select" onclick="event.stopPropagation()" onchange="cambiarEstado(\''+p.id+'\',this.value)">'+opts+'</select>'+
+        '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto(\''+p.id+'\')" title="Editar">&#9998;</button>'+
+        '<button class="btn btn-danger" onclick="event.stopPropagation();eliminarProducto(\''+p.id+'\')" title="Eliminar">&#128465;</button>'+
       '</div>';
     }).join('');
   }
@@ -1908,8 +1962,10 @@ function previewFoto(){
 
 // =================== VENTA MODAL ===================
 var _ventaModalIdx=null;
-function abrirVentaModal(i){
-  _ventaModalIdx=i;var p=state.inventario[i];
+function abrirVentaModal(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); return; }
+  _ventaModalIdx=id;var p=state.inventario[i];
   poblarSelectClientes('venta-modal-cliente');
   document.getElementById('venta-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('venta-modal-costo').textContent='$'+(p.costoTotal||0).toLocaleString();
@@ -1940,7 +1996,9 @@ function confirmarVentaModal(){
   var metodoPago=document.getElementById('venta-modal-metodo')?document.getElementById('venta-modal-metodo').value:'';
   var clienteId=document.getElementById('venta-modal-cliente')?document.getElementById('venta-modal-cliente').value:'';
   var cliente=clienteId?state.clientes.find(c=>c.id===clienteId):null;
-  var i=_ventaModalIdx;var p=state.inventario[i];
+  var i=idxInv(_ventaModalIdx);
+  if(i===-1){ invNoExiste(); cerrarVentaModal(); return; }
+  var p=state.inventario[i];
   state.inventario[i].estado='vendido';state.inventario[i].precioVenta=precio;state.inventario[i].fechaVenta=new Date().toLocaleDateString('es-MX');
   save('inventario');
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,metodoPago:metodoPago,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:clienteId||null,clienteNombre:cliente?cliente.nombre:'',fecha:new Date().toLocaleDateString('es-MX')});
@@ -1959,8 +2017,10 @@ function saldoPendienteReserva(p){
 }
 
 var _reservaModalIdx=null;
-function abrirReservaModal(i){
-  _reservaModalIdx=i;var p=state.inventario[i];
+function abrirReservaModal(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); return; }
+  _reservaModalIdx=id;var p=state.inventario[i];
   poblarSelectClientes('reserva-cliente');
   document.getElementById('reserva-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('reserva-precio').value=p.precio||'';
@@ -1978,7 +2038,9 @@ function confirmarReserva(){
   var abono=parseFloat(document.getElementById('reserva-abono').value)||0;
   if(abono<0||abono>precioAcordado){alert('El abono no puede ser mayor al precio acordado.');return;}
   var metodoPago=document.getElementById('reserva-metodo').value;
-  var i=_reservaModalIdx;var p=state.inventario[i];
+  var i=idxInv(_reservaModalIdx);
+  if(i===-1){ invNoExiste(); cerrarReservaModal(); return; }
+  var p=state.inventario[i];
   var hoy=new Date().toLocaleDateString('es-MX');
   p.estado='reservado';
   p.reserva={clienteId:clienteId,clienteNombre:cliente.nombre,precioAcordado:precioAcordado,fechaInicio:hoy,abonos: abono>0?[{monto:abono,fecha:hoy,metodoPago:metodoPago}]:[]};
@@ -1991,8 +2053,10 @@ function confirmarReserva(){
 }
 
 var _abonoModalIdx=null;
-function abrirAbonoModal(i){
-  _abonoModalIdx=i;var p=state.inventario[i];
+function abrirAbonoModal(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); return; }
+  _abonoModalIdx=id;var p=state.inventario[i];
   document.getElementById('abono-modal-info').textContent=p.nombre+' · '+p.reserva.clienteNombre+' · Saldo pendiente: $'+saldoPendienteReserva(p).toLocaleString();
   document.getElementById('abono-monto').value='';
   document.getElementById('abono-overlay').classList.add('open');
@@ -2000,7 +2064,9 @@ function abrirAbonoModal(i){
 function cerrarAbonoModal(){document.getElementById('abono-overlay').classList.remove('open');_abonoModalIdx=null;}
 function confirmarAbono(){
   if(_abonoModalIdx===null)return;
-  var i=_abonoModalIdx;var p=state.inventario[i];
+  var i=idxInv(_abonoModalIdx);
+  if(i===-1){ invNoExiste(); cerrarAbonoModal(); return; }
+  var p=state.inventario[i];
   var monto=parseFloat(document.getElementById('abono-monto').value);
   var saldo=saldoPendienteReserva(p);
   if(!monto||monto<=0){alert('Ingresa el monto del abono.');return;}
@@ -2016,7 +2082,9 @@ function confirmarAbono(){
   renderInventario();renderInicio();
 }
 
-function completarVentaReserva(i){
+function completarVentaReserva(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); cerrarModal(); return; }
   var p=state.inventario[i];
   if(!p.reserva)return;
   var saldo=saldoPendienteReserva(p);
@@ -2034,7 +2102,9 @@ function completarVentaReserva(i){
   cerrarModal();renderInventario();renderInicio();
 }
 
-function cancelarReserva(i){
+function cancelarReserva(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); cerrarModal(); return; }
   var p=state.inventario[i];
   if(!p.reserva)return;
   if(!confirm('¿Cancelar la reserva de este reloj? El reloj volvera a estar disponible.'))return;
@@ -2060,7 +2130,9 @@ function cancelarReserva(i){
 }
 
 // =================== DETALLE MODAL ===================
-function verDetalle(i){
+function verDetalle(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); cerrarModal(); return; }
   var p=state.inventario[i];
   var estados={disponible:'badge-green',transito:'badge-blue',reservado:'badge-gold',vendido:'badge-red'};
   var etiquetas={disponible:'Disponible',transito:'En transito',reservado:'Reservado',vendido:'Vendido'};
@@ -2103,9 +2175,9 @@ function verDetalle(i){
       '</div>'+
       (abonosLista?'<div style="border-top:1px solid var(--blue);padding-top:6px;margin-bottom:10px;">'+abonosLista+'</div>':'')+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
-        '<button class="btn btn-outline btn-sm" onclick="abrirAbonoModal('+i+')">Agregar abono</button>'+
-        '<button class="btn btn-gold btn-sm" onclick="completarVentaReserva('+i+')">Completar venta</button>'+
-        '<button class="btn btn-danger btn-sm" onclick="cancelarReserva('+i+')">Cancelar reserva</button>'+
+        '<button class="btn btn-outline btn-sm" onclick="abrirAbonoModal(\''+p.id+'\')">Agregar abono</button>'+
+        '<button class="btn btn-gold btn-sm" onclick="completarVentaReserva(\''+p.id+'\')">Completar venta</button>'+
+        '<button class="btn btn-danger btn-sm" onclick="cancelarReserva(\''+p.id+'\')">Cancelar reserva</button>'+
       '</div>'+
     '</div>';
   }
@@ -2119,9 +2191,10 @@ function verDetalle(i){
       '</div>'+costoSection+
     '</div>'+specsHtml+notasHtml+internoHtml+reservaHtml+
     '<div style="display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);">'+
-      '<button class="btn btn-gold" style="flex:1;" onclick="editarProducto('+i+')">Editar</button>'+
+      '<button class="btn btn-gold" style="flex:1;" onclick="editarProducto(\''+p.id+'\')">Editar</button>'+
+      '<button class="btn btn-outline" onclick="duplicarProducto(\''+p.id+'\')" title="Registrar otra unidad de este mismo modelo">Otra unidad</button>'+
       '<button class="btn btn-outline" onclick="cerrarModal()">Cerrar</button>'+
-      '<button class="btn btn-danger" onclick="eliminarProducto('+i+')">Eliminar</button>'+
+      '<button class="btn btn-danger" onclick="eliminarProducto(\''+p.id+'\')">Eliminar</button>'+
     '</div>';
   document.getElementById('inv-modal').style.display='block';
   document.body.style.overflow='hidden';
