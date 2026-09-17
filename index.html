@@ -240,8 +240,8 @@
   /* AJUSTES PARA CELULAR */
   @media (max-width: 600px) {
     /* 1. Bloquear el espacio en blanco a la derecha */
-    html, body { overflow-x: hidden; overscroll-behavior-y: none; height: 100%; }
-    nav { position: sticky; top: 0; }
+    html, body { overflow-x: hidden; }
+    nav { position: static; }
 
     /* 2. Menú superior centrado y adaptado */
     nav { flex-direction: column; height: auto; padding: 12px 16px; gap: 8px; }
@@ -250,7 +250,7 @@
     #nav-sync-indicator { padding: 0; font-size: 11px; }
 
     /* 3. Pestañas + correo + Salir, todo en una sola tira deslizable */
-    nav > div:last-child { flex-direction: row; width: 100%; padding: 0; align-items: center; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+    nav > div:last-child { flex-direction: row; width: 100%; padding: 0; align-items: center; gap: 10px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; touch-action: pan-x; overscroll-behavior-x: contain; overscroll-behavior-y: none; }
     nav > div:last-child::-webkit-scrollbar { display: none; }
     .nav-tabs { flex-wrap: nowrap; overflow-x: visible; justify-content: flex-start; width: auto; padding: 0; flex-shrink: 0; }
     .nav-tab { padding: 6px 9px; white-space: nowrap; flex-shrink: 0; font-size: 12px; }
@@ -275,7 +275,7 @@
     .list-item .badge, .list-item .btn, .list-item a.btn, .list-item .cambio-estado-select { flex-shrink: 0; }
 
     /* 8. Calendario semanal (Contenido): scroll horizontal en vez de recortarse */
-    .week-grid { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; gap: 10px; padding-bottom: 6px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+    .week-grid { display: flex; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; gap: 10px; padding-bottom: 6px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; touch-action: pan-x; overscroll-behavior-x: contain; overscroll-behavior-y: none; }
     .week-grid .day-col { flex: 0 0 150px; scroll-snap-align: start; }
 
     /* 9. Filtros y chips que no quepan en una linea, que bajen ordenadamente */
