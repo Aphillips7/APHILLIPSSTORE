@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Aphillips">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
   :root {
@@ -819,6 +822,10 @@
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div><div class="card-title" style="margin-bottom:4px;">Sesion activa</div><div id="sesion-usuario-email" style="font-size:13px;color:var(--muted);">—</div></div>
     <button class="btn btn-outline btn-sm" onclick="cerrarSesion()">Cerrar sesion</button>
+  </div>
+  <div class="card" id="card-instalar-pwa" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div><div class="card-title" style="margin-bottom:4px;">Instalar como app</div><div style="font-size:13px;color:var(--muted);">La agregas a tu pantalla de inicio, se abre sin barra de navegador.</div></div>
+    <button class="btn btn-gold btn-sm" id="btn-instalar-pwa" onclick="instalarPWA()">Instalar</button>
   </div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div><div class="card-title" style="margin-bottom:4px;">Estado</div><div id="sync-status" style="font-size:13px;color:var(--muted);">Conectando...</div></div>
@@ -3286,6 +3293,38 @@ var lastSync=localStorage.getItem('lastSync');if(lastSync)setSyncStatus('Ultima 
 renderSyncHistory();
 vigilarSesion();
 renderInicio();
+
+// =================== PWA: instalar como app ===================
+var _pwaInstallEvent = null;
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  _pwaInstallEvent = e;
+  var card = document.getElementById('card-instalar-pwa');
+  if (card) card.style.display = 'flex';
+});
+function instalarPWA() {
+  if (!_pwaInstallEvent) return;
+  _pwaInstallEvent.prompt();
+  _pwaInstallEvent.userChoice.then(function () {
+    _pwaInstallEvent = null;
+    var card = document.getElementById('card-instalar-pwa');
+    if (card) card.style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', function () {
+  var card = document.getElementById('card-instalar-pwa');
+  if (card) card.style.display = 'none';
+});
+
+// =================== PWA: registrar el service worker ===================
+// Solo en https:// (o localhost) — nunca en file:// para no romper pruebas locales.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {
+      // Si falla (ej. abierto como archivo local), la app sigue funcionando normal, solo sin PWA.
+    });
+  });
+}
 </script>
 </body>
 </html>
