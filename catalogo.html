@@ -66,9 +66,17 @@
   .btn-wa:active{transform:scale(0.98);}
   .btn-cerrar{display:block;text-align:center;color:var(--muted);font-size:13px;padding:14px 0 4px;cursor:pointer;background:none;border:none;width:100%;font-family:inherit;}
   @media(min-width:820px){
-    .modal-box{max-width:760px;display:flex;flex-direction:row;align-items:stretch;max-height:82vh;overflow-y:visible;}
-    .modal-foto{width:340px;flex-shrink:0;aspect-ratio:auto;height:auto;border-radius:18px 0 0 18px;}
-    .modal-body{flex:1;min-width:0;overflow-y:auto;max-height:82vh;}
+    .modal-box{max-width:980px;display:flex;flex-direction:row;align-items:stretch;max-height:86vh;overflow:hidden;border-radius:28px;}
+    .modal-foto{width:46%;flex-shrink:0;aspect-ratio:auto;height:auto;border-radius:0;}
+    .modal-body{flex:1;min-width:0;overflow-y:auto;max-height:86vh;padding:48px 46px;display:flex;flex-direction:column;}
+    .modal-nombre{font-size:30px;}
+    .modal-sub{font-size:14px;margin-top:5px;}
+    .modal-precio{font-size:38px;margin:22px 0;}
+    .specs{background:var(--bg);border-radius:16px;padding:6px 20px;margin:20px 0 24px;}
+    .spec-row{padding:12px 0;font-size:14px;}
+    .modal-notas{font-size:14px;padding:16px 18px;margin-bottom:22px;}
+    .btn-wa{padding:16px;font-size:16px;margin-top:auto;}
+    .btn-cerrar{font-size:14px;}
   }
   footer{text-align:center;color:var(--muted2);font-size:12px;padding:30px 0 10px;}
 </style>
