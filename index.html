@@ -613,7 +613,7 @@
     <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
   </div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;margin-bottom:16px;">
-    <div style="font-size:13px;color:var(--muted);">Catalogo publico — se actualiza solo con lo Disponible</div>
+    <div style="font-size:13px;color:var(--muted);">Catalogo publico — se actualiza con lo Disponible y lo En transito (con etiqueta "En camino")</div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline btn-sm" onclick="copiarLinkCatalogo()">Copiar link</button>
       <a class="btn btn-outline btn-sm" href="catalogo.html" target="_blank" style="text-decoration:none;">Ver catalogo</a>
@@ -2754,11 +2754,11 @@ function camposPublicos(p){
     mm:p.mm||'', materialCaja:p.materialCaja||'', materialCorrea:p.materialCorrea||'',
     colorEsfera:p.colorEsfera||'', movimiento:p.movimiento||'', agua:p.agua||'',
     cristal:p.cristal||'', color:p.color||'', notas:p.notas||'',
-    precio:p.precio||0, foto:p.foto||'', _ts:p._ts||0
+    precio:p.precio||0, foto:p.foto||'', estado:p.estado||'', _ts:p._ts||0
   };
 }
 function esPublicable(p){
-  return p.estado==='disponible' && !p.ocultoCatalogo;
+  return (p.estado==='disponible' || p.estado==='transito') && !p.ocultoCatalogo;
 }
 var _lastSyncedPublico = {};
 async function syncCatalogoPublico(){
