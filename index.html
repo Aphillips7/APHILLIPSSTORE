@@ -613,7 +613,7 @@
     <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
   </div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;margin-bottom:16px;">
-    <div style="font-size:13px;color:var(--muted);">Catalogo publico — se actualiza con lo Disponible y lo En transito (con etiqueta "En camino")</div>
+    <div style="font-size:13px;color:var(--muted);">Catalogo publico — incluye Disponible, En transito ("En camino") y Vendido reciente ("Agotado", hasta 21 dias)</div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline btn-sm" onclick="copiarLinkCatalogo()">Copiar link</button>
       <a class="btn btn-outline btn-sm" href="catalogo.html" target="_blank" style="text-decoration:none;">Ver catalogo</a>
@@ -2758,8 +2758,15 @@ function camposPublicos(p){
   };
 }
 function esPublicable(p){
-  return (p.estado==='disponible' || p.estado==='transito') && !p.ocultoCatalogo;
+  if(p.ocultoCatalogo) return false;
+  if(p.estado==='disponible' || p.estado==='transito') return true;
+  if(p.estado==='vendido'){
+    var dias = diasEnInventario(p.fechaVenta);
+    return dias===null || dias<=DIAS_AGOTADO_VISIBLE;
+  }
+  return false;
 }
+var DIAS_AGOTADO_VISIBLE = 21; // dias que un reloj vendido se muestra como "Agotado" en el catalogo publico antes de desaparecer
 var _lastSyncedPublico = {};
 async function syncCatalogoPublico(){
   try{
