@@ -48,6 +48,11 @@
   @media(min-width:640px){ #modal{align-items:center;padding:20px;} }
   .modal-box{background:var(--card);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;box-shadow:var(--shadow-xl);animation:slideUp var(--base) var(--ease);}
   @media(min-width:640px){ .modal-box{border-radius:18px;animation:popIn var(--base) var(--ease);} }
+  @media(min-width:820px){
+    .modal-box{max-width:760px;display:flex;flex-direction:row;align-items:stretch;max-height:82vh;overflow-y:visible;}
+    .modal-foto{width:340px;flex-shrink:0;aspect-ratio:auto;height:auto;border-radius:18px 0 0 18px;}
+    .modal-body{flex:1;min-width:0;overflow-y:auto;max-height:82vh;}
+  }
   @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
   @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
   @keyframes popIn{from{opacity:0;transform:scale(0.96) translateY(8px);}to{opacity:1;transform:none;}}
