@@ -612,6 +612,13 @@
     <div><div class="section-title" style="margin-bottom:2px;">Inventario</div><div class="section-sub" style="margin-bottom:0;"></div></div>
     <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
   </div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;margin-bottom:16px;">
+    <div style="font-size:13px;color:var(--muted);">Catalogo publico — se actualiza solo con lo Disponible</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="copiarLinkCatalogo()">Copiar link</button>
+      <a class="btn btn-outline btn-sm" href="catalogo.html" target="_blank" style="text-decoration:none;">Ver catalogo</a>
+    </div>
+  </div>
   <div class="grid-3" style="margin-top:20px;">
     <div class="stat-box"><div class="stat-label">Disponibles</div><div class="stat-value" id="inv-stat-disponibles">0</div></div>
     <div class="stat-box"><div class="stat-label">En transito</div><div class="stat-value" style="color:var(--blue)" id="inv-stat-transito">0</div></div>
@@ -670,6 +677,10 @@
         <div class="field"><label>Color / variante</label><input type="text" id="inv-color" placeholder="Ej: Dorado/negro..." /></div>
       </div>
       <div class="field"><label>Notas adicionales</label><textarea id="inv-notas" rows="2" placeholder="Caracteristicas especiales, edicion limitada..."></textarea></div>
+      <div class="field" style="display:flex;align-items:center;gap:9px;background:var(--bg2);padding:11px 14px;border-radius:var(--r-md);margin-bottom:14px;">
+        <input type="checkbox" id="inv-oculto-catalogo" style="width:16px;height:16px;accent-color:var(--black);cursor:pointer;flex-shrink:0;margin:0;" />
+        <label for="inv-oculto-catalogo" style="margin:0;cursor:pointer;color:var(--text);font-weight:400;">No mostrar en el catalogo publico (aunque este Disponible)</label>
+      </div>
       <div class="divider-text">Trazabilidad (uso interno)</div>
       <div class="grid-2">
         <div class="field"><label>Numero de serie</label><input type="text" id="inv-serie" placeholder="Ej: SN-849213" /></div>
@@ -1749,6 +1760,7 @@ function agregarProducto(){
     cristal:document.getElementById('inv-cristal').value.trim(),
     color:document.getElementById('inv-color').value.trim(),
     notas:document.getElementById('inv-notas').value.trim(),
+    ocultoCatalogo:document.getElementById('inv-oculto-catalogo').checked,
     serie:document.getElementById('inv-serie').value.trim(),
     proveedor:document.getElementById('inv-proveedor').value.trim(),
     paqueteria:document.getElementById('inv-paqueteria').value.trim(),
@@ -1790,6 +1802,7 @@ function limpiarFormulario(){
 }
 function resetCamposFormulario(){
   ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('inv-oculto-catalogo').checked=false;
   document.getElementById('inv-genero').value='hombre';
   document.getElementById('inv-movimiento').value='';
   document.getElementById('inv-estado').value='disponible';
@@ -1814,6 +1827,7 @@ function editarProducto(id){
   var p=state.inventario[i];
   var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
   Object.entries(fields).forEach(([id,v])=>{var el=document.getElementById(id);if(el)el.value=v||'';});
+  document.getElementById('inv-oculto-catalogo').checked=!!p.ocultoCatalogo;
   document.getElementById('inv-genero').value=p.genero||'hombre';
   document.getElementById('inv-movimiento').value=p.movimiento||'';
   document.getElementById('inv-estado').value=p.estado||'disponible';
@@ -1826,6 +1840,15 @@ function editarProducto(id){
   toggleFormulario(true);
   cerrarModal();
 }
+function copiarLinkCatalogo(){
+  var url = new URL('catalogo.html', window.location.href).href;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ alert('Link copiado:\n'+url); }).catch(function(){ prompt('Copia este link:', url); });
+  } else {
+    prompt('Copia este link:', url);
+  }
+}
+
 function duplicarProducto(id){
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); return; }
@@ -2716,8 +2739,58 @@ async function syncColeccion(key){
     var now=new Date().toLocaleTimeString('es-MX');
     setSyncStatus('Sincronizado · '+now,'var(--green)','ok');
     localStorage.setItem('lastSync',now);
+    if(key==='inventario'){ await syncCatalogoPublico(); }
   }catch(e){
     setSyncStatus('Error de sincronizacion','var(--red)','error');
+  }
+}
+
+// =================== CATALOGO PUBLICO ===================
+// Solo estos campos salen a la luz publica. Nunca costo, margen, precio minimo,
+// proveedor, numero de serie ni tracking.
+function camposPublicos(p){
+  return {
+    nombre:p.nombre||'', sku:p.sku||'', coleccion:p.coleccion||'', genero:p.genero||'',
+    mm:p.mm||'', materialCaja:p.materialCaja||'', materialCorrea:p.materialCorrea||'',
+    colorEsfera:p.colorEsfera||'', movimiento:p.movimiento||'', agua:p.agua||'',
+    cristal:p.cristal||'', color:p.color||'', notas:p.notas||'',
+    precio:p.precio||0, foto:p.foto||'', _ts:p._ts||0
+  };
+}
+function esPublicable(p){
+  return p.estado==='disponible' && !p.ocultoCatalogo;
+}
+var _lastSyncedPublico = {};
+async function syncCatalogoPublico(){
+  try{
+    var coll=db.collection('catalogo_publico');
+    var ops=[];
+    var idsVisibles=new Set();
+    state.inventario.forEach(function(p){
+      if(!esPublicable(p)) return;
+      idsVisibles.add(p.id);
+      var pub=camposPublicos(p);
+      var json=JSON.stringify(pub);
+      if(_lastSyncedPublico[p.id]!==json){ ops.push({tipo:'set',id:p.id,item:pub,json:json}); }
+    });
+    Object.keys(_lastSyncedPublico).forEach(function(id){
+      if(!idsVisibles.has(id)) ops.push({tipo:'delete',id:id});
+    });
+    for(var i=0;i<ops.length;i+=450){
+      var chunk=ops.slice(i,i+450);
+      var batch=db.batch();
+      chunk.forEach(function(op){
+        if(op.tipo==='set'){ batch.set(coll.doc(op.id),op.item); }
+        else { batch.delete(coll.doc(op.id)); }
+      });
+      await batch.commit();
+      chunk.forEach(function(op){
+        if(op.tipo==='set'){ _lastSyncedPublico[op.id]=op.json; }
+        else { delete _lastSyncedPublico[op.id]; }
+      });
+    }
+  }catch(e){
+    // El catalogo publico es un extra; si falla, no debe romper el sync normal del negocio.
   }
 }
 
@@ -2747,6 +2820,7 @@ function refrescarVista(key){
     try{ renderPicker(); }catch(e){}
     try{ renderPickerCompra(); }catch(e){}
     try{ renderClientes(); }catch(e){}
+    try{ syncCatalogoPublico(); }catch(e){}
   }else if(key==='movimientos'){
     try{ renderHistorial(); }catch(e){}
     try{ renderResumen(); }catch(e){}
