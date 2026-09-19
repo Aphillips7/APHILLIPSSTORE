@@ -438,7 +438,7 @@ function abrir(id){
   var waTexto = document.getElementById('modal-wa-texto');
   var msg;
   if(r.estado==='transito'){
-    waTexto.textContent = 'Apartar · escribir por WhatsApp';
+    waTexto.textContent = 'Apartar por WhatsApp';
     msg = encodeURIComponent('Hola! Vi en el catalogo el '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que esta en camino, ¿me lo pueden apartar?');
   } else if(r.estado==='vendido'){
     waTexto.textContent = 'Preguntar por uno similar';
