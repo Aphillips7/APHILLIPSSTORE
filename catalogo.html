@@ -22,6 +22,7 @@
     --black:#09090b;--text:#18181b;--muted:#71717a;--muted2:#a1a1aa;
     --green:#067647;--green-bg:rgba(6,118,71,0.08);
     --blue:#24405f;--blue-bg:rgba(36,64,95,0.08);
+    --bronze:#8a6d3a;--bronze-bg:rgba(138,109,58,0.10);
     --gray:#3f3f46;--gray-bg:rgba(63,63,70,0.08);
     --slate:#475569;--slate-bg:rgba(71,85,105,0.09);
     --red:#7a2e3a;--red-bg:rgba(122,46,58,0.08);
@@ -49,6 +50,18 @@
   .orden-select{margin-left:auto;background:var(--card);border:1px solid var(--border2);color:var(--text);font-size:12.5px;font-weight:500;padding:8px 14px;border-radius:var(--r-pill);font-family:inherit;cursor:pointer;outline:none;}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+  .grid.compacta{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .grid.compacta .card-info{padding:9px 10px;}
+  .grid.compacta .card-nombre{font-size:12px;line-height:1.25;}
+  .grid.compacta .card-sub{font-size:10.5px;}
+  .grid.compacta .card-precio{font-size:13.5px;margin-top:5px;}
+  .grid.compacta .card-cotizar{font-size:10px;padding:6px 8px;margin-top:5px;}
+  .grid.compacta .badge-tag{font-size:9.5px;padding:4px 8px;top:7px;left:7px;}
+  .toggle-vista{display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:var(--r-md);border:1px solid var(--border2);background:var(--card);cursor:pointer;flex-shrink:0;color:var(--muted);transition:background var(--fast) var(--ease),color var(--fast) var(--ease);}
+  .toggle-vista:active{transform:scale(0.94);}
+  .toggle-vista.on{background:var(--black);color:#fff;border-color:var(--black);}
+  .toggle-vista svg{width:17px;height:17px;}
+  @media(max-width:639px){ .toggle-vista{display:flex;} }
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;box-shadow:var(--shadow);}
   @media (prefers-reduced-motion: no-preference){
     .card{opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease), transform .5s var(--ease), box-shadow var(--fast) var(--ease);}
@@ -61,9 +74,9 @@
   .card-foto .sinfoto{color:var(--muted2);font-size:12px;}
   .card-foto.agotada img{filter:grayscale(45%);opacity:0.55;}
   .badge-tag{position:absolute;top:10px;left:10px;font-size:11px;font-weight:700;letter-spacing:0.02em;padding:5px 11px;border-radius:var(--r-pill);box-shadow:0 2px 8px rgba(9,9,11,0.18);}
-  .badge-tag.camino{background:var(--blue);color:#fff;}
+  .badge-tag.camino{background:var(--bronze);color:#fff;font-style:italic;}
   .badge-tag.agotado{background:rgba(9,9,11,0.85);color:#fff;}
-  .badge-tag.pedido{background:var(--red);color:#fff;}
+  .badge-tag.pedido{background:var(--gray);color:#fff;font-style:italic;}
   .card-info{padding:14px 16px;}
   .card-nombre{font-weight:600;font-size:14px;color:var(--black);letter-spacing:-0.01em;line-height:1.3;}
   .card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
@@ -99,9 +112,9 @@
   .btn-cerrar-x:active{transform:scale(0.92);}
   .btn-cerrar-x svg{width:16px;height:16px;}
   .modal-badge{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.01em;padding:4px 11px;border-radius:var(--r-pill);margin-bottom:10px;width:max-content;}
-  .modal-badge.camino{background:var(--blue-bg);color:var(--blue);font-style:italic;}
+  .modal-badge.camino{background:var(--bronze-bg);color:var(--bronze);font-style:italic;}
   .modal-badge.agotado{background:var(--gray-bg);color:var(--gray);}
-  .modal-badge.pedido{background:var(--red-bg);color:var(--red);font-style:italic;}
+  .modal-badge.pedido{background:var(--gray-bg);color:var(--gray);font-style:italic;}
   .modal-nombre{font-weight:700;font-size:21px;color:var(--black);letter-spacing:-0.02em;line-height:1.2;}
   .modal-sub{font-size:13px;color:var(--muted);margin-top:3px;}
   .sku-copy{cursor:pointer;border-bottom:1px dashed var(--muted2);}
@@ -170,6 +183,9 @@
       <option value="precio_asc">Precio: menor a mayor</option>
       <option value="precio_desc">Precio: mayor a menor</option>
     </select>
+    <button type="button" class="toggle-vista" id="toggle-vista" onclick="toggleVistaCompacta()" title="Ver mas relojes a la vez" aria-label="Cambiar vista">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+    </button>
   </div>
   <div id="grid" class="grid">
       <div class="card skeleton-card">
@@ -274,6 +290,14 @@ document.getElementById('fab-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+
 let relojes = [];
 let _filtroGenero = '';
 let _orden = 'recientes';
+let _vistaCompacta = false;
+function toggleVistaCompacta(){
+  _vistaCompacta = !_vistaCompacta;
+  var btn = document.getElementById('toggle-vista');
+  if(btn) btn.classList.toggle('on', _vistaCompacta);
+  var grid = document.getElementById('grid');
+  if(grid) grid.classList.toggle('compacta', _vistaCompacta);
+}
 let _idAbierto = null;
 let _deepLinkHandled = false;
 const _idInicial = new URLSearchParams(location.search).get('id');
@@ -334,8 +358,9 @@ function setGenero(g, btn){
 function setOrden(v){ _orden = v; render(); }
 
 function ordenPeso(estado){
-  if(estado==='vendido') return 2;
-  if(estado==='bajopedido') return 1;
+  if(estado==='vendido') return 3;
+  if(estado==='bajopedido') return 2;
+  if(estado==='transito') return 1;
   return 0;
 }
 
