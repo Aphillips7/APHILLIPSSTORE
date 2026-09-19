@@ -84,7 +84,7 @@
   #modal{display:none;position:fixed;inset:0;background:rgba(9,9,11,0.42);backdrop-filter:blur(4px);z-index:200;align-items:flex-end;justify-content:center;animation:fadeIn var(--base) var(--ease);}
   #modal.open{display:flex;}
   @media(min-width:640px){ #modal{align-items:center;padding:20px;} }
-  .modal-box{background:var(--card);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;box-shadow:var(--shadow-xl);animation:slideUp var(--base) var(--ease);}
+  .modal-box{background:var(--card);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;box-shadow:var(--shadow-xl);animation:slideUp var(--base) var(--ease);position:relative;}
   @media(min-width:640px){ .modal-box{border-radius:18px;animation:popIn var(--base) var(--ease);} }
   @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
   @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
@@ -93,16 +93,16 @@
   @keyframes modalBodyIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
   .modal-foto{width:100%;aspect-ratio:1/1;background:var(--card);padding:24px;animation:modalFotoIn 320ms var(--ease);}
   .modal-foto img{width:100%;height:100%;object-fit:contain;}
-  .modal-body{padding:20px;animation:modalBodyIn 380ms var(--ease) 70ms both;position:relative;}
-  .btn-cerrar-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:var(--bg);border:1px solid var(--border2);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;line-height:1;transition:background var(--fast) var(--ease),color var(--fast) var(--ease),transform var(--fast) var(--ease);z-index:5;}
-  .btn-cerrar-x:hover{background:var(--border);color:var(--black);}
+  .modal-body{padding:20px;animation:modalBodyIn 380ms var(--ease) 70ms both;}
+  .btn-cerrar-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.92);box-shadow:0 2px 8px rgba(9,9,11,0.15);border:none;color:var(--red);display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;transition:background var(--fast) var(--ease),transform var(--fast) var(--ease);z-index:20;}
+  .btn-cerrar-x:hover{background:#fff;}
   .btn-cerrar-x:active{transform:scale(0.92);}
   .btn-cerrar-x svg{width:16px;height:16px;}
   .modal-badge{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.01em;padding:4px 11px;border-radius:var(--r-pill);margin-bottom:10px;width:max-content;}
   .modal-badge.camino{background:var(--blue-bg);color:var(--blue);}
   .modal-badge.agotado{background:var(--gray-bg);color:var(--gray);}
   .modal-badge.pedido{background:var(--slate-bg);color:var(--slate);}
-  .modal-nombre{font-weight:700;font-size:21px;color:var(--black);letter-spacing:-0.02em;line-height:1.2;padding-right:38px;}
+  .modal-nombre{font-weight:700;font-size:21px;color:var(--black);letter-spacing:-0.02em;line-height:1.2;}
   .modal-sub{font-size:13px;color:var(--muted);margin-top:3px;}
   .sku-copy{cursor:pointer;border-bottom:1px dashed var(--muted2);}
   .sku-copy:hover{color:var(--black);}
@@ -122,22 +122,22 @@
   .btn-compartir:active{transform:scale(0.98);}
   @media(min-width:820px){
     #modal{padding:24px;}
-    .modal-box{max-width:1180px;width:94vw;display:flex;flex-direction:row;align-items:stretch;height:88vh;max-height:900px;overflow:hidden;border-radius:24px;background:var(--card);}
-    .modal-foto{width:50%;flex-shrink:0;aspect-ratio:auto;height:100%;border-radius:0;padding:56px;background:var(--card);}
+    .modal-box{max-width:920px;width:100%;display:flex;flex-direction:row;align-items:stretch;height:min(660px,90vh);max-height:90vh;overflow:hidden;border-radius:24px;background:var(--card);}
+    .modal-foto{width:50%;flex-shrink:0;aspect-ratio:auto;height:100%;border-radius:0;padding:44px;background:var(--card);}
     .modal-foto img{object-fit:contain;}
-    .modal-body{flex:1;min-width:0;overflow-y:hidden;height:100%;padding:52px 64px;display:flex;flex-direction:column;border-left:1px solid var(--border);}
+    .modal-body{flex:1;min-width:0;overflow-y:hidden;height:100%;padding:44px 48px;display:flex;flex-direction:column;border-left:1px solid var(--border);}
     .modal-info{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;}
-    .btn-cerrar-x{top:24px;right:24px;width:38px;height:38px;}
-    .modal-badge{margin-bottom:16px;}
-    .modal-nombre{font-size:30px;}
-    .modal-sub{font-size:14px;margin-top:7px;}
-    .modal-precio{font-size:36px;margin:26px 0 26px;}
-    .modal-precio.cotizar{font-size:20px;}
-    .specs{background:transparent;border-radius:0;padding:0;margin:0 0 20px;display:grid;grid-template-columns:1fr 1fr;column-gap:48px;row-gap:2px;}
-    .spec-row{padding:12px 0;font-size:13px;}
+    .btn-cerrar-x{top:20px;right:20px;width:36px;height:36px;}
+    .modal-badge{margin-bottom:14px;}
+    .modal-nombre{font-size:27px;}
+    .modal-sub{font-size:13px;margin-top:5px;}
+    .modal-precio{font-size:33px;margin:20px 0 22px;}
+    .modal-precio.cotizar{font-size:19px;}
+    .specs{background:transparent;border-radius:0;padding:0;margin:0 0 18px;display:grid;grid-template-columns:1fr 1fr;column-gap:42px;}
+    .spec-row{padding:10px 0;font-size:12.5px;}
     .spec-row:last-child{border-bottom:none;}
-    .modal-notas{font-size:13px;padding:15px 17px;margin-bottom:0;line-height:1.6;}
-    .btn-wa{padding:16px;font-size:15px;margin-top:32px;}
+    .modal-notas{font-size:12.5px;padding:13px 15px;margin-bottom:0;line-height:1.55;}
+    .btn-wa{padding:15px;font-size:14.5px;margin-top:28px;}
   }
   footer{text-align:center;color:var(--muted2);font-size:12px;padding:30px 0 10px;}
 
@@ -234,11 +234,11 @@
 
 <div id="modal">
   <div class="modal-box">
+    <button class="btn-cerrar-x" onclick="cerrar()" aria-label="Cerrar" title="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
     <div class="modal-foto" id="modal-foto"></div>
     <div class="modal-body">
-      <button class="btn-cerrar-x" onclick="cerrar()" aria-label="Cerrar" title="Cerrar">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
       <div class="modal-info">
         <div class="modal-badge" id="modal-badge" style="display:none;"></div>
         <div class="modal-nombre" id="modal-nombre"></div>
