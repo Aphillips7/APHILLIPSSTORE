@@ -25,6 +25,7 @@
     --green:#067647;--green-bg:rgba(6,118,71,0.08);
     --red:#b42318;--red-bg:rgba(180,35,24,0.08);
     --blue:#175cd3;--blue-bg:rgba(23,92,211,0.08);
+    --slate:#475569;--slate-bg:rgba(71,85,105,0.09);
     /* Forma */
     --r-lg:12px;--r-md:8px;--r-sm:6px;--r-pill:999px;
     /* Profundidad */
@@ -70,7 +71,8 @@
   .card-title{font-family:inherit;font-size:14px;font-weight:600;letter-spacing:-0.01em;text-transform:none;color:var(--black);margin-bottom:14px;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
-  @media(max-width:600px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+  .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+  @media(max-width:600px){.grid-2,.grid-3{grid-template-columns:1fr;}.grid-4{grid-template-columns:1fr 1fr;}}
   .stat-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;display:flex;flex-direction:column;gap:5px;box-shadow:var(--shadow);}
   .stat-label{font-size:13px;font-weight:500;letter-spacing:-0.01em;text-transform:none;color:var(--muted);}
   .stat-value{font-family:inherit;font-size:30px;font-weight:600;color:var(--black);line-height:1.1;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;}
@@ -110,6 +112,7 @@
   .badge-red{background:var(--red-bg);color:var(--red);}
   .badge-gold{background:var(--accent-light);color:var(--accent);}
   .badge-blue{background:var(--blue-bg);color:var(--blue);}
+  .badge-slate{background:var(--slate-bg);color:var(--slate);}
   .money{font-family:inherit;font-size:1em;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;}
   .money.pos{color:var(--green);}
   .money.neg{color:var(--red);}
@@ -367,6 +370,11 @@
   </div>
 
   <div class="card">
+    <div class="card-title">Interes en el catalogo</div>
+    <div id="metricas-catalogo-container"><div class="empty" style="padding:16px 0;"><span></span>Aun no hay datos de vistas o clics.</div></div>
+  </div>
+
+  <div class="card">
     <div class="card-title">Meta del mes</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <span id="meta-label" style="font-size:14px;">Sin meta definida</span>
@@ -613,15 +621,16 @@
     <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
   </div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;margin-bottom:16px;">
-    <div style="font-size:13px;color:var(--muted);">Catalogo publico — incluye Disponible, En transito ("En camino") y Vendido reciente ("Agotado", hasta 21 dias)</div>
+    <div style="font-size:13px;color:var(--muted);">Catalogo publico — incluye Disponible, En transito ("En camino"), Bajo pedido ("Bajo cotizacion") y Vendido reciente ("Agotado", hasta 21 dias)</div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline btn-sm" onclick="copiarLinkCatalogo()">Copiar link</button>
       <a class="btn btn-outline btn-sm" href="catalogo.html" target="_blank" style="text-decoration:none;">Ver catalogo</a>
     </div>
   </div>
-  <div class="grid-3" style="margin-top:20px;">
+  <div class="grid-4" style="margin-top:20px;">
     <div class="stat-box"><div class="stat-label">Disponibles</div><div class="stat-value" id="inv-stat-disponibles">0</div></div>
     <div class="stat-box"><div class="stat-label">En transito</div><div class="stat-value" style="color:var(--blue)" id="inv-stat-transito">0</div></div>
+    <div class="stat-box"><div class="stat-label">Bajo pedido</div><div class="stat-value" style="color:var(--slate)" id="inv-stat-bajopedido">0</div></div>
     <div class="stat-box"><div class="stat-label">Valor en stock</div><div class="stat-value gold money" id="inv-stat-valor">$0</div></div>
   </div>
   <div class="card" style="padding:14px 20px;margin-top:0;">
@@ -633,6 +642,7 @@
       <button class="btn btn-sm filtro-estado active" onclick="setFiltroEstado(this,'')">Todos</button>
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'disponible')" style="color:var(--green);border-color:var(--green);">Disponible</button>
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'transito')" style="color:var(--blue);border-color:var(--blue);">En transito</button>
+      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'bajopedido')" style="color:var(--slate);border-color:var(--slate);">Bajo pedido</button>
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'reservado')" style="color:var(--accent);border-color:var(--accent);">Reservado</button>
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'vendido')" style="color:var(--red);border-color:var(--red);">Vendido</button>
     </div>
@@ -704,7 +714,7 @@
       <div class="grid-2">
         <div class="field"><label>Precio de venta objetivo ($)</label><div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
         <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
-        <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
+        <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="bajopedido">Bajo pedido</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
       </div>
 <div class="divider-text">Imagen</div>
       <div class="field">
@@ -1005,6 +1015,7 @@ const state = {
   movimientos: [],
   inventario: [],
   clientes: [],
+  metricas: {},
   meta: parseFloat(localStorage.getItem('meta') || '0'),
   weekTasks: JSON.parse(localStorage.getItem('weekTasks') || '{}'),
   ideas: JSON.parse(localStorage.getItem('ideas') || '[]'),
@@ -1117,6 +1128,7 @@ function renderInicio() {
 
   renderChecklist();
   renderPendientesInicio();
+  renderMetricasInicio();
   renderMiniChartInicio();
   renderRecientesInicio();
 }
@@ -1167,6 +1179,44 @@ function renderPendientesInicio() {
   items.sort(function(a,b){ return a.orden - b.orden; });
   cont.innerHTML = items.length ? items.map(function(x){ return x.html; }).join('') :
     '<div class="empty" style="padding:20px 0;"><span></span>Todo al dia, sin pendientes por ahora.</div>';
+}
+function renderMetricasInicio(){
+  var cont = document.getElementById('metricas-catalogo-container');
+  if(!cont) return;
+  var filas = state.inventario
+    .filter(function(p){ return esPublicable(p); })
+    .map(function(p){
+      var m = state.metricas[p.id] || {};
+      return { p:p, vistas:m.vistas||0, aperturas:m.aperturas||0, clics:m.clics||0 };
+    })
+    .filter(function(x){ return x.vistas>0 || x.aperturas>0 || x.clics>0; });
+  if(!filas.length){
+    cont.innerHTML = '<div class="empty" style="padding:16px 0;"><span></span>Aun no hay datos de vistas o clics.</div>';
+    return;
+  }
+  var topInteres = filas.slice().sort(function(a,b){ return b.clics-a.clics; }).filter(function(x){ return x.clics>0; }).slice(0,3);
+  var friccion = filas.filter(function(x){ return x.clics===0 && (x.aperturas>=5 || x.vistas>=15); })
+    .sort(function(a,b){ return (b.vistas+b.aperturas*2)-(a.vistas+a.aperturas*2); }).slice(0,3);
+  var html = '';
+  if(topInteres.length){
+    html += '<div style="font-size:11px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Top interes — mas clics a WhatsApp</div>';
+    html += topInteres.map(function(x){
+      return '<div class="list-item" style="padding:8px 0;">'+
+        '<div class="list-item-info"><div class="list-item-name">'+x.p.nombre+'</div>'+
+        '<div class="list-item-sub">'+x.vistas+' vistas · '+x.aperturas+' aperturas</div></div>'+
+        '<span class="badge badge-green">'+x.clics+' clic'+(x.clics!==1?'s':'')+'</span></div>';
+    }).join('');
+  }
+  if(friccion.length){
+    html += '<div style="font-size:11px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;color:var(--muted);margin:'+(topInteres.length?'16px':'0')+' 0 6px;">Alerta de friccion — mucho interes, cero clics</div>';
+    html += friccion.map(function(x){
+      return '<div class="list-item" style="padding:8px 0;">'+
+        '<div class="list-item-info"><div class="list-item-name">'+x.p.nombre+'</div>'+
+        '<div class="list-item-sub">'+x.vistas+' vistas · '+x.aperturas+' aperturas · 0 clics</div></div>'+
+        '<span class="badge badge-red">Revisar precio/foto</span></div>';
+    }).join('');
+  }
+  cont.innerHTML = html || '<div class="empty" style="padding:16px 0;"><span></span>Aun no hay suficientes datos para mostrar tendencias.</div>';
 }
 function renderMiniChartInicio() {
   var cont = document.getElementById('mini-chart-container');
@@ -1848,6 +1898,21 @@ function copiarLinkCatalogo(){
     prompt('Copia este link:', url);
   }
 }
+function copiarLinkReloj(id){
+  var url = new URL('catalogo.html?id='+encodeURIComponent(id), window.location.href).href;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ alert('Link copiado:\n'+url); }).catch(function(){ prompt('Copia este link:', url); });
+  } else {
+    prompt('Copia este link:', url);
+  }
+}
+function toggleOcultoCatalogo(id){
+  var i=idxInv(id);
+  if(i===-1){ invNoExiste(); return; }
+  state.inventario[i].ocultoCatalogo = !state.inventario[i].ocultoCatalogo;
+  save('inventario');
+  renderInventario();
+}
 
 function duplicarProducto(id){
   var i=idxInv(id);
@@ -1922,14 +1987,15 @@ function makeFotoHtml(url,size){
 function renderInventario(){
   var disponibles=state.inventario.filter(p=>p.estado==='disponible').length;
   var transito=state.inventario.filter(p=>p.estado==='transito').length;
+  var bajoPedido=state.inventario.filter(p=>p.estado==='bajopedido').length;
   var valorStock=state.inventario.filter(p=>p.estado==='disponible').reduce((a,p)=>a+(p.precio||0),0);
-  var elD=document.getElementById('inv-stat-disponibles');var elT=document.getElementById('inv-stat-transito');var elV=document.getElementById('inv-stat-valor');
-  if(elD)elD.textContent=disponibles;if(elT)elT.textContent=transito;if(elV)elV.textContent='$'+valorStock.toLocaleString();
+  var elD=document.getElementById('inv-stat-disponibles');var elT=document.getElementById('inv-stat-transito');var elBP=document.getElementById('inv-stat-bajopedido');var elV=document.getElementById('inv-stat-valor');
+  if(elD)elD.textContent=disponibles;if(elT)elT.textContent=transito;if(elBP)elBP.textContent=bajoPedido;if(elV)elV.textContent='$'+valorStock.toLocaleString();
   var statStock=document.getElementById('stat-stock');if(statStock)statStock.textContent=disponibles;
   var lista=document.getElementById('inv-lista');
   var query=document.getElementById('inv-search')?document.getElementById('inv-search').value.toLowerCase():'';
-  var estadosBadge={disponible:'badge-green',transito:'badge-blue',reservado:'badge-gold',vendido:'badge-red'};
-  var etiquetas={disponible:'Disponible',transito:'En transito',reservado:'Reservado',vendido:'Vendido'};
+  var estadosBadge={disponible:'badge-green',transito:'badge-blue',bajopedido:'badge-slate',reservado:'badge-gold',vendido:'badge-red'};
+  var etiquetas={disponible:'Disponible',transito:'En transito',bajopedido:'Bajo pedido',reservado:'Reservado',vendido:'Vendido'};
   var items=state.inventario.map((p,i)=>({p,i})).filter(x=>{
     var mQ=(x.p.nombre||'').toLowerCase().includes(query)||(x.p.sku||'').toLowerCase().includes(query)||(x.p.coleccion||'').toLowerCase().includes(query)||(x.p.tracking||'').toLowerCase().includes(query);
     var mE=!_filtroEstado||x.p.estado===_filtroEstado;
@@ -1969,13 +2035,16 @@ function renderInventario(){
       var imp=p.estado==='transito'&&!p.importacion;
       var mc=p.margen>=30?'var(--green)':p.margen>=15?'var(--accent)':'var(--red)';
       var dias=p.estado!=='vendido'?diasEnInventario(p.fecha):null;
-      var opts=['disponible','transito','reservado','vendido'].map(e=>'<option value="'+e+'"'+(p.estado===e?' selected':'')+'>'+({disponible:'Disponible',transito:'En transito',reservado:'Reservado',vendido:'Vendido'}[e]||e)+'</option>').join('');
+      var opts=['disponible','transito','bajopedido','reservado','vendido'].map(e=>'<option value="'+e+'"'+(p.estado===e?' selected':'')+'>'+({disponible:'Disponible',transito:'En transito',bajopedido:'Bajo pedido',reservado:'Reservado',vendido:'Vendido'}[e]||e)+'</option>').join('');
       var subLinea=imp?'<span style="color:var(--blue)">Importacion pendiente</span>':'Costo: $'+(p.costoTotal||0).toFixed(2);
       if(p.estado==='reservado'&&p.reserva){
         subLinea='Reservado por <strong>'+p.reserva.clienteNombre+'</strong> · Saldo: $'+saldoPendienteReserva(p).toLocaleString();
       } else {
         subLinea+=((!imp&&p.precio)?' · Margen: <span style="color:'+mc+'">'+p.margen+'%</span>':'')+' · Venta: $'+(p.precio||0).toLocaleString();
       }
+      var vis=p.ocultoCatalogo;
+      var visBtn='<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();toggleOcultoCatalogo(\''+p.id+'\')" title="'+(vis?'Oculto del catalogo publico — clic para mostrar':'Visible en el catalogo publico — clic para ocultar')+'" style="'+(vis?'color:var(--muted);':'color:var(--green);')+'">'+(vis?'&#128683;':'&#128065;')+'</button>';
+      var linkBtn=esPublicable(p)?'<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();copiarLinkReloj(\''+p.id+'\')" title="Copiar link directo de este reloj">&#128279;</button>':'';
       return'<div class="list-item" style="gap:12px;cursor:pointer;" onclick="verDetalle(\''+p.id+'\')">'+
         makeFotoHtml(p.foto,52)+
         '<div class="list-item-info">'+
@@ -1983,6 +2052,7 @@ function renderInventario(){
           '<div class="list-item-sub">'+subLinea+'</div>'+
         '</div>'+
         '<select class="cambio-estado-select" onclick="event.stopPropagation()" onchange="cambiarEstado(\''+p.id+'\',this.value)">'+opts+'</select>'+
+        visBtn+linkBtn+
         '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto(\''+p.id+'\')" title="Editar">&#9998;</button>'+
         '<button class="btn btn-danger" onclick="event.stopPropagation();eliminarProducto(\''+p.id+'\')" title="Eliminar">&#128465;</button>'+
       '</div>';
@@ -2171,8 +2241,8 @@ function verDetalle(id){
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarModal(); return; }
   var p=state.inventario[i];
-  var estados={disponible:'badge-green',transito:'badge-blue',reservado:'badge-gold',vendido:'badge-red'};
-  var etiquetas={disponible:'Disponible',transito:'En transito',reservado:'Reservado',vendido:'Vendido'};
+  var estados={disponible:'badge-green',transito:'badge-blue',bajopedido:'badge-slate',reservado:'badge-gold',vendido:'badge-red'};
+  var etiquetas={disponible:'Disponible',transito:'En transito',bajopedido:'Bajo pedido',reservado:'Reservado',vendido:'Vendido'};
   var generos={hombre:'Hombre',mujer:'Mujer',unisex:'Unisex'};
   var mc=p.margen>=30?'var(--green)':p.margen>=15?'var(--accent)':'var(--red)';
   var imp=p.estado==='transito'&&!p.importacion;
@@ -2753,13 +2823,13 @@ function camposPublicos(p){
     nombre:p.nombre||'', sku:p.sku||'', coleccion:p.coleccion||'', genero:p.genero||'',
     mm:p.mm||'', materialCaja:p.materialCaja||'', materialCorrea:p.materialCorrea||'',
     colorEsfera:p.colorEsfera||'', movimiento:p.movimiento||'', agua:p.agua||'',
-    cristal:p.cristal||'', color:p.color||'', notas:p.notas||'',
+    cristal:p.cristal||'', color:p.color||'', notas:p.notas||'', eta:p.eta||'',
     precio:p.precio||0, foto:p.foto||'', estado:p.estado||'', _ts:p._ts||0
   };
 }
 function esPublicable(p){
   if(p.ocultoCatalogo) return false;
-  if(p.estado==='disponible' || p.estado==='transito') return true;
+  if(p.estado==='disponible' || p.estado==='transito' || p.estado==='bajopedido') return true;
   if(p.estado==='vendido'){
     var dias = diasEnInventario(p.fechaVenta);
     return dias===null || dias<=DIAS_AGOTADO_VISIBLE;
@@ -2884,6 +2954,13 @@ function iniciarListenersFirebase(){
   }, function(){
     setSyncStatus('Sin conexion','var(--red)','error');
   });
+
+  db.collection('metricas_catalogo').onSnapshot(function(snap){
+    var m={};
+    snap.forEach(function(doc){ m[doc.id]=doc.data(); });
+    state.metricas=m;
+    try{ renderMetricasInicio(); }catch(e){}
+  }, function(){ /* las metricas son un extra; si fallan no afectan el resto del panel */ });
 
   setSyncStatus('Conectado','var(--green)','ok');
 }
