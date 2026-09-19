@@ -318,6 +318,7 @@
       <button class="nav-tab active" onclick="showPage(event,'inicio')">Inicio</button>
       <button class="nav-tab" onclick="showPage(event,'finanzas')">Finanzas</button>
       <button class="nav-tab" onclick="showPage(event,'inventario')">Inventario</button>
+      <button class="nav-tab" onclick="showPage(event,'catalogo')">Catalogo</button>
       <button class="nav-tab" onclick="showPage(event,'contenido')">Contenido</button>
       <button class="nav-tab" onclick="showPage(event,'clientes')">Clientes</button>
       <button class="nav-tab" id="nav-tab-sync" onclick="showPage(event,'config')" style="display:none;">Sync <span id="nav-sync-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-left:4px;vertical-align:middle;"></span></button>
@@ -367,11 +368,6 @@
   <div class="card">
     <div class="card-title">Pendientes y alertas</div>
     <div id="pendientes-container"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Interes en el catalogo</div>
-    <div id="metricas-catalogo-container"><div class="empty" style="padding:16px 0;"><span></span>Aun no hay datos de vistas o clics.</div></div>
   </div>
 
   <div class="card">
@@ -806,6 +802,32 @@
   </div>
 </div>
 
+<!-- CATALOGO -->
+<div id="page-catalogo" class="page">
+  <div class="section-title">Catalogo</div>
+  <div class="section-sub">Centro de mando de tu vitrina publica: visibilidad, links directos e interes de los clientes.</div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;margin-bottom:16px;margin-top:14px;">
+    <div style="font-size:13px;color:var(--muted);">Se sincroniza solo con lo que esta Disponible, En transito, Bajo pedido, y lo Vendido reciente (hasta 21 dias)</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="copiarLinkCatalogo()">Copiar link del catalogo</button>
+      <a class="btn btn-outline btn-sm" href="catalogo.html" target="_blank" style="text-decoration:none;">Ver catalogo</a>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="stat-box"><div class="stat-label">Visibles en el catalogo</div><div class="stat-value" id="cat-stat-visibles">0</div></div>
+    <div class="stat-box"><div class="stat-label">Ocultos manualmente</div><div class="stat-value" style="color:var(--muted)" id="cat-stat-ocultos">0</div></div>
+    <div class="stat-box"><div class="stat-label">Clics a WhatsApp (total)</div><div class="stat-value" style="color:var(--green)" id="cat-stat-clics">0</div></div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">Interes de los clientes</div>
+    <div id="metricas-catalogo-container"><div class="empty" style="padding:16px 0;"><span></span>Aun no hay datos de vistas o clics.</div></div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">Vitrina — visibilidad y links por reloj</div>
+    <div id="catalogo-lista"></div>
+  </div>
+</div>
+
 <!-- CONTENIDO -->
 <div id="page-contenido" class="page">
   <div class="section-title">Contenido</div>
@@ -1066,6 +1088,7 @@ function showPage(ev, name) {
   if (name === 'inicio') renderInicio();
   if (name === 'finanzas') renderFinanzas();
   if (name === 'inventario') renderInventario();
+  if (name === 'catalogo') renderCatalogoAdmin();
   if (name === 'contenido') renderContenido();
   if (name === 'clientes') renderClientes();
 }
@@ -1128,7 +1151,6 @@ function renderInicio() {
 
   renderChecklist();
   renderPendientesInicio();
-  renderMetricasInicio();
   renderMiniChartInicio();
   renderRecientesInicio();
 }
@@ -1180,7 +1202,49 @@ function renderPendientesInicio() {
   cont.innerHTML = items.length ? items.map(function(x){ return x.html; }).join('') :
     '<div class="empty" style="padding:20px 0;"><span></span>Todo al dia, sin pendientes por ahora.</div>';
 }
-function renderMetricasInicio(){
+function renderCatalogoAdmin(){
+  var items = state.inventario.filter(function(p){ return p.estado!=='vendido' || esPublicable(p); });
+  var visibles = items.filter(function(p){ return esPublicable(p); });
+  var ocultos = state.inventario.filter(function(p){ return !esPublicable(p) && !p.ocultoCatalogo && (p.estado==='disponible'||p.estado==='transito'||p.estado==='bajopedido'); });
+  var ocultosManual = state.inventario.filter(function(p){ return p.ocultoCatalogo; });
+  var elVis=document.getElementById('cat-stat-visibles'); if(elVis) elVis.textContent = visibles.length;
+  var elOc=document.getElementById('cat-stat-ocultos'); if(elOc) elOc.textContent = ocultosManual.length;
+  var totalClics = 0;
+  Object.keys(state.metricas).forEach(function(id){ totalClics += (state.metricas[id].clics||0); });
+  var elCl=document.getElementById('cat-stat-clics'); if(elCl) elCl.textContent = totalClics;
+
+  renderMetricasCatalogo();
+
+  var lista = document.getElementById('catalogo-lista');
+  if(!lista) return;
+  var elegibles = state.inventario.filter(function(p){ return p.estado==='disponible'||p.estado==='transito'||p.estado==='bajopedido'||p.estado==='vendido'; });
+  if(!elegibles.length){
+    lista.innerHTML = '<div class="empty" style="padding:20px 0;"><span></span>Aun no tienes relojes para mostrar en el catalogo.</div>';
+    return;
+  }
+  var estadosBadge={disponible:'badge-green',transito:'badge-blue',bajopedido:'badge-slate',vendido:'badge-red'};
+  var etiquetas={disponible:'Disponible',transito:'En transito',bajopedido:'Bajo pedido',vendido:'Vendido'};
+  elegibles.sort(function(a,b){
+    var ma=state.metricas[a.id]||{}, mb=state.metricas[b.id]||{};
+    return (mb.clics||0)-(ma.clics||0);
+  });
+  lista.innerHTML = elegibles.map(function(p){
+    var m = state.metricas[p.id] || {};
+    var vis = p.ocultoCatalogo;
+    var pub = esPublicable(p);
+    var visBtn='<button class="btn btn-outline btn-sm" onclick="toggleOcultoCatalogo(\''+p.id+'\')" title="'+(vis?'Oculto del catalogo publico — clic para mostrar':'Visible en el catalogo publico — clic para ocultar')+'" style="'+(vis?'color:var(--muted);':'color:var(--green);')+'">'+(vis?'&#128683; Oculto':'&#128065; Visible')+'</button>';
+    var linkBtn=pub?'<button class="btn btn-outline btn-sm" onclick="copiarLinkReloj(\''+p.id+'\')" title="Copiar link directo de este reloj">&#128279; Link</button>':'';
+    return '<div class="list-item" style="gap:12px;">'+
+      makeFotoHtml(p.foto,48)+
+      '<div class="list-item-info">'+
+        '<div class="list-item-name" style="display:flex;align-items:center;gap:8px;">'+p.nombre+(p.sku?' <span style="color:var(--muted);font-size:12px;">· '+p.sku+'</span>':'')+' <span class="badge '+(estadosBadge[p.estado]||'')+'">'+(etiquetas[p.estado]||p.estado)+'</span></div>'+
+        '<div class="list-item-sub">'+(m.vistas||0)+' vistas · '+(m.aperturas||0)+' aperturas · '+(m.clics||0)+' clics'+(pub?'':' · no publicado en este momento')+'</div>'+
+      '</div>'+
+      visBtn+linkBtn+
+    '</div>';
+  }).join('');
+}
+function renderMetricasCatalogo(){
   var cont = document.getElementById('metricas-catalogo-container');
   if(!cont) return;
   var filas = state.inventario
@@ -2042,9 +2106,6 @@ function renderInventario(){
       } else {
         subLinea+=((!imp&&p.precio)?' · Margen: <span style="color:'+mc+'">'+p.margen+'%</span>':'')+' · Venta: $'+(p.precio||0).toLocaleString();
       }
-      var vis=p.ocultoCatalogo;
-      var visBtn='<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();toggleOcultoCatalogo(\''+p.id+'\')" title="'+(vis?'Oculto del catalogo publico — clic para mostrar':'Visible en el catalogo publico — clic para ocultar')+'" style="'+(vis?'color:var(--muted);':'color:var(--green);')+'">'+(vis?'&#128683;':'&#128065;')+'</button>';
-      var linkBtn=esPublicable(p)?'<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();copiarLinkReloj(\''+p.id+'\')" title="Copiar link directo de este reloj">&#128279;</button>':'';
       return'<div class="list-item" style="gap:12px;cursor:pointer;" onclick="verDetalle(\''+p.id+'\')">'+
         makeFotoHtml(p.foto,52)+
         '<div class="list-item-info">'+
@@ -2052,7 +2113,6 @@ function renderInventario(){
           '<div class="list-item-sub">'+subLinea+'</div>'+
         '</div>'+
         '<select class="cambio-estado-select" onclick="event.stopPropagation()" onchange="cambiarEstado(\''+p.id+'\',this.value)">'+opts+'</select>'+
-        visBtn+linkBtn+
         '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto(\''+p.id+'\')" title="Editar">&#9998;</button>'+
         '<button class="btn btn-danger" onclick="event.stopPropagation();eliminarProducto(\''+p.id+'\')" title="Eliminar">&#128465;</button>'+
       '</div>';
@@ -2894,6 +2954,7 @@ function refrescarVista(key){
   try{ renderEspacioUsado(); }catch(e){}
   if(key==='inventario'){
     try{ renderInventario(); }catch(e){}
+    try{ renderCatalogoAdmin(); }catch(e){}
     try{ renderPicker(); }catch(e){}
     try{ renderPickerCompra(); }catch(e){}
     try{ renderClientes(); }catch(e){}
@@ -2959,7 +3020,7 @@ function iniciarListenersFirebase(){
     var m={};
     snap.forEach(function(doc){ m[doc.id]=doc.data(); });
     state.metricas=m;
-    try{ renderMetricasInicio(); }catch(e){}
+    try{ renderCatalogoAdmin(); }catch(e){}
   }, function(){ /* las metricas son un extra; si fallan no afectan el resto del panel */ });
 
   setSyncStatus('Conectado','var(--green)','ok');
