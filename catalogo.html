@@ -23,6 +23,7 @@
     --green:#067647;--green-bg:rgba(6,118,71,0.08);
     --blue:#175cd3;--blue-bg:rgba(23,92,211,0.08);
     --gray:#3f3f46;--gray-bg:rgba(63,63,70,0.08);
+    --slate:#475569;--slate-bg:rgba(71,85,105,0.09);
     --r-lg:14px;--r-md:9px;--r-pill:999px;
     --shadow:0 1px 2px rgba(9,9,11,0.04),0 1px 3px rgba(9,9,11,0.03);
     --shadow-lg:0 8px 24px -6px rgba(9,9,11,0.10),0 2px 6px rgba(9,9,11,0.05);
@@ -61,10 +62,12 @@
   .badge-tag{position:absolute;top:10px;left:10px;font-size:11px;font-weight:700;letter-spacing:0.01em;padding:4px 10px;border-radius:var(--r-pill);}
   .badge-tag.camino{background:var(--blue-bg);color:var(--blue);}
   .badge-tag.agotado{background:rgba(9,9,11,0.75);color:#fff;}
+  .badge-tag.pedido{background:var(--slate-bg);color:var(--slate);}
   .card-info{padding:14px 16px;}
   .card-nombre{font-weight:600;font-size:14px;color:var(--black);letter-spacing:-0.01em;line-height:1.3;}
   .card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
   .card-precio{font-weight:700;font-size:16px;color:var(--black);margin-top:8px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .card-precio.cotizar{font-weight:600;font-style:italic;font-size:12.5px;color:var(--slate);letter-spacing:0;}
   .card-agotado .card-nombre,.card-agotado .card-precio{color:var(--muted);}
   .empty{text-align:center;padding:70px 20px;color:var(--muted2);font-size:14px;}
   .empty span{display:block;font-size:26px;margin-bottom:10px;opacity:0.4;}
@@ -84,24 +87,26 @@
   @keyframes popIn{from{opacity:0;transform:scale(0.96) translateY(8px);}to{opacity:1;transform:none;}}
   @keyframes modalFotoIn{from{opacity:0;}to{opacity:1;}}
   @keyframes modalBodyIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-  .modal-foto{width:100%;aspect-ratio:1/1;background:var(--bg);animation:modalFotoIn 320ms var(--ease);}
-  .modal-foto img{width:100%;height:100%;object-fit:cover;}
+  .modal-foto{width:100%;aspect-ratio:1/1;background:var(--card);padding:24px;animation:modalFotoIn 320ms var(--ease);}
+  .modal-foto img{width:100%;height:100%;object-fit:contain;}
   .modal-body{padding:20px;animation:modalBodyIn 380ms var(--ease) 70ms both;}
   .modal-badge{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.01em;padding:4px 11px;border-radius:var(--r-pill);margin-bottom:10px;width:max-content;}
   .modal-badge.camino{background:var(--blue-bg);color:var(--blue);}
   .modal-badge.agotado{background:var(--gray-bg);color:var(--gray);}
+  .modal-badge.pedido{background:var(--slate-bg);color:var(--slate);}
   .modal-nombre{font-weight:700;font-size:21px;color:var(--black);letter-spacing:-0.02em;line-height:1.2;}
   .modal-sub{font-size:13px;color:var(--muted);margin-top:3px;}
   .sku-copy{cursor:pointer;border-bottom:1px dashed var(--muted2);}
   .sku-copy:hover{color:var(--black);}
   .modal-precio{font-weight:800;font-size:26px;color:var(--black);margin:14px 0;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .modal-precio.cotizar{font-weight:600;font-style:italic;font-size:17px;color:var(--slate);letter-spacing:0;}
   .specs{margin:16px 0;}
   .spec-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;gap:14px;}
   .spec-row span:first-child{color:var(--muted2);font-weight:400;}
   .spec-row span:last-child{color:var(--black);font-weight:700;text-align:right;}
   .modal-notas{background:var(--bg);border-radius:var(--r-md);padding:12px 14px;font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
-  .btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r-md);padding:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);text-decoration:none;}
-  .btn-wa svg{width:18px;height:18px;flex-shrink:0;}
+  .btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r-md);padding:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);text-decoration:none;margin-top:18px;}
+  .btn-wa svg{width:19px;height:19px;flex-shrink:0;}
   @media (hover:hover){ .btn-wa:hover{transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(6,118,71,0.45);} }
   .btn-wa:active{transform:scale(0.97) translateY(0);box-shadow:none;}
   .btn-compartir{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:var(--r-md);padding:11px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;transition:border-color var(--fast) var(--ease),color var(--fast) var(--ease);}
@@ -111,19 +116,20 @@
   .btn-cerrar:hover{color:var(--black);}
   @media(min-width:820px){
     #modal{padding:24px;}
-    .modal-box{max-width:920px;width:100%;display:flex;flex-direction:row;align-items:stretch;height:min(660px,90vh);max-height:90vh;overflow:hidden;border-radius:24px;}
-    .modal-foto{width:50%;flex-shrink:0;aspect-ratio:auto;height:100%;border-radius:0;padding:36px;}
+    .modal-box{max-width:920px;width:100%;display:flex;flex-direction:row;align-items:stretch;height:min(660px,90vh);max-height:90vh;overflow:hidden;border-radius:24px;background:var(--card);}
+    .modal-foto{width:50%;flex-shrink:0;aspect-ratio:auto;height:100%;border-radius:0;padding:44px;background:var(--card);}
     .modal-foto img{object-fit:contain;}
-    .modal-body{flex:1;min-width:0;overflow-y:hidden;height:100%;padding:40px 44px;display:flex;flex-direction:column;}
+    .modal-body{flex:1;min-width:0;overflow-y:hidden;height:100%;padding:40px 48px;display:flex;flex-direction:column;border-left:1px solid var(--border);}
     .modal-info{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;}
-    .modal-nombre{font-size:26px;}
+    .modal-nombre{font-size:27px;}
     .modal-sub{font-size:13px;margin-top:5px;}
-    .modal-precio{font-size:32px;margin:18px 0 20px;}
-    .specs{background:var(--bg);border-radius:14px;padding:4px 22px;margin:0 0 16px;display:grid;grid-template-columns:1fr 1fr;column-gap:36px;}
-    .spec-row{padding:9px 0;font-size:12.5px;}
+    .modal-precio{font-size:33px;margin:20px 0 20px;}
+    .modal-precio.cotizar{font-size:19px;}
+    .specs{background:transparent;border-radius:0;padding:0;margin:0 0 16px;display:grid;grid-template-columns:1fr 1fr;column-gap:40px;}
+    .spec-row{padding:10px 0;font-size:12.5px;}
     .spec-row:last-child{border-bottom:none;}
     .modal-notas{font-size:12.5px;padding:13px 15px;margin-bottom:0;line-height:1.55;}
-    .btn-wa{padding:14px;font-size:14.5px;}
+    .btn-wa{padding:15px;font-size:14.5px;margin-top:28px;}
     .btn-cerrar{font-size:13px;padding:10px 0 0;}
   }
   footer{text-align:center;color:var(--muted2);font-size:12px;padding:30px 0 10px;}
@@ -218,7 +224,7 @@
 <footer>Aphillips Store</footer>
 
 <a class="fab-wa" id="fab-wa" href="#" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C7.03 3 3 7.03 3 12c0 1.66.46 3.22 1.25 4.56L3 21l4.6-1.22A8.93 8.93 0 0 0 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 10.3c.4 1.9 2 3.5 3.9 3.9M8.6 8.7c-.15.3-.1 1 .2 1.6M15.4 15.3c.6.3 1.3.35 1.6.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
 </a>
 
 <div id="modal">
@@ -234,7 +240,7 @@
         <div class="modal-notas" id="modal-notas" style="display:none;"></div>
       </div>
       <a class="btn-wa" id="modal-wa" href="#" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C7.03 3 3 7.03 3 12c0 1.66.46 3.22 1.25 4.56L3 21l4.6-1.22A8.93 8.93 0 0 0 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 10.3c.4 1.9 2 3.5 3.9 3.9M8.6 8.7c-.15.3-.1 1 .2 1.6M15.4 15.3c.6.3 1.3.35 1.6.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
         <span id="modal-wa-texto">Me interesa · escribir por WhatsApp</span>
       </a>
       <button class="btn-compartir" onclick="compartir()">Compartir</button>
@@ -271,9 +277,33 @@ let _deepLinkHandled = false;
 const _idInicial = new URLSearchParams(location.search).get('id');
 if(_idInicial){ history.replaceState(null, '', location.pathname); }
 
+function textoETA(eta){
+  if(!eta) return 'Importacion pendiente';
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var fecha = new Date(eta+'T00:00:00');
+  if(isNaN(fecha.getTime())) return 'Importacion pendiente';
+  var dias = Math.round((fecha-hoy)/86400000);
+  if(dias<=0) return 'Llegando';
+  if(dias===1) return 'Llega mañana';
+  return 'Llega en '+dias+' dias';
+}
+
+var _vistasContadas = new Set();
+function incMetrica(id, campo){
+  if(!id) return;
+  var upd = {}; upd[campo] = firebase.firestore.FieldValue.increment(1);
+  upd['_ultima'] = Date.now();
+  db.collection('metricas_catalogo').doc(id).set(upd, {merge:true}).catch(function(){});
+}
+
 const _io = ('IntersectionObserver' in window) ? new IntersectionObserver(function(entries){
   entries.forEach(function(en){
-    if(en.isIntersecting){ en.target.classList.add('visible'); _io.unobserve(en.target); }
+    if(en.isIntersecting){
+      en.target.classList.add('visible');
+      var rid = en.target.getAttribute('data-id');
+      if(rid && !_vistasContadas.has(rid)){ _vistasContadas.add(rid); incMetrica(rid,'vistas'); }
+      _io.unobserve(en.target);
+    }
   });
 }, {threshold:0.12, rootMargin:'0px 0px -30px 0px'}) : null;
 
@@ -324,6 +354,12 @@ function actualizarChipsColeccion(){
   cont.innerHTML = html;
 }
 
+function ordenPeso(estado){
+  if(estado==='vendido') return 2;
+  if(estado==='bajopedido') return 1;
+  return 0;
+}
+
 function render(){
   var q = document.getElementById('buscador').value.toLowerCase();
   var grid = document.getElementById('grid');
@@ -334,7 +370,7 @@ function render(){
     return true;
   });
   items.sort(function(a,b){
-    var av = a.estado==='vendido' ? 1 : 0, bv = b.estado==='vendido' ? 1 : 0;
+    var av = ordenPeso(a.estado), bv = ordenPeso(b.estado);
     if(av!==bv) return av-bv;
     if(_orden==='precio_asc') return (a.precio||0)-(b.precio||0);
     if(_orden==='precio_desc') return (b.precio||0)-(a.precio||0);
@@ -346,14 +382,16 @@ function render(){
   }
   grid.innerHTML = items.map(function(r){
     var agotado = r.estado==='vendido';
+    var pedido = r.estado==='bajopedido';
     var foto = r.foto ? '<img src="'+r.foto+'" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'<span class=sinfoto>Sin foto</span>\'" />' : '<span class="sinfoto">Sin foto</span>';
-    var badge = r.estado==='transito' ? '<span class="badge-tag camino">En camino</span>' : (agotado ? '<span class="badge-tag agotado">Agotado</span>' : '');
-    return '<div class="card'+(agotado?' card-agotado':'')+'" onclick="abrir(\''+r.id+'\')">'+
+    var badge = r.estado==='transito' ? '<span class="badge-tag camino">En camino</span>' : (agotado ? '<span class="badge-tag agotado">Agotado</span>' : (pedido ? '<span class="badge-tag pedido">Bajo pedido</span>' : ''));
+    var precioHtml = pedido ? '<div class="card-precio cotizar">Precio bajo cotizacion</div>' : '<div class="card-precio">$'+(r.precio||0).toLocaleString()+'</div>';
+    return '<div class="card'+(agotado?' card-agotado':'')+'" data-id="'+r.id+'" onclick="abrir(\''+r.id+'\')">'+
       '<div class="card-foto'+(agotado?' agotada':'')+'">'+badge+foto+'</div>'+
       '<div class="card-info">'+
         '<div class="card-nombre">'+(r.nombre||'')+'</div>'+
         '<div class="card-sub">'+(r.sku?'Ref. '+r.sku:'')+(r.coleccion?(r.sku?' · ':'')+r.coleccion:'')+'</div>'+
-        '<div class="card-precio">$'+(r.precio||0).toLocaleString()+'</div>'+
+        precioHtml+
       '</div>'+
     '</div>';
   }).join('');
@@ -398,26 +436,31 @@ function abrir(id){
   _idAbierto = id;
   document.getElementById('modal-foto').innerHTML = r.foto ? '<img src="'+r.foto+'" alt="" />' : '';
   var badgeEl = document.getElementById('modal-badge');
-  if(r.estado==='transito'){ badgeEl.className='modal-badge camino'; badgeEl.textContent='En camino'; badgeEl.style.display='inline-block'; }
+  if(r.estado==='transito'){ badgeEl.className='modal-badge camino'; badgeEl.textContent=textoETA(r.eta); badgeEl.style.display='inline-block'; }
   else if(r.estado==='vendido'){ badgeEl.className='modal-badge agotado'; badgeEl.textContent='Agotado'; badgeEl.style.display='inline-block'; }
+  else if(r.estado==='bajopedido'){ badgeEl.className='modal-badge pedido'; badgeEl.textContent='Bajo pedido'; badgeEl.style.display='inline-block'; }
   else { badgeEl.style.display='none'; }
   document.getElementById('modal-nombre').textContent = r.nombre || '';
   var skuHtml = r.sku ? '<span class="sku-copy" onclick="copiarSku(event,\''+r.sku.replace(/'/g,"\\'")+'\')" title="Toca para copiar el SKU">Ref. '+r.sku+'</span>' : '';
   var colTxt = r.coleccion ? (r.sku?' · ':'')+r.coleccion : '';
   document.getElementById('modal-sub').innerHTML = skuHtml + colTxt;
-  document.getElementById('modal-precio').textContent = '$'+(r.precio||0).toLocaleString();
+  var precioEl = document.getElementById('modal-precio');
+  if(r.estado==='bajopedido'){ precioEl.textContent = 'Precio bajo cotizacion'; precioEl.className = 'modal-precio cotizar'; }
+  else { precioEl.textContent = '$'+(r.precio||0).toLocaleString(); precioEl.className = 'modal-precio'; }
   document.getElementById('modal-specs').innerHTML =
     spec('Genero', r.genero==='hombre'?'Hombre':r.genero==='mujer'?'Mujer':r.genero==='unisex'?'Unisex':'') +
     spec('Diametro', r.mm?r.mm+' mm':'') +
-    spec('Material caja', r.materialCaja) +
-    spec('Correa / brazalete', r.materialCorrea) +
-    spec('Color esfera', r.colorEsfera) +
+    spec('Caja', r.materialCaja) +
+    spec('Correa', r.materialCorrea) +
+    spec('Esfera', r.colorEsfera) +
     spec('Movimiento', r.movimiento) +
     spec('Resistencia agua', r.agua) +
     spec('Cristal', r.cristal) +
-    spec('Color / variante', r.color);
+    spec('Color', r.color);
   var notasEl = document.getElementById('modal-notas');
-  if(r.notas){ notasEl.textContent = r.notas; notasEl.style.display='block'; } else { notasEl.style.display='none'; }
+  var notasTexto = r.notas || '';
+  if(r.estado==='bajopedido'){ notasTexto = (notasTexto?notasTexto+' · ':'')+'Modelo bajo pedido. Entrega estimada en 10-15 dias habiles tras abono inicial.'; }
+  if(notasTexto){ notasEl.textContent = notasTexto; notasEl.style.display='block'; } else { notasEl.style.display='none'; }
   var waTexto = document.getElementById('modal-wa-texto');
   var msg;
   if(r.estado==='transito'){
@@ -426,6 +469,9 @@ function abrir(id){
   } else if(r.estado==='vendido'){
     waTexto.textContent = 'Preguntar por uno similar';
     msg = encodeURIComponent('Hola! Vi el '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' en el catalogo pero ya esta vendido, ¿tienen algo similar o se puede conseguir de nuevo?');
+  } else if(r.estado==='bajopedido'){
+    waTexto.textContent = 'Cotizar por WhatsApp';
+    msg = encodeURIComponent('Hola! Quiero cotizar el modelo '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que vi en el catalogo bajo pedido.');
   } else {
     waTexto.textContent = 'Me interesa · escribir por WhatsApp';
     msg = encodeURIComponent('Hola! Me interesa el '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que vi en el catalogo, ¿sigue disponible?');
@@ -435,6 +481,7 @@ function abrir(id){
   document.body.style.overflow = 'hidden';
   if(navigator.vibrate){ navigator.vibrate(8); }
   history.pushState({modal:id}, '', '?id='+encodeURIComponent(id));
+  incMetrica(id, 'aperturas');
 }
 function cerrarModalUI(){
   document.getElementById('modal').classList.remove('open');
@@ -446,6 +493,7 @@ function cerrar(){
 }
 window.addEventListener('popstate', function(){ cerrarModalUI(); });
 document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) cerrar(); });
+document.getElementById('modal-wa').addEventListener('click', function(){ if(_idAbierto) incMetrica(_idAbierto,'clics'); });
 </script>
 </body>
 </html>
