@@ -340,7 +340,6 @@ try{ db.enablePersistence({synchronizeTabs:true}).catch(function(){ /* persisten
 
 document.getElementById('fab-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('Hola! Tengo una pregunta sobre el catalogo de relojes.');
 document.getElementById('fab-wa').addEventListener('click', function(){ vibrar(10); });
-actualizarContadorFavoritos();
 
 let relojes = [];
 let _filtroGenero = '';
@@ -352,6 +351,7 @@ function vibrar(ms){ if(navigator.vibrate){ try{ navigator.vibrate(ms||10); }cat
 // =================== FAVORITOS ===================
 let _favoritos = new Set();
 try{ _favoritos = new Set(JSON.parse(localStorage.getItem('aphillips_favoritos')||'[]')); }catch(e){}
+actualizarContadorFavoritos();
 function guardarFavoritos(){ try{ localStorage.setItem('aphillips_favoritos', JSON.stringify(Array.from(_favoritos))); }catch(e){} }
 function actualizarContadorFavoritos(){
   var n = _favoritos.size;
