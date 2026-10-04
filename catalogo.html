@@ -876,7 +876,7 @@ document.getElementById('modal-wa').addEventListener('click', function(){ if(_id
 
   function cargarBestsellers() {
     const contenedor = document.getElementById('bestsellers-container');
-    if(contenedor.innerHTML.trim() !== "") return; // Ya están cargados
+    if(contenedor.children.length > 0) return; // Verifica si hay relojes reales, ignorando comentarios
     
     // Tomamos hasta 4 relojes al azar (o los primeros) para simular Bestsellers
     const muestras = relojes.slice(0, 4); 
