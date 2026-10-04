@@ -861,11 +861,18 @@ document.getElementById('modal-wa').addEventListener('click', function(){ if(_id
     if(buscadorAbierto) {
       panel.classList.add('open');
       icono.innerHTML = svgCruz;
+      
+      // BLOQUEA EL SCROLL DEL FONDO
+      document.body.style.overflow = 'hidden'; 
+      
       setTimeout(() => document.getElementById('buscador').focus(), 100);
       cargarBestsellers(); // Cargar productos de muestra
     } else {
       panel.classList.remove('open');
       icono.innerHTML = svgLupa;
+      
+      // REACTIVA EL SCROLL DEL FONDO AL CERRAR
+      document.body.style.overflow = ''; 
     }
   }
 
