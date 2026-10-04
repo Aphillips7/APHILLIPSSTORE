@@ -136,21 +136,41 @@
   .btn-fav-header.mostrar{display:flex;}
   .btn-fav-header:active{transform:scale(0.95);}
   .btn-fav-header svg{width:15px;height:15px;color:#e0245e;}
-  #modal-favoritos{display:none;position:fixed;inset:0;background:rgba(9,9,11,0.42);backdrop-filter:blur(4px);z-index:210;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);}
-  #modal-favoritos.open{display:flex;animation:fadeIn var(--base) var(--ease);}
-  #modal-favoritos .modal-box{width:100%;max-width:440px;border-radius:20px 20px 0 0;max-height:82vh;overflow-y:auto;background:var(--card);box-shadow:var(--shadow-xl);animation:slideUp var(--base) var(--ease);position:relative;padding:24px 22px calc(22px + env(safe-area-inset-bottom,0px));}
-  @media(min-width:640px){
-    #modal-favoritos{align-items:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));}
-    #modal-favoritos .modal-box{border-radius:18px;animation:popIn var(--base) var(--ease);}
-  }
-  .fav-fila{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-  .fav-fila:last-child{border-bottom:none;}
-  .fav-fila-foto{width:52px;height:52px;object-fit:cover;border-radius:9px;flex-shrink:0;background:var(--bg);}
-  .fav-fila-info{flex:1;min-width:0;}
-  .fav-fila-nombre{font-weight:600;font-size:13.5px;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .fav-fila-precio{font-size:12px;color:var(--muted);margin-top:1px;}
-  .fav-fila-quitar{background:none;border:none;color:var(--muted2);cursor:pointer;padding:7px;flex-shrink:0;transition:color var(--fast) var(--ease);}
+  /* === PANEL LATERAL DE FAVORITOS (estilo Omega) === */
+  #modal-favoritos{position:fixed;top:var(--header-h,99px);left:0;right:0;bottom:0;z-index:149;display:flex;justify-content:flex-end;background:rgba(9,9,11,0.38);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s var(--ease),visibility 0s linear .45s;}
+  #modal-favoritos.open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .35s var(--ease),visibility 0s;}
+  .fav-drawer{position:relative;display:flex;flex-direction:column;width:min(47vw,680px);min-width:440px;height:100%;background:var(--bg);box-shadow:-14px 0 40px -14px rgba(9,9,11,0.28);transform:translateX(100%);transition:transform .45s var(--ease);}
+  #modal-favoritos.open .fav-drawer{transform:translateX(0);}
+  .fav-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:42px 96px 0 40px;}
+  .fav-titulo{font-size:clamp(22px,2vw,28px);font-weight:300;letter-spacing:.05em;text-transform:uppercase;color:var(--black);line-height:1.2;}
+  .fav-cuenta{font-size:15px;font-weight:400;color:var(--muted);}
+  .fav-cerrar{position:absolute;top:16px;right:24px;width:48px;height:48px;border-radius:50%;border:1px solid var(--border2);background:#fff;color:var(--black);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background var(--fast) var(--ease),border-color var(--fast) var(--ease),transform var(--fast) var(--ease);}
+  .fav-cerrar:hover{background:var(--black);border-color:var(--black);color:#fff;}
+  .fav-cerrar:active{transform:scale(0.92);}
+  .fav-cerrar svg{width:18px;height:18px;}
+  .fav-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:34px 40px 24px;}
+  .fav-foot{padding:24px 40px calc(24px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border2);background:var(--bg);}
+  .fav-foot .btn-wa{margin:0;border-radius:0;padding:18px;font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
+  .fav-fila{position:relative;display:flex;align-items:center;gap:24px;padding:24px;background:#fff;border:1px solid var(--border2);margin-bottom:16px;}
+  .fav-fila:last-child{border-bottom:1px solid var(--border2);margin-bottom:0;}
+  .fav-fila-foto{width:clamp(96px,11vw,154px);aspect-ratio:1/1;height:auto;object-fit:cover;border-radius:0;flex-shrink:0;background:var(--bg);cursor:pointer;}
+  .fav-fila-info{flex:1;min-width:0;padding-right:28px;cursor:pointer;}
+  .fav-badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.1em;color:#555;background:var(--bg);padding:5px 10px;border-radius:var(--r-pill);margin-bottom:12px;}
+  .fav-fila-nombre{font-weight:500;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--black);line-height:1.35;overflow-wrap:anywhere;}
+  .fav-fila-sub{font-size:12.5px;color:var(--muted);margin-top:6px;}
+  .fav-fila-precio{font-size:13px;color:var(--black);margin-top:6px;}
+  .fav-fila-quitar{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;line-height:0;transition:color var(--fast) var(--ease);}
+  .fav-fila-quitar:hover{color:var(--black);}
   .fav-fila-quitar:active{color:var(--red);}
+  @media (max-width:820px){
+    .fav-drawer{width:100%;min-width:0;}
+    .fav-head{padding:26px 76px 0 20px;}
+    .fav-cerrar{top:12px;right:16px;width:42px;height:42px;}
+    .fav-body{padding:22px 20px 20px;}
+    .fav-foot{padding:16px 20px calc(16px + env(safe-area-inset-bottom,0px));}
+    .fav-fila{gap:16px;padding:16px;}
+    .fav-fila-info{padding-right:22px;}
+  }
   .fav-vacio{color:var(--muted);font-size:13.5px;padding:14px 0 6px;line-height:1.6;}
   .card-foto img{width:100%;height:100%;object-fit:cover;}
   .card-foto .sinfoto{color:var(--muted2);font-size:12px;}
@@ -316,24 +336,24 @@
   /* Encabezado transparente (blanco) mientras se esta sobre la imagen.
      Con mouse: se vuelve solido al pasar el cursor. En pantalla tactil no hay hover. */
   @media (hover: hover) {
-      header.on-hero:not(:hover):not(.search-open) { background: transparent; border-bottom-color: transparent; }
-      header.on-hero:not(:hover):not(.search-open) .desktop-link,
-      header.on-hero:not(:hover):not(.search-open) .icon-btn,
-      header.on-hero:not(:hover):not(.search-open) .menu-btn,
-      header.on-hero:not(:hover):not(.search-open) .header-bottom a { color: #fff; }
-      header.on-hero:not(:hover):not(.search-open) .header-bottom a:hover { border-bottom-color: #fff; }
-      header.on-hero:not(:hover):not(.search-open) .header-center img { filter: none; }
-      header.on-hero:not(:hover):not(.search-open) .fav-count { background: transparent; color: #fff; }
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) { background: transparent; border-bottom-color: transparent; }
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) .desktop-link,
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) .icon-btn,
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) .menu-btn,
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) .header-bottom a { color: #fff; }
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) .header-bottom a:hover { border-bottom-color: #fff; }
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) .header-center img { filter: none; }
+      header.on-hero:not(:hover):not(.search-open):not(.fav-open) .fav-count { background: transparent; color: #fff; }
   }
   @media (hover: none) {
-    header.on-hero:not(.search-open) { background: transparent; border-bottom-color: transparent; }
-    header.on-hero:not(.search-open) .desktop-link,
-    header.on-hero:not(.search-open) .icon-btn,
-    header.on-hero:not(.search-open) .menu-btn,
-    header.on-hero:not(.search-open) .header-bottom a { color: #fff; }
-    header.on-hero:not(.search-open) .header-bottom a:hover { border-bottom-color: #fff; }
-    header.on-hero:not(.search-open) .header-center img { filter: none; }
-    header.on-hero:not(.search-open) .fav-count { background: transparent; color: #fff; }
+    header.on-hero:not(.search-open):not(.fav-open) { background: transparent; border-bottom-color: transparent; }
+    header.on-hero:not(.search-open):not(.fav-open) .desktop-link,
+    header.on-hero:not(.search-open):not(.fav-open) .icon-btn,
+    header.on-hero:not(.search-open):not(.fav-open) .menu-btn,
+    header.on-hero:not(.search-open):not(.fav-open) .header-bottom a { color: #fff; }
+    header.on-hero:not(.search-open):not(.fav-open) .header-bottom a:hover { border-bottom-color: #fff; }
+    header.on-hero:not(.search-open):not(.fav-open) .header-center img { filter: none; }
+    header.on-hero:not(.search-open):not(.fav-open) .fav-count { background: transparent; color: #fff; }
   }
 
   /* Celular: imagen vertical, texto en el espacio de abajo */
@@ -577,18 +597,23 @@
   </div>
 </div>
 
-<div id="modal-favoritos">
-  <div class="modal-box">
-    <button class="btn-cerrar-x" onclick="cerrarFavoritos()" aria-label="Cerrar" title="Cerrar">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+<div id="modal-favoritos" aria-hidden="true">
+  <aside class="fav-drawer" role="dialog" aria-modal="true" aria-label="Mis favoritos">
+    <button class="fav-cerrar" id="fav-cerrar" onclick="cerrarFavoritos()" aria-label="Cerrar" title="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     </button>
-    <div style="font-weight:700;font-size:17px;color:var(--black);margin-bottom:14px;">Tus favoritos</div>
-    <div id="lista-favoritos"></div>
-    <a class="btn-wa" id="btn-wa-favoritos" href="#" onclick="confirmarWaFavoritos(this,event)" style="display:none;">
-      <svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
-      <span id="btn-wa-favoritos-texto">Consultar por WhatsApp</span>
-    </a>
-  </div>
+    <div class="fav-head">
+      <h2 class="fav-titulo">Mis favoritos</h2>
+      <span class="fav-cuenta" id="fav-cuenta"></span>
+    </div>
+    <div class="fav-body"><div id="lista-favoritos"></div></div>
+    <div class="fav-foot" id="fav-foot">
+      <a class="btn-wa" id="btn-wa-favoritos" href="#" onclick="confirmarWaFavoritos(this,event)" style="display:none;">
+        <svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+        <span id="btn-wa-favoritos-texto">Consultar por WhatsApp</span>
+      </a>
+    </div>
+  </aside>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
@@ -642,32 +667,71 @@ function renderListaFavoritos(){
   var cont = document.getElementById('lista-favoritos');
   var items = relojes.filter(function(r){ return _favoritos.has(r.id); });
   var btnWa = document.getElementById('btn-wa-favoritos');
+  var foot = document.getElementById('fav-foot');
+  var cuenta = document.getElementById('fav-cuenta');
+  if(cuenta) cuenta.textContent = items.length ? '('+items.length+' producto'+(items.length===1?'':'s')+')' : '';
   if(!items.length){
     cont.innerHTML = '<div class="fav-vacio">Aun no has guardado relojes. Toca el corazon en cualquier reloj para guardarlo aqui, y luego consulta por varios de una sola vez.</div>';
     if(btnWa) btnWa.style.display = 'none';
+    if(foot) foot.style.display = 'none';
     return;
   }
   cont.innerHTML = items.map(function(r){
-    var foto = r.foto ? '<img class="fav-fila-foto" src="'+r.foto+'" alt="" onerror="this.style.display=\'none\'" />' : '<div class="fav-fila-foto"></div>';
+    var precio = r.estado==='bajopedido' ? 'Bajo pedido' : '$'+(r.precio||0).toLocaleString();
+    var badge = r.estado==='transito' ? 'EN CAMINO' : (r.estado==='bajopedido' ? 'BAJO PEDIDO' : (r.estado==='vendido' ? 'VENDIDO' : 'NUEVO'));
+    var sub = (r.coleccion||'') + (r.sku ? (r.coleccion?' · ':'')+'Ref. '+r.sku : '');
+    var foto = r.foto ? '<img class="fav-fila-foto" src="'+r.foto+'" alt="" onclick="verDesdeFavoritos(\''+r.id+'\')" onerror="this.style.display=\'none\'" />' : '<div class="fav-fila-foto" onclick="verDesdeFavoritos(\''+r.id+'\')"></div>';
     return '<div class="fav-fila">'+foto+
-      '<div class="fav-fila-info"><div class="fav-fila-nombre">'+(r.nombre||'')+'</div><div class="fav-fila-precio">'+(r.estado==='bajopedido'?'Bajo pedido':'$'+(r.precio||0).toLocaleString())+'</div></div>'+
-      '<button class="fav-fila-quitar" onclick="quitarFavorito(\''+r.id+'\')" aria-label="Quitar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M6 6L18 18M18 6L6 18"/></svg></button>'+
+      '<div class="fav-fila-info" onclick="verDesdeFavoritos(\''+r.id+'\')">'+
+        '<span class="fav-badge">'+badge+'</span>'+
+        '<div class="fav-fila-nombre">'+(r.nombre||'Reloj')+'</div>'+
+        (sub?'<div class="fav-fila-sub">'+sub+'</div>':'')+
+        '<div class="fav-fila-precio">'+precio+'</div>'+
+      '</div>'+
+      '<button class="fav-fila-quitar" onclick="quitarFavorito(\''+r.id+'\')" aria-label="Quitar" title="Quitar de favoritos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="18" height="18"><path d="M6 6L18 18M18 6L6 18"/></svg></button>'+
     '</div>';
   }).join('');
   if(btnWa){
     btnWa.style.display = 'flex';
     document.getElementById('btn-wa-favoritos-texto').textContent = 'Consultar por WhatsApp ('+items.length+')';
   }
+  if(foot) foot.style.display = '';
 }
 function abrirFavoritos(){
+  // si el buscador esta abierto, se cierra para que no se encimen
+  if(typeof buscadorAbierto !== 'undefined' && buscadorAbierto){
+    var bb = Array.prototype.find.call(document.querySelectorAll('.icon-btn[aria-label="Buscar"]'), function(x){ return x.offsetParent !== null; });
+    if(bb) toggleBuscador(bb);
+  }
+  var hd = document.getElementById('site-header');
+  document.documentElement.style.setProperty('--header-h', hd.offsetHeight + 'px');
   renderListaFavoritos();
-  document.getElementById('modal-favoritos').classList.add('open');
+  var m = document.getElementById('modal-favoritos');
+  m.classList.add('open');
+  m.setAttribute('aria-hidden', 'false');
+  hd.classList.add('fav-open');
   document.body.style.overflow = 'hidden';
+  setTimeout(function(){ var c = document.getElementById('fav-cerrar'); if(c) c.focus({preventScroll:true}); }, 380);
 }
 function cerrarFavoritos(){
-  document.getElementById('modal-favoritos').classList.remove('open');
+  var m = document.getElementById('modal-favoritos');
+  m.classList.remove('open');
+  m.setAttribute('aria-hidden', 'true');
+  var hd = document.getElementById('site-header');
+  if(hd) hd.classList.remove('fav-open');
   document.body.style.overflow = '';
 }
+function verDesdeFavoritos(id){
+  cerrarFavoritos();
+  abrir(id);
+}
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && document.getElementById('modal-favoritos').classList.contains('open')) cerrarFavoritos();
+});
+window.addEventListener('resize', function(){
+  var hd = document.getElementById('site-header');
+  if(hd) document.documentElement.style.setProperty('--header-h', hd.offsetHeight + 'px');
+});
 function quitarFavorito(id){
   _favoritos.delete(id);
   guardarFavoritos();
@@ -937,6 +1001,7 @@ document.getElementById('modal-wa').addEventListener('click', function(){ if(_id
     
     buscadorAbierto = !buscadorAbierto;
     document.getElementById('site-header').classList.toggle('search-open', buscadorAbierto);
+    if(buscadorAbierto) cerrarFavoritos();
     
     // Cambiar ícono de Lupa a "X"
     const icono = btnElement.querySelector('svg');
