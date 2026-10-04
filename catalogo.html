@@ -16,7 +16,9 @@
 <meta name="twitter:description" content="Relojes disponibles ahora. Toca uno para ver detalles y escribir por WhatsApp.">
 <meta name="twitter:image" content="https://i.imgur.com/qxhaWkz.jpeg">
 <style>
-  @import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,301,400,401,500,501,700,701,900,901&display=swap');
+  /* 1. Importación correcta de la tipografía Jost */
+  @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap');
+
   :root{
     --bg:#f7f7f8;--card:#ffffff;--border:#ececef;--border2:#dedee2;
     --black:#09090b;--text:#18181b;--muted:#71717a;--muted2:#a1a1aa;
@@ -32,8 +34,20 @@
     --shadow-xl:0 24px 48px -12px rgba(9,9,11,0.20),0 4px 12px rgba(9,9,11,0.08);
     --ease:cubic-bezier(0.32,0.72,0,1);--fast:140ms;--base:220ms;
   }
+  
   *{box-sizing:border-box;margin:0;padding:0;}
- header { background: #ffffff; border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top,0px); }
+
+  /* 2. Asignación de la fuente a toda la página (body) */
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Jost', 'Futura', Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header { background: #ffffff; border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top,0px); }
   .header-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1200px; margin: 0 auto; }
   .header-left, .header-right { display: flex; align-items: center; gap: 20px; flex: 1; }
   .header-right { justify-content: flex-end; }
