@@ -436,7 +436,7 @@
 
   /* === CARRUSEL DESTACADOS (estilo Omega, fondo blanco bajo el hero) === */
   body.vista-catalogo #destacados{display:none;}
-  #destacados{--dg:18px;--dn:4.3;--dred:#c8102e;background:#fff;padding:clamp(34px,4vw,64px) 0 clamp(40px,4.4vw,72px) clamp(20px,5.9vw,140px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
+  #destacados{--dg:18px;--dn:4.3;--dred:var(--black);background:#fff;padding:clamp(34px,4vw,64px) 0 clamp(40px,4.4vw,72px) clamp(20px,5.9vw,140px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
   .dest-tabs{display:flex;justify-content:center;gap:clamp(22px,3.2vw,46px);flex-wrap:wrap;padding-right:clamp(20px,5.9vw,140px);margin-bottom:clamp(26px,3.2vw,50px);}
   .dest-tab{font-family:inherit;font-size:clamp(13px,1.1vw,16px);font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:#4b4b4f;background:none;border:none;border-bottom:1px solid transparent;padding:0 0 10px;cursor:pointer;transition:color .2s var(--ease),border-color .2s var(--ease);}
   .dest-tab:hover{color:var(--dred);}
@@ -466,7 +466,7 @@
   .dest-bar{position:relative;flex:1;height:26px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;}
   .dest-bar i{position:absolute;left:0;top:50%;height:3px;transform:translateY(-50%);transition:height .2s var(--ease),width .25s var(--ease);}
   .dest-bar .b-fondo{width:100%;background:#ececee;}
-  .dest-bar .b-prev{width:0;background:rgba(200,16,46,.28);}
+  .dest-bar .b-prev{width:0;background:rgba(9,9,11,.25);}
   .dest-bar .b-fill{width:0;background:var(--dred);}
   .dest-bar.dragging i{transition:height .2s var(--ease);}
   @media (hover:hover){ .dest-bar:hover i,.dest-bar.dragging i{height:7px;} }
