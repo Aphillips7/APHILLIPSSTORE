@@ -236,14 +236,14 @@
   .card-foto .sinfoto{color:var(--muted2);font-size:12px;}
   .card-foto.agotada img{filter:grayscale(45%);opacity:0.55;}
   .badge-tag{position:absolute;top:10px;left:10px;font-size:11px;font-weight:700;letter-spacing:0.02em;padding:5px 11px;border-radius:var(--r-pill);box-shadow:0 2px 8px rgba(9,9,11,0.18);}
-  .badge-tag.camino{background:var(--bronze);color:#fff;font-:italic;}
+  .badge-tag.camino{background:var(--bronze);color:#fff;font-style:italic;}
   .badge-tag.agotado{background:rgba(9,9,11,0.85);color:#fff;}
-  .badge-tag.pedido{background:var(--gray);color:#fff;font-:italic;}
+  .badge-tag.pedido{background:var(--gray);color:#fff;font-style:italic;}
   .card-info{padding:14px 16px;}
   .card-nombre{font-weight:700;font-size:14px;color:var(--black);letter-spacing:-0.01em;line-height:1.3;}
   .card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
   .card-precio{font-weight:700;font-size:16px;color:var(--black);margin-top:8px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
-  .card-precio.cotizar{font-weight:700;font-:italic;font-size:12.5px;color:var(--red);letter-spacing:0;}
+  .card-precio.cotizar{font-weight:700;font-style:italic;font-size:12.5px;color:var(--red);letter-spacing:0;}
   .card-cotizar{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r-pill);padding:7px 10px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;margin-top:8px;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
   .card-cotizar svg{width:13px;height:13px;flex-shrink:0;}
   .card-cotizar:active{transform:scale(0.96);}
@@ -274,9 +274,9 @@
   .btn-cerrar-x:active{transform:scale(0.92);}
   .btn-cerrar-x svg{width:16px;height:16px;}
   .modal-badge{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.01em;padding:4px 11px;border-radius:var(--r-pill);margin-bottom:10px;width:max-content;}
-  .modal-badge.camino{background:var(--bronze-bg);color:var(--bronze);font-:italic;}
+  .modal-badge.camino{background:var(--bronze-bg);color:var(--bronze);font-style:italic;}
   .modal-badge.agotado{background:var(--gray-bg);color:var(--gray);}
-  .modal-badge.pedido{background:var(--gray-bg);color:var(--gray);font-:italic;}
+  .modal-badge.pedido{background:var(--gray-bg);color:var(--gray);font-style:italic;}
   .modal-nombre{font-weight:700;font-size:21px;color:var(--black);letter-spacing:-0.02em;line-height:1.2;}
   .modal-sub{font-size:13px;color:var(--muted);margin-top:3px;}
   .sku-copy{cursor:pointer;border-bottom:1px dashed var(--muted2);}
@@ -446,11 +446,11 @@
   /* contenedor mas compacto y centrado; las medidas internas (cqw) salen de su ancho */
   .dest-wrap{position:relative;width:calc(100% - 2 * clamp(14px,2.35vw,48px));max-width:1500px;margin:0 auto;container-type:inline-size;}
   /* tarjetas que se asoman a ambos lados cuando no hay vecinas reales */
-  .dest-ghost{position:absolute;top:0;width:calc(var(--peek) - var(--dg));height:calc((100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));background:linear-gradient(180deg,#c9c9c9 0%,#d0d0d0 6%,#d8d8d8 12%,#e2e2e2 22%,#ececec 32%,#f5f5f5 42%,#fbfbfb 52%,#fff 62%,#fff 100%);pointer-events:none;}
+  .dest-ghost{position:absolute;top:0;width:calc(var(--peek) - var(--dg));height:calc((100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);pointer-events:none;}
   .dest-ghost.izq{left:0;} .dest-ghost.der{right:0;}
   .dest-track::-webkit-scrollbar{display:none;}
   .dest-card{position:relative;flex:0 0 calc((100% - (var(--vis) - 1) * var(--dg)) / var(--vis));min-width:0;scroll-snap-align:start;display:flex;flex-direction:column;text-align:center;cursor:default;-webkit-tap-highlight-color:transparent;outline:none;}
-  .dest-foto{position:relative;aspect-ratio:1/1;background:linear-gradient(180deg,#c9c9c9 0%,#d0d0d0 6%,#d8d8d8 12%,#e2e2e2 22%,#ececec 32%,#f5f5f5 42%,#fbfbfb 52%,#fff 62%,#fff 100%);overflow:hidden;}
+  .dest-foto{position:relative;aspect-ratio:1/1;background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);overflow:hidden;}
   /* cada vista de la galeria ocupa toda la tarjeta; cambian con fundido */
   .dest-foto .g{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .45s var(--ease),transform .7s var(--ease);pointer-events:none;user-select:none;-webkit-user-drag:none;}
   .dest-foto .g.on{opacity:1;}
@@ -463,7 +463,8 @@
   .dest-gal:hover{background:#fff;}
   .dest-card:hover .dest-gal,.dest-card:focus-within .dest-gal{opacity:1;}
   @media (hover:none){ .dest-gal{opacity:1;} }
-  .dest-nombre{margin-top:clamp(26px,3.5vw,56px);font-size:clamp(12px,.95vw,14px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#18181b;line-height:1.35;padding:0 6px;}
+  .dest-card{background:#f7f7f9;padding-bottom:clamp(16px,2vw,28px);}
+  .dest-nombre{margin-top:clamp(14px,1.8vw,26px);font-size:clamp(12px,.95vw,14px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#18181b;line-height:1.35;padding:0 6px;}
   .dest-sub{margin-top:8px;font-size:clamp(12px,.9vw,13px);color:#6b6b70;letter-spacing:.02em;line-height:1.5;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .dest-precio{margin-top:8px;font-size:clamp(12px,.95vw,14px);font-weight:400;letter-spacing:.05em;color:#2b2b2e;}
   .dest-comprar{margin:10px auto 0;height:30px;display:flex;align-items:flex-start;justify-content:center;opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);}
