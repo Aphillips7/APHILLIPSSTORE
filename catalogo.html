@@ -18,6 +18,7 @@
 <style>
   /* 1. Importación correcta de la tipografía Jost */
   @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&display=swap');
 
   :root{
     --bg:#f7f7f8;--card:#ffffff;--border:#ececef;--border2:#dedee2;
@@ -236,14 +237,14 @@
   .card-foto .sinfoto{color:var(--muted2);font-size:12px;}
   .card-foto.agotada img{filter:grayscale(45%);opacity:0.55;}
   .badge-tag{position:absolute;top:10px;left:10px;font-size:11px;font-weight:700;letter-spacing:0.02em;padding:5px 11px;border-radius:var(--r-pill);box-shadow:0 2px 8px rgba(9,9,11,0.18);}
-  .badge-tag.camino{background:var(--bronze);color:#fff;font-:italic;}
+  .badge-tag.camino{background:var(--bronze);color:#fff;font-style:italic;}
   .badge-tag.agotado{background:rgba(9,9,11,0.85);color:#fff;}
-  .badge-tag.pedido{background:var(--gray);color:#fff;font-:italic;}
+  .badge-tag.pedido{background:var(--gray);color:#fff;font-style:italic;}
   .card-info{padding:14px 16px;}
   .card-nombre{font-weight:700;font-size:14px;color:var(--black);letter-spacing:-0.01em;line-height:1.3;}
   .card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
   .card-precio{font-weight:700;font-size:16px;color:var(--black);margin-top:8px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
-  .card-precio.cotizar{font-weight:700;font-:italic;font-size:12.5px;color:var(--red);letter-spacing:0;}
+  .card-precio.cotizar{font-weight:700;font-style:italic;font-size:12.5px;color:var(--red);letter-spacing:0;}
   .card-cotizar{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r-pill);padding:7px 10px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;margin-top:8px;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
   .card-cotizar svg{width:13px;height:13px;flex-shrink:0;}
   .card-cotizar:active{transform:scale(0.96);}
@@ -274,9 +275,9 @@
   .btn-cerrar-x:active{transform:scale(0.92);}
   .btn-cerrar-x svg{width:16px;height:16px;}
   .modal-badge{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.01em;padding:4px 11px;border-radius:var(--r-pill);margin-bottom:10px;width:max-content;}
-  .modal-badge.camino{background:var(--bronze-bg);color:var(--bronze);font-:italic;}
+  .modal-badge.camino{background:var(--bronze-bg);color:var(--bronze);font-style:italic;}
   .modal-badge.agotado{background:var(--gray-bg);color:var(--gray);}
-  .modal-badge.pedido{background:var(--gray-bg);color:var(--gray);font-:italic;}
+  .modal-badge.pedido{background:var(--gray-bg);color:var(--gray);font-style:italic;}
   .modal-nombre{font-weight:700;font-size:21px;color:var(--black);letter-spacing:-0.02em;line-height:1.2;}
   .modal-sub{font-size:13px;color:var(--muted);margin-top:3px;}
   .sku-copy{cursor:pointer;border-bottom:1px dashed var(--muted2);}
@@ -434,29 +435,27 @@
     .hero-btn { padding: 10px 18px; font-size: 11px; }
   }
 
-  /* === CARRUSEL DESTACADOS (tarjetas cuadradas con degradado, estilo TAG Heuer) === */
+  /* === CARRUSEL DESTACADOS (estilo TAG Heuer): infinito; el fondo/tarjeta queda fijo y solo se desliza el reloj === */
   body.vista-catalogo #destacados{display:none;}
-  #destacados{--dk:var(--black);--vis:3;--peek:6.4cqw;--dg:2px;background:#fff;padding:clamp(22px,2.4vw,38px) 0 clamp(14px,1.6vw,26px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
+  #destacados{--dk:var(--black);--vis:3;--peek:6.4cqw;--dg:2px;--cw:calc((100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));--dgrad:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);background:#fff;padding:clamp(22px,2.4vw,38px) 0 clamp(14px,1.6vw,26px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
   .dest-tabs{display:flex;justify-content:center;gap:clamp(22px,3.2vw,46px);flex-wrap:wrap;padding:0 20px;margin-bottom:clamp(18px,2.2vw,32px);}
   .dest-tab{font-family:inherit;font-size:clamp(13px,1.1vw,16px);font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:#4b4b4f;background:none;border:none;border-bottom:1px solid transparent;padding:0 0 10px;cursor:pointer;transition:color .2s var(--ease),border-color .2s var(--ease);}
   .dest-tab:hover{color:var(--dk);}
   .dest-tab.on{color:var(--dk);border-bottom-color:var(--dk);}
-  /* pista a todo el ancho: mismo margen a ambos lados para que se asomen las tarjetas vecinas de forma simetrica */
-  .dest-track{display:flex;gap:var(--dg);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain;padding:0 var(--peek);scroll-padding:0 var(--peek);position:relative;z-index:1;}
-  /* contenedor mas compacto y centrado; las medidas internas (cqw) salen de su ancho */
   .dest-wrap{position:relative;width:calc(100% - 2 * clamp(14px,2.35vw,48px));max-width:1500px;margin:0 auto;container-type:inline-size;}
-  /* tarjetas que se asoman a ambos lados cuando no hay vecinas reales */
-  .dest-ghost{position:absolute;top:0;width:calc(var(--peek) - var(--dg));height:calc((100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);pointer-events:none;}
-  .dest-ghost.izq{left:0;} .dest-ghost.der{right:0;}
-  .dest-track::-webkit-scrollbar{display:none;}
-  .dest-card{position:relative;flex:0 0 calc((100% - (var(--vis) - 1) * var(--dg)) / var(--vis));min-width:0;scroll-snap-align:start;display:flex;flex-direction:column;text-align:center;cursor:default;-webkit-tap-highlight-color:transparent;outline:none;}
-  .dest-foto{position:relative;aspect-ratio:1/1;background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);overflow:hidden;}
-  /* cada vista de la galeria ocupa toda la tarjeta; cambian con fundido */
+  /* ventana: recorta; las "lineas" entre tarjetas (.dest-div) quedan fijas encima y solo se mueven los relojes */
+  .dest-stage{position:relative;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;}
+  .dest-stage.arrastrando{cursor:grabbing;}
+  .dest-track{display:flex;will-change:transform;transform:translateX(calc(var(--peek) - var(--pos,0) * (var(--cw) + var(--dg)) + var(--drag,0px)));}
+  .dest-track.anim{transition:transform .65s var(--ease);}
+  .dest-div{position:absolute;top:0;left:0;right:0;height:calc(var(--cw) + var(--dg));pointer-events:none;z-index:4;}
+  .dest-div i{position:absolute;top:0;bottom:0;width:var(--dg);background:#fff;left:calc(var(--peek) + var(--k) * (var(--cw) + var(--dg)) - var(--dg));}
+  .dest-card{position:relative;flex:0 0 calc(var(--cw) + var(--dg));min-width:0;display:flex;flex-direction:column;text-align:center;-webkit-tap-highlight-color:transparent;outline:none;}
+  .dest-foto{position:relative;aspect-ratio:1/1;background:var(--dgrad);overflow:hidden;}
   .dest-foto .g{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .45s var(--ease),transform .7s var(--ease);pointer-events:none;user-select:none;-webkit-user-drag:none;}
   .dest-foto .g.on{opacity:1;}
   .dest-foto .sinfoto{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
   .dest-badge{position:absolute;top:14px;left:14px;z-index:3;background:#fff;color:#2b2b2e;font-size:11px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;line-height:1.3;}
-  /* flechitas dentro de la tarjeta: solo si el modelo tiene mas de una imagen */
   .dest-gal{position:absolute;top:50%;z-index:3;width:30px;height:30px;margin-top:-15px;border-radius:50%;border:none;background:rgba(255,255,255,.88);color:#2b2b2e;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .25s var(--ease),background .2s var(--ease);}
   .dest-gal.izq{left:12px;} .dest-gal.der{right:12px;}
   .dest-gal svg{width:14px;height:14px;}
@@ -474,7 +473,6 @@
     .dest-card:hover .g.frente{transform:scale(1.03);}
   }
   @media (hover:none){ .dest-comprar{opacity:1;transform:none;} }
-  /* navegacion: flecha izquierda, puntos en el centro, flecha derecha */
   .dest-nav{display:flex;align-items:center;justify-content:center;gap:clamp(12px,1.4vw,20px);margin-top:clamp(8px,1.4vw,22px);}
   .dest-puntos{display:flex;align-items:center;gap:8px;min-height:34px;}
   .dest-punto{width:5px;height:5px;padding:0;border:none;border-radius:999px;background:#cfcfd4;cursor:pointer;transition:width .3s var(--ease),background .3s var(--ease);}
@@ -483,9 +481,103 @@
   .dest-flecha{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--dk);cursor:pointer;transition:opacity .2s var(--ease),transform .2s var(--ease);}
   .dest-flecha svg{width:20px;height:10px;}
   .dest-flecha:hover:not(:disabled){transform:scale(1.12);}
-  .dest-flecha:disabled{opacity:.28;cursor:default;}
   @media (max-width:900px){ #destacados{--vis:2;--peek:7cqw;} }
   @media (max-width:560px){ #destacados{--vis:1;--peek:9cqw;} .dest-badge{top:10px;left:10px;font-size:10px;} }
+
+  /* === LISTADO DE RELOJES (estilo TAG Heuer: "Men's watches") === */
+  body.vista-catalogo{background:#fff;}
+  body.vista-catalogo .wrap{max-width:1560px;padding-left:clamp(16px,1.6vw,24px);padding-right:clamp(16px,1.6vw,24px);}
+  .cat-head{display:block;margin-bottom:0;}
+  .cat-eyebrow{display:block;font-size:14px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--black);line-height:1.2;}
+  .cat-titulo{font-family:'Syne','Jost',Arial,sans-serif;font-weight:800;font-size:clamp(28px,2.6vw,42px);letter-spacing:.005em;line-height:1.08;text-transform:uppercase;color:var(--black);margin-top:2px;}
+  .cat-desc{display:flex;align-items:flex-end;gap:14px;max-width:560px;margin-top:clamp(14px,1.4vw,20px);}
+  .cat-desc p{flex:1;font-size:15px;line-height:1.45;color:#8a8a90;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .cat-desc.abierta p{display:block;-webkit-line-clamp:unset;overflow:visible;}
+  .cat-desc button{flex:none;background:none;border:none;font-family:inherit;font-size:24px;font-weight:300;line-height:1;color:#555;cursor:pointer;padding:0 4px 1px;}
+  .cat-controles{display:flex;align-items:center;gap:12px;margin:clamp(18px,2.4vw,30px) 0 clamp(18px,2vw,28px);}
+  .cat-cuenta{margin-right:auto;font-size:13px;color:var(--muted);}
+  .ctl-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:46px;padding:0 22px;background:#fff;border:1px solid #1b1b1d;border-radius:0;font-family:inherit;font-size:14px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--black);cursor:pointer;white-space:nowrap;transition:background .2s var(--ease),color .2s var(--ease);}
+  .ctl-btn svg{width:18px;height:18px;flex:none;}
+  .ctl-btn:hover{background:var(--black);color:#fff;}
+  .vista-sel{display:none;align-items:center;gap:4px;height:46px;padding:4px;border:1px solid #1b1b1d;background:#fff;}
+  .vista-sel button{width:34px;height:36px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--black);}
+  .vista-sel button.on{background:var(--black);color:#fff;}
+  .vista-sel svg{width:15px;height:15px;}
+  .grid{grid-template-columns:repeat(4,1fr);gap:clamp(30px,3vw,46px) clamp(14px,1.7vw,24px);}
+  @media (max-width:1180px){ .grid{grid-template-columns:repeat(3,1fr);} }
+  .grid .card{background:transparent;border:none;border-radius:0;box-shadow:none;overflow:visible;}
+  .grid .card:not(.skeleton-card):hover,.grid .card:not(.skeleton-card):active{box-shadow:none;transform:none;}
+  .grid .card-foto{background:#f5f6f8;}
+  .grid .card-foto img{object-fit:contain;padding:9%;box-sizing:border-box;mix-blend-mode:multiply;}
+  .grid .card:hover .card-foto img{transform:none;}
+  .grid .card-info.ci-tag{display:grid;grid-template-columns:1fr auto;grid-template-areas:"txt fav";align-items:start;column-gap:10px;padding:14px 0 0;}
+  .ci-tag .ci-txt{grid-area:txt;min-width:0;}
+  .ci-tag .btn-favorito{grid-area:fav;position:static;width:auto;height:auto;padding:0;margin-top:-2px;background:none;box-shadow:none;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;color:var(--black);}
+  .ci-tag .btn-favorito svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linejoin:round;}
+  .ci-tag .btn-favorito.activo{color:#e0245e;}
+  .ci-tag .btn-favorito.activo svg{fill:currentColor;stroke:currentColor;}
+  .ci-eti{display:block;font-size:13px;font-weight:600;letter-spacing:.01em;text-transform:uppercase;color:#d0021b;line-height:1.35;}
+  .ci-eti.gris{color:var(--muted);}
+  .ci-nombre{font-size:14px;font-weight:600;letter-spacing:.01em;text-transform:uppercase;color:var(--black);line-height:1.3;overflow-wrap:anywhere;}
+  .ci-spec{font-size:13.5px;color:#76767c;margin-top:3px;line-height:1.35;}
+  .ci-precio{font-size:14px;color:var(--black);margin-top:6px;font-variant-numeric:tabular-nums;}
+  .card-agotado .ci-nombre,.card-agotado .ci-precio{color:var(--muted);}
+  @media (max-width:820px){
+    body.vista-catalogo .wrap{padding-top:84px;}
+    .cat-desc{max-width:none;}
+    .cat-cuenta{display:none;}
+    .vista-sel{display:flex;}
+    .cat-controles{gap:8px;}
+    .ctl-btn{padding:0 12px;gap:8px;font-size:13px;}
+    #btn-ordenar{flex:1;min-width:0;background:var(--black);color:#fff;}
+    .vista-sel button{width:30px;}
+    .grid{grid-template-columns:repeat(2,1fr);gap:30px 12px;}
+    .grid.vista-1{grid-template-columns:1fr;}
+    .grid .card-info.ci-tag{grid-template-columns:1fr;grid-template-areas:"fav" "txt";padding-top:10px;}
+    .ci-tag .btn-favorito{justify-self:start;margin:0 0 14px;}
+  }
+  /* panel de filtros (lateral en PC, pantalla completa en celular) */
+  #modal-filtros,#modal-orden{position:fixed;inset:0;z-index:170;background:rgba(9,9,11,.38);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease),visibility 0s linear .4s;}
+  #modal-filtros.open,#modal-orden.open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s var(--ease),visibility 0s;}
+  #modal-filtros{display:flex;justify-content:flex-end;}
+  .flt-drawer{display:flex;flex-direction:column;width:min(50vw,683px);min-width:440px;height:100%;background:#fff;transform:translateX(100%);transition:transform .4s var(--ease);}
+  #modal-filtros.open .flt-drawer{transform:none;}
+  .flt-head{display:flex;align-items:center;gap:16px;padding:26px 32px 24px;border-bottom:1px solid #bdbdc2;}
+  .flt-titulo{font-size:16px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--black);}
+  .flt-reset{background:none;border:none;border-bottom:1px solid var(--black);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--black);cursor:pointer;padding:0 0 1px;}
+  .flt-x{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--black);display:flex;padding:4px;}
+  .flt-x svg{width:22px;height:22px;}
+  .flt-body{flex:1;overflow-y:auto;overscroll-behavior:contain;}
+  .flt-sec{border-bottom:1px solid #bdbdc2;}
+  .flt-sec>button{width:100%;display:flex;justify-content:space-between;align-items:center;padding:19px 32px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--black);cursor:pointer;text-align:left;}
+  .flt-sec>button .mas{font-size:22px;font-weight:300;line-height:1;color:#2a5da8;}
+  .flt-opts{display:none;padding:0 32px 16px;}
+  .flt-sec.abierta .flt-opts{display:block;}
+  .flt-opt{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:15px;color:var(--black);cursor:pointer;}
+  .flt-opt input{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;margin:0;border:1px solid #1b1b1d;border-radius:0;background:#fff;cursor:pointer;display:grid;place-content:center;}
+  .flt-opt input:checked{background:var(--black);}
+  .flt-opt input:checked::after{content:'';width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);}
+  .flt-opt small{margin-left:auto;font-size:12.5px;color:#8a8a90;}
+  .flt-foot{padding:12px;border-top:1px solid #bdbdc2;}
+  .flt-ver{width:100%;height:50px;background:var(--black);color:#fff;border:none;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;}
+  @media (max-width:820px){
+    .flt-drawer{width:100%;min-width:0;}
+    .flt-head{padding:22px 20px 20px;}
+    .flt-sec>button{padding:19px 20px;}
+    .flt-opts{padding:0 20px 16px;}
+  }
+  /* hoja "Ordenar por" */
+  #modal-orden{display:flex;align-items:flex-end;justify-content:center;}
+  .ord-sheet{width:100%;max-width:560px;background:#fff;padding:26px 24px calc(30px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .4s var(--ease);}
+  #modal-orden.open .ord-sheet{transform:none;}
+  @media (min-width:821px){ #modal-orden{align-items:center;} .ord-sheet{max-width:440px;transform:translateY(16px);} }
+  .ord-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+  .ord-head h2{font-size:17px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--black);}
+  .ord-head button{background:none;border:none;cursor:pointer;color:var(--black);display:flex;padding:4px;}
+  .ord-head svg{width:20px;height:20px;}
+  .ord-opt{display:flex;align-items:center;gap:16px;width:100%;padding:11px 0;background:none;border:none;font-family:inherit;font-size:17px;color:var(--black);cursor:pointer;text-align:left;}
+  .ord-radio{flex:none;width:26px;height:26px;border:1.5px solid var(--black);border-radius:50%;display:grid;place-content:center;}
+  .ord-opt.on .ord-radio::after{content:'';width:12px;height:12px;border-radius:50%;background:var(--black);}
 </style>
 </head>
 <body>
@@ -620,9 +712,10 @@
     <button type="button" class="dest-tab" onclick="destTab(this)">Recomendados</button>
   </div>
   <div class="dest-wrap">
-    <span class="dest-ghost izq" aria-hidden="true"></span>
-    <div class="dest-track" id="dest-track"></div>
-    <span class="dest-ghost der" aria-hidden="true"></span>
+    <div class="dest-stage" id="dest-stage">
+      <div class="dest-track" id="dest-track"></div>
+      <div class="dest-div" id="dest-div" aria-hidden="true"></div>
+    </div>
   </div>
   <div class="dest-nav" id="dest-nav">
     <button type="button" class="dest-flecha" id="dest-izq" aria-label="Anterior" onclick="destMover(-1)"><svg viewBox="0 0 28 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M27 7H2M7.5 1.5L2 7l5.5 5.5"/></svg></button>
@@ -655,24 +748,21 @@
 <div class="wrap" id="catalogo">
   <div class="cat-head">
     <button type="button" class="cat-volver" onclick="volverInicio()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Inicio</button>
+    <span class="cat-eyebrow">Aphillips Store</span>
     <h2 class="cat-titulo" id="cat-titulo">Todos los relojes</h2>
-    <span class="cat-cuenta" id="cat-cuenta"></span>
-  </div>
-  <div class="filtros-wrap">
-    <div class="chip-row" id="chips-genero">
-      <button data-g="" class="chip active" onclick="setGenero('',this)">Todos</button>
-      <button data-g="hombre" class="chip" onclick="setGenero('hombre',this)">Hombre</button>
-      <button data-g="mujer" class="chip" onclick="setGenero('mujer',this)">Mujer</button>
-      <button data-g="unisex" class="chip" onclick="setGenero('unisex',this)">Unisex</button>
+    <div class="cat-desc" id="cat-desc">
+      <p id="cat-desc-txt"></p>
+      <button type="button" id="cat-desc-btn" onclick="toggleDesc()" aria-label="Ver más" aria-expanded="false">+</button>
     </div>
-    <select class="orden-select" id="orden-select" onchange="setOrden(this.value)">
-      <option value="recientes">Mas recientes</option>
-      <option value="precio_asc">Precio: menor a mayor</option>
-      <option value="precio_desc">Precio: mayor a menor</option>
-    </select>
-    <button type="button" class="toggle-vista" id="toggle-vista" onclick="toggleVistaCompacta()" title="Ver mas relojes a la vez" aria-label="Cambiar vista">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
-    </button>
+  </div>
+  <div class="cat-controles">
+    <span class="cat-cuenta" id="cat-cuenta"></span>
+    <div class="vista-sel" id="vista-sel">
+      <button type="button" class="on" data-v="2" onclick="setVista(2)" aria-label="Dos columnas"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5" height="5"/><rect x="9.5" y="1.5" width="5" height="5"/><rect x="1.5" y="9.5" width="5" height="5"/><rect x="9.5" y="9.5" width="5" height="5"/></svg></button>
+      <button type="button" data-v="1" onclick="setVista(1)" aria-label="Una columna"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4.5" y="4.5" width="7" height="7"/></svg></button>
+    </div>
+    <button type="button" class="ctl-btn" id="btn-ordenar" onclick="abrirOrden()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20V5M4 9l4-4 4 4M16 4v15M12 15l4 4 4-4"/></svg>Ordenar por</button>
+    <button type="button" class="ctl-btn" id="btn-filtrar" onclick="abrirFiltros()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 7h9M18 7h3M3 17h3M12 17h9"/><circle cx="15" cy="7" r="2.6"/><circle cx="9" cy="17" r="2.6"/></svg><span>Filtrar</span><span id="flt-badge"></span></button>
   </div>
   <div id="grid" class="grid">
       <div class="card skeleton-card">
@@ -723,6 +813,26 @@
           <div class="skeleton-line" style="width:34%;margin-top:14px;height:15px;"></div>
         </div>
       </div>
+  </div>
+</div>
+
+<div id="modal-filtros" aria-hidden="true" onclick="if(event.target===this)cerrarFiltros()">
+  <aside class="flt-drawer" role="dialog" aria-modal="true" aria-label="Filtros">
+    <div class="flt-head">
+      <h2 class="flt-titulo">Filtros</h2>
+      <button type="button" class="flt-reset" onclick="fltReset()">Reiniciar</button>
+      <button type="button" class="flt-x" onclick="cerrarFiltros()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    </div>
+    <div class="flt-body" id="flt-body"></div>
+    <div class="flt-foot"><button type="button" class="flt-ver" id="flt-ver" onclick="cerrarFiltros()">Ver productos</button></div>
+  </aside>
+</div>
+
+<div id="modal-orden" aria-hidden="true" onclick="if(event.target===this)cerrarOrden()">
+  <div class="ord-sheet" role="dialog" aria-modal="true" aria-label="Ordenar por">
+    <div class="ord-head"><h2>Ordenar por</h2><button type="button" onclick="cerrarOrden()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>
+    <button type="button" class="ord-opt" data-o="precio_desc" onclick="ordSel('precio_desc')"><span class="ord-radio"></span>Precio (de mayor a menor)</button>
+    <button type="button" class="ord-opt" data-o="precio_asc" onclick="ordSel('precio_asc')"><span class="ord-radio"></span>Precio (de menor a mayor)</button>
   </div>
 </div>
 
@@ -1009,18 +1119,10 @@ function confirmarWaFavoritos(el, e){
   }, 480);
 }
 
-function toggleVistaCompacta(){
+function setVista(n){ // celular: 2 columnas o 1 columna
   var grid = document.getElementById('grid');
-  if(grid) grid.classList.add('vista-cambiando');
-  setTimeout(function(){
-    _vistaCompacta = !_vistaCompacta;
-    var btn = document.getElementById('toggle-vista');
-    if(btn) btn.classList.toggle('on', _vistaCompacta);
-    if(grid){
-      grid.classList.toggle('compacta', _vistaCompacta);
-      requestAnimationFrame(function(){ grid.classList.remove('vista-cambiando'); });
-    }
-  }, 180);
+  if(grid) grid.classList.toggle('vista-1', n===1);
+  document.querySelectorAll('#vista-sel button').forEach(function(b){ b.classList.toggle('on', +b.getAttribute('data-v')===n); });
 }
 let _idAbierto = null;
 let _deepLinkHandled = false;
@@ -1109,33 +1211,48 @@ var DEST_LOCAL = [
 
 function _destEsc(t){ return String(t==null?'':t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function _destVis(){ var t=document.getElementById('dest-track'); return Math.max(1, parseInt(getComputedStyle(t).getPropertyValue('--vis'))||3); }
-function _destPaso(){ var t=document.getElementById('dest-track'), c=t.querySelector('.dest-card'); if(!c) return 0; return c.getBoundingClientRect().width + (parseFloat(getComputedStyle(t).columnGap)||0); }
-function _destPaginas(){ var t=document.getElementById('dest-track'); return Math.max(1, Math.ceil(t.children.length / _destVis())); }
-function _destPag(){
-  var t=document.getElementById('dest-track'), max=t.scrollWidth-t.clientWidth, n=_destPaginas();
-  if(max<=2 || n<2) return 0;
-  return Math.max(0, Math.min(n-1, Math.round(t.scrollLeft/max*(n-1))));
-}
 var _bolsa = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l-1 12h-11z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>';
 var _chevI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
 var _chevD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
 
+// Carrusel infinito: la ventana (con las lineas entre tarjetas) queda fija y solo se desliza el contenido.
+// Se dibujan copias a ambos lados y, al terminar de deslizar, se salta sin animacion a la posicion equivalente.
+var _destN = 0, _destIdx = 0, _destC = 0, _destAnim = false, _destT = 0, _destHtml = [];
+function _destMod(i){ return _destN ? ((i % _destN) + _destN) % _destN : 0; }
+function _destPaso(){ var c=document.querySelector('#dest-track .dest-card'); return c ? c.getBoundingClientRect().width : 0; }
+function _destCard(r){
+  var fotos = (r.fotos||[]).map(function(src,i){ return '<img class="g'+(i===0?' on frente':'')+'" src="'+_destEsc(src)+'" alt="" draggable="false">'; }).join('');
+  if(!fotos) fotos = '<span class="sinfoto">Sin foto</span>';
+  var gal = (r.fotos||[]).length>1 ? '<button type="button" class="dest-gal izq" aria-label="Imagen anterior" onclick="destGal(this,-1)">'+_chevI+'</button><button type="button" class="dest-gal der" aria-label="Imagen siguiente" onclick="destGal(this,1)">'+_chevD+'</button>' : '';
+  return '<div class="dest-card">'+
+    '<div class="dest-foto">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
+    '<div class="dest-nombre">'+_destEsc(r.nombre)+'</div>'+
+    (r.detalle?'<div class="dest-sub">'+_destEsc(r.detalle)+'</div>':'')+
+    (r.precio?'<div class="dest-precio">'+_destEsc(r.precio)+'</div>':'')+
+    '<div class="dest-comprar"><span>'+_bolsa+'Comprar ahora</span></div>'+
+  '</div>';
+}
+function _destPos(anim){
+  var t = document.getElementById('dest-track');
+  if(anim) t.classList.add('anim'); else t.classList.remove('anim');
+  t.style.setProperty('--pos', _destIdx + _destC);
+  t.style.setProperty('--drag', '0px');
+  if(!anim) void t.offsetWidth;
+}
 function renderDestacados(){
   var sec = document.getElementById('destacados'), track = document.getElementById('dest-track'); if(!track) return;
-  if(!DEST_LOCAL.length){ sec.style.display='none'; return; }
-  track.innerHTML = DEST_LOCAL.map(function(r){
-    var fotos = (r.fotos||[]).map(function(src,i){ return '<img class="g'+(i===0?' on frente':'')+'" src="'+_destEsc(src)+'" alt="" draggable="false">'; }).join('');
-    if(!fotos) fotos = '<span class="sinfoto">Sin foto</span>';
-    var gal = (r.fotos||[]).length>1 ? '<button type="button" class="dest-gal izq" aria-label="Imagen anterior" onclick="destGal(this,-1)">'+_chevI+'</button><button type="button" class="dest-gal der" aria-label="Imagen siguiente" onclick="destGal(this,1)">'+_chevD+'</button>' : '';
-    return '<div class="dest-card" tabindex="0">'+
-      '<div class="dest-foto">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
-      '<div class="dest-nombre">'+_destEsc(r.nombre)+'</div>'+
-      (r.detalle?'<div class="dest-sub">'+_destEsc(r.detalle)+'</div>':'')+
-      (r.precio?'<div class="dest-precio">'+_destEsc(r.precio)+'</div>':'')+
-      '<div class="dest-comprar"><span>'+_bolsa+'Comprar ahora</span></div>'+
-    '</div>';
-  }).join('');
-  track.scrollLeft = 0;
+  _destN = DEST_LOCAL.length;
+  if(!_destN){ sec.style.display='none'; return; }
+  var vis = _destVis();
+  _destC = _destN>1 ? vis+2 : 0;
+  if(_destHtml.length !== _destN) _destHtml = DEST_LOCAL.map(_destCard);
+  var h = '';
+  for(var k=-_destC; k<_destN+_destC; k++) h += _destHtml[_destMod(k)];
+  track.innerHTML = h;
+  var dv = ''; for(var j=0; j<=vis; j++) dv += '<i style="--k:'+j+'"></i>';
+  document.getElementById('dest-div').innerHTML = dv;
+  _destAnim = false; _destIdx = _destMod(_destIdx);
+  _destPos(false);
   destPuntos();
 }
 function destGal(btn, dir){ // cambia la imagen dentro de la tarjeta con fundido
@@ -1145,43 +1262,124 @@ function destGal(btn, dir){ // cambia la imagen dentro de la tarjeta con fundido
   imgs[i].classList.remove('on'); imgs[n].classList.add('on');
 }
 function destPuntos(){
-  var box = document.getElementById('dest-puntos'), n = _destPaginas();
-  box.innerHTML = Array.apply(null,Array(n)).map(function(_,i){ return '<button type="button" class="dest-punto" aria-label="Ir a la pagina '+(i+1)+'" onclick="destIr('+i+')"></button>'; }).join('');
+  var box = document.getElementById('dest-puntos');
+  box.innerHTML = _destN>1 ? Array.apply(null,Array(_destN)).map(function(_,i){ return '<button type="button" class="dest-punto" aria-label="Ir al reloj '+(i+1)+'" onclick="destIr('+i+')"></button>'; }).join('') : '';
+  document.getElementById('dest-nav').style.display = _destN>1 ? '' : 'none';
   destActualizar();
 }
-function destIr(pag){
-  var t = document.getElementById('dest-track'), max = t.scrollWidth - t.clientWidth;
-  var x = Math.min(max, pag * _destVis() * _destPaso());
-  t.scrollTo({left: Math.max(0,x), behavior:'smooth'});
+function _destFin(){
+  if(!_destAnim) return;
+  _destAnim = false;
+  var m = _destMod(_destIdx);
+  if(m !== _destIdx){ _destIdx = m; _destPos(false); }
 }
-function destMover(dir){ destIr(Math.max(0, Math.min(_destPaginas()-1, _destPag()+dir))); }
+function destMover(dir){
+  if(_destN<2 || _destAnim) return;
+  _destAnim = true; _destIdx += dir;
+  _destPos(true); destActualizar();
+  clearTimeout(_destT); _destT = setTimeout(_destFin, 800);
+}
+function destIr(pag){
+  if(_destN<2 || _destAnim) return;
+  var d = pag - _destMod(_destIdx); if(!d) return;
+  if(Math.abs(d)===_destN-1) d = d>0 ? -1 : 1;
+  if(Math.abs(d)===1){ destMover(d); }
+  else { _destIdx = pag; _destPos(false); destActualizar(); }
+}
 function destTab(btn){ // por ahora solo cambia el subrayado; la funcion se configura despues
   document.querySelectorAll('#dest-tabs .dest-tab').forEach(function(b){ b.classList.toggle('on', b===btn); });
 }
 function destActualizar(){
-  var t = document.getElementById('dest-track'); if(!t) return;
-  var max = t.scrollWidth - t.clientWidth, pg = _destPag();
+  var pg = _destMod(_destIdx);
   document.querySelectorAll('#dest-puntos .dest-punto').forEach(function(d,i){ d.classList.toggle('on', i===pg); });
-  document.getElementById('dest-izq').disabled = t.scrollLeft <= 2;
-  document.getElementById('dest-der').disabled = t.scrollLeft >= max - 2;
 }
 (function(){
-  var t = document.getElementById('dest-track'); if(!t) return;
-  var raf = 0;
-  t.addEventListener('scroll', function(){ if(raf) return; raf = requestAnimationFrame(function(){ raf = 0; destActualizar(); }); }, {passive:true});
+  var t = document.getElementById('dest-track'), st = document.getElementById('dest-stage'); if(!t || !st) return;
+  t.addEventListener('transitionend', function(e){ if(e.target===t && e.propertyName==='transform'){ clearTimeout(_destT); _destFin(); } });
+  // arrastrar con el dedo o el mouse
+  var x0=0, y0=0, dx=0, activo=false, movido=false;
+  st.addEventListener('pointerdown', function(e){
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    if(e.target.closest && e.target.closest('.dest-gal')) return;
+    if(_destAnim || _destN<2) return;
+    activo = true; movido = false; x0 = e.clientX; y0 = e.clientY; dx = 0;
+  });
+  st.addEventListener('pointermove', function(e){
+    if(!activo) return;
+    dx = e.clientX - x0;
+    if(!movido){
+      if(Math.abs(dx)<6) return;
+      if(Math.abs(e.clientY-y0) > Math.abs(dx)){ activo = false; return; }
+      movido = true; try{ st.setPointerCapture(e.pointerId); }catch(_){}
+      st.classList.add('arrastrando'); t.classList.remove('anim');
+    }
+    t.style.setProperty('--drag', dx+'px');
+  });
+  function fin(){
+    if(!activo) return; activo = false;
+    if(!movido) return;
+    st.classList.remove('arrastrando');
+    var paso = _destPaso(), dir = 0;
+    if(Math.abs(dx) > Math.min(60, paso*0.2)) dir = dx<0 ? 1 : -1;
+    if(dir){ _destAnim = true; _destIdx += dir; clearTimeout(_destT); _destT = setTimeout(_destFin, 800); }
+    _destPos(true); destActualizar();
+  }
+  st.addEventListener('pointerup', fin);
+  st.addEventListener('pointercancel', fin);
   var ult = 0;
-  window.addEventListener('resize', function(){ var v=_destVis(); if(v!==ult){ ult=v; destPuntos(); } else destActualizar(); });
+  window.addEventListener('resize', function(){ var v=_destVis(); if(v!==ult){ ult=v; renderDestacados(); } });
   renderDestacados(); ult = _destVis();
 })();
 
-var _TITULOS_GEN = {'':'Todos los relojes', hombre:'Relojes de hombre', mujer:'Relojes de mujer', unisex:'Relojes unisex'};
-var _HASH_GEN = {'#hombre':'hombre', '#mujer':'mujer', '#unisex':'unisex', '#todos':''};
+var _TITULOS_GEN = {'':'Todos los relojes', hombre:'Relojes para hombre', mujer:'Relojes para mujer'};
+var _DESC_GEN = {
+  '': 'Explora todos los relojes disponibles en Aphillips Store. Toca cualquiera para ver sus detalles y consulta la disponibilidad directamente por WhatsApp.',
+  hombre: 'Los relojes para hombre de Aphillips Store combinan elegancia y carácter: diseños audaces, movimientos automáticos y acabados pensados para durar. Consulta la disponibilidad de cada pieza directamente por WhatsApp.',
+  mujer: 'Los relojes para mujer de Aphillips Store reúnen estilo y precisión: diseños refinados, detalles cuidados y piezas seleccionadas para acompañarte todos los días. Consulta la disponibilidad de cada pieza directamente por WhatsApp.'
+};
+var _HASH_GEN = {'#hombre':'hombre', '#mujer':'mujer', '#todos':''};
+// Solo hay dos generos. Los relojes registrados como "unisex" aparecen tanto en hombre como en mujer.
+function _genOk(r){ return !_filtroGenero || r.genero===_filtroGenero || r.genero==='unisex'; }
+function _busOk(r){
+  var bus = document.getElementById('buscador'), q = (bus ? bus.value : '').toLowerCase();
+  return !q || (r.nombre||'').toLowerCase().includes(q) || (r.coleccion||'').toLowerCase().includes(q) || (r.sku||'').toLowerCase().includes(q);
+}
+// filtros del panel (colección, movimiento, tamaño, esfera, correa, caja)
+var _FACETAS = [
+  {k:'coleccion', t:'Colección'}, {k:'movimiento', t:'Movimiento'}, {k:'mm', t:'Tamaño de caja'},
+  {k:'colorEsfera', t:'Color de esfera'}, {k:'materialCorrea', t:'Material de correa'}, {k:'materialCaja', t:'Material de caja'}
+];
+var _filtros = {}, _fltAbiertas = {}, _nItems = 0;
+function _fval(r,k){ var v = (k==='mm') ? (r.mm ? r.mm+' mm' : '') : r[k]; return v==null ? '' : String(v).trim(); }
+function _facOk(r, omit){
+  for(var i=0;i<_FACETAS.length;i++){
+    var k = _FACETAS[i].k; if(k===omit) continue;
+    var sel = _filtros[k]; if(!sel || !Object.keys(sel).length) continue;
+    if(!sel[_fval(r,k).toLowerCase()]) return false;
+  }
+  return true;
+}
+function _nFiltros(){ var n=0; Object.keys(_filtros).forEach(function(k){ n += Object.keys(_filtros[k]).length; }); return n; }
+
 function setGenero(g, btn){
+  if(g !== _filtroGenero){ _filtros = {}; }
   _filtroGenero = g;
-  document.querySelectorAll('#chips-genero .chip').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-g')===g); });
   var t = document.getElementById('cat-titulo'); if(t) t.textContent = _TITULOS_GEN[g] || _TITULOS_GEN[''];
+  setDescripcion(g);
   if(document.body.classList.contains('vista-catalogo')){ history.replaceState(history.state, '', '#'+(g||'todos')); }
   render();
+}
+function setDescripcion(g){
+  var box = document.getElementById('cat-desc'), p = document.getElementById('cat-desc-txt'), b = document.getElementById('cat-desc-btn');
+  if(!p) return;
+  p.textContent = _DESC_GEN[g] || _DESC_GEN[''];
+  box.classList.remove('abierta'); b.textContent = '+'; b.setAttribute('aria-expanded','false');
+  requestAnimationFrame(function(){ b.style.visibility = (p.scrollHeight > p.clientHeight + 1) ? 'visible' : 'hidden'; });
+}
+function toggleDesc(){
+  var box = document.getElementById('cat-desc'), b = document.getElementById('cat-desc-btn');
+  var ab = box.classList.toggle('abierta');
+  b.textContent = ab ? '−' : '+'; b.setAttribute('aria-expanded', ab ? 'true' : 'false');
 }
 function _refrescarHeader(){ window.dispatchEvent(new Event('resize')); }
 function mostrarCatalogo(g, push){
@@ -1251,6 +1449,82 @@ function buscarEscribiendo(){
 setTimeout(function(){ if(Object.prototype.hasOwnProperty.call(_HASH_GEN, location.hash)){ aplicarVistaDesdeHash(); } }, 0);
 function setOrden(v){ _orden = v; render(); }
 
+// ---- panel de filtros ----
+function abrirFiltros(){
+  cerrarFavoritos(); cerrarCuenta();
+  renderFiltros();
+  var m = document.getElementById('modal-filtros');
+  m.classList.add('open'); m.setAttribute('aria-hidden','false');
+  document.body.style.overflow = 'hidden';
+}
+function cerrarFiltros(){
+  var m = document.getElementById('modal-filtros'); if(!m || !m.classList.contains('open')) return;
+  m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+  document.body.style.overflow = '';
+}
+function renderFiltros(){
+  var body = document.getElementById('flt-body'); if(!body) return;
+  var base = relojes.filter(function(r){ return _genOk(r) && _busOk(r); });
+  var top = body.scrollTop, html = '';
+  _FACETAS.forEach(function(f){
+    var mapa = {};
+    base.forEach(function(r){
+      var v = _fval(r,f.k); if(!v) return;
+      var key = v.toLowerCase();
+      if(!mapa[key]) mapa[key] = {label:v, n:0};
+      if(_facOk(r, f.k)) mapa[key].n++;
+    });
+    var keys = Object.keys(mapa); if(!keys.length) return;
+    keys.sort(function(a,b){ return a.localeCompare(b, 'es', {numeric:true}); });
+    var sel = _filtros[f.k] || {};
+    html += '<div class="flt-sec'+(_fltAbiertas[f.k]?' abierta':'')+'" data-k="'+f.k+'">'+
+      '<button type="button" onclick="fltSec(\''+f.k+'\')"><span>'+f.t+'</span><span class="mas">'+(_fltAbiertas[f.k]?'−':'+')+'</span></button>'+
+      '<div class="flt-opts">'+keys.map(function(key){
+        return '<label class="flt-opt"><input type="checkbox" data-k="'+f.k+'" data-v="'+_destEsc(key)+'"'+(sel[key]?' checked':'')+' onchange="fltToggle(this)"><span>'+_destEsc(mapa[key].label)+'</span><small>'+mapa[key].n+'</small></label>';
+      }).join('')+'</div></div>';
+  });
+  body.innerHTML = html || '<div class="fav-vacio" style="padding:24px 32px;">No hay filtros disponibles todavia.</div>';
+  body.scrollTop = top;
+  actualizarFltUI(true);
+}
+function fltSec(k){
+  _fltAbiertas[k] = !_fltAbiertas[k];
+  var sec = document.querySelector('#flt-body .flt-sec[data-k="'+k+'"]');
+  if(sec){ sec.classList.toggle('abierta', !!_fltAbiertas[k]); sec.querySelector('.mas').textContent = _fltAbiertas[k] ? '−' : '+'; }
+}
+function fltToggle(el){
+  var k = el.getAttribute('data-k'), v = el.getAttribute('data-v');
+  var sel = _filtros[k] = _filtros[k] || {};
+  if(el.checked) sel[v] = true; else delete sel[v];
+  render();
+}
+function fltReset(){ _filtros = {}; render(); }
+function actualizarFltUI(desdePanel){
+  var n = _nFiltros(), b = document.getElementById('flt-badge');
+  if(b) b.textContent = n ? '('+n+')' : '';
+  var ver = document.getElementById('flt-ver');
+  if(ver) ver.textContent = _nItems===0 ? 'Sin resultados' : 'Ver '+_nItems+' producto'+(_nItems===1?'':'s');
+  var m = document.getElementById('modal-filtros');
+  if(!desdePanel && m && m.classList.contains('open')) renderFiltros();
+}
+// ---- hoja "Ordenar por" ----
+function abrirOrden(){
+  document.querySelectorAll('#modal-orden .ord-opt').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-o')===_orden); });
+  var m = document.getElementById('modal-orden'); m.classList.add('open'); m.setAttribute('aria-hidden','false');
+  document.body.style.overflow = 'hidden';
+}
+function cerrarOrden(){
+  var m = document.getElementById('modal-orden'); if(!m || !m.classList.contains('open')) return;
+  m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+  document.body.style.overflow = '';
+}
+function ordSel(v){ setOrden(_orden===v ? 'recientes' : v); cerrarOrden(); }
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ cerrarFiltros(); cerrarOrden(); } });
+window.addEventListener('resize', function(){
+  var p = document.getElementById('cat-desc-txt'), b = document.getElementById('cat-desc-btn'), box = document.getElementById('cat-desc');
+  if(p && b && box && !box.classList.contains('abierta') && p.clientHeight) b.style.visibility = (p.scrollHeight > p.clientHeight + 1) ? 'visible' : 'hidden';
+});
+
 function ordenPeso(estado){
   if(estado==='vendido') return 3;
   if(estado==='bajopedido') return 2;
@@ -1259,13 +1533,8 @@ function ordenPeso(estado){
 }
 
 function render(){
-  var q = document.getElementById('buscador').value.toLowerCase();
   var grid = document.getElementById('grid');
-  var items = relojes.filter(function(r){
-    if(q && !((r.nombre||'').toLowerCase().includes(q) || (r.coleccion||'').toLowerCase().includes(q) || (r.sku||'').toLowerCase().includes(q))) return false;
-    if(_filtroGenero && r.genero!==_filtroGenero) return false;
-    return true;
-  });
+  var items = relojes.filter(function(r){ return _genOk(r) && _busOk(r) && _facOk(r); });
   items.sort(function(a,b){
     var av = ordenPeso(a.estado), bv = ordenPeso(b.estado);
     if(av!==bv) return av-bv;
@@ -1273,30 +1542,39 @@ function render(){
     if(_orden==='precio_desc') return (b.precio||0)-(a.precio||0);
     return 0;
   });
+  _nItems = items.length;
   var _cc = document.getElementById('cat-cuenta');
-  if(_cc) _cc.textContent = relojes.length ? '('+items.length+' reloj'+(items.length===1?'':'es')+')' : '';
+  if(_cc) _cc.textContent = relojes.length ? items.length+' reloj'+(items.length===1?'':'es') : '';
   if(!items.length){
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><span>&#9082;</span>'+(relojes.length?'Sin resultados para tu busqueda.':'No hay relojes disponibles por el momento.')+'</div>';
+    actualizarFltUI();
     return;
   }
   grid.innerHTML = items.map(function(r){
     var agotado = r.estado==='vendido';
     var pedido = r.estado==='bajopedido';
     var foto = r.foto ? '<img src="'+r.foto+'" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'<span class=sinfoto>Sin foto</span>\'" />' : '<span class="sinfoto">Sin foto</span>';
-    var badge = r.estado==='transito' ? '<span class="badge-tag camino">'+textoETA(r.eta)+'</span>' : (agotado ? '<span class="badge-tag agotado">Agotado</span>' : (pedido ? '<span class="badge-tag pedido">Bajo pedido</span>' : ''));
+    var eti = r.estado==='transito' ? textoETA(r.eta) : (agotado ? 'Agotado' : (pedido ? 'Bajo pedido' : 'Nuevo'));
     var favBtn = '<button class="btn-favorito'+(_favoritos.has(r.id)?' activo':'')+'" data-fav-id="'+r.id+'" onclick="toggleFavorito(event,\''+r.id+'\')" aria-label="Favorito"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-6.7-4.35-9.33-8.2C1 10.28 1.5 6.8 4.36 5.1 6.6 3.77 9.3 4.5 11 6.3l1 1.05 1-1.05c1.7-1.8 4.4-2.53 6.64-1.2 2.86 1.7 3.36 5.18 1.69 7.7C18.7 16.65 12 21 12 21z"/></svg></button>';
-    var precioHtml = pedido ? '<button class="card-cotizar" onclick="event.stopPropagation();cotizarDirecto(\''+r.id+'\')"><svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>Cotizar por WhatsApp</button>' : '<div class="card-precio">$'+(r.precio||0).toLocaleString()+'</div>';
+    var spec = [r.movimiento, r.mm ? r.mm+' mm' : '', r.materialCaja].filter(Boolean).join(', ');
+    if(!spec) spec = (r.sku?'Ref. '+r.sku:'')+(r.coleccion?(r.sku?' · ':'')+r.coleccion:'');
+    var precioHtml = pedido ? '<button class="card-cotizar" onclick="event.stopPropagation();cotizarDirecto(\''+r.id+'\')"><svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>Cotizar por WhatsApp</button>' : '<div class="ci-precio">$'+(r.precio||0).toLocaleString()+'</div>';
     return '<div class="card'+(agotado?' card-agotado':'')+'" data-id="'+r.id+'" onclick="abrir(\''+r.id+'\')">'+
-      '<div class="card-foto'+(agotado?' agotada':'')+'">'+badge+favBtn+foto+'</div>'+
-      '<div class="card-info">'+
-        '<div class="card-nombre">'+(r.nombre||'')+'</div>'+
-        '<div class="card-sub">'+(r.sku?'Ref. '+r.sku:'')+(r.coleccion?(r.sku?' · ':'')+r.coleccion:'')+'</div>'+
-        precioHtml+
+      '<div class="card-foto'+(agotado?' agotada':'')+'">'+foto+'</div>'+
+      '<div class="card-info ci-tag">'+
+        favBtn+
+        '<div class="ci-txt">'+
+          '<span class="ci-eti'+(agotado?' gris':'')+'">'+eti+'</span>'+
+          '<div class="ci-nombre">'+(r.nombre||'')+'</div>'+
+          (spec?'<div class="ci-spec">'+spec+'</div>':'')+
+          precioHtml+
+        '</div>'+
       '</div>'+
     '</div>';
   }).join('');
   var cards = grid.querySelectorAll('.card');
   cards.forEach(function(c){ if(_io){ _io.observe(c); } else { c.classList.add('visible'); } });
+  actualizarFltUI();
 }
 
 function spec(label, val){
