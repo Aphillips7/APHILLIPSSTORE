@@ -446,13 +446,13 @@
   /* contenedor mas compacto y centrado; las medidas internas (cqw) salen de su ancho */
   .dest-wrap{position:relative;width:calc(100% - 2 * clamp(14px,2.35vw,48px));max-width:1500px;margin:0 auto;container-type:inline-size;}
   /* tarjetas que se asoman a ambos lados cuando no hay vecinas reales */
-  .dest-ghost{position:absolute;top:0;width:calc(var(--peek) - var(--dg));height:calc((100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);pointer-events:none;}
+  .dest-ghost{position:absolute;top:var(--ghost-top,0px);width:calc(var(--peek) - var(--dg));height:calc(.88 * (100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);pointer-events:none;}
   .dest-ghost.izq{left:0;} .dest-ghost.der{right:0;}
   .dest-track::-webkit-scrollbar{display:none;}
   .dest-card{position:relative;flex:0 0 calc((100% - (var(--vis) - 1) * var(--dg)) / var(--vis));min-width:0;scroll-snap-align:start;display:flex;flex-direction:column;text-align:center;cursor:default;-webkit-tap-highlight-color:transparent;outline:none;}
-  .dest-foto{position:relative;aspect-ratio:1/1;background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);overflow:hidden;}
+  .dest-foto{position:relative;aspect-ratio:1/.88;margin-top:clamp(14px,1.6vw,22px);background:linear-gradient(180deg,#0f0f0f 0%,#0e0e0e 40%,#101010 42%,#171717 44%,#1f1f1f 46%,#29282d 48%,#343338 50%,#424146 52%,#545358 54%,#68676d 56%,#7d7c84 58%,#9a99a1 60%,#b3b2ba 62%,#c9c8d0 64%,#dcdbe0 66%,#e5e5e7 68%,#eeeef0 70%,#f2f2f4 72%,#f4f4f6 75%,#f6f6f8 80%,#f7f7f9 100%);overflow:hidden;}
   /* cada vista de la galeria ocupa toda la tarjeta; cambian con fundido */
-  .dest-foto .g{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .45s var(--ease),transform .7s var(--ease);pointer-events:none;user-select:none;-webkit-user-drag:none;}
+  .dest-foto .g{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;display:block;opacity:0;transition:opacity .45s var(--ease),transform .7s var(--ease);pointer-events:none;user-select:none;-webkit-user-drag:none;}
   .dest-foto .g.on{opacity:1;}
   .dest-foto .sinfoto{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
   .dest-badge{position:absolute;top:14px;left:14px;z-index:3;background:#fff;color:#2b2b2e;font-size:11px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;line-height:1.3;}
@@ -463,11 +463,10 @@
   .dest-gal:hover{background:#fff;}
   .dest-card:hover .dest-gal,.dest-card:focus-within .dest-gal{opacity:1;}
   @media (hover:none){ .dest-gal{opacity:1;} }
-  .dest-card{background:#f7f7f9;padding-bottom:clamp(16px,2vw,28px);}
-  .dest-nombre{margin-top:clamp(14px,1.8vw,26px);font-size:clamp(12px,.95vw,14px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#18181b;line-height:1.35;padding:0 6px;}
+  .dest-nombre{margin-top:0;font-size:clamp(12px,.95vw,14px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#18181b;line-height:1.35;padding:0 6px;}
   .dest-sub{margin-top:8px;font-size:clamp(12px,.9vw,13px);color:#6b6b70;letter-spacing:.02em;line-height:1.5;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .dest-precio{margin-top:8px;font-size:clamp(12px,.95vw,14px);font-weight:400;letter-spacing:.05em;color:#2b2b2e;}
-  .dest-comprar{margin:10px auto 0;height:30px;display:flex;align-items:flex-start;justify-content:center;opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);}
+  .dest-comprar{margin:14px auto 0;height:30px;display:flex;align-items:flex-start;justify-content:center;opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);}
   .dest-comprar span{display:inline-flex;align-items:center;gap:10px;font-family:inherit;font-size:13px;font-weight:500;letter-spacing:.1em;color:var(--dk);background:none;border:none;border-bottom:1px solid var(--dk);padding:0 2px 4px;cursor:pointer;}
   .dest-comprar svg{width:16px;height:16px;flex:none;}
   @media (hover:hover){
@@ -1129,15 +1128,19 @@ function renderDestacados(){
     if(!fotos) fotos = '<span class="sinfoto">Sin foto</span>';
     var gal = (r.fotos||[]).length>1 ? '<button type="button" class="dest-gal izq" aria-label="Imagen anterior" onclick="destGal(this,-1)">'+_chevI+'</button><button type="button" class="dest-gal der" aria-label="Imagen siguiente" onclick="destGal(this,1)">'+_chevD+'</button>' : '';
     return '<div class="dest-card" tabindex="0">'+
-      '<div class="dest-foto">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
       '<div class="dest-nombre">'+_destEsc(r.nombre)+'</div>'+
       (r.detalle?'<div class="dest-sub">'+_destEsc(r.detalle)+'</div>':'')+
       (r.precio?'<div class="dest-precio">'+_destEsc(r.precio)+'</div>':'')+
+      '<div class="dest-foto">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
       '<div class="dest-comprar"><span>'+_bolsa+'Comprar ahora</span></div>'+
     '</div>';
   }).join('');
   track.scrollLeft = 0;
+  destGhost();
   destPuntos();
+}
+function destGhost(){ // alinea las tarjetas fantasma con la parte superior de las fotos
+  var w=document.querySelector('.dest-wrap'), f=document.querySelector('#dest-track .dest-foto'); if(w&&f) w.style.setProperty('--ghost-top', f.offsetTop+'px');
 }
 function destGal(btn, dir){ // cambia la imagen dentro de la tarjeta con fundido
   var foto = btn.closest('.dest-foto'), imgs = foto.querySelectorAll('.g'); if(imgs.length<2) return;
@@ -1171,7 +1174,7 @@ function destActualizar(){
   var raf = 0;
   t.addEventListener('scroll', function(){ if(raf) return; raf = requestAnimationFrame(function(){ raf = 0; destActualizar(); }); }, {passive:true});
   var ult = 0;
-  window.addEventListener('resize', function(){ var v=_destVis(); if(v!==ult){ ult=v; destPuntos(); } else destActualizar(); });
+  window.addEventListener('resize', function(){ destGhost(); var v=_destVis(); if(v!==ult){ ult=v; destPuntos(); } else destActualizar(); });
   renderDestacados(); ult = _destVis();
 })();
 
