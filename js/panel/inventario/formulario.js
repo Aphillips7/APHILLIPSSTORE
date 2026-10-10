@@ -1,7 +1,7 @@
 import { autoRegistrarCompraInv } from '../finanzas/registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { cerrarModal } from './detalle.js';
-import { previewFoto } from './fotos.js';
+import { fotosFormulario, fotosSubiendo, setFotosFormulario } from './fotos.js';
 import { renderInventario } from './lista.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 
@@ -38,6 +38,8 @@ function agregarProducto(){
   var editIdx=document.getElementById('inv-edit-index').value;
   var nombre=document.getElementById('inv-nombre').value.trim();
   if(!nombre){alert('Escribe el modelo del producto.');return;}
+  if(fotosSubiendo()){alert('Espera a que terminen de subir las fotos.');return;}
+  var listaFotos=fotosFormulario();
   var costo=parseFloat(document.getElementById('inv-costo').value)||0;
   var imp=parseFloat(document.getElementById('inv-importacion').value)||0;
   var costoTotal=costo+imp;
@@ -57,6 +59,7 @@ function agregarProducto(){
     agua:document.getElementById('inv-agua').value.trim(),
     cristal:document.getElementById('inv-cristal').value.trim(),
     color:document.getElementById('inv-color').value.trim(),
+    descripcion:document.getElementById('inv-descripcion').value.trim(),
     notas:document.getElementById('inv-notas').value.trim(),
     ocultoCatalogo:document.getElementById('inv-oculto-catalogo').checked,
     serie:document.getElementById('inv-serie').value.trim(),
@@ -67,7 +70,8 @@ function agregarProducto(){
     costo, importacion:imp, costoTotal, precio,
     precioMin:parseFloat(document.getElementById('inv-precio-min').value)||0,
     margen, estado,
-    foto:document.getElementById('inv-foto').value.trim(),
+    foto:listaFotos[0]||'',                                              // principal (URL, o una foto antigua en base64)
+    fotos:listaFotos.filter(function(u){ return /^https:\/\//.test(u); }), // todas las fotos en la nube, en orden
     fecha:new Date().toLocaleDateString('es-MX')
   };
   var esEdicion=editIdx!=='';
@@ -99,13 +103,13 @@ function limpiarFormulario(){
   toggleFormulario(false);
 }
 function resetCamposFormulario(){
-  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto','inv-foto-carpeta','inv-descripcion'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-oculto-catalogo').checked=false;
   document.getElementById('inv-genero').value='hombre';
   document.getElementById('inv-movimiento').value='';
   document.getElementById('inv-estado').value='disponible';
   document.getElementById('inv-edit-index').value='';
-  var fp=document.getElementById('inv-foto-preview');if(fp)fp.textContent='';
+  setFotosFormulario([]);
   ['inv-preview-margen','inv-preview-ganancia'].forEach(id=>{var el=document.getElementById(id);if(el){el.textContent='--';el.style.color='var(--muted)';}});
   document.getElementById('inv-preview-costo').textContent='$0.00';
   document.getElementById('inv-form-title').textContent='Registrar unidad';
@@ -123,7 +127,7 @@ function editarProducto(id){
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); return; }
   var p=state.inventario[i];
-  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
+  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion};
   Object.entries(fields).forEach(([id,v])=>{var el=document.getElementById(id);if(el)el.value=v||'';});
   document.getElementById('inv-oculto-catalogo').checked=!!p.ocultoCatalogo;
   document.getElementById('inv-genero').value=p.genero||'hombre';
@@ -134,9 +138,15 @@ function editarProducto(id){
   document.getElementById('inv-submit-btn').textContent='Guardar cambios';
   var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='inline-flex';
   calcularMargenPreview();
-  if(p.foto)previewFoto();
+  setFotosFormulario(fotosDe(p));
   toggleFormulario(true);
   cerrarModal();
+}
+
+// fotos de una unidad para el formulario: las de la nube; si no tiene, la foto antigua (base64)
+function fotosDe(p){
+  if(p.fotos&&p.fotos.length) return p.fotos.slice();
+  return p.foto?[p.foto]:[];
 }
 
 function duplicarProducto(id){
@@ -148,7 +158,7 @@ function duplicarProducto(id){
   var copiar={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,
     'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,
     'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,
-    'inv-proveedor':p.proveedor,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-foto':p.foto};
+    'inv-proveedor':p.proveedor,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion};
   Object.entries(copiar).forEach(function(e){var el=document.getElementById(e[0]);if(el)el.value=e[1]||'';});
   document.getElementById('inv-genero').value=p.genero||'hombre';
   document.getElementById('inv-movimiento').value=p.movimiento||'';
@@ -158,7 +168,7 @@ function duplicarProducto(id){
   document.getElementById('inv-form-title').textContent='Nueva unidad de '+(p.nombre||'este modelo');
   document.getElementById('inv-submit-btn').textContent='Registrar unidad';
   var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='inline-flex';
-  if(p.foto)previewFoto();
+  setFotosFormulario(fotosDe(p));
   calcularMargenPreview();
   cerrarModal();
   toggleFormulario(true);

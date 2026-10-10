@@ -23,8 +23,9 @@ function camposPublicos(p){
     nombre:p.nombre||'', sku:p.sku||'', coleccion:p.coleccion||'', genero:p.genero||'',
     mm:p.mm||'', materialCaja:p.materialCaja||'', materialCorrea:p.materialCorrea||'',
     colorEsfera:p.colorEsfera||'', movimiento:p.movimiento||'', agua:p.agua||'',
-    cristal:p.cristal||'', color:p.color||'', notas:p.notas||'', eta:p.eta||'',
-    precio:p.precio||0, foto:p.foto||'', estado:p.estado||'', _ts:p._ts||0
+    cristal:p.cristal||'', color:p.color||'', notas:p.notas||'', descripcion:p.descripcion||'', eta:p.eta||'',
+    precio:p.precio||0, foto:p.foto||'', fotos:Array.isArray(p.fotos)?p.fotos.slice(0,12):[],
+    estado:p.estado||'', _ts:p._ts||0
   };
 }
 function esPublicable(p){
