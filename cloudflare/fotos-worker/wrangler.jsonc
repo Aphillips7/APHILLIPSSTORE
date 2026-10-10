@@ -12,6 +12,10 @@
   "r2_buckets": [
     { "binding": "FOTOS", "bucket_name": "aphillips-photos" }
   ],
+  // Metricas del catalogo (vistas / aperturas / clics)
+  "d1_databases": [
+    { "binding": "DB", "database_name": "aphillips-db", "database_id": "c034e54e-c004-456d-b31c-58146a31f1a5", "migrations_dir": "migrations" }
+  ],
   "vars": {
     "FIREBASE_PROJECT_ID": "aphillips-store-733df",
     "FOTOS_URL_BASE": "https://fotos.aphillipsstore.com",

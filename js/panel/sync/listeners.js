@@ -1,4 +1,4 @@
-import { db } from '../../firebase.js';
+import { db, firebase } from '../../firebase.js';
 import { renderConfigPage } from '../auth/auth-overlay.js';
 import { renderCatalogoAdmin } from '../catalogo-admin.js';
 import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
@@ -94,14 +94,43 @@ function iniciarListenersFirebase(){
     setSyncStatus('Sin conexion','var(--red)','error');
   });
 
+  // Metricas: las antiguas siguen en Firestore (historial) y las nuevas llegan de Cloudflare (D1).
+  // El panel muestra la suma de las dos.
   db.collection('metricas_catalogo').onSnapshot(function(snap){
     var m={};
     snap.forEach(function(doc){ m[doc.id]=doc.data(); });
-    state.metricas=m;
-    try{ renderCatalogoAdmin(); }catch(e){}
+    _metricasFS=m;
+    combinarMetricas();
   }, function(){ /* las metricas son un extra; si fallan no afectan el resto del panel */ });
+  cargarMetricasCloudflare();
+  if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(!document.hidden) cargarMetricasCloudflare(); }, 120000);
 
   setSyncStatus('Conectado','var(--green)','ok');
+}
+
+var _metricasFS={}, _metricasCF={}, _timerMetricas=null;
+function combinarMetricas(){
+  var m={};
+  [_metricasFS,_metricasCF].forEach(function(origen){
+    Object.keys(origen).forEach(function(id){
+      var a=m[id]||(m[id]={vistas:0,aperturas:0,clics:0,_ultima:0}), b=origen[id]||{};
+      a.vistas+=b.vistas||0; a.aperturas+=b.aperturas||0; a.clics+=b.clics||0;
+      a._ultima=Math.max(a._ultima, b._ultima||0);
+    });
+  });
+  state.metricas=m;
+  try{ renderCatalogoAdmin(); }catch(e){}
+}
+async function cargarMetricasCloudflare(){
+  try{
+    var usuario=firebase.auth().currentUser; if(!usuario) return;
+    var token=await usuario.getIdToken();
+    var r=await fetch('https://api.aphillipsstore.com/metricas',{headers:{'Authorization':'Bearer '+token}});
+    if(!r.ok) return;
+    var d=await r.json();
+    _metricasCF=d.metricas||{};
+    combinarMetricas();
+  }catch(e){ /* sin conexion: se reintenta despues */ }
 }
 
 function refrescarVistaCompleta(){

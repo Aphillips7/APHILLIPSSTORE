@@ -26,3 +26,20 @@ npx wrangler@4 secret put OWNER_UID   # pega tu UID de Firebase (Authentication 
 ```
 
 Las fotos se guardan como `relojes/<id del reloj>/<fecha>-<aleatorio>.<ext>` con cache de un ano.
+
+## API (mismo Worker: `api.aphillipsstore.com`)
+
+| Ruta | Quien | Para que |
+|---|---|---|
+| `GET /catalogo` | publico | Copia del catalogo (R2 `publico/catalogo.json`, cache 30 s). La lee `js/catalogo/datos.js`; si falla, el catalogo usa Firestore. |
+| `PUT /catalogo` | admin | La publica el panel despues de cada sincronizacion. El Worker solo deja pasar campos publicos. |
+| `POST /metricas` | publico | Lote de `[id, "vistas"|"aperturas"|"clics"]` (texto JSON). Solo ids del catalogo; max 1 de cada tipo por reloj y envio. |
+| `GET /metricas` | admin | Metricas guardadas en D1 (`aphillips-db`, tabla `metricas`). El panel las suma a las antiguas de Firestore. |
+
+Base de datos D1 `aphillips-db`: migraciones en `fotos-worker/migrations/`
+(`npx wrangler@4 d1 migrations apply aphillips-db --remote`).
+
+## Tienda (`aphillipsstore.com`)
+
+Worker `aphillipsstore` (configuracion en `/wrangler.jsonc`, codigo en `tienda-worker/`), conectado a
+GitHub: cada push a `main` se publica solo. `/` = catalogo, `/admin` = panel.
