@@ -16,14 +16,56 @@ const ETIQUETAS = {
 };
 function etiquetaEstado(estado){ return ETIQUETAS[estado] || ETIQUETAS.disponible; }
 
-// Iconos de linea para cada barra desplegable
+// Brazalete de 3 filas: eslabones laterales redondeados y centrales pulidos, alternados
+function eslabones(){
+  var s = '<path d="M34 3.5c4-1 20-1 24 0M34 60.5c4 1 20 1 24 0"/>';
+  for(var y = 5; y < 50; y += 8.6){
+    s += '<rect x="34" y="'+y+'" width="7" height="7.4" rx="2"/><rect x="51" y="'+y+'" width="7" height="7.4" rx="2"/>';
+    s += '<rect x="42.6" y="'+(y+3.2)+'" width="6.8" height="7.4" rx="1.6"/><path d="M44.5 '+(y+5.2)+'h3"/>';
+  }
+  return s;
+}
+
+// Iconos de linea detallados (estilo TAG Heuer) para cada grupo de especificaciones
+const SVG = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
 const ICONOS = {
-  descripcion: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4h15l7 7v25H10z"/><path d="M25 4v7h7M15 18h12M15 23h12M15 28h8"/></svg>',
-  movimiento: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="20" r="16"/><circle cx="20" cy="20" r="11"/><path d="M20 9v4M20 27v4M9 20h4M27 20h4M12.2 12.2l2.8 2.8M25 25l2.8 2.8M12.2 27.8l2.8-2.8M25 15l2.8-2.8"/><circle cx="20" cy="20" r="3"/><circle cx="27.5" cy="13" r="1.4"/><circle cx="13" cy="27" r="1.4"/></svg>',
-  caja: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5h14l2 6M13 5l-2 6M13 35h14l2-6M13 35l-2-6"/><circle cx="20" cy="20" r="11"/><circle cx="20" cy="20" r="8.5"/><path d="M31 18h3v4h-3"/></svg>',
-  esfera: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="20" r="15"/><path d="M20 7v3M20 30v3M7 20h3M30 20h3"/><path d="M20 20V12M20 20l6 4"/><circle cx="20" cy="20" r="1.3"/></svg>',
-  correa: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h9v34H8zM23 3h9v34h-9z"/><path d="M6 13h13v8H6zM12.5 13v8"/><circle cx="27.5" cy="12" r=".8"/><circle cx="27.5" cy="18" r=".8"/><circle cx="27.5" cy="24" r=".8"/><path d="M23 30h9"/></svg>',
-  info: '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20.5V7a2 2 0 0 1 2-2h13.5L36 20.5 20.5 36z"/><circle cx="13" cy="13" r="2.5"/></svg>'
+  // calibre visto por detras: rotor, volante, rueda dentada, rubies y tornillos
+  movimiento: SVG+
+    '<circle cx="32" cy="32" r="29"/><circle cx="32" cy="32" r="26"/>'+
+    '<path d="M9.6 29.5A22.5 22.5 0 0 1 54.4 29.5H36.2a4.3 4.3 0 0 0-8.4 0z"/><path d="M14.5 26.2A18 18 0 0 1 49.5 26.2"/><path d="M19 22.5A14 14 0 0 1 45 22.5" stroke-dasharray="1.2 2"/>'+
+    '<circle cx="32" cy="29.5" r="1.6"/>'+
+    '<circle cx="21" cy="44" r="6.5"/><circle cx="21" cy="44" r="4.6"/><path d="M21 39.4v9.2M16.4 44h9.2"/><circle cx="21" cy="44" r="1"/>'+
+    '<circle cx="43.5" cy="44" r="6.2" stroke-width="2.2" stroke-dasharray="1.15 1.3"/><circle cx="43.5" cy="44" r="4.4"/><circle cx="43.5" cy="44" r="1.1"/>'+
+    '<path d="M27.5 44h9.6"/><circle cx="32" cy="52.5" r="1.3"/><circle cx="32" cy="38.5" r="1"/>'+
+    '<circle cx="12" cy="36" r="1.6"/><path d="M11 37l2-2"/><circle cx="52" cy="36" r="1.6"/><path d="M51 37l2-2"/><circle cx="32" cy="57.5" r="1.4"/><path d="M31 58.5l2-2"/>'+
+  '</svg>',
+  // caja vista de frente: asas, bisel con marcas, corona y pulsadores
+  caja: SVG+
+    '<path d="M21 13.5 23.5 4h17L43 13.5M21 50.5 23.5 60h17L43 50.5"/><path d="M26 4.5v4M38 4.5v4M26 55.5v4M38 55.5v4"/>'+
+    '<circle cx="32" cy="32" r="21"/><circle cx="32" cy="32" r="17.5"/><circle cx="32" cy="32" r="19.25" stroke-width="2" stroke-dasharray=".7 9.38"/>'+
+    '<circle cx="32" cy="32" r="14"/><path d="M22.5 25.5a11 11 0 0 1 6-6"/>'+
+    '<path d="M53 29.5h3.5v5H53"/><rect x="56.5" y="28" width="3.5" height="8" rx="1"/><path d="M57.3 30h1.9M57.3 32h1.9M57.3 34h1.9"/>'+
+    '<path d="M48.5 19.5l2.6-2.3 2 2.2-2.6 2.3M48.5 44.5l2.6 2.3 2-2.2-2.6-2.3"/>'+
+  '</svg>',
+  // esfera: indices, minutero, agujas, subesfera y ventana de fecha
+  esfera: SVG+
+    '<circle cx="32" cy="32" r="28"/><circle cx="32" cy="32" r="24.5"/>'+
+    '<circle cx="32" cy="32" r="22.5" stroke-width="1.6" stroke-dasharray=".35 2.005"/><circle cx="32" cy="32" r="20" stroke-width="3" stroke-dasharray="1.2 9.27"/>'+
+    '<circle cx="32" cy="43" r="5.5"/><path d="M32 43l2.5-3"/><rect x="42" y="29.5" width="7" height="5" rx=".5"/>'+
+    '<path d="M32 32 23.5 21.5" stroke-width="2.2"/><path d="M32 32 44.5 16" stroke-width="1.5"/><path d="M32 36V11" stroke-width=".8"/>'+
+    '<circle cx="32" cy="32" r="1.8" fill="currentColor"/>'+
+  '</svg>',
+  // correa de piel con hebilla + brazalete de eslabones
+  correa: SVG+
+    '<path d="M10 4h12v56H10z"/><path d="M12.5 8v10M19.5 8v10"/><circle cx="16" cy="26" r="1"/><circle cx="16" cy="31" r="1"/><circle cx="16" cy="36" r="1"/>'+
+    '<rect x="8.5" y="41" width="3" height="8" rx="1"/><rect x="20.5" y="41" width="3" height="8" rx="1"/><path d="M8 41h16v12H8z"/><path d="M16 41v8.5"/><path d="M9.5 44h13"/>'+
+    eslabones()+
+  '</svg>',
+  // certificado con sello
+  info: SVG+
+    '<path d="M12 6h30l10 10v42H12z"/><path d="M42 6v10h10"/><path d="M18 18h18M18 23h26M18 28h26M18 33h16"/>'+
+    '<circle cx="40" cy="44" r="7"/><circle cx="40" cy="44" r="4.5" stroke-dasharray="1 1.2"/><path d="M35.5 49.5 33 58l4-2 2 3.5 1.5-8M44.5 49.5 47 58l-4-2-2 3.5"/>'+
+  '</svg>'
 };
 
 function spec(label, val){
@@ -31,11 +73,17 @@ function spec(label, val){
   return '<div class="spec-row"><span>'+esc(label)+' : </span><b>'+val+'</b></div>';
 }
 
+// Un grupo dentro de "Especificaciones tecnicas": icono + titulo + datos
+function grupo(icono, titulo, filas){
+  if(!filas) return '';
+  return '<div class="esp-grupo"><span class="esp-ico">'+ICONOS[icono]+'</span><div class="esp-txt"><h3 class="esp-titulo">'+titulo+'</h3>'+filas+'</div></div>';
+}
+
 // Una barra desplegable (details/summary: se abre y cierra sin JS)
-function barra(icono, titulo, contenido, abierta){
+function barra(titulo, contenido){
   if(!contenido) return '';
-  return '<details class="det"'+(abierta?' open':'')+'>'+
-    '<summary class="det-btn"><span class="det-ico">'+ICONOS[icono]+'</span><span class="det-titulo">'+titulo+'</span><span class="det-mas" aria-hidden="true"></span></summary>'+
+  return '<details class="det">'+
+    '<summary class="det-btn"><span class="det-titulo">'+titulo+'</span><span class="det-mas" aria-hidden="true"></span></summary>'+
     '<div class="det-panel">'+contenido+'</div>'+
   '</details>';
 }
@@ -95,16 +143,18 @@ function abrir(id){
   notasEl.textContent = nota;
   notasEl.style.display = nota ? '' : 'none';
 
-  // Barras desplegables: solo aparecen las que tienen informacion
+  // Dos barras desplegables: Descripcion y Especificaciones tecnicas (todas juntas, cada grupo con su icono)
   var desc = r.descripcion || r.notas;
   var genero = r.genero==='hombre'?'Hombre':r.genero==='mujer'?'Mujer':r.genero==='unisex'?'Unisex':'';
+  var especificaciones =
+    grupo('movimiento', 'Movimiento', spec('Movimiento', esc(r.movimiento))) +
+    grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Resistencia al agua', esc(r.agua))) +
+    grupo('esfera', 'Esfera', spec('Color de esfera', esc(r.colorEsfera))) +
+    grupo('correa', 'Correa / Brazalete', spec('Material', esc(r.materialCorrea))) +
+    grupo('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero) + spec('Color', esc(r.color)));
   document.getElementById('modal-specs').innerHTML =
-    barra('descripcion', 'Descripción', '<p class="det-texto">'+(desc ? esc(desc) : descripcionAuto(r))+'</p>', true) +
-    barra('movimiento', 'Movimiento', spec('Movimiento', esc(r.movimiento))) +
-    barra('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Resistencia al agua', esc(r.agua))) +
-    barra('esfera', 'Esfera', spec('Color de esfera', esc(r.colorEsfera))) +
-    barra('correa', 'Correa / Brazalete', spec('Material', esc(r.materialCorrea))) +
-    barra('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero) + spec('Color', esc(r.color)));
+    barra('Descripción', '<p class="det-texto">'+(desc ? esc(desc) : descripcionAuto(r))+'</p>') +
+    barra('Especificaciones técnicas', especificaciones);
 
   var waTexto = document.getElementById('modal-wa-texto');
   var nombreRef = (r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'');
