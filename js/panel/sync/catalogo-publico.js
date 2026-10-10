@@ -1,6 +1,32 @@
-import { db } from '../../firebase.js';
+import { db, firebase } from '../../firebase.js';
 import { state } from '../state.js';
 import { camposPublicos, esPublicable } from '../../products.js';
+
+// ---------- copia del catalogo en Cloudflare ----------
+// Los clientes leen el catalogo de https://api.aphillipsstore.com/catalogo (sin gastar lecturas
+// de Firebase). Despues de cada sincronizacion el panel publica ahi la lista completa de relojes
+// publicables, solo con camposPublicos (el Worker vuelve a filtrar por si acaso).
+var API_CATALOGO = 'https://api.aphillipsstore.com/catalogo';
+var _ultimoPublicadoCF = null, _publicandoCF = false, _pendienteCF = false;
+async function publicarCatalogoCloudflare(){
+  if(_publicandoCF){ _pendienteCF = true; return; }
+  var usuario = firebase.auth && firebase.auth().currentUser;
+  if(!usuario || !navigator.onLine) return;
+  var relojes = state.inventario.filter(esPublicable).map(function(p){
+    var o = camposPublicos(p); o.id = p.id; return o;
+  });
+  relojes.sort(function(a,b){ return (b._ts||0)-(a._ts||0); });
+  var json = JSON.stringify(relojes);
+  if(json === _ultimoPublicadoCF) return;   // nada cambio desde la ultima publicacion
+  _publicandoCF = true;
+  try{
+    var token = await usuario.getIdToken();
+    var r = await fetch(API_CATALOGO, { method:'PUT', headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify({ relojes: relojes }) });
+    if(r.ok) _ultimoPublicadoCF = json;
+  }catch(e){ /* sin conexion o error: se reintenta en la proxima sincronizacion */ }
+  _publicandoCF = false;
+  if(_pendienteCF){ _pendienteCF = false; publicarCatalogoCloudflare(); }
+}
 
 // Copia publica del inventario: solo los campos de camposPublicos() de los relojes publicables.
 // _lastSyncedPublico refleja lo que REALMENTE hay en la nube (lo llena el listener de
@@ -53,6 +79,7 @@ async function syncCatalogoPublico(){
   }catch(e){
     // El catalogo publico es un extra; si falla, no debe romper el sync normal del negocio.
   }
+  publicarCatalogoCloudflare();
 }
 
-export { _lastSyncedPublico, cargarCatalogoPublicoRemoto, marcarInventarioCargado, syncCatalogoPublico };
+export { _lastSyncedPublico, cargarCatalogoPublicoRemoto, marcarInventarioCargado, publicarCatalogoCloudflare, syncCatalogoPublico };

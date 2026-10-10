@@ -1,12 +1,27 @@
-import { db, firebase } from '../firebase.js';
+// Metricas del catalogo (vistas, aperturas del detalle, clics a WhatsApp).
+// Se juntan en memoria y se envian a Cloudflare en un solo envio cada 20 s y al salir de la pagina
+// (antes era una escritura de Firestore por cada reloj visto). El servidor cuenta como maximo
+// 1 vista / 1 apertura / 1 clic por reloj en cada envio.
+const API_METRICAS = 'https://api.aphillipsstore.com/metricas';
 
 var _vistasContadas = new Set();
+var _cola = [];
 function incMetrica(id, campo){
   if(!id) return;
-  var upd = {}; upd[campo] = firebase.firestore.FieldValue.increment(1);
-  upd['_ultima'] = Date.now();
-  db.collection('metricas_catalogo').doc(id).set(upd, {merge:true}).catch(function(){});
+  _cola.push([id, campo]);
+  if(_cola.length >= 100) enviarMetricas();
 }
+function enviarMetricas(){
+  if(!_cola.length) return;
+  var cuerpo = JSON.stringify(_cola.splice(0, _cola.length));
+  // texto plano: no necesita permiso previo (CORS) y funciona al cerrar la pagina
+  var blob = new Blob([cuerpo], { type: 'text/plain' });
+  if(navigator.sendBeacon && navigator.sendBeacon(API_METRICAS, blob)) return;
+  try{ fetch(API_METRICAS, { method: 'POST', body: cuerpo, headers: { 'Content-Type': 'text/plain' }, keepalive: true }).catch(function(){}); }catch(e){}
+}
+setInterval(enviarMetricas, 20000);
+document.addEventListener('visibilitychange', function(){ if(document.hidden) enviarMetricas(); });
+window.addEventListener('pagehide', enviarMetricas);
 
 const _io = ('IntersectionObserver' in window) ? new IntersectionObserver(function(entries){
   entries.forEach(function(en){
@@ -19,4 +34,4 @@ const _io = ('IntersectionObserver' in window) ? new IntersectionObserver(functi
   });
 }, {threshold:0.12, rootMargin:'0px 0px -30px 0px'}) : null;
 
-export { _io, _vistasContadas, incMetrica };
+export { _io, _vistasContadas, enviarMetricas, incMetrica };
