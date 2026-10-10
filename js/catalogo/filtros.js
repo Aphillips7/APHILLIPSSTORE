@@ -2,14 +2,38 @@ import { cerrarCuenta } from './cuenta.js';
 import { relojes } from './datos.js';
 import { cerrarFavoritos } from './favoritos.js';
 import { _nItems, render } from './grid.js';
-import { _destEsc } from './ui.js';
+import { _destEsc, normalizar } from './ui.js';
 import { _genOk } from './vistas.js';
 
 let _orden = 'recientes';
 
+// === BUSQUEDA ===
+// Se busca en todos los datos publicos del reloj, sin importar acentos ni mayusculas.
+// Cada palabra escrita tiene que aparecer (ej. "invicta acero automatico").
+var _GEN_TXT = { hombre:'hombre caballero', mujer:'mujer dama', unisex:'unisex hombre mujer caballero dama' };
+var _EST_TXT = { disponible:'disponible', transito:'en transito', bajopedido:'bajo pedido', vendido:'agotado vendido' };
+var _IGNORAR = { reloj:1, relojes:1, de:1, del:1, para:1, el:1, la:1, los:1, las:1, con:1, y:1, en:1, un:1, una:1 };
+function textoBusqueda(r){
+  return normalizar([r.nombre, r.coleccion, r.sku, r.movimiento, r.materialCaja, r.materialCorrea, r.colorEsfera,
+    r.color, r.cristal, r.agua, r.mm ? r.mm+' mm '+r.mm+'mm' : '', _GEN_TXT[r.genero], _EST_TXT[r.estado]].filter(Boolean).join(' '));
+}
+function palabrasBusqueda(q){
+  return normalizar(q).split(/[\s,.;/]+/).filter(function(p){ return p && !_IGNORAR[p]; });
+}
+function coincideBusqueda(r, q){
+  var palabras = palabrasBusqueda(q);
+  if(!palabras.length) return true;
+  var hay = textoBusqueda(r), hayJunto = hay.replace(/\s+/g, '');
+  return palabras.every(function(p){
+    if(hay.includes(p) || hayJunto.includes(p)) return true;
+    // plurales: "automaticos" -> "automatico", "relojes" -> "reloj"
+    if(p.length > 4 && p.endsWith('es') && hay.includes(p.slice(0, -2))) return true;
+    return p.length > 3 && p.endsWith('s') && hay.includes(p.slice(0, -1));
+  });
+}
 function _busOk(r){
-  var bus = document.getElementById('buscador'), q = (bus ? bus.value : '').toLowerCase();
-  return !q || (r.nombre||'').toLowerCase().includes(q) || (r.coleccion||'').toLowerCase().includes(q) || (r.sku||'').toLowerCase().includes(q);
+  var bus = document.getElementById('buscador');
+  return coincideBusqueda(r, bus ? bus.value : '');
 }
 // filtros del panel (colección, movimiento, tamaño, esfera, correa, caja)
 var _FACETAS = [
@@ -107,6 +131,6 @@ window.addEventListener('resize', function(){
   if(p && b && box && !box.classList.contains('abierta') && p.clientHeight) b.style.visibility = (p.scrollHeight > p.clientHeight + 1) ? 'visible' : 'hidden';
 });
 
-export { _busOk, _FACETAS, _facOk, _filtros, _fltAbiertas, _fval, _nFiltros, _orden, abrirFiltros, abrirOrden, actualizarFltUI, cerrarFiltros, cerrarOrden, fltReset, fltSec, fltToggle, limpiarFiltros, ordSel, renderFiltros, setOrden };
+export { _busOk, coincideBusqueda, _FACETAS, _facOk, _filtros, _fltAbiertas, _fval, _nFiltros, _orden, abrirFiltros, abrirOrden, actualizarFltUI, cerrarFiltros, cerrarOrden, fltReset, fltSec, fltToggle, limpiarFiltros, ordSel, renderFiltros, setOrden };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { abrirFiltros, abrirOrden, cerrarFiltros, cerrarOrden, fltReset, fltSec, fltToggle, ordSel });

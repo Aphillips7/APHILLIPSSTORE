@@ -35,7 +35,7 @@ scripts/auditar-catalogo-publico.js   auditoria/limpieza manual de catalogo_publ
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
 css/panel/            base, componentes, finanzas, auth, modales, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
-                      destacados, listado, filtros (en ese orden)
+                      destacados, listado, filtros, marcas, pie (en ese orden)
 js/firebase.js        configuracion unica de Firebase; exporta firebase y db
 js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 ```
@@ -82,14 +82,14 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `main.js` | Punto de entrada (importa los modulos en orden) |
 | `datos.js` | `relojes`: escucha `catalogo_publico` con `onSnapshot`; enlace directo `?id=` |
 | `grid.js` | Dibuja la grilla de relojes (`render`), vista 1 o 2 columnas |
-| `vistas.js` | Inicio vs. catalogo, genero (`#hombre`, `#mujer`, `#todos`), descripcion |
-| `filtros.js` | Panel de filtros (coleccion, movimiento, tamano, esfera, correa, caja) y orden |
+| `vistas.js` | Inicio vs. catalogo, genero (`#hombre`, `#mujer`, `#todos`), marca (`#marca-invicta`, `#marca-bulova`, `#marca-technomarine`: el reloj es de la marca si su nombre o coleccion la mencionan), descripcion |
+| `filtros.js` | Panel de filtros (coleccion, movimiento, tamano, esfera, correa, caja), orden y `coincideBusqueda()` (busca cada palabra en todos los datos publicos, sin acentos) |
 | `modal.js` | Pagina de un reloj (estilo TAG Heuer): barras desplegables con icono, garantias y boton de WhatsApp. Usa `descripcion` si existe; si no, `notas` o una descripcion armada con los datos |
 | `favoritos.js` | Favoritos (en el navegador) y consulta multiple por WhatsApp |
 | `whatsapp.js` | Numero, boton flotante, confirmaciones, cotizar |
 | `metricas.js` | Suma vistas/aperturas/clics en `metricas_catalogo` |
 | `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
-| `buscador.js` | Panel de busqueda y "bestsellers" |
+| `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |
 | `cuenta.js` | Panel "Mi cuenta" (solo diseno, login de clientes pendiente) |
 | `header.js` | Encabezado transparente sobre el hero |
 | `ui.js` | `toast`, `vibrar`, escape de HTML |

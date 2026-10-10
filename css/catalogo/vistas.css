@@ -2,8 +2,8 @@
   body:not(.vista-catalogo) #catalogo{display:none;}
   body.vista-catalogo .hero, body.vista-catalogo #generos{display:none;}
   .cat-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;margin-bottom:26px;}
-  .cat-volver{display:inline-flex;align-items:center;gap:8px;width:100%;font-family:inherit;font-size:12px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:none;border:none;padding:0 0 10px;cursor:pointer;transition:color var(--fast) var(--ease);}
-  .cat-volver:hover{color:var(--black);}
+  .cat-volver{display:inline-flex;align-items:center;gap:8px;width:100%;font-family:inherit;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--black);background:none;border:none;padding:0 0 10px;cursor:pointer;transition:color var(--fast) var(--ease);}
+  .cat-volver:hover{color:var(--gris-texto);}
   .cat-volver svg{width:16px;height:16px;transition:transform var(--fast) var(--ease);}
   .cat-volver:hover svg{transform:translateX(-3px);}
   .cat-titulo{font-family:var(--font-titulo);font-weight:800;text-transform:uppercase;color:var(--black);}
@@ -45,5 +45,6 @@
   .card-cotizar svg{width:13px;height:13px;flex-shrink:0;}
   .card-cotizar:active{transform:scale(0.96);}
   .card-agotado .card-nombre,.card-agotado .card-precio{color:var(--muted);}
-  .empty{text-align:center;padding:70px 20px;color:var(--muted2);font-size:14px;}
+  .empty{text-align:center;padding:70px 20px;color:var(--gris-texto);font-size:var(--fs-texto);line-height:21px;max-width:520px;margin:0 auto;}
+  .empty b{display:block;font-size:var(--fs-seccion);font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--black);margin-bottom:10px;}
   .empty span{display:block;font-size:26px;margin-bottom:10px;opacity:0.4;}
