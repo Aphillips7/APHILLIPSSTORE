@@ -1,0 +1,100 @@
+import { db } from '../../firebase.js';
+import { renderConfigPage } from '../auth/auth-overlay.js';
+import { renderCatalogoAdmin } from '../catalogo-admin.js';
+import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
+import { renderContenido, renderIdeas } from '../contenido.js';
+import { renderAnalisis } from '../finanzas/analisis.js';
+import { renderFinanzas } from '../finanzas/finanzas.js';
+import { renderHistorial } from '../finanzas/historial.js';
+import { renderPickerCompra } from '../finanzas/registrar-compra.js';
+import { renderPicker } from '../finanzas/registrar-venta.js';
+import { renderResumen } from '../finanzas/resumen.js';
+import { renderChecklist, renderInicio } from '../inicio.js';
+import { renderInventario } from '../inventario/lista.js';
+import { COLECCIONES, state } from '../state.js';
+import { syncCatalogoPublico } from './catalogo-publico.js';
+import { renderEspacioUsado } from './espacio.js';
+import { setSyncStatus } from './estado-sync.js';
+import { _lastSynced, _remoteIds, marcarSyncListo } from './sync.js';
+
+function refrescarVista(key){
+  try{ renderInicio(); }catch(e){}
+  try{ renderEspacioUsado(); }catch(e){}
+  if(key==='inventario'){
+    try{ renderInventario(); }catch(e){}
+    try{ renderCatalogoAdmin(); }catch(e){}
+    try{ renderPicker(); }catch(e){}
+    try{ renderPickerCompra(); }catch(e){}
+    try{ renderClientes(); }catch(e){}
+    try{ syncCatalogoPublico(); }catch(e){}
+  }else if(key==='movimientos'){
+    try{ renderHistorial(); }catch(e){}
+    try{ renderResumen(); }catch(e){}
+    try{ renderAnalisis(); }catch(e){}
+    try{ renderFinanzas(); }catch(e){}
+    try{ renderClientes(); }catch(e){}
+  }else if(key==='clientes'){
+    try{ renderClientes(); }catch(e){}
+    try{ poblarSelectClientes('fin-cliente'); }catch(e){}
+    try{ poblarSelectClientes('reserva-cliente'); }catch(e){}
+  }else if(key==='config'){
+    try{ renderResumen(); }catch(e){}
+    try{ renderChecklist(); }catch(e){}
+    try{ renderIdeas(); }catch(e){}
+    try{ renderContenido(); }catch(e){}
+    try{ renderConfigPage(); }catch(e){}
+  }
+}
+
+function iniciarListenersFirebase(){
+  if(!marcarSyncListo()) return;
+
+  COLECCIONES.forEach(function(key){
+    db.collection(key).onSnapshot(function(snap){
+      var items=[];
+      var ids=new Set();
+      var cache=_lastSynced[key];
+      snap.forEach(function(doc){
+        var data=doc.data();
+        data.id=doc.id;
+        items.push(data);
+        ids.add(doc.id);
+        cache[doc.id]=JSON.stringify(data);
+      });
+      Object.keys(cache).forEach(function(id){ if(!ids.has(id)) delete cache[id]; });
+      items.sort(function(a,b){return (b._ts||0)-(a._ts||0);});
+      _remoteIds[key]=ids;
+      state[key]=items;
+      refrescarVista(key);
+    }, function(){
+      setSyncStatus('Sin conexion','var(--red)','error');
+    });
+  });
+
+  db.collection('config').doc('main').onSnapshot(function(doc){
+    if(!doc.exists) return;
+    var data=doc.data();
+    if(typeof data.meta==='number'){ state.meta=data.meta; localStorage.setItem('meta',state.meta); }
+    if(Array.isArray(data.tasks)){ state.tasks=data.tasks; localStorage.setItem('tasks',JSON.stringify(state.tasks)); }
+    if(data.weekTasks){ state.weekTasks=data.weekTasks; localStorage.setItem('weekTasks',JSON.stringify(state.weekTasks)); }
+    if(Array.isArray(data.ideas)){ state.ideas=data.ideas; localStorage.setItem('ideas',JSON.stringify(state.ideas)); }
+    refrescarVista('config');
+  }, function(){
+    setSyncStatus('Sin conexion','var(--red)','error');
+  });
+
+  db.collection('metricas_catalogo').onSnapshot(function(snap){
+    var m={};
+    snap.forEach(function(doc){ m[doc.id]=doc.data(); });
+    state.metricas=m;
+    try{ renderCatalogoAdmin(); }catch(e){}
+  }, function(){ /* las metricas son un extra; si fallan no afectan el resto del panel */ });
+
+  setSyncStatus('Conectado','var(--green)','ok');
+}
+
+function refrescarVistaCompleta(){
+  ['inventario','movimientos','clientes','config'].forEach(function(k){ try{ refrescarVista(k); }catch(e){} });
+}
+
+export { iniciarListenersFirebase, refrescarVista, refrescarVistaCompleta };
