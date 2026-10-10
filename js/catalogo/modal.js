@@ -103,6 +103,44 @@ function descripcionAuto(r){
   return t;
 }
 
+// ---------- galeria de fotos de la pagina del reloj ----------
+// Usa r.fotos (fotos en la nube, en orden); si no hay, la foto principal r.foto.
+let _galIdx = 0, _galN = 0;
+function pintarGaleria(r){
+  var cont = document.getElementById('modal-foto');
+  var lista = (Array.isArray(r.fotos) && r.fotos.length) ? r.fotos : (r.foto ? [r.foto] : []);
+  _galIdx = 0; _galN = lista.length;
+  if(!_galN){ cont.innerHTML = '<span class="sinfoto">Sin foto</span>'; return; }
+  var alt = esc(r.nombre || 'Reloj');
+  var html = lista.map(function(src, i){
+    return '<img class="pf-img'+(i===0?' on':'')+'" src="'+esc(src)+'" alt="'+alt+(_galN>1?' — foto '+(i+1)+' de '+_galN:'')+'"'+(i>0?' loading="lazy"':'')+' draggable="false" />';
+  }).join('');
+  if(_galN > 1){
+    html += '<button type="button" class="pf-flecha izq" aria-label="Foto anterior" onclick="galeriaMover(-1)"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>'+
+      '<button type="button" class="pf-flecha der" aria-label="Foto siguiente" onclick="galeriaMover(1)"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>'+
+      '<div class="pf-puntos">'+lista.map(function(_, i){ return '<button type="button" class="pf-punto'+(i===0?' on':'')+'" aria-label="Ver foto '+(i+1)+'" onclick="galeriaIr('+i+')"></button>'; }).join('')+'</div>';
+  }
+  cont.innerHTML = html;
+}
+function galeriaIr(i){
+  if(_galN < 2) return;
+  _galIdx = ((i % _galN) + _galN) % _galN;
+  var cont = document.getElementById('modal-foto');
+  cont.querySelectorAll('.pf-img').forEach(function(im, k){ im.classList.toggle('on', k===_galIdx); });
+  cont.querySelectorAll('.pf-punto').forEach(function(p, k){ p.classList.toggle('on', k===_galIdx); });
+}
+function galeriaMover(dir){ galeriaIr(_galIdx + dir); }
+// deslizar con el dedo para cambiar de foto
+(function(){
+  var cont = document.getElementById('modal-foto'); if(!cont) return;
+  var x0 = 0, y0 = 0;
+  cont.addEventListener('touchstart', function(e){ var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; }, {passive:true});
+  cont.addEventListener('touchend', function(e){
+    var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) galeriaMover(dx < 0 ? 1 : -1);
+  }, {passive:true});
+})();
+
 function copiarSku(e, sku){
   e.stopPropagation();
   if(navigator.clipboard){ navigator.clipboard.writeText(sku).then(function(){ toast('Referencia copiada: '+sku); }); }
@@ -112,7 +150,7 @@ function abrir(id){
   var r = relojes.find(function(x){ return x.id === id; });
   if(!r) return;
   _idAbierto = id;
-  document.getElementById('modal-foto').innerHTML = r.foto ? '<img src="'+r.foto+'" alt="'+esc(r.nombre||'Reloj')+'" />' : '<span class="sinfoto">Sin foto</span>';
+  pintarGaleria(r);
 
   var eti = etiquetaEstado(r.estado);
   var badgeEl = document.getElementById('modal-badge');
@@ -203,4 +241,4 @@ document.getElementById('modal-wa').addEventListener('click', function(){ if(_id
 
 export { _idAbierto, abrir, cerrar, cerrarModalUI, copiarSku, etiquetaEstado, spec };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { abrir, cerrar, copiarSku });
+Object.assign(window, { abrir, cerrar, copiarSku, galeriaIr, galeriaMover });

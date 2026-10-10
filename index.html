@@ -404,6 +404,7 @@
         <div class="field"><label>Cristal</label><input type="text" id="inv-cristal" placeholder="Ej: Mineral, Zafiro..." /></div>
         <div class="field"><label>Color / variante</label><input type="text" id="inv-color" placeholder="Ej: Dorado/negro..." /></div>
       </div>
+      <div class="field"><label>Descripcion <span style="font-weight:300;text-transform:none;letter-spacing:0;">— se muestra en el catalogo</span></label><textarea id="inv-descripcion" rows="4" placeholder="Ej: Reloj de buceo con movimiento automatico, bisel giratorio y esfera negra. Ideal para uso diario..."></textarea></div>
       <div class="field"><label>Notas adicionales</label><textarea id="inv-notas" rows="2" placeholder="Caracteristicas especiales, edicion limitada..."></textarea></div>
       <div class="field" style="display:flex;align-items:center;gap:9px;background:var(--bg2);padding:11px 14px;border-radius:var(--r-md);margin-bottom:14px;">
         <input type="checkbox" id="inv-oculto-catalogo" style="width:16px;height:16px;accent-color:var(--black);cursor:pointer;flex-shrink:0;margin:0;" />
@@ -434,16 +435,14 @@
         <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
         <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="bajopedido">Bajo pedido</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
       </div>
-<div class="divider-text">Imagen</div>
+<div class="divider-text">Fotos</div>
       <div class="field">
-        <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
-          <div id="inv-foto-preview" style="width:72px;height:72px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);flex-shrink:0;overflow:hidden;text-align:center;">Sin foto</div>
-          <div style="flex:1;min-width:180px;">
-            <input type="file" id="inv-foto-input" accept="image/*" onchange="subirFotoLocal(this)" />
-            <input type="hidden" id="inv-foto" />
-            <div id="inv-foto-status" style="font-size:11px;color:var(--muted);margin-top:6px;">Puedes tomar una foto o elegirla de tu galeria, en cualquier formato (JPG, PNG, etc). Se guarda directo en el dispositivo, sin depender de internet ni de enlaces.</div>
-          </div>
-        </div>
+        <div class="inv-fotos-lista" id="inv-fotos-lista"><div class="inv-foto-vacia">Sin fotos</div></div>
+        <label class="btn btn-outline inv-fotos-btn" for="inv-foto-input">+ Agregar fotos</label>
+        <input type="file" id="inv-foto-input" accept="image/*" multiple onchange="subirFotos(this)" style="display:none;" />
+        <input type="hidden" id="inv-foto" />
+        <input type="hidden" id="inv-foto-carpeta" />
+        <div id="inv-foto-status" style="font-size:11px;color:var(--muted);margin-top:8px;">Puedes elegir varias a la vez (camara o galeria). La primera es la principal; usa las flechas para cambiar el orden. Se suben a la nube, necesitas internet.</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>

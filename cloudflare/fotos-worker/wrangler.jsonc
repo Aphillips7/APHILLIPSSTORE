@@ -1,0 +1,21 @@
+// Configuracion del Worker de fotos. Se publica con:  npx wrangler@4 deploy   (desde esta carpeta)
+// OWNER_UID (tu UID de Firebase) se guarda como secreto:  npx wrangler@4 secret put OWNER_UID
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "aphillips-fotos",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "api.aphillipsstore.com", "custom_domain": true }
+  ],
+  "r2_buckets": [
+    { "binding": "FOTOS", "bucket_name": "aphillips-photos" }
+  ],
+  "vars": {
+    "FIREBASE_PROJECT_ID": "aphillips-store-733df",
+    "FOTOS_URL_BASE": "https://fotos.aphillipsstore.com",
+    "ORIGENES_PERMITIDOS": "https://aphillipsstore.com,https://www.aphillipsstore.com,https://aphillips7.github.io,http://localhost:8765"
+  },
+  "observability": { "enabled": true }
+}
