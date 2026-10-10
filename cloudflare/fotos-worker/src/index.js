@@ -36,7 +36,9 @@ export default {
     } catch (e) {
       return json({ error: 'Sesion invalida: ' + e.message }, 401, cors);
     }
-    if (uid !== env.OWNER_UID) return json({ error: 'Sin permiso' }, 403, cors);
+    // OWNER_UID puede traer espacios o saltos de linea al guardarlo; tambien admite varios separados por coma
+    const duenos = String(env.OWNER_UID || '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (!duenos.includes(uid)) return json({ error: 'Sin permiso (tu UID es ' + uid + ')' }, 403, cors);
 
     if (request.method === 'POST') {
       const reloj = (url.searchParams.get('reloj') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
