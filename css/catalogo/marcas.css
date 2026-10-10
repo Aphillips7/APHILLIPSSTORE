@@ -9,12 +9,8 @@
   .marca-foto img{width:100%;height:100%;object-fit:cover;object-position:50% 45%;display:block;transition:transform .9s var(--ease);}
   /* barra negra con el logo de la marca en blanco */
   .marca-txt{display:flex;align-items:center;justify-content:center;height:clamp(64px,6vw,92px);padding:0 12px;background:var(--black);}
-  /* Los tres logos con el mismo peso visual: Invicta es solo texto, Bulova y TechnoMarine llevan
-     un simbolo encima, por eso a esos se les da mas alto para que su nombre se vea del mismo tamano */
-  .marca-logo{display:block;width:auto;max-width:80%;object-fit:contain;}
-  .logo-invicta{height:clamp(14px,1.5vw,22px);}
-  .logo-bulova{height:clamp(26px,2.8vw,42px);}
-  .logo-technomarine{height:clamp(26px,2.8vw,42px);}
+  /* Los tres logos (simbolo + nombre) con la misma altura, centrados en la barra */
+  .marca-logo{display:block;width:auto;height:clamp(28px,2.9vw,44px);max-width:80%;object-fit:contain;margin:0 auto;}
   .marca-card:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
   @media (hover:hover){ .marca-card:hover .marca-foto img{transform:scale(1.04);} }
   .marcas-grid .gen-reveal:nth-child(2){transition-delay:.1s;}
@@ -31,7 +27,5 @@
     .marcas-grid{gap:6px;}
     .marca-foto{aspect-ratio:3/4;}
     .marca-txt{height:46px;padding:0 6px;}
-    .logo-invicta{height:12px;}
-    .logo-bulova{height:24px;}
-    .logo-technomarine{height:24px;}
+    .marca-logo{height:24px;}
   }
