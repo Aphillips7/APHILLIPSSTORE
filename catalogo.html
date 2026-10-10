@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="css/catalogo/filtros.css">
 <link rel="stylesheet" href="css/catalogo/marcas.css">
 <link rel="stylesheet" href="css/catalogo/pie.css">
+<link rel="stylesheet" href="css/catalogo/hora.css">
 </head>
 <body>
 
@@ -243,9 +244,17 @@
   <div class="regla-seccion" aria-hidden="true"></div>
 </section>
 
-<!-- FRASE -->
-<section id="frase" class="frase" aria-label="Frase">
-  <blockquote class="frase-texto gen-reveal">« El tiempo no se detiene jamás, ¿por qué tendríamos que hacerlo nosotros? »</blockquote>
+<!-- RELOJ EN VIVO + FRASE (estilo TAG Heuer): Invicta Pro Diver dibujado en SVG que marca la hora de Panama -->
+<section id="hora" class="hora" aria-label="Hora de Panamá">
+  <div class="hora-marco">
+    <span class="hora-esq e1"></span><span class="hora-esq e2"></span><span class="hora-esq e3"></span><span class="hora-esq e4"></span>
+    <div class="hora-reloj" id="reloj-vivo" role="img" aria-label="Reloj Invicta Pro Diver marcando la hora de Panamá"></div>
+    <div class="hora-txt">
+      <img class="hora-logo" src="img/logo.png" alt="Aphillips Store" loading="lazy">
+      <blockquote class="hora-frase">« El tiempo no se detiene jamás, ¿por qué tendríamos que hacerlo nosotros? »</blockquote>
+      <p class="hora-zona">Hora de Panamá · <span id="hora-digital">--:--</span></p>
+    </div>
+  </div>
 </section>
 
 <div class="wrap" id="catalogo">

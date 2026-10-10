@@ -35,7 +35,7 @@ scripts/auditar-catalogo-publico.js   auditoria/limpieza manual de catalogo_publ
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
 css/panel/            base, componentes, finanzas, auth, modales, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
-                      destacados, listado, filtros, marcas, pie (en ese orden)
+                      destacados, listado, filtros, marcas, pie, hora (en ese orden)
 js/firebase.js        configuracion unica de Firebase; exporta firebase y db
 js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 ```
@@ -93,6 +93,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `cuenta.js` | Panel "Mi cuenta" (solo diseno, login de clientes pendiente) |
 | `header.js` | Encabezado transparente sobre el hero y efecto de la portada al bajar |
 | `menu.js` | Menu del celular (boton hamburguesa) |
+| `reloj-vivo.js` | Reloj Invicta Pro Diver dibujado en SVG que marca la hora de Panama (UTC-5) en la seccion `#hora`; solo se anima cuando esta en pantalla |
 | `ui.js` | `toast`, `vibrar`, escape de HTML |
 
 ## Colecciones de Firestore

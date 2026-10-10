@@ -13,3 +13,4 @@ import './filtros.js';
 import './grid.js';
 import './modal.js';
 import './buscador.js';
+import './reloj-vivo.js';
