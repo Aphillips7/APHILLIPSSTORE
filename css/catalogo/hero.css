@@ -80,7 +80,7 @@
     .hero { min-height: 520px; }
     /* reloj mas pequeno y mas abajo para que no choque con el logo del encabezado;
        el borde de arriba de la foto se difumina en el negro del fondo */
-    .hero img { object-position: 50% 50%; transform: scale(.82); transform-origin: 50% 78%;
+    .hero img { object-position: 50% 50%; transform: translateY(-4.5%) scale(.8); transform-origin: 50% 78%;
       -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26%, #000 90%, transparent 100%), linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%);
       -webkit-mask-composite: source-in;
       mask-image: linear-gradient(to bottom, transparent 0, #000 26%, #000 90%, transparent 100%), linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%);
