@@ -1,0 +1,4 @@
+# Cloudflare / Node (carpeta cloudflare/)
+node_modules/
+.wrangler/
+.dev.vars
