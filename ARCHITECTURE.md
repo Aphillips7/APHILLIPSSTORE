@@ -1,7 +1,8 @@
 # Arquitectura de APHILLIPS STORE
 
 Web de reventa de relojes publicada en **GitHub Pages** (rama `main`), sin herramientas de
-compilacion. Usa **Firebase Firestore + Firebase Auth** (plan Spark, sin Storage).
+compilacion. Usa **Firebase Firestore + Firebase Auth** (plan Spark, sin Storage) y **Cloudflare**
+para las fotos (R2 + Worker, ver `cloudflare/README.md`). Dominio: `aphillipsstore.com`.
 
 - `index.html` — **panel interno** (PWA instalable): inventario, finanzas, clientes, contenido.
 - `catalogo.html` — **catalogo publico**: los clientes ven relojes y escriben por WhatsApp.
@@ -32,6 +33,7 @@ sw.js                 service worker (cache del "cascaron")
 firestore.rules       reglas de seguridad (se publican a mano en la consola)
 docs/PUBLICAR-REGLAS.md   pasos para publicar reglas y crear el admin
 scripts/auditar-catalogo-publico.js   auditoria/limpieza manual de catalogo_publico (consola)
+cloudflare/fotos-worker/   Worker que sube/borra fotos en R2 (api.aphillipsstore.com); fotos en fotos.aphillipsstore.com
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
 css/panel/            base, componentes, finanzas, auth, modales, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
@@ -60,7 +62,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `finanzas/historial.js` · `resumen.js` · `analisis.js` · `finanzas.js` | Sub-pantallas de Finanzas y saldo por metodo |
 | `inventario/lista.js` | Lista/vista por modelo, filtros, cambiar estado, eliminar |
 | `inventario/formulario.js` | Registrar/editar/duplicar unidad, vista previa de margen |
-| `inventario/fotos.js` | Subir foto (se comprime a JPEG base64 de max. 900 px) |
+| `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal |
 | `inventario/detalle.js` | Modal de detalle de una unidad |
 | `inventario/venta-modal.js` | Modal "vender" desde el inventario |
 | `inventario/reservas.js` | Reservar, abonos, completar y cancelar reserva |
@@ -112,7 +114,8 @@ No hay coleccion de pedidos.
 
 ### `inventario/{id}`
 `nombre, sku, coleccion, genero (hombre|mujer|unisex), mm, materialCaja, materialCorrea,
-colorEsfera, movimiento, agua, cristal, color, notas, foto (JPEG base64), eta (aaaa-mm-dd),
+colorEsfera, movimiento, agua, cristal, color, descripcion, notas, fotos (URLs en R2, en orden), foto
+(principal = fotos[0]; en unidades antiguas puede ser JPEG base64), eta (aaaa-mm-dd),
 ocultoCatalogo` y **privados**: `costo, importacion (aduana/envio), costoTotal, precio (venta
 objetivo), precioMin, margen (%), proveedor, serie, paqueteria, tracking, fecha (alta, d/m/aaaa),
 precioVenta, fechaVenta, reserva {clienteId, clienteNombre, precioAcordado, fechaInicio,
@@ -121,7 +124,7 @@ abonos:[{monto, fecha, metodoPago}]}, estado, _ts`.
 ### `catalogo_publico/{id}`
 Solo lo que devuelve `camposPublicos()` en `js/products.js`:
 `nombre, sku, coleccion, genero, mm, materialCaja, materialCorrea, colorEsfera, movimiento, agua,
-cristal, color, notas, eta, precio, foto, estado, _ts`. **Ojo: `notas` es publico.**
+cristal, color, notas, descripcion, eta, precio, foto, fotos, estado, _ts`. **Ojo: `notas` y `descripcion` son publicos.**
 
 ### `movimientos/{id}`
 `tipo` = `venta | compra | gasto | retiro | abono | traspaso | reserva_cancelada`, `desc, monto,
