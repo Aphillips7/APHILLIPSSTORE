@@ -102,9 +102,9 @@ var cont = document.getElementById('reloj-vivo');
 if(cont){
   cont.innerHTML = dibujarReloj();
   var gH = document.getElementById('rv-h'), gM = document.getElementById('rv-m'), gS = document.getElementById('rv-s');
-  var fechaEl = document.getElementById('rv-fecha'), digital = document.getElementById('hora-digital');
+  var fechaEl = document.getElementById('rv-fecha');
   var reducido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var visible = false, raf = 0, ultimoTexto = '', ultimaFecha = -1;
+  var visible = false, raf = 0, ultimaFecha = -1;
 
   var actualizar = function(){
     var t = new Date(Date.now() - 5 * 3600000);   // Panama = UTC-5 todo el ano
@@ -115,8 +115,6 @@ if(cont){
     gS.setAttribute('transform', 'rotate('+n(sg * 6)+' '+C+' '+C+')');
     var dia = t.getUTCDate();
     if(dia !== ultimaFecha){ ultimaFecha = dia; fechaEl.textContent = dia; }
-    var h12 = h % 12 || 12, texto = h12 + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' a. m.' : ' p. m.');
-    if(texto !== ultimoTexto){ ultimoTexto = texto; if(digital) digital.textContent = texto; }
   };
   var ciclo = function(){ actualizar(); if(visible) raf = reducido ? setTimeout(ciclo, 1000) : requestAnimationFrame(ciclo); };
   var arrancar = function(){ if(visible) return; visible = true; ciclo(); };
