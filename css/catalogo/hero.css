@@ -78,7 +78,13 @@
   /* Celular: imagen vertical, texto en el espacio de abajo */
   @media (max-width: 820px) {
     .hero { min-height: 520px; }
-    .hero img { object-position: 50% 50%; }
+    /* reloj mas pequeno y mas abajo para que no choque con el logo del encabezado;
+       el borde de arriba de la foto se difumina en el negro del fondo */
+    .hero img { object-position: 50% 50%; transform: scale(.82); transform-origin: 50% 78%;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26%, #000 90%, transparent 100%), linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-image: linear-gradient(to bottom, transparent 0, #000 26%, #000 90%, transparent 100%), linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%);
+      mask-composite: intersect; }
     .hero::after { height: 150px; }
     .wrap { padding-top: 84px; }
     .hero-content { left: 24px; right: 24px; max-width: none; bottom: calc(max(5.5svh, 36px) + env(safe-area-inset-bottom, 0px)); }

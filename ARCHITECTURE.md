@@ -91,7 +91,8 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |
 | `cuenta.js` | Panel "Mi cuenta" (solo diseno, login de clientes pendiente) |
-| `header.js` | Encabezado transparente sobre el hero |
+| `header.js` | Encabezado transparente sobre el hero y efecto de la portada al bajar |
+| `menu.js` | Menu del celular (boton hamburguesa) |
 | `ui.js` | `toast`, `vibrar`, escape de HTML |
 
 ## Colecciones de Firestore

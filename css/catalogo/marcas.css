@@ -9,10 +9,12 @@
   .marca-foto img{width:100%;height:100%;object-fit:cover;object-position:50% 45%;display:block;transition:transform .9s var(--ease);}
   /* barra negra con el logo de la marca en blanco */
   .marca-txt{display:flex;align-items:center;justify-content:center;height:clamp(64px,6vw,92px);padding:0 12px;background:var(--black);}
-  .marca-logo{display:block;height:auto;max-height:62%;object-fit:contain;}
-  .logo-invicta{width:58%;}
-  .logo-bulova{width:36%;max-height:70%;}
-  .logo-technomarine{width:46%;}
+  /* Los tres logos con el mismo peso visual: Invicta es solo texto, Bulova y TechnoMarine llevan
+     un simbolo encima, por eso a esos se les da mas alto para que su nombre se vea del mismo tamano */
+  .marca-logo{display:block;width:auto;max-width:80%;object-fit:contain;}
+  .logo-invicta{height:clamp(14px,1.5vw,22px);}
+  .logo-bulova{height:clamp(26px,2.8vw,42px);}
+  .logo-technomarine{height:clamp(26px,2.8vw,42px);}
   .marca-card:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
   @media (hover:hover){ .marca-card:hover .marca-foto img{transform:scale(1.04);} }
   .marcas-grid .gen-reveal:nth-child(2){transition-delay:.1s;}
@@ -20,12 +22,16 @@
   @media (min-width:821px){
     .marcas-titulo{font-size:clamp(22px,1.9vw,30px);line-height:1.1;}
   }
+  /* === FRASE === */
+  body.vista-catalogo #frase{display:none;}
+  .frase{position:relative;z-index:1;background:#fff;padding:clamp(4px,1.5vw,24px) 20px clamp(56px,7vw,112px);text-align:center;}
+  .frase-texto{max-width:820px;margin:0 auto;font-size:clamp(20px,2.3vw,32px);font-style:italic;font-weight:300;line-height:1.35;color:var(--black);}
   /* celular: las tres tarjetas a la vista, mas pequenas */
   @media (max-width:820px){
     .marcas-grid{gap:6px;}
     .marca-foto{aspect-ratio:3/4;}
-    .marca-txt{height:44px;padding:0 6px;}
-    .logo-invicta{width:76%;}
-    .logo-bulova{width:50%;}
-    .logo-technomarine{width:64%;}
+    .marca-txt{height:46px;padding:0 6px;}
+    .logo-invicta{height:12px;}
+    .logo-bulova{height:24px;}
+    .logo-technomarine{height:24px;}
   }

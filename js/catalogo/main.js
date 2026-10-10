@@ -4,6 +4,7 @@ import './whatsapp.js';
 import './favoritos.js';
 import './cuenta.js';
 import './header.js';
+import './menu.js';
 import './metricas.js';
 import './datos.js';
 import './destacados.js';

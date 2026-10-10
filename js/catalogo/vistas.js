@@ -97,6 +97,22 @@ function irASeccion(id, e){
   var s = document.getElementById(id);
   if(s) s.scrollIntoView({behavior:'smooth'});
 }
+// Logo: siempre a la pagina principal, cerrando lo que este abierto (reloj, buscador, paneles, menu)
+function irAInicio(e){
+  if(e && e.preventDefault) e.preventDefault();
+  ['cerrarMenu','cerrarFavoritos','cerrarCuenta','cerrarFiltros','cerrarOrden'].forEach(function(f){ if(typeof window[f]==='function') window[f](); });
+  if(document.getElementById('site-header').classList.contains('search-open') && typeof window.toggleBuscador==='function'){
+    var bb = Array.prototype.find.call(document.querySelectorAll('.icon-btn[aria-label="Buscar"]'), function(x){ return x.offsetParent !== null; });
+    if(bb) window.toggleBuscador(bb);
+  }
+  var m = document.getElementById('modal');
+  if(m && m.classList.contains('open')){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); document.body.classList.remove('prod-abierto'); }
+  document.body.style.overflow = '';
+  history.replaceState(null, '', location.pathname);
+  document.body.classList.remove('vista-catalogo');
+  window.scrollTo(0, 0);
+  _refrescarHeader();
+}
 function volverInicio(){
   if(history.state && history.state.vista){ history.back(); }
   else { history.replaceState(null, '', location.pathname + location.search); mostrarInicio(true); }
@@ -132,6 +148,6 @@ document.addEventListener('click', function(e){
 // si abren la pagina directo en #hombre / #mujer / #todos / #marca-...
 setTimeout(function(){ if(_esHashCatalogo(location.hash)){ aplicarVistaDesdeHash(); } }, 0);
 
-export { _DESC_GEN, _filtroGenero, _filtroMarca, _genOk, _HASH_GEN, _MARCAS, _refrescarHeader, _TITULOS_GEN, aplicarVistaDesdeHash, irAGenero, irAMarca, irASeccion, mostrarCatalogo, mostrarInicio, setDescripcion, setGenero, setMarca, toggleDesc, volverInicio };
+export { _DESC_GEN, _filtroGenero, _filtroMarca, _genOk, _HASH_GEN, _MARCAS, _refrescarHeader, _TITULOS_GEN, aplicarVistaDesdeHash, irAGenero, irAInicio, irAMarca, irASeccion, mostrarCatalogo, mostrarInicio, setDescripcion, setGenero, setMarca, toggleDesc, volverInicio };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { irAGenero, irAMarca, irASeccion, toggleDesc, volverInicio });
+Object.assign(window, { irAGenero, irAInicio, irAMarca, irASeccion, toggleDesc, volverInicio });

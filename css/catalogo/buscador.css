@@ -10,15 +10,15 @@
   .search-panel-content { padding: 40px 24px; max-width: 1200px; margin: 0 auto; }
   
   .search-input-row { position: relative; border-bottom: 1px solid var(--border2); margin-bottom: 40px; padding-bottom: 10px; }
-  .search-input-row input { width: 100%; border: none; font-size: 18px; font-weight: 300; outline: none; padding-right: 40px; color: var(--black); font-family: inherit;}
-  .search-input-row input::placeholder { color: var(--muted2); }
+  .search-input-row input { width: 100%; border: none; border-radius: 0; background: transparent; font-size: 16px; font-weight: 400; letter-spacing: .01em; outline: none; padding: 0 40px 0 0; color: var(--black); font-family: var(--font-texto); }
+  .search-input-row input::placeholder { color: #8a8a8f; font-weight: 400; }
   .search-submit { position: absolute; right: 0; bottom: 10px; color: var(--muted2); }
 
   .search-layout { display: flex; gap: 60px; }
-  .search-layout h4 { font-size: var(--fs-etiqueta); letter-spacing: .04em; text-transform: uppercase; color: var(--black); margin-bottom: 24px; font-weight: 500; }
+  .search-layout h4 { font-size: var(--fs-etiqueta); letter-spacing: .02em; text-transform: uppercase; color: var(--black); margin-bottom: 24px; font-weight: 600; }
   
   .search-suggestions { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; gap: 18px; }
-  .search-suggestions a { text-decoration: none; color: #555; font-size: var(--fs-texto); font-weight: 400; transition: color var(--fast) var(--ease); }
+  .search-suggestions a { text-decoration: none; color: var(--black); font-size: 14px; font-weight: 400; transition: color var(--fast) var(--ease); }
   .search-suggestions a:hover { color: var(--black); }
 
   .search-bestsellers { flex: 1; min-width: 0; }
