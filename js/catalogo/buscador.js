@@ -58,7 +58,7 @@ function cargarBestsellers() {
   
   contenedor.innerHTML = muestras.map(r => {
     const precioHtml = r.estado === 'bajopedido' ? 'Consultar' : '$' + (r.precio || 0).toLocaleString();
-    const badge = r.estado === 'transito' ? 'EN CAMINO' : 'NUEVO';
+    const badge = r.estado === 'transito' ? 'EN TRÁNSITO' : (r.estado === 'bajopedido' ? 'BAJO PEDIDO' : 'DISPONIBLE');
     return `
       <div class="bs-card" onclick="abrir('${r.id}')">
         <img src="${r.foto || ''}" onerror="this.style.display='none'" />

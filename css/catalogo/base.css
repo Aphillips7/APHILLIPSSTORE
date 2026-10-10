@@ -11,6 +11,10 @@
     --fs-texto:13px;     /* parrafos y descripciones */
     --fs-etiqueta:12px;  /* etiquetas, nombres, precios, botones */
     --gris-texto:#6a6a6a;
+    /* Colores de las etiquetas de estado */
+    --estado-disponible:#067647;  /* verde */
+    --estado-transito:#b98900;    /* amarillo (oscurecido para que se lea sobre blanco) */
+    --estado-pedido:#d0021b;      /* rojo */
     --bg:#f7f7f8;--card:#ffffff;--border:#ececef;--border2:#dedee2;
     --black:#09090b;--text:#18181b;--muted:#71717a;--muted2:#a1a1aa;
     --green:#067647;--green-bg:rgba(6,118,71,0.08);

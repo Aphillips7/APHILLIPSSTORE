@@ -289,27 +289,50 @@
   <svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
 </a>
 
-<div id="modal">
-  <div class="modal-box">
-    <button class="btn-cerrar-x" onclick="cerrar()" aria-label="Cerrar" title="Cerrar">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
-    <div class="modal-foto" id="modal-foto"></div>
-    <div class="modal-body">
-      <div class="modal-info">
-        <div class="modal-badge" id="modal-badge" style="display:none;"></div>
-        <div class="modal-nombre" id="modal-nombre"></div>
-        <div class="modal-sub" id="modal-sub"></div>
-        <div class="modal-precio" id="modal-precio"></div>
-        <div class="specs" id="modal-specs"></div>
-        <div class="modal-notas" id="modal-notas" style="display:none;"></div>
-      </div>
-      <a class="btn-wa" id="modal-wa" href="#" target="_blank" rel="noopener" onclick="confirmarWa(this,event)">
+<!-- PAGINA DEL RELOJ (estilo TAG Heuer): se abre al tocar cualquier reloj -->
+<div id="modal" class="prod" role="dialog" aria-modal="true" aria-label="Detalle del reloj" aria-hidden="true">
+  <div class="prod-wrap">
+    <button type="button" class="cat-volver prod-volver" onclick="cerrar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Volver</button>
+    <div class="prod-top">
+      <div class="prod-foto" id="modal-foto"></div>
+      <div class="prod-info">
+        <div class="prod-cabeza">
+          <div class="prod-txt">
+            <span class="prod-eti" id="modal-badge"></span>
+            <h1 class="prod-nombre" id="modal-nombre"></h1>
+            <div class="prod-spec" id="modal-spec"></div>
+            <div class="prod-ref" id="modal-sub"></div>
+          </div>
+          <button type="button" class="btn-favorito prod-fav" id="modal-fav" aria-label="Guardar en favoritos"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        </div>
+        <div class="prod-precio" id="modal-precio"></div>
+        <a class="btn-wa" id="modal-wa" href="#" target="_blank" rel="noopener" onclick="confirmarWa(this,event)">
         <svg viewBox="0 0 448 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
-        <span id="modal-wa-texto">Me interesa · escribir por WhatsApp</span>
-      </a>
+        <span id="modal-wa-texto">Comprar por WhatsApp</span>
+        </a>
+        <p class="prod-nota" id="modal-notas"></p>
+      </div>
     </div>
+    <!-- Barras desplegables (Descripcion, Movimiento, Caja...) que arma modal.js segun la info del reloj -->
+    <div class="prod-detalles" id="modal-specs"></div>
   </div>
+  <section class="prod-garantias" aria-label="Garantias de compra">
+    <div class="prod-regla" aria-hidden="true"></div>
+    <div class="prod-gar-fila">
+      <div class="prod-gar">
+        <svg viewBox="0 0 48 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6h20v17H14zM34 12h6l5 6v5h-11"/><circle cx="20" cy="25" r="3" fill="#fff"/><circle cx="39" cy="25" r="3" fill="#fff"/><path d="M2 11h9M5 16h6M1 21h10"/></svg>
+        <span>Envío a todo el país</span>
+      </div>
+      <div class="prod-gar">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="M16 3l11 6v14l-11 6-11-6V9z"/><path d="M5 9l11 6 11-6M16 15v14"/></svg>
+        <span>Caja</span>
+      </div>
+      <div class="prod-gar">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3l11 6v14l-11 6-11-6V9z"/><path d="M11 16l4 4 7-8"/></svg>
+        <span>Auténtico</span>
+      </div>
+    </div>
+  </section>
 </div>
 
 <div id="modal-favoritos" aria-hidden="true">

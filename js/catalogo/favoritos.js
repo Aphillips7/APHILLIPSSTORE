@@ -39,7 +39,7 @@ function renderListaFavoritos(){
   }
   cont.innerHTML = items.map(function(r){
     var precio = r.estado==='bajopedido' ? 'Bajo pedido' : '$'+(r.precio||0).toLocaleString();
-    var badge = r.estado==='transito' ? 'EN CAMINO' : (r.estado==='bajopedido' ? 'BAJO PEDIDO' : (r.estado==='vendido' ? 'VENDIDO' : 'NUEVO'));
+    var badge = r.estado==='transito' ? 'EN TRÁNSITO' : (r.estado==='bajopedido' ? 'BAJO PEDIDO' : (r.estado==='vendido' ? 'AGOTADO' : 'DISPONIBLE'));
     var sub = (r.coleccion||'') + (r.sku ? (r.coleccion?' · ':'')+'Ref. '+r.sku : '');
     var foto = r.foto ? '<img class="fav-fila-foto" src="'+r.foto+'" alt="" onclick="verDesdeFavoritos(\''+r.id+'\')" onerror="this.style.display=\'none\'" />' : '<div class="fav-fila-foto" onclick="verDesdeFavoritos(\''+r.id+'\')"></div>';
     return '<div class="fav-fila">'+foto+

@@ -41,7 +41,7 @@
   .card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
   .card-precio{font-weight:700;font-size:16px;color:var(--black);margin-top:8px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
   .card-precio.cotizar{font-weight:700;font-style:italic;font-size:12.5px;color:var(--red);letter-spacing:0;}
-  .card-cotizar{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r-pill);padding:7px 10px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;margin-top:8px;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
+  .card-cotizar{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:var(--black);color:#fff;border:none;border-radius:0;padding:9px 10px;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
   .card-cotizar svg{width:13px;height:13px;flex-shrink:0;}
   .card-cotizar:active{transform:scale(0.96);}
   .card-agotado .card-nombre,.card-agotado .card-precio{color:var(--muted);}

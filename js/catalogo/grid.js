@@ -2,10 +2,10 @@ import { relojes } from './datos.js';
 import { _favoritos, toggleFavorito } from './favoritos.js';
 import { _busOk, _facOk, _orden, actualizarFltUI } from './filtros.js';
 import { _io } from './metricas.js';
-import { abrir } from './modal.js';
+import { abrir, etiquetaEstado } from './modal.js';
 import { _genOk } from './vistas.js';
 import { cotizarDirecto } from './whatsapp.js';
-import { ordenPeso, textoETA } from '../products.js';
+import { ordenPeso } from '../products.js';
 
 let _vistaCompacta = false;
 var _nItems = 0; // cuantos relojes quedan visibles tras filtros (lo usa el panel de filtros)
@@ -38,7 +38,7 @@ function render(){
     var agotado = r.estado==='vendido';
     var pedido = r.estado==='bajopedido';
     var foto = r.foto ? '<img src="'+r.foto+'" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'<span class=sinfoto>Sin foto</span>\'" />' : '<span class="sinfoto">Sin foto</span>';
-    var eti = r.estado==='transito' ? textoETA(r.eta) : (agotado ? 'Agotado' : (pedido ? 'Bajo pedido' : 'Nuevo'));
+    var eti = etiquetaEstado(r.estado);
     var favBtn = '<button class="btn-favorito'+(_favoritos.has(r.id)?' activo':'')+'" data-fav-id="'+r.id+'" onclick="toggleFavorito(event,\''+r.id+'\')" aria-label="Favorito"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-6.7-4.35-9.33-8.2C1 10.28 1.5 6.8 4.36 5.1 6.6 3.77 9.3 4.5 11 6.3l1 1.05 1-1.05c1.7-1.8 4.4-2.53 6.64-1.2 2.86 1.7 3.36 5.18 1.69 7.7C18.7 16.65 12 21 12 21z"/></svg></button>';
     var spec = [r.movimiento, r.mm ? r.mm+' mm' : '', r.materialCaja].filter(Boolean).join(', ');
     if(!spec) spec = (r.sku?'Ref. '+r.sku:'')+(r.coleccion?(r.sku?' · ':'')+r.coleccion:'');
@@ -48,7 +48,7 @@ function render(){
       '<div class="card-info ci-tag">'+
         favBtn+
         '<div class="ci-txt">'+
-          '<span class="ci-eti'+(agotado?' gris':'')+'">'+eti+'</span>'+
+          '<span class="ci-eti '+eti.cls+'">'+eti.txt+'</span>'+
           '<div class="ci-nombre">'+(r.nombre||'')+'</div>'+
           (spec?'<div class="ci-spec">'+spec+'</div>':'')+
           precioHtml+
