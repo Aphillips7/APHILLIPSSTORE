@@ -3,7 +3,7 @@
   body.vista-catalogo .wrap{max-width:1560px;padding-left:clamp(16px,1.6vw,24px);padding-right:clamp(16px,1.6vw,24px);}
   .cat-head{display:block;margin-bottom:0;}
   .cat-eyebrow{display:block;font-size:14px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--black);line-height:1.2;}
-  .cat-titulo{font-family:'Syne','Jost',Arial,sans-serif;font-weight:800;font-size:clamp(28px,2.6vw,42px);letter-spacing:.005em;line-height:1.08;text-transform:uppercase;color:var(--black);margin-top:2px;}
+  .cat-titulo{font-family:var(--font-titulo);font-weight:800;font-size:clamp(28px,2.6vw,42px);letter-spacing:.005em;line-height:1.08;text-transform:uppercase;color:var(--black);margin-top:2px;}
   .cat-desc{display:flex;align-items:flex-end;gap:14px;max-width:560px;margin-top:clamp(14px,1.4vw,20px);}
   .cat-desc p{flex:1;font-size:15px;line-height:1.45;color:#8a8a90;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
   .cat-desc.abierta p{display:block;-webkit-line-clamp:unset;overflow:visible;}
