@@ -15,7 +15,7 @@
   .search-submit { position: absolute; right: 0; bottom: 10px; color: var(--muted2); }
 
   .search-layout { display: flex; gap: 60px; }
-  .search-layout h4 { font-size: 11px; letter-spacing: 1.5px; color: #333; margin-bottom: 24px; font-weight: 500; }
+  .search-layout h4 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #333; margin-bottom: 24px; font-weight: 600; }
   
   .search-suggestions { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; gap: 18px; }
   .search-suggestions a { text-decoration: none; color: #555; font-size: 14px; font-weight: 400; transition: color var(--fast) var(--ease); }

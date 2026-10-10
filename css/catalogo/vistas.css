@@ -6,7 +6,7 @@
   .cat-volver:hover{color:var(--black);}
   .cat-volver svg{width:16px;height:16px;transition:transform var(--fast) var(--ease);}
   .cat-volver:hover svg{transform:translateX(-3px);}
-  .cat-titulo{font-size:clamp(24px,2.4vw,34px);font-weight:300;letter-spacing:.06em;text-transform:uppercase;color:var(--black);line-height:1.2;}
+  .cat-titulo{font-family:var(--font-titulo);font-weight:800;text-transform:uppercase;color:var(--black);}
   .cat-cuenta{font-size:15px;color:var(--muted);}
   .fav-fila{position:relative;display:flex;align-items:center;gap:24px;padding:24px;background:#fff;border:1px solid var(--border2);margin-bottom:16px;}
   .fav-fila:last-child{border-bottom:1px solid var(--border2);margin-bottom:0;}

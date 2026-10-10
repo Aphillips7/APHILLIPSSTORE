@@ -1,8 +1,9 @@
-  /* 1. Importación correcta de la tipografía Jost */
-  @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap');
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&display=swap');
+  /* 1. Tipografias de la marca: Syne (titulos) + Jost (subtitulos y textos) */
+  @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap');
 
   :root{
+    --font-titulo:'Syne','Jost',Arial,sans-serif;
+    --font-texto:'Jost','Futura',Arial,sans-serif;
     --bg:#f7f7f8;--card:#ffffff;--border:#ececef;--border2:#dedee2;
     --black:#09090b;--text:#18181b;--muted:#71717a;--muted2:#a1a1aa;
     --green:#067647;--green-bg:rgba(6,118,71,0.08);
@@ -24,7 +25,7 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Jost', 'Futura', Arial, sans-serif;
+    font-family: var(--font-texto);
     font-size: 15px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
