@@ -24,18 +24,18 @@
   .modal-badge.camino{background:var(--bronze-bg);color:var(--bronze);font-style:italic;}
   .modal-badge.agotado{background:var(--gray-bg);color:var(--gray);}
   .modal-badge.pedido{background:var(--gray-bg);color:var(--gray);font-style:italic;}
-  .modal-nombre{font-family:var(--font-titulo);font-weight:800;font-size:21px;color:var(--black);letter-spacing:.005em;line-height:1.12;text-transform:uppercase;}
-  .modal-sub{font-size:13px;color:var(--muted);margin-top:3px;}
+  .modal-nombre{font-family:var(--font-titulo);font-weight:800;font-size:var(--fs-titulo);color:var(--black);letter-spacing:.01em;line-height:24px;text-transform:uppercase;}
+  .modal-sub{font-size:var(--fs-etiqueta);color:var(--gris-texto);margin-top:4px;line-height:16px;}
   .sku-copy{cursor:pointer;border-bottom:1px dashed var(--muted2);}
   .sku-copy:hover{color:var(--black);}
-  .modal-precio{font-weight:900;font-size:26px;color:var(--black);margin:14px 0;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
-  .modal-precio.cotizar{font-weight:700;font-style:italic;font-size:17px;color:var(--slate);letter-spacing:0;}
+  .modal-precio{font-weight:500;font-size:var(--fs-titulo-2);color:var(--black);margin:14px 0;font-variant-numeric:tabular-nums;}
+  .modal-precio.cotizar{font-weight:500;font-style:italic;font-size:var(--fs-seccion);color:var(--slate);}
   .specs{margin:16px 0;}
-  .spec-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;gap:14px;}
-  .spec-row span:first-child{color:var(--muted2);font-weight:400;}
-  .spec-row span:last-child{color:var(--black);font-weight:700;text-align:right;}
-  .modal-notas{background:var(--bg);border-radius:var(--r-md);padding:12px 14px;font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
-  .btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r-md);padding:15px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease),background var(--fast) var(--ease);text-decoration:none;margin-top:22px;}
+  .spec-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:var(--fs-etiqueta);gap:14px;}
+  .spec-row span:first-child{color:var(--gris-texto);font-weight:400;}
+  .spec-row span:last-child{color:var(--black);font-weight:500;text-align:right;}
+  .modal-notas{background:var(--bg);border-radius:var(--r-md);padding:12px 14px;font-size:var(--fs-etiqueta);color:var(--gris-texto);margin-bottom:16px;line-height:18px;}
+  .btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r-md);padding:15px;font-family:inherit;font-size:var(--fs-texto);font-weight:600;cursor:pointer;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease),background var(--fast) var(--ease);text-decoration:none;margin-top:22px;}
   .btn-wa.confirmando{background:#0d5c3b;}
   .btn-wa svg{width:19px;height:19px;flex-shrink:0;}
   @media (hover:hover){ .btn-wa:hover{transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(6,118,71,0.45);} }
@@ -49,15 +49,13 @@
     .modal-info{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;}
     .btn-cerrar-x{top:20px;right:20px;width:36px;height:36px;}
     .modal-badge{margin-bottom:14px;}
-    .modal-nombre{font-size:26px;}
-    .modal-sub{font-size:13px;margin-top:5px;}
-    .modal-precio{font-size:33px;margin:20px 0 22px;}
-    .modal-precio.cotizar{font-size:19px;}
+    .modal-sub{margin-top:5px;}
+    .modal-precio{margin:20px 0 22px;}
     .specs{background:transparent;border-radius:0;padding:0;margin:0 0 18px;display:grid;grid-template-columns:1fr 1fr;column-gap:42px;}
-    .spec-row{padding:10px 0;font-size:12.5px;}
+    .spec-row{padding:10px 0;}
     .spec-row:last-child{border-bottom:none;}
-    .modal-notas{font-size:12.5px;padding:13px 15px;margin-bottom:0;line-height:1.55;}
-    .btn-wa{padding:16px;font-size:14.5px;margin-top:30px;}
+    .modal-notas{padding:13px 15px;margin-bottom:0;}
+    .btn-wa{padding:16px;margin-top:30px;}
   }
   footer{text-align:center;color:var(--muted2);font-size:12px;padding:30px 0 10px;}
 

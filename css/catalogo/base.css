@@ -4,6 +4,13 @@
   :root{
     --font-titulo:'Syne','Jost',Arial,sans-serif;
     --font-texto:'Jost','Futura',Arial,sans-serif;
+    /* Escala de tamanos (tomada de tagheuer.com; es fija, igual en PC y celular) */
+    --fs-titulo:22px;    /* titulos principales: portada, listado, generos, favoritos, nombre del reloj */
+    --fs-titulo-2:18px;  /* titulos de paneles: Filtros, Ordenar por */
+    --fs-seccion:14px;   /* titulos pequenos de seccion */
+    --fs-texto:13px;     /* parrafos y descripciones */
+    --fs-etiqueta:12px;  /* etiquetas, nombres, precios, botones */
+    --gris-texto:#6a6a6a;
     --bg:#f7f7f8;--card:#ffffff;--border:#ececef;--border2:#dedee2;
     --black:#09090b;--text:#18181b;--muted:#71717a;--muted2:#a1a1aa;
     --green:#067647;--green-bg:rgba(6,118,71,0.08);
@@ -51,11 +58,11 @@
 
   .menu-btn, .icon-btn { background: none; border: none; cursor: pointer; color: #333; display: flex; align-items: center; justify-content: center; padding: 4px; transition: color var(--fast) var(--ease); }
   .menu-btn:hover, .icon-btn:hover { color: var(--black); }
-  .desktop-link { font-size: 11px; font-weight: 500; letter-spacing: 1px; color: #555; cursor: pointer; text-decoration: none; }
+  .desktop-link { font-size: var(--fs-etiqueta); font-weight: 500; letter-spacing: 1px; color: #555; cursor: pointer; text-decoration: none; }
   .desktop-link:hover { color: var(--black); }
 
   .header-bottom { display: flex; justify-content: center; gap: 32px; padding: 0 24px 16px; max-width: 1200px; margin: 0 auto; }
-  .header-bottom a { text-decoration: none; font-size: 11px; font-weight: 500; letter-spacing: 1px; color: #555; transition: all var(--fast) var(--ease); border-bottom: 1px solid transparent; padding-bottom: 2px; }
+  .header-bottom a { text-decoration: none; font-size: var(--fs-etiqueta); font-weight: 500; letter-spacing: 1px; color: #555; transition: all var(--fast) var(--ease); border-bottom: 1px solid transparent; padding-bottom: 2px; }
   .header-bottom a:hover { color: var(--black); border-bottom: 1px solid var(--black); }
 
   /* Clases para controlar qué se ve en PC vs Celular */

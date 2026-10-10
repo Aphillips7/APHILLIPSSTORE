@@ -7,15 +7,15 @@
   .cat-volver svg{width:16px;height:16px;transition:transform var(--fast) var(--ease);}
   .cat-volver:hover svg{transform:translateX(-3px);}
   .cat-titulo{font-family:var(--font-titulo);font-weight:800;text-transform:uppercase;color:var(--black);}
-  .cat-cuenta{font-size:15px;color:var(--muted);}
+  .cat-cuenta{font-size:var(--fs-etiqueta);color:var(--muted);}
   .fav-fila{position:relative;display:flex;align-items:center;gap:24px;padding:24px;background:#fff;border:1px solid var(--border2);margin-bottom:16px;}
   .fav-fila:last-child{border-bottom:1px solid var(--border2);margin-bottom:0;}
   .fav-fila-foto{width:clamp(96px,11vw,154px);aspect-ratio:1/1;height:auto;object-fit:cover;border-radius:0;flex-shrink:0;background:var(--bg);cursor:pointer;}
   .fav-fila-info{flex:1;min-width:0;padding-right:28px;cursor:pointer;}
   .fav-badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.1em;color:#555;background:var(--bg);padding:5px 10px;border-radius:var(--r-pill);margin-bottom:12px;}
-  .fav-fila-nombre{font-weight:500;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--black);line-height:1.35;overflow-wrap:anywhere;}
-  .fav-fila-sub{font-size:12.5px;color:var(--muted);margin-top:6px;}
-  .fav-fila-precio{font-size:13px;color:var(--black);margin-top:6px;}
+  .fav-fila-nombre{font-weight:500;font-size:var(--fs-etiqueta);letter-spacing:.02em;text-transform:uppercase;color:var(--black);line-height:14px;overflow-wrap:anywhere;}
+  .fav-fila-sub{font-size:var(--fs-etiqueta);color:var(--gris-texto);margin-top:4px;line-height:16px;}
+  .fav-fila-precio{font-size:var(--fs-etiqueta);color:var(--black);margin-top:4px;line-height:16px;}
   .fav-fila-quitar{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;line-height:0;transition:color var(--fast) var(--ease);}
   .fav-fila-quitar:hover{color:var(--black);}
   .fav-fila-quitar:active{color:var(--red);}
@@ -28,7 +28,7 @@
     .fav-fila{gap:16px;padding:16px;}
     .fav-fila-info{padding-right:22px;}
   }
-  .fav-vacio{color:var(--muted);font-size:13.5px;padding:14px 0 6px;line-height:1.6;}
+  .fav-vacio{color:var(--muted);font-size:var(--fs-texto);padding:14px 0 6px;line-height:1.6;}
   .card-foto img{width:100%;height:100%;object-fit:cover;}
   .card-foto .sinfoto{color:var(--muted2);font-size:12px;}
   .card-foto.agotada img{filter:grayscale(45%);opacity:0.55;}
