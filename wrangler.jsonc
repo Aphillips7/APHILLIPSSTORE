@@ -1,9 +1,9 @@
-// Tienda en Cloudflare (aphillipsstore.com): sirve los archivos de este repositorio.
+// Tienda en Cloudflare (aphillipsstore.com): Worker "aphillipsstore", conectado a GitHub (Workers Builds).
 // Se publica sola con cada push a main (Workers Builds) o a mano con:  npx wrangler@4 deploy
 // El Worker de fotos (api.aphillipsstore.com) esta aparte, en cloudflare/fotos-worker/.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "aphillips-tienda",
+  "name": "aphillipsstore",
   "main": "cloudflare/tienda-worker/index.js",
   "compatibility_date": "2026-09-01",
   "workers_dev": false,
