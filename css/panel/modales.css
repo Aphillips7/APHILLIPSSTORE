@@ -1,0 +1,10 @@
+  /* MODALES */
+  #inv-modal{display:none;position:fixed;inset:0;background:rgba(9,9,11,0.30);backdrop-filter:blur(6px);z-index:200;overflow-y:auto;padding:32px 16px;animation:fadeIn var(--base) var(--ease);}
+  #inv-modal>div{max-width:580px;margin:0 auto;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-xl);overflow:hidden;animation:popIn var(--slow) var(--ease);}
+  #venta-overlay,#reserva-overlay,#abono-overlay,#reglas-overlay{display:none;position:fixed;inset:0;background:rgba(9,9,11,0.42);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+  #venta-overlay.open,#reserva-overlay.open,#abono-overlay.open,#reglas-overlay.open{display:flex;animation:fadeIn var(--base) var(--ease);}
+  #venta-overlay.open>div,#reserva-overlay.open>div,#abono-overlay.open>div,#reglas-overlay.open>div{animation:popIn var(--slow) var(--ease);border-radius:16px !important;box-shadow:var(--shadow-xl) !important;}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}
+  }

@@ -1,0 +1,39 @@
+  /* === PANEL LATERAL DE FAVORITOS (estilo Omega) === */
+  #modal-favoritos,#panel-cuenta{position:fixed;top:var(--header-h,99px);left:0;right:0;bottom:0;z-index:149;display:flex;justify-content:flex-end;background:rgba(9,9,11,0.38);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s var(--ease),visibility 0s linear .45s;}
+  #modal-favoritos.open,#panel-cuenta.open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .35s var(--ease),visibility 0s;}
+  .fav-drawer{position:relative;display:flex;flex-direction:column;width:min(47vw,680px);min-width:440px;height:100%;background:var(--bg);box-shadow:-14px 0 40px -14px rgba(9,9,11,0.28);transform:translateX(100%);transition:transform .45s var(--ease);}
+  #modal-favoritos.open .fav-drawer,#panel-cuenta.open .fav-drawer{transform:translateX(0);}
+  .fav-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:42px 96px 0 40px;}
+  .fav-titulo{font-size:clamp(22px,2vw,28px);font-weight:300;letter-spacing:.05em;text-transform:uppercase;color:var(--black);line-height:1.2;}
+  .fav-cuenta{font-size:15px;font-weight:400;color:var(--muted);}
+  .fav-cerrar{position:absolute;top:16px;right:24px;width:48px;height:48px;border-radius:50%;border:1px solid var(--border2);background:#fff;color:var(--black);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background var(--fast) var(--ease),border-color var(--fast) var(--ease),transform var(--fast) var(--ease);}
+  .fav-cerrar:hover{background:var(--black);border-color:var(--black);color:#fff;}
+  .fav-cerrar:active{transform:scale(0.92);}
+  .fav-cerrar svg{width:18px;height:18px;}
+  .fav-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:34px 40px 24px;}
+  .fav-foot{padding:24px 40px calc(24px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border2);background:var(--bg);}
+  .fav-foot .btn-wa{margin:0;border-radius:0;padding:18px;font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
+  /* === PANEL DE CUENTA (estilo Omega) === */
+  .cta-seccion{margin:0;}
+  .cta-titulo{font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--black);margin-bottom:26px;}
+  .cta-campo{position:relative;margin-bottom:22px;}
+  .cta-campo input{width:100%;height:50px;background:#fff;border:1px solid var(--border2);border-radius:0;padding:18px 16px 0;font-family:inherit;font-size:16px;color:var(--black);outline:none;transition:border-color var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
+  .cta-campo input:focus{border-color:var(--black);box-shadow:0 0 0 1px var(--black);}
+  .cta-campo label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted);pointer-events:none;transition:top .18s var(--ease),font-size .18s var(--ease),transform .18s var(--ease);}
+  .cta-campo label b{font-weight:500;color:var(--black);}
+  .cta-campo input:focus + label,.cta-campo input:not(:placeholder-shown) + label{top:9px;transform:none;font-size:11.5px;letter-spacing:.04em;}
+  .cta-fila{display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
+  .cta-btn{display:inline-flex;align-items:center;justify-content:center;min-width:120px;padding:17px 30px;font-family:inherit;font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1px solid var(--black);transition:background-color .25s var(--ease),color .25s var(--ease),transform .12s var(--ease);}
+  .cta-btn.primario{background:var(--black);color:#fff;}
+  .cta-btn.primario:hover{background:#fff;color:var(--black);}
+  .cta-btn.secundario{background:#fff;color:var(--black);border-color:var(--border2);}
+  .cta-btn.secundario:hover{background:var(--black);color:#fff;border-color:var(--black);}
+  .cta-btn:active{transform:scale(0.97);}
+  .cta-link{font-family:inherit;font-size:14px;font-weight:500;color:var(--black);background:none;border:none;border-bottom:1px solid var(--border2);padding:0 0 2px;cursor:pointer;text-decoration:none;transition:border-color var(--fast) var(--ease);}
+  .cta-link:hover{border-bottom-color:var(--black);}
+  .cta-sep{border:none;border-top:1px solid var(--border2);margin:40px 0;}
+  .cta-texto{font-size:16px;line-height:1.6;color:#444;margin-bottom:26px;max-width:46ch;}
+  @media (max-width:820px){
+    .cta-sep{margin:32px 0;}
+    .cta-texto{font-size:15px;}
+  }

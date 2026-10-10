@@ -1,0 +1,24 @@
+window.addEventListener('resize', function(){
+  var hd = document.getElementById('site-header');
+  if(hd) document.documentElement.style.setProperty('--header-h', hd.offsetHeight + 'px');
+});
+
+  // === ENCABEZADO TRANSPARENTE SOBRE EL HERO ===
+  (function(){
+    var header = document.getElementById('site-header');
+    var hero = document.getElementById('hero');
+    var ticking = false;
+    function actualizar(){
+      ticking = false;
+      if(!header || !hero) return;
+      document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+      var heroVisible = hero.offsetHeight > 0; // en celular el hero esta oculto
+      var limite = hero.offsetHeight - header.offsetHeight;
+      header.classList.toggle('on-hero', heroVisible && window.scrollY < limite);
+    }
+    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(actualizar); } }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll);
+    window.addEventListener('load', actualizar);
+    actualizar();
+  })();
