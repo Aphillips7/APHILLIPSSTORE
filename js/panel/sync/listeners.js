@@ -68,8 +68,10 @@ function iniciarListenersFirebase(){
       // Solo una lectura confirmada por el servidor sirve para decidir que despublicar
       if(key==='inventario' && !(snap.metadata && snap.metadata.fromCache)) marcarInventarioCargado();
       refrescarVista(key);
-    }, function(){
-      setSyncStatus('Sin conexion','var(--red)','error');
+    }, function(err){
+      // permission-denied = las reglas de Firestore rechazan esta cuenta (no es la del admin)
+      if(err && err.code==='permission-denied') setSyncStatus('Sin permiso: esta cuenta no es la del administrador','var(--red)','error');
+      else setSyncStatus('Sin conexion','var(--red)','error');
     });
   });
 

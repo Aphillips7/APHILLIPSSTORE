@@ -5,6 +5,9 @@ let _backupCodesCache = null;
 function limpiarCacheAuth(){ _totpSecretCache = null; _backupCodesCache = null; }
 
 // =================== AUTENTICACION (TOTP) ===================
+// Codigo de 6 digitos que protege la pestana Sync. Se verifica en el navegador,
+// asi que es una capa extra de interfaz, no de seguridad: los datos los protege
+// el login de Firebase + firestore.rules (authSettings solo lo lee el admin).
 const B32_CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 function base32Encode(bytes){
   var bits='',output='';

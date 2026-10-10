@@ -22,6 +22,8 @@ function idxInv(id){ return state.inventario.findIndex(function(x){return x.id==
 function invNoExiste(){ alert('Ese reloj ya no esta en la lista (pudo actualizarse en otro dispositivo). Refresca e intenta de nuevo.'); try{renderInventario();}catch(e){} }
 
 
+// Solo decide que se MUESTRA (p. ej. la pestana Sync). No protege datos: cualquiera
+// puede editar este archivo en su navegador. La proteccion real es firestore.rules.
 const OWNER_EMAIL = 'aphillipsstore@gmail.com';
 
 function esPropietario(){
