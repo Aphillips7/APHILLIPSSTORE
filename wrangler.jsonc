@@ -1,0 +1,22 @@
+// Tienda en Cloudflare (aphillipsstore.com): sirve los archivos de este repositorio.
+// Se publica sola con cada push a main (Workers Builds) o a mano con:  npx wrangler@4 deploy
+// El Worker de fotos (api.aphillipsstore.com) esta aparte, en cloudflare/fotos-worker/.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "aphillips-tienda",
+  "main": "cloudflare/tienda-worker/index.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "aphillipsstore.com", "custom_domain": true },
+    { "pattern": "www.aphillipsstore.com", "custom_domain": true }
+  ],
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "not_found_handling": "none",
+    "run_worker_first": ["/", "/admin", "/admin/", "/manifest.json", "/index.html", "/catalogo.html"]
+  },
+  "observability": { "enabled": true }
+}

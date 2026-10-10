@@ -1,0 +1,13 @@
+# Archivos del repositorio que NO se publican en aphillipsstore.com
+.git
+.github
+.gitignore
+.assetsignore
+.wrangler
+node_modules
+wrangler.jsonc
+cloudflare
+scripts
+docs
+*.md
+firestore.rules

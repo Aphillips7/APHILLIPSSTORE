@@ -83,8 +83,10 @@ function renderMetricasCatalogo(){
   cont.innerHTML = html || '<div class="empty" style="padding:16px 0;"><span></span>Aun no hay suficientes datos para mostrar tendencias.</div>';
 }
 
+// Los links que se comparten con clientes siempre usan el dominio de la tienda
+var URL_TIENDA = 'https://aphillipsstore.com/';
 function copiarLinkCatalogo(){
-  var url = new URL('catalogo.html', window.location.href).href;
+  var url = URL_TIENDA;
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(url).then(function(){ alert('Link copiado:\n'+url); }).catch(function(){ prompt('Copia este link:', url); });
   } else {
@@ -92,7 +94,7 @@ function copiarLinkCatalogo(){
   }
 }
 function copiarLinkReloj(id){
-  var url = new URL('catalogo.html?id='+encodeURIComponent(id), window.location.href).href;
+  var url = URL_TIENDA+'?id='+encodeURIComponent(id);
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(url).then(function(){ alert('Link copiado:\n'+url); }).catch(function(){ prompt('Copia este link:', url); });
   } else {
