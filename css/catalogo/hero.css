@@ -16,6 +16,12 @@
   .hero-title { font-family: var(--font-titulo); font-size: var(--fs-titulo); font-weight: 800; letter-spacing: .01em; line-height: 24px; text-transform: uppercase; margin-bottom: 22px; }
   .hero-btn { display: inline-block; font-family: inherit; font-size: var(--fs-etiqueta); font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #fff; text-decoration: none; background: transparent; border: 1px solid #fff; padding: 13px 22px; cursor: pointer;
     transition: background-color .25s var(--ease), color .25s var(--ease), transform .12s var(--ease); }
+  /* Laptop/PC: la imagen ocupa toda la pantalla, asi que el texto de portada crece con el ancho */
+  @media (min-width: 821px) {
+    .hero-eyebrow { font-size: clamp(12px, 1vw, 16px); line-height: 1.2; margin-bottom: clamp(6px, .6vw, 10px); }
+    .hero-title { font-size: clamp(28px, 2.5vw, 40px); line-height: 1.1; margin-bottom: clamp(24px, 2.2vw, 34px); }
+    .hero-btn { font-size: clamp(12px, .85vw, 13px); padding: 14px 26px; }
+  }
   .hero-btn:hover, .hero-btn:focus-visible { background: #fff; color: var(--black); outline: none; }
   .hero-btn:active { background: #d4d4d8; border-color: #d4d4d8; color: var(--black); transform: scale(.97); }
   @media (prefers-reduced-motion: no-preference) {
