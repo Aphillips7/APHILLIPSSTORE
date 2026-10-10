@@ -65,6 +65,7 @@ const SHELL_FILES = [
   './js/panel/inventario/detalle.js',
   './js/panel/inventario/venta-modal.js',
   './js/panel/inventario/reservas.js',
+  './js/panel/inventario/transacciones.js',
   './js/panel/sync/sync.js',
   './js/panel/sync/listeners.js',
   './js/panel/sync/estado-sync.js',

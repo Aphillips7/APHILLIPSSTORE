@@ -12,7 +12,7 @@ import { renderResumen } from '../finanzas/resumen.js';
 import { renderChecklist, renderInicio } from '../inicio.js';
 import { renderInventario } from '../inventario/lista.js';
 import { COLECCIONES, state } from '../state.js';
-import { syncCatalogoPublico } from './catalogo-publico.js';
+import { cargarCatalogoPublicoRemoto, marcarInventarioCargado, syncCatalogoPublico } from './catalogo-publico.js';
 import { renderEspacioUsado } from './espacio.js';
 import { setSyncStatus } from './estado-sync.js';
 import { _lastSynced, _remoteIds, marcarSyncListo } from './sync.js';
@@ -65,11 +65,20 @@ function iniciarListenersFirebase(){
       items.sort(function(a,b){return (b._ts||0)-(a._ts||0);});
       _remoteIds[key]=ids;
       state[key]=items;
+      // Solo una lectura confirmada por el servidor sirve para decidir que despublicar
+      if(key==='inventario' && !(snap.metadata && snap.metadata.fromCache)) marcarInventarioCargado();
       refrescarVista(key);
     }, function(){
       setSyncStatus('Sin conexion','var(--red)','error');
     });
   });
+
+  // Lo que hay publicado de verdad en el catalogo (para limpiar lo que ya no debe verse)
+  db.collection('catalogo_publico').onSnapshot(function(snap){
+    if(snap.metadata && snap.metadata.fromCache) return;
+    cargarCatalogoPublicoRemoto(snap);
+    syncCatalogoPublico();
+  }, function(){ /* el catalogo publico es un extra; si falla no afecta el panel */ });
 
   db.collection('config').doc('main').onSnapshot(function(doc){
     if(!doc.exists) return;

@@ -2,6 +2,7 @@
 import { poblarSelectClientes } from '../clientes/clientes.js';
 import { renderInicio } from '../inicio.js';
 import { renderInventario } from './lista.js';
+import { avisarError, cambiarEstadoSeguro } from './transacciones.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 
 var _ventaModalIdx=null;
@@ -31,18 +32,24 @@ function actualizarVentaModalPreview(costo){
   } else {prev.style.display='none';}
 }
 function cerrarVentaModal(){document.getElementById('venta-overlay').classList.remove('open');_ventaModalIdx=null;renderInventario();}
-function confirmarVentaModal(){
+async function confirmarVentaModal(){
   if(_ventaModalIdx===null)return;
+  var id=_ventaModalIdx;
   var precio=parseFloat(document.getElementById('venta-modal-precio').value);
   if(!precio||precio<=0){document.getElementById('venta-modal-precio').style.borderColor='var(--red)';document.getElementById('venta-modal-precio').focus();return;}
   var canal=document.getElementById('venta-modal-canal').value;
   var metodoPago=document.getElementById('venta-modal-metodo')?document.getElementById('venta-modal-metodo').value:'';
   var clienteId=document.getElementById('venta-modal-cliente')?document.getElementById('venta-modal-cliente').value:'';
   var cliente=clienteId?state.clientes.find(c=>c.id===clienteId):null;
-  var i=idxInv(_ventaModalIdx);
+  var i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarVentaModal(); return; }
   var p=state.inventario[i];
-  state.inventario[i].estado='vendido';state.inventario[i].precioVenta=precio;state.inventario[i].fechaVenta=new Date().toLocaleDateString('es-MX');
+  var fechaVenta=new Date().toLocaleDateString('es-MX');
+  try{ await cambiarEstadoSeguro(id, p.estado, {estado:'vendido', precioVenta:precio, fechaVenta:fechaVenta}); }
+  catch(e){ avisarError(e); cerrarVentaModal(); return; }
+  i=idxInv(id);
+  if(i===-1){ invNoExiste(); cerrarVentaModal(); return; }
+  state.inventario[i].estado='vendido';state.inventario[i].precioVenta=precio;state.inventario[i].fechaVenta=fechaVenta;
   save('inventario');
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,metodoPago:metodoPago,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:clienteId||null,clienteNombre:cliente?cliente.nombre:'',fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');

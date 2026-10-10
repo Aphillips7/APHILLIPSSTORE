@@ -2,6 +2,7 @@
 import { poblarSelectClientes } from '../clientes/clientes.js';
 import { renderPickerCompra } from './registrar-compra.js';
 import { renderInicio } from '../inicio.js';
+import { avisarError, cambiarEstadoSeguro } from '../inventario/transacciones.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 
 function selTipo(tipo, btn) {
@@ -116,7 +117,7 @@ function actualizarPreview() {
 }
 
 // =================== REGISTRAR VENTA ===================
-function registrarMovimiento() {
+async function registrarMovimiento() {
   var invIdx = document.getElementById('fin-inv-index').value;
   if (invIdx === '') { alert('Selecciona un reloj del inventario primero.'); return; }
   var i = idxInv(invIdx);
@@ -128,11 +129,16 @@ function registrarMovimiento() {
   var clienteId = document.getElementById('fin-cliente') ? document.getElementById('fin-cliente').value : '';
   var cliente = clienteId ? state.clientes.find(c=>c.id===clienteId) : null;
   if (!monto || monto <= 0) { alert('Ingresa el precio de venta.'); return; }
+  var fechaVenta = new Date().toLocaleDateString('es-MX');
+  try { await cambiarEstadoSeguro(p.id, p.estado, { estado:'vendido', precioVenta:monto, fechaVenta:fechaVenta }); }
+  catch (e) { avisarError(e); limpiarSeleccion(); return; }
+  i = idxInv(invIdx);
+  if (i === -1) { invNoExiste(); limpiarSeleccion(); return; }
   state.movimientos.unshift({ id:idAleatorio('mov'), _ts:Date.now(), tipo:'venta', desc: p.nombre + (p.sku ? ' · Ref. '+p.sku : ''), monto: monto, canal: canal, metodoPago: metodoPago, costo: p.costoTotal || 0, precioObjetivo: p.precio||0, clienteId: clienteId||null, clienteNombre: cliente?cliente.nombre:'', fecha: new Date().toLocaleDateString('es-MX') });
   save('movimientos');
   state.inventario[i].estado = 'vendido';
   state.inventario[i].precioVenta = monto;
-  state.inventario[i].fechaVenta = new Date().toLocaleDateString('es-MX');
+  state.inventario[i].fechaVenta = fechaVenta;
   save('inventario');
   limpiarSeleccion();
   renderInicio();
