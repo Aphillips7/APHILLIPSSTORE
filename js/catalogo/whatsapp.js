@@ -8,6 +8,10 @@ const WHATSAPP_NUM = '50762615442';
 // Boton flotante de WhatsApp
 document.getElementById('fab-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('Hola! Tengo una pregunta sobre el catalogo de relojes.');
 document.getElementById('fab-wa').addEventListener('click', function(){ vibrar(10); });
+// Enlaces de contacto del encabezado y del pie de pagina
+document.querySelectorAll('.wa-link').forEach(function(a){
+  a.href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('Hola! Tengo una pregunta sobre Aphillips Store.');
+});
 
 // =================== CONFIRMACION AL ABRIR WHATSAPP ===================
 function confirmarWa(el, e){

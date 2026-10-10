@@ -3,7 +3,7 @@ import { _favoritos, toggleFavorito } from './favoritos.js';
 import { _busOk, _facOk, _orden, actualizarFltUI } from './filtros.js';
 import { _io } from './metricas.js';
 import { abrir, etiquetaEstado } from './modal.js';
-import { _genOk } from './vistas.js';
+import { _filtroMarca, _genOk, _MARCAS } from './vistas.js';
 import { cotizarDirecto } from './whatsapp.js';
 import { ordenPeso } from '../products.js';
 
@@ -30,7 +30,13 @@ function render(){
   var _cc = document.getElementById('cat-cuenta');
   if(_cc) _cc.textContent = relojes.length ? items.length+' reloj'+(items.length===1?'':'es') : '';
   if(!items.length){
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><span>&#9082;</span>'+(relojes.length?'Sin resultados para tu busqueda.':'No hay relojes disponibles por el momento.')+'</div>';
+    var bus = document.getElementById('buscador'), hayBusqueda = bus && bus.value.trim();
+    var msg;
+    if(!relojes.length) msg = 'No hay relojes disponibles por el momento.';
+    else if(hayBusqueda) msg = 'Sin resultados para tu búsqueda. Prueba con otra marca, modelo o material.';
+    else if(_filtroMarca && _MARCAS[_filtroMarca]) msg = '<b>Aún no hay relojes '+_MARCAS[_filtroMarca].nombre+' en el catálogo.</b>Muy pronto tendremos novedades de esta marca. Si buscas un modelo en específico, escríbenos por WhatsApp y te ayudamos a conseguirlo.';
+    else msg = 'No hay relojes con estos filtros.';
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1;">'+msg+'</div>';
     actualizarFltUI();
     return;
   }

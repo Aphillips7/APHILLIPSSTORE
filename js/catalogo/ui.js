@@ -11,4 +11,7 @@ function toast(msg){
 
 function _destEsc(t){ return String(t==null?'':t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
-export { _destEsc, toast, vibrar };
+// minusculas y sin acentos, para comparar textos ("Automático" = "automatico")
+function normalizar(t){ return String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+export { _destEsc, normalizar, toast, vibrar };
