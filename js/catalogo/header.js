@@ -16,7 +16,11 @@ window.addEventListener('resize', function(){
       var limite = hero.offsetHeight - header.offsetHeight;
       header.classList.toggle('on-hero', heroVisible && window.scrollY < limite);
       // efecto Omega: cuanto se ha cubierto la portada (0 = nada, 1 = cubierta)
-      if(heroVisible) hero.style.setProperty('--hero-p', Math.min(1, Math.max(0, window.scrollY / hero.offsetHeight)).toFixed(3));
+      if(heroVisible){
+        var y = Math.min(hero.offsetHeight, Math.max(0, window.scrollY));
+        hero.style.setProperty('--hero-p', (y / hero.offsetHeight).toFixed(3));
+        hero.style.setProperty('--hero-y', Math.round(y) + 'px');
+      }
     }
     function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(actualizar); } }
     window.addEventListener('scroll', onScroll, {passive:true});

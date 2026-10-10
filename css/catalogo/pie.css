@@ -26,7 +26,7 @@
     .pie{padding:0 16px;}
     .pie-logo{margin:0 -16px;}
     .pie-fila{flex-direction:column;align-items:stretch;gap:0;padding:0;}
-    .pie-redes{justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--pie-linea);}
+    .pie-redes{justify-content:center;gap:48px;padding:24px 0;border-bottom:1px solid var(--pie-linea);}
     .pie-acciones{flex-direction:column;gap:24px;padding:28px 0;border-left:none;}
     .pie-cols{grid-template-columns:1fr;gap:0;padding:0;}
     .pie-col{border-bottom:1px solid var(--pie-linea);}

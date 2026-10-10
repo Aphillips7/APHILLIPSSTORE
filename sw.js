@@ -1,7 +1,7 @@
 // Service Worker de Aphillips Store — version del cache
 // Cada vez que publiques cambios en HTML, CSS o JS, sube este numero
 // (ej: 'aphillips-v3'). Al activarse la version nueva se borra el cache viejo.
-const CACHE_NAME = 'aphillips-v6';
+const CACHE_NAME = 'aphillips-v9';
 
 // Solo el "cascaron" de la app: nunca datos, nunca Firebase, nunca fuentes externas.
 // Si agregas o renombras un archivo en /css o /js, agregalo tambien aqui.
@@ -36,6 +36,7 @@ const SHELL_FILES = [
   './css/catalogo/filtros.css',
   './css/catalogo/marcas.css',
   './css/catalogo/pie.css',
+  './css/catalogo/hora.css',
   // JS compartido
   './js/firebase.js',
   './js/products.js',
@@ -80,6 +81,7 @@ const SHELL_FILES = [
   './js/catalogo/favoritos.js',
   './js/catalogo/cuenta.js',
   './js/catalogo/header.js',
+  './js/catalogo/menu.js',
   './js/catalogo/metricas.js',
   './js/catalogo/datos.js',
   './js/catalogo/destacados.js',
@@ -87,7 +89,8 @@ const SHELL_FILES = [
   './js/catalogo/filtros.js',
   './js/catalogo/grid.js',
   './js/catalogo/modal.js',
-  './js/catalogo/buscador.js'
+  './js/catalogo/buscador.js',
+  './js/catalogo/reloj-vivo.js'
   // Las fotos grandes del catalogo (img/*.webp) no se precargan: se guardan
   // en el cache la primera vez que se ven, para no gastar datos del celular.
 ];

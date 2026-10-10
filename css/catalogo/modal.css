@@ -101,6 +101,7 @@
 
   .fab-wa{position:fixed;right:18px;bottom:18px;width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);z-index:100;text-decoration:none;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
   .fab-wa svg{width:26px;height:26px;}
+  body:not(.vista-catalogo) .fab-wa{display:none;} /* en la pagina principal no va el boton flotante */
   @media (hover:hover){ .fab-wa:hover{transform:translateY(-3px);box-shadow:var(--shadow-xl);} }
   .fab-wa:active{transform:scale(0.94);}
   @media(min-width:640px){ .fab-wa{right:28px;bottom:28px;} }
