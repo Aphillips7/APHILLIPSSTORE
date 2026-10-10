@@ -84,7 +84,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `grid.js` | Dibuja la grilla de relojes (`render`), vista 1 o 2 columnas |
 | `vistas.js` | Inicio vs. catalogo, genero (`#hombre`, `#mujer`, `#todos`), descripcion |
 | `filtros.js` | Panel de filtros (coleccion, movimiento, tamano, esfera, correa, caja) y orden |
-| `modal.js` | Detalle de un reloj y boton de WhatsApp |
+| `modal.js` | Pagina de un reloj (estilo TAG Heuer): barras desplegables con icono, garantias y boton de WhatsApp. Usa `descripcion` si existe; si no, `notas` o una descripcion armada con los datos |
 | `favoritos.js` | Favoritos (en el navegador) y consulta multiple por WhatsApp |
 | `whatsapp.js` | Numero, boton flotante, confirmaciones, cotizar |
 | `metricas.js` | Suma vistas/aperturas/clics en `metricas_catalogo` |
@@ -130,9 +130,9 @@ clienteId, clienteNombre, invId, metodoOrigen, metodoDestino, fecha (d/m/aaaa), 
 
 | Estado | Significado | En el catalogo |
 |---|---|---|
-| `disponible` | En mano, a la venta | "Nuevo", con precio |
-| `transito` | Comprado, en camino | "Llega en N dias" (segun `eta`), boton "Apartar" |
-| `bajopedido` | Se consigue al pedirlo | "Bajo pedido", sin precio, boton "Cotizar" |
+| `disponible` | En mano, a la venta | "Disponible" (verde), con precio, boton "Comprar" |
+| `transito` | Comprado, en camino | "En tránsito" (amarillo); la pagina del reloj dice "Llega en N dias" (`eta`), boton "Apartar" |
+| `bajopedido` | Se consigue al pedirlo | "Bajo pedido" (rojo), sin precio, boton "Cotizar" |
 | `reservado` | Apartado por un cliente con abono | **No aparece** |
 | `vendido` | Vendido | "Agotado" durante 21 dias, luego desaparece |
 
