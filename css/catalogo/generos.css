@@ -1,5 +1,5 @@
   /* === SECCION DE GENEROS (tarjetas con imagen, estilo Omega) === */
-  #generos{background:#fff;padding:clamp(6px,.8vw,12px) clamp(20px,5.9vw,140px) clamp(40px,5vw,84px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
+  #generos{background:#fff;padding:clamp(6px,.8vw,12px) clamp(20px,5.9vw,140px) clamp(20px,2.4vw,40px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
   .gen-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,3.5vw,48px);max-width:1500px;margin:0 auto;}
   .gen-tile{position:relative;display:block;aspect-ratio:4/3;overflow:hidden;background:#dbe8f6;color:#fff;text-decoration:none;-webkit-tap-highlight-color:transparent;}
   .gen-tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .9s var(--ease);}
