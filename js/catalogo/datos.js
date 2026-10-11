@@ -34,7 +34,9 @@ function errorCarga(){
 }
 
 async function pedirCloudflare(){
-  var r = await fetch(API_CATALOGO, { cache: 'no-store' });
+  // no-cache: el navegador pregunta con If-None-Match y, si no cambio, el servidor responde 304
+  // sin volver a mandar el catalogo (se usa la copia que ya tiene)
+  var r = await fetch(API_CATALOGO, { cache: 'no-cache' });
   if(!r.ok) throw new Error('catalogo ' + r.status);
   var d = await r.json();
   if(!Array.isArray(d.relojes)) throw new Error('catalogo sin relojes');

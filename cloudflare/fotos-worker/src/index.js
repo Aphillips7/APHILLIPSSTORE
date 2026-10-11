@@ -41,7 +41,7 @@ export default {
     if (ruta === '/salud') return json({ ok: true }, 200, cors);
 
     // ---------- publicas ----------
-    if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(env, cors);
+    if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
 
     const conocida = (ruta === '/catalogo' && metodo === 'PUT') || (ruta === '/metricas' && metodo === 'GET') ||
@@ -110,17 +110,24 @@ function encabezadosCors(request, env, publica) {
 }
 
 // ---------- catalogo publico (copia en R2, servida con cache) ----------
-async function leerCatalogo(env, cors) {
+// Con ETag: si el navegador ya tiene la version actual (If-None-Match) se responde 304 sin cuerpo,
+// asi el catalogo abierto solo se vuelve a descargar cuando de verdad cambio.
+async function leerCatalogo(request, env, cors) {
   const cache = caches.default;
-  const enCache = await cache.match(URL_CACHE_CATALOGO);
-  if (enCache) return conCors(enCache, cors);
-  const obj = await env.FOTOS.get(CLAVE_CATALOGO);
-  if (!obj) return json({ relojes: null, error: 'Catalogo aun no publicado' }, 404, cors);
-  const cuerpo = await obj.text();
-  const res = new Response(cuerpo, {
-    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=30' }
-  });
-  await cache.put(URL_CACHE_CATALOGO, res.clone());
+  let res = await cache.match(URL_CACHE_CATALOGO);
+  if (!res) {
+    const obj = await env.FOTOS.get(CLAVE_CATALOGO);
+    if (!obj) return json({ relojes: null, error: 'Catalogo aun no publicado' }, 404, cors);
+    res = new Response(await obj.text(), {
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=30', 'ETag': obj.httpEtag }
+    });
+    await cache.put(URL_CACHE_CATALOGO, res.clone());
+  }
+  const etag = res.headers.get('ETag');
+  const pedido = (request.headers.get('If-None-Match') || '').replace(/^W\//, '');
+  if (etag && pedido && pedido === etag.replace(/^W\//, '')) {
+    return new Response(null, { status: 304, headers: { ...cors, 'ETag': etag, 'Cache-Control': 'public, max-age=30' } });
+  }
   return conCors(res, cors);
 }
 
