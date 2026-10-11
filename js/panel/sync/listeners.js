@@ -15,7 +15,7 @@ import { renderInventario } from '../inventario/lista.js';
 import { COLECCIONES, state } from '../state.js';
 import { cargarCatalogoPublicoRemoto, marcarInventarioCargado, syncCatalogoPublico } from './catalogo-publico.js';
 import { renderEspacioUsado } from './espacio.js';
-import { espejarColeccionSnap, espejarDoc, renderEspejo } from './espejo-cloudflare.js';
+import { iniciarEspejo } from './espejo-cloudflare.js';
 import { setSyncStatus } from './estado-sync.js';
 import { _lastSynced, _remoteIds, marcarSyncListo } from './sync.js';
 
@@ -54,7 +54,6 @@ function iniciarListenersFirebase(){
 
   COLECCIONES.forEach(function(key){
     db.collection(key).onSnapshot(function(snap){
-      try{ espejarColeccionSnap(key, snap); }catch(e){}
       var items=[];
       var ids=new Set();
       var cache=_lastSynced[key];
@@ -89,7 +88,6 @@ function iniciarListenersFirebase(){
   db.collection('config').doc('main').onSnapshot(function(doc){
     if(!doc.exists) return;
     var data=doc.data();
-    try{ if(!(doc.metadata && doc.metadata.fromCache)) espejarDoc('config', 'main', data); }catch(e){}
     if(typeof data.meta==='number'){ state.meta=data.meta; localStorage.setItem('meta',state.meta); }
     if(Array.isArray(data.tasks)){ state.tasks=data.tasks; localStorage.setItem('tasks',JSON.stringify(state.tasks)); }
     if(data.weekTasks){ state.weekTasks=data.weekTasks; localStorage.setItem('weekTasks',JSON.stringify(state.weekTasks)); }
@@ -111,7 +109,7 @@ function iniciarListenersFirebase(){
   if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(!document.hidden) cargarMetricasCloudflare(); }, 120000);
 
   setSyncStatus('Conectado','var(--green)','ok');
-  try{ renderEspejo(); }catch(e){}
+  try{ iniciarEspejo(); }catch(e){}
 }
 
 var _metricasFS={}, _metricasCF={}, _timerMetricas=null;
