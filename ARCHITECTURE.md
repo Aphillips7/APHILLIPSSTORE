@@ -2,8 +2,8 @@
 
 Web de reventa de relojes publicada en **GitHub Pages** (rama `main`), sin herramientas de
 compilacion. **Cloudflare** (ver `cloudflare/README.md`) guarda los datos del panel (D1), las fotos
-(R2), el catalogo publico y las metricas. **Firebase Auth** sigue siendo el login, y **Firestore**
-recibe una copia de respaldo de todo (y es el respaldo del catalogo publico). Dominio: `aphillipsstore.com`.
+(R2), el catalogo publico y las metricas. **Firebase Auth** es solo el login del panel. **Firestore**
+quedo como archivo historico de solo lectura (ya no se escribe). Dominio: `aphillipsstore.com`.
 
 - `index.html` — **panel interno** (PWA instalable): inventario, finanzas, clientes, contenido.
 - `catalogo.html` — **catalogo publico**: los clientes ven relojes y escriben por WhatsApp.
@@ -11,8 +11,9 @@ recibe una copia de respaldo de todo (y es el respaldo del catalogo publico). Do
 
 ## Reglas tecnicas
 
-- Todo el JS son **modulos ES** (`<script type="module">`), sin bundler. Cada HTML carga primero
-  el SDK **compat** de Firebase con `<script>` (global `window.firebase`) y despues su `main.js`.
+- Todo el JS son **modulos ES** (`<script type="module">`), sin bundler. `index.html` carga primero
+  el SDK **compat** de Firebase (app + auth) con `<script>` (global `window.firebase`) y despues su
+  `main.js`. `catalogo.html` no usa Firebase.
 - Los modulos **no funcionan abriendo el HTML con doble clic** (`file://`): hace falta un servidor
   (GitHub Pages, o uno local en `localhost`).
 - Las funciones que se llaman desde atributos `onclick`/`oninput`/… del HTML (o de HTML generado
@@ -21,7 +22,8 @@ recibe una copia de respaldo de todo (y es el respaldo del catalogo publico). Do
 - Un modulo **no puede reasignar** una variable importada de otro. Si hace falta, el modulo dueno
   exporta una funcion (p. ej. `limpiarFiltros()`, `detenerSync()`, `marcarSyncListo()`).
 - Las claves de Firebase en `js/firebase.js` son publicas por diseno (el repo es publico).
-  **La seguridad real esta en `firestore.rules`.** `OWNER_EMAIL` y el codigo TOTP solo deciden
+  **La seguridad real esta en el Worker** (`cloudflare/fotos-worker`): verifica el ID token de
+  Firebase y que sea el UID del dueno (`OWNER_UID`). `OWNER_EMAIL` y el codigo TOTP solo deciden
   que se muestra en pantalla.
 
 ## Archivos
@@ -31,15 +33,15 @@ index.html            estructura del panel (sin CSS ni JS en linea)
 catalogo.html         estructura del catalogo
 manifest.json         PWA del panel
 sw.js                 service worker (cache del "cascaron")
-firestore.rules       reglas de seguridad (se publican a mano en la consola)
+firestore.rules       reglas del archivo historico de Firestore: solo lectura del admin (se publican a mano)
 docs/PUBLICAR-REGLAS.md   pasos para publicar reglas y crear el admin
-scripts/auditar-catalogo-publico.js   auditoria/limpieza manual de catalogo_publico (consola)
+scripts/auditar-catalogo-publico.js   (historico) auditoria de catalogo_publico en Firestore
 cloudflare/fotos-worker/   Worker que sube/borra fotos en R2 (api.aphillipsstore.com); fotos en fotos.aphillipsstore.com
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
 css/panel/            base, componentes, finanzas, auth, modales, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
                       destacados, listado, filtros, marcas, pie, hora (en ese orden)
-js/firebase.js        configuracion unica de Firebase; exporta firebase y db
+js/firebase.js        configuracion de Firebase (solo Auth); exporta firebase
 js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 ```
 
@@ -70,14 +72,12 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/transacciones.js` | `cambiarEstadoSeguro()`: transaccion anti venta doble |
 | `clientes/clientes.js` | Alta/edicion/lista de clientes, `poblarSelectClientes` |
 | `clientes/cliente-detalle.js` | Ficha del cliente, historial, "contactado hoy" |
-| `sync/fuente.js` | `FUENTE_DATOS`: `'cloudflare'` (actual) o `'firebase'` (volver atras con un cambio) |
-| `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), copia de respaldo a Firestore, `cambiarEstadoNube` |
-| `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare (o a Firestore si `FUENTE_DATOS='firebase'`) |
-| `sync/listeners.js` | Arranque de los datos (Cloudflare o Firestore), catalogo publico, metricas; refresca pantallas |
-| `sync/espejo-cloudflare.js` | Solo con `FUENTE_DATOS='firebase'`: copia lo de Firestore a D1 |
-| `sync/catalogo-publico.js` | Mantiene `catalogo_publico` igual a lo publicable del inventario |
+| `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), `cambiarEstadoNube` |
+| `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare |
+| `sync/listeners.js` | Arranque de los datos al iniciar sesion, metricas (y su importacion unica desde Firestore); refresca pantallas |
+| `sync/catalogo-publico.js` | Publica en Cloudflare (`PUT /catalogo`) la lista de relojes publicables, solo `camposPublicos` |
 | `sync/estado-sync.js` | Indicador de sincronizacion e historial |
-| `sync/espacio.js` | Espacio usado de Firestore (1 GB gratis) |
+| `sync/espacio.js` | Espacio usado estimado (D1, 500 MB gratis) |
 | `auth/totp.js` | Codigo de 6 digitos (TOTP) y codigos de respaldo |
 | `auth/auth-overlay.js` | Pantallas del TOTP que protegen la pestana Sync |
 
@@ -86,14 +86,14 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | Archivo | Responsabilidad |
 |---|---|
 | `main.js` | Punto de entrada (importa los modulos en orden) |
-| `datos.js` | `relojes`: escucha `catalogo_publico` con `onSnapshot`; enlace directo `?id=` |
+| `datos.js` | `relojes`: lee `GET /catalogo` de Cloudflare cada minuto (304 si no cambio); guarda la ultima lista en el navegador por si falla; enlace directo `?id=` |
 | `grid.js` | Dibuja la grilla de relojes (`render`), vista 1 o 2 columnas |
 | `vistas.js` | Inicio vs. catalogo, genero (`#hombre`, `#mujer`, `#todos`), marca (`#marca-invicta`, `#marca-bulova`, `#marca-technomarine`: el reloj es de la marca si su nombre o coleccion la mencionan), descripcion |
 | `filtros.js` | Panel de filtros (coleccion, movimiento, tamano, esfera, correa, caja), orden y `coincideBusqueda()` (busca cada palabra en todos los datos publicos, sin acentos) |
 | `modal.js` | Pagina de un reloj (estilo TAG Heuer): barras desplegables con icono, garantias y boton de WhatsApp. Usa `descripcion` si existe; si no, `notas` o una descripcion armada con los datos |
 | `favoritos.js` | Favoritos (en el navegador) y consulta multiple por WhatsApp |
 | `whatsapp.js` | Numero, boton flotante, confirmaciones, cotizar |
-| `metricas.js` | Suma vistas/aperturas/clics en `metricas_catalogo` |
+| `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
 | `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |
 | `cuenta.js` | Panel "Mi cuenta" (solo diseno, login de clientes pendiente) |
@@ -102,17 +102,19 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `reloj-vivo.js` | Reloj Invicta Pro Diver dibujado en SVG que marca la hora de Panama (UTC-5) en la seccion `#hora`; solo se anima cuando esta en pantalla |
 | `ui.js` | `toast`, `vibrar`, escape de HTML |
 
-## Colecciones de Firestore
+## Datos (Cloudflare D1, tabla `docs`; ver `cloudflare/README.md`)
 
-| Coleccion | Contenido | Quien lee / escribe |
+| Coleccion (`col`) | Contenido | Quien lee / escribe |
 |---|---|---|
 | `inventario/{id}` | Una unidad (reloj). **Privado** | Solo admin |
-| `catalogo_publico/{id}` | Copia publica de las unidades publicables (mismo id que inventario) | Todos leen · admin escribe |
-| `metricas_catalogo/{id}` | `vistas`, `aperturas`, `clics`, `_ultima` | Visitantes solo suman +1 · admin todo |
 | `movimientos/{id}` | Ventas, compras, gastos, retiros, abonos, traspasos | Solo admin |
 | `clientes/{id}` | Nombre, telefono, canal, producto de interes, notas | Solo admin |
 | `config/main` | `meta`, `tasks`, `weekTasks`, `ideas` | Solo admin |
 | `authSettings/{uid}` | Secreto TOTP y hashes de codigos de respaldo | Solo admin |
+
+Ademas: catalogo publico en R2 (`publico/catalogo.json`, todos leen, admin publica) y metricas en
+D1 (tabla `metricas`: visitantes suman, admin lee). Firestore guarda la copia antigua de todo esto
+(`catalogo_publico`, `metricas_catalogo`...) solo como archivo.
 
 No hay coleccion de pedidos.
 
@@ -125,7 +127,7 @@ objetivo), precioMin, margen (%), proveedor, serie, paqueteria, tracking, fecha 
 precioVenta, fechaVenta, reserva {clienteId, clienteNombre, precioAcordado, fechaInicio,
 abonos:[{monto, fecha, metodoPago}]}, estado, _ts`.
 
-### `catalogo_publico/{id}`
+### Catalogo publico (`GET /catalogo`)
 Solo lo que devuelve `camposPublicos()` en `js/products.js`:
 `nombre, sku, coleccion, genero, mm, materialCaja, materialCorrea, colorEsfera, movimiento, agua,
 cristal, color, notas, descripcion, eta, precio, foto, fotos, estado, _ts`. **Ojo: `notas` y `descripcion` son publicos.**
@@ -151,18 +153,16 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
 
 - **Que es publico**: `esPublicable(p)` — no oculto (`ocultoCatalogo`) y estado disponible,
   transito o bajo pedido; o vendido hace `DIAS_AGOTADO_VISIBLE` (21) dias o menos.
-- **Sincronizacion del catalogo**: el panel escucha `catalogo_publico` y lo iguala a lo publicable
-  del inventario (publica, actualiza y borra). Solo borra con datos confirmados por el servidor.
+- **Sincronizacion del catalogo**: despues de cada envio del inventario, el panel publica la lista
+  completa de relojes publicables (`PUT /catalogo`); solo con el inventario ya cargado de la nube.
 - **Venta doble imposible**: vender, reservar, completar y cancelar reserva pasan por
-  `cambiarEstadoSeguro(id, estadoEsperado, cambios, quitar)` — una transaccion que solo escribe si
-  el estado en la nube sigue siendo el que se veia en pantalla, y en la misma transaccion actualiza
-  `catalogo_publico`. **Requiere internet**; sin conexion avisa y no registra nada.
+  `cambiarEstadoSeguro(id, estadoEsperado, cambios, quitar)` -> `POST /datos/estado`: el Worker solo
+  escribe si el estado en la nube sigue siendo el que se veia en pantalla (y condicionado a la
+  huella leida); 409 si cambio en otro dispositivo. **Requiere internet**; sin conexion avisa y no registra nada.
 - **Resto de cambios** (editar, gastos, clientes, tareas): se guardan en memoria y `save()` los
   envia a Cloudflare 1,2 s despues, comparando con lo ultimo que confirmo la nube. Funcionan sin
   conexion: quedan en IndexedDB y se envian al volver. Si otro dispositivo cambio el mismo documento,
   gana el cambio que todavia no se habia enviado (se envia despues).
-- **Venta doble (Cloudflare)**: `POST /datos/estado` comprueba el estado y escribe condicionado a la
-  huella leida; 409 si cambio en otro dispositivo.
 - **Costo y margen**: `costoTotal = costo + importacion`; `margen = round((precio - costoTotal) / precio * 100)`.
   Colores: ≥30 % verde, ≥15 % ambar, menos rojo.
 - **Compra automatica**: al registrar una unidad `disponible` con costo (o pasar de transito a
@@ -180,7 +180,8 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
 ## Almacenamiento local (navegador)
 
 Panel: `tasks`, `meta`, `weekTasks`, `ideas` (copia de `config/main`), `lastSync`, `syncHistory`,
-`lastExportISO`, `authTotpPendiente`. Catalogo: `aphillips_favoritos`.
+`lastExportISO`, `authTotpPendiente`; IndexedDB `aphillips-panel` (datos + cambios sin enviar).
+Catalogo: `aphillips_favoritos`, `aphillips_catalogo` (ultima lista de relojes).
 
 ## Service worker (`sw.js`)
 
@@ -192,6 +193,7 @@ Panel: `tasks`, `meta`, `weekTasks`, `ideas` (copia de `config/main`), `lastSync
 
 ## Seguridad
 
-`firestore.rules` (publicar a mano, ver `docs/PUBLICAR-REGLAS.md`): el admin se identifica por
-**UID**. Visitantes: leer `catalogo_publico` y sumar +1 a metricas de relojes publicados. Todo lo
-demas, solo admin. Si se agrega una coleccion nueva, hay que darle su regla (sin regla = denegado).
+El Worker de la API (`cloudflare/fotos-worker`) protege todo: las rutas de admin exigen el ID token
+de Firebase del UID del dueno (`OWNER_UID`). Visitantes: solo `GET /catalogo` y `POST /metricas`
+(solo ids del catalogo). El catalogo publico pasa por `CAMPOS_PUBLICOS` en el Worker.
+`firestore.rules` (publicar a mano): Firestore es solo lectura para el admin y nadie escribe.

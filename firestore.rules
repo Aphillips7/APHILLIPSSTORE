@@ -1,12 +1,13 @@
 rules_version = '2';
 
-// Reglas de Firestore de APHILLIPS STORE.
-// El repositorio es publico y la config de Firebase esta en el codigo: cualquiera
-// puede intentar leer o escribir. ESTAS REGLAS son la unica proteccion real.
+// Reglas de Firestore de APHILLIPS STORE (despues de la etapa 3c).
+// Los datos de la tienda viven en Cloudflare. Firestore queda como ARCHIVO HISTORICO de solo
+// lectura: solo el admin puede leerlo (p. ej. para consultar algo viejo o importar metricas
+// antiguas una vez) y nadie puede escribir. El catalogo publico ya no se lee de aqui.
 //
 // ANTES DE PUBLICAR: reemplaza PEGA_AQUI_TU_UID por el UID de tu usuario admin
 // (Firebase Console > Authentication > Users > columna "User UID").
-// Ver ARCHITECTURE.md / instrucciones del paso 4.
+// Se publican a mano: Firebase Console > Firestore Database > Reglas > pegar > Publicar.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -16,61 +17,10 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == 'PEGA_AQUI_TU_UID';
     }
 
-    // ---------- Catalogo publico ----------
-    // Todo lo que esta aqui ya es publico por diseno (el panel solo copia
-    // camposPublicos de relojes publicables). Cualquiera lee; solo el admin escribe.
-    match /catalogo_publico/{id} {
-      allow read: if true;
-      allow write: if esAdmin();
+    // Todo: solo lectura para el admin; escrituras cerradas para todos.
+    match /{coleccion}/{id} {
+      allow read: if esAdmin();
+      allow write: if false;
     }
-
-    // ---------- Metricas del catalogo ----------
-    // Los visitantes solo pueden SUMAR 1 a vistas / aperturas / clics de un reloj
-    // que exista en el catalogo publico. No pueden leer, borrar ni poner numeros
-    // arbitrarios. El admin puede todo.
-    match /metricas_catalogo/{id} {
-      function existeEnCatalogo(relojId) {
-        return exists(/databases/$(database)/documents/catalogo_publico/$(relojId));
-      }
-      // Si el contador cambia, solo puede subir exactamente 1.
-      function sumaUno(campo) {
-        return !(campo in request.resource.data.diff(resource.data).affectedKeys())
-          || request.resource.data[campo] == resource.data.get(campo, 0) + 1;
-      }
-      function ultimaValida() {
-        return !('_ultima' in request.resource.data) || request.resource.data._ultima is int;
-      }
-
-      allow read, delete: if esAdmin();
-
-      allow create: if esAdmin() || (
-        existeEnCatalogo(id)
-        && request.resource.data.keys().hasOnly(['vistas', 'aperturas', 'clics', '_ultima'])
-        && request.resource.data.get('vistas', 1) == 1
-        && request.resource.data.get('aperturas', 1) == 1
-        && request.resource.data.get('clics', 1) == 1
-        && ultimaValida()
-      );
-
-      allow update: if esAdmin() || (
-        existeEnCatalogo(id)
-        && request.resource.data.keys().hasOnly(['vistas', 'aperturas', 'clics', '_ultima'])
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vistas', 'aperturas', 'clics', '_ultima'])
-        && sumaUno('vistas') && sumaUno('aperturas') && sumaUno('clics')
-        && ultimaValida()
-      );
-    }
-
-    // ---------- Datos privados del negocio ----------
-    // inventario (costos, aduana, proveedor, margen, serie, tracking, reservas),
-    // movimientos (finanzas), clientes (telefonos), config (tareas, ideas, meta)
-    // y authSettings (secreto del codigo de autenticacion).
-    match /inventario/{id}      { allow read, write: if esAdmin(); }
-    match /movimientos/{id}     { allow read, write: if esAdmin(); }
-    match /clientes/{id}        { allow read, write: if esAdmin(); }
-    match /config/{id}          { allow read, write: if esAdmin(); }
-    match /authSettings/{uid}   { allow read, write: if esAdmin(); }
-
-    // Cualquier otra coleccion queda cerrada. (Sin regla = acceso denegado.)
   }
 }

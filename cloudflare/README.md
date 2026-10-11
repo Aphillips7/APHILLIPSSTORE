@@ -31,10 +31,11 @@ Las fotos se guardan como `relojes/<id del reloj>/<fecha>-<aleatorio>.<ext>` con
 
 | Ruta | Quien | Para que |
 |---|---|---|
-| `GET /catalogo` | publico | Copia del catalogo (R2 `publico/catalogo.json`, cache 30 s). La lee `js/catalogo/datos.js`; si falla, el catalogo usa Firestore. |
+| `GET /catalogo` | publico | Copia del catalogo (R2 `publico/catalogo.json`, cache 30 s). La lee `js/catalogo/datos.js`; si falla, el catalogo muestra la ultima lista guardada en el navegador. Responde 304 con ETag si no cambio. |
 | `PUT /catalogo` | admin | La publica el panel despues de cada sincronizacion. El Worker solo deja pasar campos publicos. |
 | `POST /metricas` | publico | Lote de `[id, "vistas"|"aperturas"|"clics"]` (texto JSON). Solo ids del catalogo; max 1 de cada tipo por reloj y envio. |
-| `GET /metricas` | admin | Metricas guardadas en D1 (`aphillips-db`, tabla `metricas`). El panel las suma a las antiguas de Firestore. |
+| `GET /metricas` | admin | Metricas guardadas en D1 (`aphillips-db`, tabla `metricas`). Incluye `importado` (si ya se sumaron las antiguas de Firestore). |
+| `POST /metricas/importar` | admin | Suma una sola vez las metricas antiguas de Firestore (marca en tabla `ajustes`). |
 | `GET /datos?desde=n` | admin | Datos del panel (tabla `docs`) cambiados despues de la version `n`. `completo:false` = pedir de nuevo. |
 | `GET /datos/resumen` | admin | Huellas SHA-256 de cada documento (lo usa la copia de `espejo-cloudflare.js`). |
 | `POST /datos/lote` | admin | `{ops:[{col,id,json}|{col,id,borrar:true}]}`, max 200, todo o nada. Borrar conserva el contenido (`borrado=1`). |
@@ -42,7 +43,7 @@ Las fotos se guardan como `relojes/<id del reloj>/<fecha>-<aleatorio>.<ext>` con
 
 Colecciones en `docs`: `inventario`, `movimientos`, `clientes`, `config` (doc `main`), `authSettings`.
 Para recuperar algo borrado o volver atras: D1 Time Travel (`npx wrangler@4 d1 time-travel restore aphillips-db --timestamp=...`)
-o la copia de respaldo en Firestore.
+o tus respaldos JSON del panel (Firestore ya no recibe copias; queda como archivo hasta el 10/10/2026).
 
 Base de datos D1 `aphillips-db`: migraciones en `fotos-worker/migrations/`
 (`npx wrangler@4 d1 migrations apply aphillips-db --remote`).

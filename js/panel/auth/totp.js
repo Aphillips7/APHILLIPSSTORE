@@ -1,6 +1,4 @@
-import { db, firebase } from '../../firebase.js';
-import { espejarDoc } from '../sync/espejo-cloudflare.js';
-import { FUENTE_DATOS } from '../sync/fuente.js';
+import { firebase } from '../../firebase.js';
 import { escribirDocNube, leerDocNube } from '../sync/nube.js';
 
 let _totpSecretCache = null;
@@ -10,7 +8,7 @@ function limpiarCacheAuth(){ _totpSecretCache = null; _backupCodesCache = null; 
 // =================== AUTENTICACION (TOTP) ===================
 // Codigo de 6 digitos que protege la pestana Sync. Se verifica en el navegador,
 // asi que es una capa extra de interfaz, no de seguridad: los datos los protege
-// el login de Firebase + firestore.rules (authSettings solo lo lee el admin).
+// el login de Firebase + el Worker de Cloudflare (authSettings solo lo lee el admin).
 const B32_CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 function base32Encode(bytes){
   var bits='',output='';
@@ -66,38 +64,20 @@ function getTotpSecret(){ return _totpSecretCache||''; }
 async function cargarAuthSettingsNube(){
   var u=firebase.auth().currentUser;
   if(!u){ _totpSecretCache=''; _backupCodesCache=[]; return; }
-  if(FUENTE_DATOS==='cloudflare'){
-    try{
-      var enNube=await leerDocNube('authSettings', u.uid);
-      if(enNube){ _totpSecretCache=enNube.secret||''; _backupCodesCache=enNube.backupCodes||[]; return; }
-    }catch(e){}
-    // si Cloudflare no lo tiene (o no respondio), se consulta Firestore como antes
-  }
-  try{
-    var doc=await db.collection('authSettings').doc(u.uid).get();
-    if(doc.exists){
-      var data=doc.data();
-      try{ if(!(doc.metadata && doc.metadata.fromCache)) espejarDoc('authSettings', u.uid, data); }catch(e){}
-      _totpSecretCache=data.secret||'';
-      _backupCodesCache=data.backupCodes||[];
-    }else{
-      _totpSecretCache='';
-      _backupCodesCache=[];
-    }
-  }catch(e){
-    _totpSecretCache='';
-    _backupCodesCache=[];
-  }
+  // Devuelve false si no se pudo saber (Cloudflare no respondio): asi no se ofrece crear un codigo
+  // nuevo encima del que ya existe.
+  var enNube;
+  try{ enNube=await leerDocNube('authSettings', u.uid); }catch(e){ enNube=undefined; }
+  if(enNube===undefined){ _totpSecretCache=''; _backupCodesCache=[]; return false; }
+  _totpSecretCache=(enNube&&enNube.secret)||'';
+  _backupCodesCache=(enNube&&enNube.backupCodes)||[];
+  return true;
 }
 async function guardarAuthSettingsNube(secret,backupCodes){
   var u=firebase.auth().currentUser;
   if(!u)return;
   var datos={secret:secret,backupCodes:backupCodes,actualizado:Date.now()};
-  if(FUENTE_DATOS==='cloudflare') await escribirDocNube('authSettings', u.uid, datos);   // tambien copia a Firestore
-  else{
-    await db.collection('authSettings').doc(u.uid).set(datos);
-    try{ espejarDoc('authSettings', u.uid, datos); }catch(e){}
-  }
+  await escribirDocNube('authSettings', u.uid, datos);
   _totpSecretCache=secret;
   _backupCodesCache=backupCodes;
 }

@@ -1,7 +1,7 @@
-// Configuracion unica de Firebase para el panel y el catalogo.
-// El SDK "compat" se carga con <script> en cada HTML antes de los modulos.
-// Estas claves son publicas por diseno (el repo es publico): lo que protege
-// los datos son las reglas de Firestore (firestore.rules), no este archivo.
+// Firebase solo se usa para el LOGIN del panel (Firebase Auth). Los datos estan en Cloudflare.
+// El SDK "compat" (app + auth) se carga con <script> en index.html antes de los modulos.
+// Estas claves son publicas por diseno (el repo es publico): lo que protege los datos es que el
+// Worker de Cloudflare verifica la sesion (ID token) y que sea la cuenta del dueno.
 const firebaseConfig = {
   apiKey: "AIzaSyCz8cHrafrPGYvp-x9iv1ccFQSobJrFmxo",
   authDomain: "aphillips-store-733df.firebaseapp.com",
@@ -13,6 +13,4 @@ const firebaseConfig = {
 
 export const firebase = window.firebase;
 firebase.initializeApp(firebaseConfig);
-export const db = firebase.firestore();
-// Persistencia offline: si no esta disponible (modo privado, varias pestanas...) no rompe nada.
-try { db.enablePersistence({ synchronizeTabs: true }).catch(function(){}); } catch(e){}
+export { firebaseConfig };

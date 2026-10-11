@@ -23,7 +23,7 @@ function invNoExiste(){ alert('Ese reloj ya no esta en la lista (pudo actualizar
 
 
 // Solo decide que se MUESTRA (p. ej. la pestana Sync). No protege datos: cualquiera
-// puede editar este archivo en su navegador. La proteccion real es firestore.rules.
+// puede editar este archivo en su navegador. La proteccion real es el Worker de Cloudflare (verifica la sesion del dueno).
 const OWNER_EMAIL = 'aphillipsstore@gmail.com';
 
 function esPropietario(){
