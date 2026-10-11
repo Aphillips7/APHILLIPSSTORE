@@ -60,3 +60,44 @@
   header.menu-open .mb-2{opacity:0;}
   header.menu-open .mb-3{transform:rotate(-45deg) translateY(-6px);}
   .logo-inicio{display:block;line-height:0;}
+
+  /* ---------- Mi cuenta (cuenta.js) ---------- */
+  .cta-google{gap:12px;width:100%;}
+  .cta-google svg{flex:none;background:#fff;border-radius:50%;padding:2px;width:22px;height:22px;}
+  .cta-legal{font-size:11.5px;line-height:17px;color:var(--gris-texto);margin-top:16px;max-width:46ch;}
+  .cta-mensaje{background:#f4f4f5;border-left:2px solid var(--black);padding:12px 14px;font-size:var(--fs-texto);line-height:19px;color:var(--black);margin-bottom:26px;}
+  .cta-ancho{width:100%;text-decoration:none;}
+  .cta-sub{font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--black);margin:30px 0 14px;}
+  .cta-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border2);}
+  .cta-item:first-of-type{border-top:1px solid var(--border2);}
+  .cta-item img{width:52px;height:52px;object-fit:contain;background:#f4f4f5;flex:none;}
+  .cta-item > div{flex:1;min-width:0;}
+  .cta-item b{display:block;font-size:var(--fs-texto);font-weight:600;color:var(--black);line-height:19px;}
+  .cta-item span{display:block;font-size:var(--fs-etiqueta);color:var(--gris-texto);line-height:17px;margin-top:2px;}
+  .cta-item strong{color:var(--black);font-weight:600;}
+  .cta-peligro{color:var(--estado-pedido);}
+  .cta-metricas{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border2);border:1px solid var(--border2);}
+  .cta-metricas div{background:#fff;padding:14px 10px;text-align:center;}
+  .cta-metricas b{display:block;font-family:var(--font-titulo);font-size:20px;font-weight:800;color:var(--black);}
+  .cta-metricas span{font-size:11px;color:var(--gris-texto);letter-spacing:.02em;}
+  .cta-top{list-style:decimal inside;margin-top:14px;font-size:var(--fs-texto);color:var(--black);}
+  .cta-top li{padding:7px 0;border-bottom:1px solid var(--border2);}
+  .cta-top li span{font-weight:500;}
+  .cta-top li em{display:block;font-style:normal;font-size:11.5px;color:var(--gris-texto);padding-left:18px;}
+  .cta-dev{margin-top:28px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);}
+  .cta-dev summary{list-style:none;cursor:pointer;padding:18px 0;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--black);}
+  .cta-dev summary::-webkit-details-marker{display:none;}
+  .cta-dev summary::after{content:'+';float:right;font-weight:300;font-size:18px;line-height:12px;}
+  .cta-dev[open] summary::after{content:'−';}
+  .cta-estado{list-style:none;margin-bottom:18px;}
+  .cta-estado li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #eee;font-size:var(--fs-etiqueta);color:var(--gris-texto);}
+  .cta-estado li span{color:var(--black);text-align:right;}
+  .cta-estado .cta-ok{color:var(--estado-disponible);}
+  .cta-estado .cta-mal{color:var(--estado-pedido);}
+  .cta-check{display:flex;align-items:center;gap:10px;font-size:var(--fs-texto);color:var(--black);margin-bottom:18px;cursor:pointer;}
+  .cta-check input{width:18px;height:18px;accent-color:var(--black);}
+  .cta-dev-botones{gap:12px;padding-bottom:20px;}
+  .cta-dev-botones .cta-btn{min-width:0;padding:13px 18px;}
+  /* punto en el icono de la cuenta cuando hay sesion */
+  .icon-btn.con-sesion{position:relative;}
+  .icon-btn.con-sesion::after{content:'';position:absolute;top:3px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--estado-disponible);box-shadow:0 0 0 2px #fff;}

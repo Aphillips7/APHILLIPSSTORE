@@ -1,6 +1,7 @@
 import { relojes } from './datos.js';
 import { _favoritos } from './favoritos.js';
 import { incMetrica } from './metricas.js';
+import { saludo } from './sesion.js';
 import { vibrar } from './ui.js';
 
 const WHATSAPP_NUM = '50762615442';
@@ -43,7 +44,7 @@ function confirmarWaFavoritos(el, e){
   textoEl.textContent = '✓ Abriendo WhatsApp...';
   vibrar(10);
   var lineas = items.map(function(r){ return '• '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':''); });
-  var msg = 'Hola! Me interesan estos relojes del catalogo:\n'+lineas.join('\n')+'\n¿Me confirman disponibilidad?';
+  var msg = saludo()+' Me interesan estos relojes del catalogo:\n'+lineas.join('\n')+'\n¿Me confirman disponibilidad?';
   var url = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent(msg);
   setTimeout(function(){
     window.open(url, '_blank');
@@ -57,7 +58,7 @@ function cotizarDirecto(id){
   var r = relojes.find(function(x){ return x.id === id; });
   if(!r) return;
   vibrar(10);
-  var msg = encodeURIComponent('Hola! Quiero cotizar el modelo '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que vi en el catalogo bajo pedido.');
+  var msg = encodeURIComponent(saludo()+' Quiero cotizar el modelo '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que vi en el catalogo bajo pedido.');
   incMetrica(id, 'clics');
   window.open('https://wa.me/'+WHATSAPP_NUM+'?text='+msg, '_blank');
 }

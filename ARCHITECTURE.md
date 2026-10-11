@@ -72,6 +72,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/transacciones.js` | `cambiarEstadoSeguro()`: transaccion anti venta doble |
 | `clientes/clientes.js` | Alta/edicion/lista de clientes, `poblarSelectClientes` |
 | `clientes/cliente-detalle.js` | Ficha del cliente, historial, "contactado hoy" |
+| `clientes/cuentas-web.js` | Cuentas de clientes del catalogo: avisos pendientes (un toque abre WhatsApp con el mensaje y lo marca enviado) y vincular cada cuenta con un cliente del panel |
 | `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), `cambiarEstadoNube` |
 | `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare |
 | `sync/listeners.js` | Arranque de los datos al iniciar sesion, metricas (y su importacion unica desde Firestore); refresca pantallas |
@@ -96,7 +97,8 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
 | `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |
-| `cuenta.js` | Panel "Mi cuenta" (solo diseno, login de clientes pendiente) |
+| `cuenta.js` | "Mi cuenta": login con Google (Firebase Auth, el SDK se descarga solo al abrir el panel o si ya habia sesion), perfil y WhatsApp, avisos ("Avisame" en un reloj o una marca), compras y apartados, favoritos en la nube. Con la cuenta del dueno: ir al panel, metricas y opciones de desarrollador (estado del sistema, no contar mis visitas, forzar actualizacion, respaldo) |
+| `sesion.js` | Estado de la sesion del cliente (`sesion`, `saludo()` para los mensajes de WhatsApp, `tieneAviso`) sin dependencias |
 | `header.js` | Encabezado transparente sobre el hero y efecto de la portada al bajar |
 | `menu.js` | Menu del celular (boton hamburguesa) |
 | `reloj-vivo.js` | Reloj Invicta Pro Diver dibujado en SVG que marca la hora de Panama (UTC-5) en la seccion `#hora`; solo se anima cuando esta en pantalla |
@@ -176,13 +178,21 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
   hace mas de 45 dias ("Rebajar").
 - **Genero**: los relojes `unisex` aparecen en hombre y en mujer.
 - **WhatsApp**: numero en `js/catalogo/whatsapp.js` (`WHATSAPP_NUM`).
-- **Metricas**: una vista por reloj por visita, apertura del detalle y clic a WhatsApp.
+- **Metricas**: una vista por reloj por visita, apertura del detalle y clic a WhatsApp. No cuentan si
+  `localStorage.aphillips_no_contar = '1'` (se activa solo con la cuenta del dueno).
+- **Cuentas de clientes**: login con Google; cada cliente solo ve y cambia lo suyo (el Worker lo
+  filtra por el UID del token). Avisos: el panel calcula cuales ya se pueden enviar (reloj publicable
+  y `disponible` que antes no lo estaba o bajo de precio; o relojes nuevos de la marca desde el ultimo
+  aviso) y el dueno los manda por WhatsApp. Compras y apartados solo si el dueno vinculo la cuenta a
+  un cliente del panel; nunca se muestran costos ni datos privados. El catalogo recupera la sesion
+  del panel (mismo dominio) para mostrar las opciones de administrador.
 
 ## Almacenamiento local (navegador)
 
 Panel: `tasks`, `meta`, `weekTasks`, `ideas` (copia de `config/main`), `lastSync`, `syncHistory`,
 `lastExportISO`, `authTotpPendiente`; IndexedDB `aphillips-panel` (datos + cambios sin enviar).
-Catalogo: `aphillips_favoritos`, `aphillips_catalogo` (ultima lista de relojes).
+Catalogo: `aphillips_favoritos`, `aphillips_catalogo` (ultima lista de relojes), `aphillips_sesion`
+(hay sesion: cargar Firebase Auth al abrir), `aphillips_no_contar`.
 
 ## Service worker (`sw.js`)
 

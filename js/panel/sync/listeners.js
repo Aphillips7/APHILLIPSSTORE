@@ -2,6 +2,7 @@ import { firebase } from '../../firebase.js';
 import { renderConfigPage } from '../auth/auth-overlay.js';
 import { renderCatalogoAdmin } from '../catalogo-admin.js';
 import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
+import { cargarCuentasWeb, renderCuentasWeb } from '../clientes/cuentas-web.js';
 import { renderContenido, renderIdeas } from '../contenido.js';
 import { renderAnalisis } from '../finanzas/analisis.js';
 import { renderFinanzas } from '../finanzas/finanzas.js';
@@ -30,6 +31,7 @@ function refrescarVista(key){
     try{ renderClientes(); }catch(e){}
     try{ syncCatalogoPublico(); }catch(e){}
     try{ renderFotosAntiguas(); }catch(e){}
+    try{ renderCuentasWeb(); }catch(e){}
   }else if(key==='movimientos'){
     try{ renderHistorial(); }catch(e){}
     try{ renderResumen(); }catch(e){}
@@ -38,6 +40,7 @@ function refrescarVista(key){
     try{ renderClientes(); }catch(e){}
   }else if(key==='clientes'){
     try{ renderClientes(); }catch(e){}
+    try{ renderCuentasWeb(); }catch(e){}
     try{ poblarSelectClientes('fin-cliente'); }catch(e){}
     try{ poblarSelectClientes('reserva-cliente'); }catch(e){}
   }else if(key==='config'){
@@ -56,7 +59,8 @@ function iniciarListenersFirebase(){
   iniciarNube({ refrescarVista: refrescarVista, refrescarVistaCompleta: refrescarVistaCompleta, marcarInventarioCargado: marcarInventarioCargado });
   cargarMetricasCloudflare();
   try{ cargarRespaldosNube(); }catch(e){}
-  if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(!document.hidden) cargarMetricasCloudflare(); }, 120000);
+  try{ cargarCuentasWeb(); }catch(e){}
+  if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(document.hidden) return; cargarMetricasCloudflare(); try{ cargarCuentasWeb(); }catch(e){} }, 120000);
 }
 
 // Metricas del catalogo (vistas, aperturas, clics), guardadas en Cloudflare (D1).

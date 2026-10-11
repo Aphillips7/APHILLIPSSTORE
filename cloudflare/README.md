@@ -52,6 +52,12 @@ Las fotos se guardan como `relojes/<id del reloj>/<fecha>-<aleatorio>.<ext>` con
 **Vista previa de links** (`?id=<reloj>`): el Worker de la tienda lee el catalogo por el service binding `API`
 y cambia `og:title`, `og:description` y `og:image` (usa `fotoCompartir`, JPEG) con HTMLRewriter.
 
+**Cuentas de clientes** (tablas `cuentas`, `favoritos`, `avisos`; migracion `0004_cuentas.sql`):
+`GET/DELETE /cuenta`, `PUT /cuenta/perfil`, `PUT /cuenta/favoritos`, `POST/DELETE /cuenta/avisos`, `GET /cuenta/compras`
+(cualquier sesion de Firebase no anonima; todo filtrado por el UID del token) y de admin `GET /admin/cuentas`,
+`POST /admin/cuentas/vincular`, `POST /admin/avisos/avisado`. Las compras solo devuelven monto, fecha y
+descripcion (nunca costos). El respaldo diario incluye estas tablas.
+
 Colecciones en `docs`: `inventario`, `movimientos`, `clientes`, `config` (doc `main`), `authSettings`.
 Para recuperar algo borrado o volver atras: D1 Time Travel (`npx wrangler@4 d1 time-travel restore aphillips-db --timestamp=...`)
 o tus respaldos JSON del panel (Firestore ya no recibe copias; queda como archivo hasta el 10/10/2026).

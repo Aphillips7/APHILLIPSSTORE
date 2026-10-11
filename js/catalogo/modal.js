@@ -2,6 +2,7 @@ import { relojes } from './datos.js';
 import { _favoritos } from './favoritos.js';
 import { incMetrica } from './metricas.js';
 import { _destEsc as esc, toast } from './ui.js';
+import { saludo } from './sesion.js';
 import { WHATSAPP_NUM } from './whatsapp.js';
 import { textoETA } from '../products.js';
 
@@ -199,18 +200,20 @@ function abrir(id){
   var msg;
   if(r.estado==='transito'){
     waTexto.textContent = 'Apartar por WhatsApp';
-    msg = 'Hola! Vi en el catalogo el '+nombreRef+' que esta en transito, ¿me lo pueden apartar?';
+    msg = saludo()+' Vi en el catalogo el '+nombreRef+' que esta en transito, ¿me lo pueden apartar?';
   } else if(r.estado==='vendido'){
     waTexto.textContent = 'Preguntar por uno similar';
-    msg = 'Hola! Vi el '+nombreRef+' en el catalogo pero ya esta vendido, ¿tienen algo similar o se puede conseguir de nuevo?';
+    msg = saludo()+' Vi el '+nombreRef+' en el catalogo pero ya esta vendido, ¿tienen algo similar o se puede conseguir de nuevo?';
   } else if(r.estado==='bajopedido'){
     waTexto.textContent = 'Cotizar por WhatsApp';
-    msg = 'Hola! Quiero cotizar el modelo '+nombreRef+' que vi en el catalogo bajo pedido.';
+    msg = saludo()+' Quiero cotizar el modelo '+nombreRef+' que vi en el catalogo bajo pedido.';
   } else {
     waTexto.textContent = 'Comprar por WhatsApp';
-    msg = 'Hola! Me interesa el '+nombreRef+' que vi en el catalogo, ¿sigue disponible?';
+    msg = saludo()+' Me interesa el '+nombreRef+' que vi en el catalogo, ¿sigue disponible?';
   }
   document.getElementById('modal-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent(msg);
+  // cuenta.js pinta el boton "Avisame" de este reloj
+  document.dispatchEvent(new CustomEvent('reloj-abierto', { detail: r }));
 
   var hd = document.getElementById('site-header');
   if(hd) document.documentElement.style.setProperty('--header-h', hd.offsetHeight + 'px');

@@ -8,7 +8,23 @@ import { vibrar } from './ui.js';
 let _favoritos = new Set();
 try{ _favoritos = new Set(JSON.parse(localStorage.getItem('aphillips_favoritos')||'[]')); }catch(e){}
 actualizarContadorFavoritos();
-function guardarFavoritos(){ try{ localStorage.setItem('aphillips_favoritos', JSON.stringify(Array.from(_favoritos))); }catch(e){} }
+// cuenta.js se suscribe para guardar los favoritos en la nube cuando hay sesion
+// (var sin valor inicial: cuenta.js se suscribe antes de que este modulo termine de cargar, por la
+// importacion circular entre ambos)
+var _alCambiar;
+function alCambiarFavoritos(fn){ (_alCambiar = _alCambiar || []).push(fn); }
+function guardarFavoritos(){
+  try{ localStorage.setItem('aphillips_favoritos', JSON.stringify(Array.from(_favoritos))); }catch(e){}
+  (_alCambiar || []).forEach(function(fn){ try{ fn(); }catch(e){} });
+}
+// reemplaza la lista (al iniciar sesion se unen los del navegador con los de la cuenta)
+function reemplazarFavoritos(ids){
+  _favoritos.clear();
+  ids.forEach(function(id){ _favoritos.add(id); });
+  try{ localStorage.setItem('aphillips_favoritos', JSON.stringify(Array.from(_favoritos))); }catch(e){}
+  document.querySelectorAll('.btn-favorito[data-fav-id]').forEach(function(b){ b.classList.toggle('activo', _favoritos.has(b.getAttribute('data-fav-id'))); });
+  actualizarContadorFavoritos();
+}
 function actualizarContadorFavoritos(){
   var n = _favoritos.size;
   var btn = document.getElementById('btn-fav-header');
@@ -101,6 +117,6 @@ function quitarFavorito(id){
 }
 document.getElementById('modal-favoritos').addEventListener('click', function(e){ if(e.target===this) cerrarFavoritos(); });
 
-export { _favoritos, abrirFavoritos, actualizarContadorFavoritos, cerrarFavoritos, guardarFavoritos, quitarFavorito, renderListaFavoritos, toggleFavorito, verDesdeFavoritos };
+export { _favoritos, abrirFavoritos, actualizarContadorFavoritos, alCambiarFavoritos, cerrarFavoritos, guardarFavoritos, quitarFavorito, reemplazarFavoritos, renderListaFavoritos, toggleFavorito, verDesdeFavoritos };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { abrirFavoritos, cerrarFavoritos, quitarFavorito, toggleFavorito, verDesdeFavoritos });

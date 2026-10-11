@@ -24,6 +24,18 @@
 //   GET    /respaldos/archivo?nombre=<n>  descarga un respaldo (mismo formato que "Exportar respaldo")
 //   POST   /mantenimiento      hace ahora el respaldo y la limpieza de fotos (lo mismo que el cron diario)
 //
+// Rutas de clientes (cualquier cuenta con sesion de Firebase; cada uno SOLO ve y cambia lo suyo):
+//   GET    /cuenta             -> { perfil, favoritos, avisos, vinculado, esAdmin }  (crea la cuenta la 1.a vez)
+//   PUT    /cuenta/perfil      { nombre, telefono }
+//   PUT    /cuenta/favoritos   { ids: [...] }  (reemplaza la lista, max 100)
+//   POST   /cuenta/avisos      { tipo: 'reloj'|'marca', valor }   DELETE /cuenta/avisos?tipo=&valor=
+//   GET    /cuenta/compras     -> compras y apartados (solo si el admin vinculo la cuenta a un cliente)
+//   DELETE /cuenta             borra la cuenta y sus datos
+// Rutas de admin para cuentas:
+//   GET    /admin/cuentas      -> todas las cuentas con sus avisos y cuantos favoritos tienen
+//   POST   /admin/cuentas/vincular  { uid, clienteId|null }
+//   POST   /admin/avisos/avisado    { uid, tipo, valor, estado, precio }  (marca el WhatsApp como enviado)
+//
 // Tarea diaria (cron, 3:00 a. m. de Panama): respaldo de los datos en el bucket PRIVADO
 // aphillips-respaldos (se guardan RETENCION_DIAS dias) y borrado de fotos que ningun reloj usa
 // desde hace mas de 30 dias.
@@ -61,11 +73,22 @@ export default {
     if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
 
+    // ---------- cuentas de clientes (su propia sesion) ----------
+    if (ruta === '/cuenta' || ruta.startsWith('/cuenta/')) {
+      let sesion;
+      try { sesion = await verificarSesionFirebase(request.headers.get('Authorization'), env); }
+      catch (e) { return json({ error: 'Sesion invalida: ' + e.message }, 401, cors); }
+      const proveedor = sesion.firebase && sesion.firebase.sign_in_provider;
+      if (!proveedor || proveedor === 'anonymous' || proveedor === 'custom') return json({ error: 'Inicia sesion con tu cuenta' }, 403, cors);
+      return rutaCuenta(ruta, metodo, request, url, env, cors, sesion);
+    }
+
     const conocida = (ruta === '/catalogo' && metodo === 'PUT') || (ruta === '/metricas' && metodo === 'GET') ||
       (ruta === '/metricas/importar' && metodo === 'POST') ||
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
-      ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET');
+      ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
+      (ruta === '/admin/cuentas' && metodo === 'GET') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -89,6 +112,9 @@ export default {
     if (ruta === '/mantenimiento') return json(await mantenimiento(env, 'manual'), 200, cors);
     if (ruta === '/respaldos') return listarRespaldos(env, cors);
     if (ruta === '/respaldos/archivo') return descargarRespaldo(url, env, cors);
+    if (ruta === '/admin/cuentas') return adminCuentas(env, cors);
+    if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
+    if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
 
     if (metodo === 'POST') {
       const reloj = (url.searchParams.get('reloj') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
@@ -360,6 +386,154 @@ async function loteDatos(request, env, cors) {
   return json({ ok: true, version: await versionActual(env), hashes }, 200, cors);
 }
 
+// ---------- cuentas de clientes ----------
+const MARCAS = ['invicta', 'bulova', 'technomarine'];
+const MAX_FAVORITOS = 100;
+const MAX_AVISOS = 50;
+const RE_ID = /^[A-Za-z0-9_-]{1,120}$/;
+function esDueno(uid, env) {
+  return String(env.OWNER_UID || '').split(',').map((x) => x.trim()).filter(Boolean).includes(uid);
+}
+function limpiarTexto(t, max) { return String(t == null ? '' : t).replace(/[<>\u0000-\u001f]/g, '').trim().slice(0, max); }
+// WhatsApp: solo digitos (con + opcional al inicio); 7 a 15 digitos
+function limpiarTelefono(t) {
+  const s = String(t == null ? '' : t).trim();
+  if (!s) return '';
+  const digitos = s.replace(/[^0-9]/g, '');
+  if (digitos.length < 7 || digitos.length > 15) return null;
+  return (s.startsWith('+') ? '+' : '') + digitos;
+}
+async function leerJson(request) { try { return await request.json(); } catch (e) { return null; } }
+
+async function rutaCuenta(ruta, metodo, request, url, env, cors, sesion) {
+  const uid = sesion.sub;
+  const ahora = Date.now();
+  // la cuenta se crea la primera vez que el cliente entra
+  await env.DB.prepare('INSERT INTO cuentas (uid, email, nombre, telefono, creado, actualizado) VALUES (?1, ?2, ?3, \'\', ?4, ?4) ' +
+    'ON CONFLICT(uid) DO UPDATE SET email = excluded.email')
+    .bind(uid, limpiarTexto(sesion.email, 120), limpiarTexto(sesion.name, 60), ahora).run();
+
+  if (ruta === '/cuenta' && metodo === 'GET') {
+    const c = await env.DB.prepare('SELECT email, nombre, telefono, cliente_id FROM cuentas WHERE uid = ?1').bind(uid).first();
+    const fav = await env.DB.prepare('SELECT reloj_id FROM favoritos WHERE uid = ?1 ORDER BY creado').bind(uid).all();
+    const av = await env.DB.prepare('SELECT tipo, valor, creado FROM avisos WHERE uid = ?1 ORDER BY creado DESC').bind(uid).all();
+    return json({
+      perfil: { nombre: c.nombre, telefono: c.telefono, email: c.email },
+      favoritos: fav.results.map((r) => r.reloj_id),
+      avisos: av.results,
+      vinculado: !!c.cliente_id,
+      esAdmin: esDueno(uid, env)
+    }, 200, cors);
+  }
+  if (ruta === '/cuenta' && metodo === 'DELETE') {
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM favoritos WHERE uid = ?1').bind(uid),
+      env.DB.prepare('DELETE FROM avisos WHERE uid = ?1').bind(uid),
+      env.DB.prepare('DELETE FROM cuentas WHERE uid = ?1').bind(uid)
+    ]);
+    return json({ ok: true }, 200, cors);
+  }
+  if (ruta === '/cuenta/perfil' && metodo === 'PUT') {
+    const b = await leerJson(request);
+    if (!b) return json({ error: 'Datos invalidos' }, 400, cors);
+    const nombre = limpiarTexto(b.nombre, 60);
+    const telefono = limpiarTelefono(b.telefono);
+    if (telefono === null) return json({ error: 'Revisa tu numero de WhatsApp (solo numeros, con codigo de pais si no es de Panama).' }, 400, cors);
+    await env.DB.prepare('UPDATE cuentas SET nombre = ?2, telefono = ?3, actualizado = ?4 WHERE uid = ?1').bind(uid, nombre, telefono, ahora).run();
+    return json({ ok: true, perfil: { nombre, telefono } }, 200, cors);
+  }
+  if (ruta === '/cuenta/favoritos' && metodo === 'PUT') {
+    const b = await leerJson(request);
+    if (!b || !Array.isArray(b.ids)) return json({ error: 'Faltan los favoritos' }, 400, cors);
+    const ids = [...new Set(b.ids.filter((x) => typeof x === 'string' && RE_ID.test(x)))].slice(0, MAX_FAVORITOS);
+    const insertar = env.DB.prepare('INSERT OR IGNORE INTO favoritos (uid, reloj_id, creado) VALUES (?1, ?2, ?3)');
+    await env.DB.batch([env.DB.prepare('DELETE FROM favoritos WHERE uid = ?1').bind(uid), ...ids.map((id, i) => insertar.bind(uid, id, ahora + i))]);
+    return json({ ok: true, favoritos: ids }, 200, cors);
+  }
+  if (ruta === '/cuenta/avisos' && metodo === 'POST') {
+    const b = await leerJson(request);
+    if (!b || (b.tipo !== 'reloj' && b.tipo !== 'marca') || typeof b.valor !== 'string') return json({ error: 'Aviso invalido' }, 400, cors);
+    const c = await env.DB.prepare('SELECT telefono FROM cuentas WHERE uid = ?1').bind(uid).first();
+    if (!c.telefono) return json({ error: 'Agrega tu WhatsApp en Mi cuenta para poder avisarte.', falta: 'telefono' }, 400, cors);
+    const n = await env.DB.prepare('SELECT count(*) AS n FROM avisos WHERE uid = ?1').bind(uid).first();
+    if (n.n >= MAX_AVISOS) return json({ error: 'Llegaste al maximo de ' + MAX_AVISOS + ' avisos.' }, 400, cors);
+    let estado = '', precio = 0;
+    if (b.tipo === 'reloj') {
+      const r = await relojPublico(b.valor, env);
+      if (!r) return json({ error: 'Ese reloj ya no esta en el catalogo' }, 404, cors);
+      estado = r.estado || ''; precio = Number(r.precio) || 0;
+    } else if (!MARCAS.includes(b.valor)) return json({ error: 'Marca desconocida' }, 400, cors);
+    await env.DB.prepare('INSERT INTO avisos (uid, tipo, valor, estado_base, precio_base, creado) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ' +
+      'ON CONFLICT(uid, tipo, valor) DO NOTHING').bind(uid, b.tipo, b.valor, estado, precio, ahora).run();
+    return json({ ok: true }, 200, cors);
+  }
+  if (ruta === '/cuenta/avisos' && metodo === 'DELETE') {
+    await env.DB.prepare('DELETE FROM avisos WHERE uid = ?1 AND tipo = ?2 AND valor = ?3')
+      .bind(uid, url.searchParams.get('tipo') || '', url.searchParams.get('valor') || '').run();
+    return json({ ok: true }, 200, cors);
+  }
+  if (ruta === '/cuenta/compras' && metodo === 'GET') return comprasCliente(uid, env, cors);
+  return json({ error: 'No encontrado' }, 404, cors);
+}
+
+async function relojPublico(id, env) {
+  if (!RE_ID.test(id)) return null;
+  const obj = await env.FOTOS.get(CLAVE_CATALOGO);
+  if (!obj) return null;
+  try { return (JSON.parse(await obj.text()).relojes || []).find((r) => r.id === id) || null; } catch (e) { return null; }
+}
+
+// Solo datos que el cliente ya conoce (lo que pago y lo que le falta). Nunca costos ni margenes.
+async function comprasCliente(uid, env, cors) {
+  const c = await env.DB.prepare('SELECT cliente_id FROM cuentas WHERE uid = ?1').bind(uid).first();
+  if (!c || !c.cliente_id) return json({ vinculado: false, compras: [], apartados: [] }, 200, cors);
+  const cid = c.cliente_id;
+  const movs = await env.DB.prepare("SELECT datos FROM docs WHERE col = 'movimientos' AND borrado = 0 AND json_extract(datos, '$.clienteId') = ?1").bind(cid).all();
+  const compras = [];
+  for (const f of movs.results) {
+    let m; try { m = JSON.parse(f.datos); } catch (e) { continue; }
+    if (m.tipo !== 'venta' && m.tipo !== 'abono') continue;
+    compras.push({ tipo: m.tipo, descripcion: limpiarTexto(m.desc, 160), monto: Number(m.monto) || 0, fecha: m.fecha || '', _ts: m._ts || 0 });
+  }
+  compras.sort((a, b) => b._ts - a._ts);
+  const inv = await env.DB.prepare("SELECT id, datos FROM docs WHERE col = 'inventario' AND borrado = 0 AND json_extract(datos, '$.reserva.clienteId') = ?1").bind(cid).all();
+  const apartados = [];
+  for (const f of inv.results) {
+    let p; try { p = JSON.parse(f.datos); } catch (e) { continue; }
+    if (p.estado !== 'reservado' || !p.reserva) continue;
+    const abonado = (p.reserva.abonos || []).reduce((t, a) => t + (Number(a.monto) || 0), 0);
+    const acordado = Number(p.reserva.precioAcordado) || 0;
+    apartados.push({ id: f.id, reloj: limpiarTexto(p.nombre, 120), sku: limpiarTexto(p.sku, 40), foto: typeof p.foto === 'string' && p.foto.startsWith('https://') ? p.foto : '',
+      precioAcordado: acordado, abonado, saldo: Math.max(0, acordado - abonado), desde: p.reserva.fechaInicio || '' });
+  }
+  return json({ vinculado: true, compras, apartados }, 200, cors);
+}
+
+async function adminCuentas(env, cors) {
+  const cuentas = (await env.DB.prepare('SELECT uid, email, nombre, telefono, cliente_id, creado FROM cuentas ORDER BY creado DESC').all()).results;
+  const favs = (await env.DB.prepare('SELECT uid, count(*) AS n FROM favoritos GROUP BY uid').all()).results;
+  const avisos = (await env.DB.prepare('SELECT uid, tipo, valor, estado_base, precio_base, creado, avisado FROM avisos').all()).results;
+  const nFav = Object.fromEntries(favs.map((r) => [r.uid, r.n]));
+  const porUid = {};
+  for (const a of avisos) (porUid[a.uid] || (porUid[a.uid] = [])).push(a);
+  return json({ cuentas: cuentas.map((c) => ({ ...c, favoritos: nFav[c.uid] || 0, avisos: porUid[c.uid] || [] })) }, 200, cors);
+}
+async function adminVincular(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || typeof b.uid !== 'string') return json({ error: 'Falta la cuenta' }, 400, cors);
+  const cid = b.clienteId == null || b.clienteId === '' ? null : String(b.clienteId);
+  if (cid !== null && !RE_ID.test(cid)) return json({ error: 'Cliente invalido' }, 400, cors);
+  await env.DB.prepare('UPDATE cuentas SET cliente_id = ?2, actualizado = ?3 WHERE uid = ?1').bind(b.uid, cid, Date.now()).run();
+  return json({ ok: true }, 200, cors);
+}
+async function adminAvisado(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || typeof b.uid !== 'string' || typeof b.tipo !== 'string' || typeof b.valor !== 'string') return json({ error: 'Aviso invalido' }, 400, cors);
+  await env.DB.prepare('UPDATE avisos SET avisado = ?4, estado_base = ?5, precio_base = ?6 WHERE uid = ?1 AND tipo = ?2 AND valor = ?3')
+    .bind(b.uid, b.tipo, b.valor, Date.now(), limpiarTexto(b.estado, 20), Number(b.precio) || 0).run();
+  return json({ ok: true }, 200, cors);
+}
+
 // ---------- respaldos automaticos y limpieza de fotos ----------
 const RETENCION_DIAS = 120;
 const DIAS_FOTO_HUERFANA = 30;
@@ -393,6 +567,11 @@ async function hacerRespaldo(env, tipo) {
   const met = await env.DB.prepare('SELECT id, vistas, aperturas, clics, ultima FROM metricas').all();
   r.metricas = {};
   for (const m of met.results) r.metricas[m.id] = { vistas: m.vistas, aperturas: m.aperturas, clics: m.clics, _ultima: m.ultima };
+  try {
+    r.cuentasTienda = (await env.DB.prepare('SELECT * FROM cuentas').all()).results;
+    r.favoritosTienda = (await env.DB.prepare('SELECT * FROM favoritos').all()).results;
+    r.avisosTienda = (await env.DB.prepare('SELECT * FROM avisos').all()).results;
+  } catch (e) { /* tablas aun no creadas */ }
   const ahora = new Date();
   const dia = ahora.toISOString().slice(0, 10);
   const nombre = tipo === 'manual' ? dia + '-manual-' + ahora.toISOString().slice(11, 16).replace(':', '') : dia;
@@ -481,6 +660,10 @@ function b64urlABytes(s) {
 function b64urlAJson(s) { return JSON.parse(new TextDecoder().decode(b64urlABytes(s))); }
 
 async function verificarTokenFirebase(cabecera, env) {
+  return (await verificarSesionFirebase(cabecera, env)).sub;
+}
+// Devuelve el contenido del token (sub, email, name, firebase.sign_in_provider...) si es valido
+async function verificarSesionFirebase(cabecera, env) {
   const m = /^Bearer\s+(.+)$/i.exec(cabecera || '');
   if (!m) throw new Error('falta el token');
   const partes = m[1].split('.');
@@ -503,5 +686,5 @@ async function verificarTokenFirebase(cabecera, env) {
   const llave = await crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
   const valido = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', llave, b64urlABytes(f64), new TextEncoder().encode(h64 + '.' + p64));
   if (!valido) throw new Error('firma no valida');
-  return payload.sub;
+  return payload;
 }

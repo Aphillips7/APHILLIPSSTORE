@@ -22,6 +22,8 @@ function vigilarSesion(){
   firebase.auth().onAuthStateChanged(function(user){
     if(user && !user.isAnonymous){
       ocultarLoginGate();
+      // el catalogo (mismo dominio) recupera esta sesion y muestra las opciones de administrador en Mi cuenta
+      try{ localStorage.setItem('aphillips_sesion','1'); }catch(e){}
       var elEmail=document.getElementById('sesion-usuario-email');
       if(elEmail) elEmail.textContent=user.email||'';
       var navEmail=document.getElementById('nav-sesion-email');
