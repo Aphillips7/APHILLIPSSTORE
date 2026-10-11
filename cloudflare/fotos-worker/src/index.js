@@ -604,7 +604,8 @@ function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota }) {
     '<body style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#09090b;">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 12px;"><tr><td align="center">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;">' +
-    '<tr><td style="background:#09090b;padding:26px 32px;text-align:center;font-family:Georgia,\'Times New Roman\',serif;font-size:24px;letter-spacing:4px;color:#ffffff;font-weight:bold;">APHILLIPS</td></tr>' +
+    // logo de la tienda (img/logo-correo.png); si el correo bloquea imagenes se ve el texto APHILLIPS
+    '<tr><td style="background:#000000;padding:24px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo.png" width="240" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;outline:none;width:240px;max-width:100%;height:auto;color:#ffffff;font-family:Georgia,serif;font-size:24px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
     '<tr><td style="padding:36px 32px 8px;">' +
       '<p style="margin:0 0 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6a6a6a;">' + e(titulo) + '</p>' +
       '<p style="margin:0 0 16px;font-size:16px;line-height:24px;">' + e(saludo) + '</p>' +
