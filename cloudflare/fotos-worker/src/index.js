@@ -203,7 +203,7 @@ async function publicarCatalogo(request, env, cors) {
   if (!datos || !Array.isArray(datos.relojes)) return json({ error: 'Falta la lista de relojes' }, 400, cors);
   if (datos.relojes.length > 2000) return json({ error: 'Demasiados relojes' }, 413, cors);
   // segunda capa de proteccion: solo pasan los campos publicos
-  const relojes = datos.relojes.filter((r) => r && typeof r.id === 'string' && r.id).map((r) => {
+  const relojes = datos.relojes.filter((r) => r && typeof r.id === 'string' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id)).map((r) => {
     const limpio = {};
     for (const k of CAMPOS_PUBLICOS) if (r[k] !== undefined) limpio[k] = r[k];
     return limpio;

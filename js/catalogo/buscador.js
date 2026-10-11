@@ -49,7 +49,7 @@ function _tarjeta(r){
   var eti = etiquetaEstado(r.estado);
   var sub = [r.movimiento, r.mm ? r.mm+' mm' : '', r.materialCaja].filter(Boolean).join(', ') || r.coleccion || '';
   return '<div class="bs-card" role="button" tabindex="0" onclick="verDesdeBuscador(\''+r.id+'\')">'+
-      (r.foto ? '<img src="'+r.foto+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'" />' : '<div class="bs-sinfoto"></div>')+
+      (r.foto ? '<img src="'+esc(r.foto)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'" />' : '<div class="bs-sinfoto"></div>')+
       '<div class="bs-info">'+
         '<span class="bs-eti '+eti.cls+'">'+eti.txt+'</span>'+
         '<span class="bs-name">'+esc(r.nombre || 'Reloj')+'</span>'+

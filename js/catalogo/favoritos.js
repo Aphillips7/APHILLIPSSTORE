@@ -3,7 +3,7 @@ import { buscadorAbierto, toggleBuscador } from './buscador.js';
 import { cerrarCuenta } from './cuenta.js';
 import { relojes } from './datos.js';
 import { abrir, cerrar } from './modal.js';
-import { vibrar } from './ui.js';
+import { _destEsc as esc, vibrar } from './ui.js';
 
 let _favoritos = new Set();
 try{ _favoritos = new Set(JSON.parse(localStorage.getItem('aphillips_favoritos')||'[]')); }catch(e){}
@@ -57,12 +57,12 @@ function renderListaFavoritos(){
     var precio = r.estado==='bajopedido' ? 'Bajo pedido' : '$'+(r.precio||0).toLocaleString();
     var badge = r.estado==='transito' ? 'EN TRÁNSITO' : (r.estado==='bajopedido' ? 'BAJO PEDIDO' : (r.estado==='vendido' ? 'AGOTADO' : 'DISPONIBLE'));
     var sub = (r.coleccion||'') + (r.sku ? (r.coleccion?' · ':'')+'Ref. '+r.sku : '');
-    var foto = r.foto ? '<img class="fav-fila-foto" src="'+r.foto+'" alt="" onclick="verDesdeFavoritos(\''+r.id+'\')" onerror="this.style.display=\'none\'" />' : '<div class="fav-fila-foto" onclick="verDesdeFavoritos(\''+r.id+'\')"></div>';
+    var foto = r.foto ? '<img class="fav-fila-foto" src="'+esc(r.foto)+'" alt="" onclick="verDesdeFavoritos(\''+r.id+'\')" onerror="this.style.display=\'none\'" />' : '<div class="fav-fila-foto" onclick="verDesdeFavoritos(\''+r.id+'\')"></div>';
     return '<div class="fav-fila">'+foto+
       '<div class="fav-fila-info" onclick="verDesdeFavoritos(\''+r.id+'\')">'+
         '<span class="fav-badge">'+badge+'</span>'+
-        '<div class="fav-fila-nombre">'+(r.nombre||'Reloj')+'</div>'+
-        (sub?'<div class="fav-fila-sub">'+sub+'</div>':'')+
+        '<div class="fav-fila-nombre">'+esc(r.nombre||'Reloj')+'</div>'+
+        (sub?'<div class="fav-fila-sub">'+esc(sub)+'</div>':'')+
         '<div class="fav-fila-precio">'+precio+'</div>'+
       '</div>'+
       '<button class="fav-fila-quitar" onclick="quitarFavorito(\''+r.id+'\')" aria-label="Quitar" title="Quitar de favoritos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="18" height="18"><path d="M6 6L18 18M18 6L6 18"/></svg></button>'+

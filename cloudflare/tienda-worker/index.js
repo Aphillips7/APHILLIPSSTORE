@@ -127,12 +127,28 @@ function servir(env, request, ruta) {
   return env.ASSETS.fetch(new Request(destino.toString(), request));
 }
 
+// Content-Security-Policy. Como el sitio usa <script> y onclick en linea, script-src lleva
+// 'unsafe-inline' (la defensa real contra XSS es escapar los datos del catalogo en el JS); la CSP
+// anade object-src 'none', base-uri y frame-ancestors (anti-clickjacking) y acota de donde se cargan
+// imagenes, conexiones y scripts. El panel ademas necesita Firebase (gstatic), qrcode (cdnjs) y el
+// login de Google.
+const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
+  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; " +
+  "connect-src 'self' https://api.aphillipsstore.com; font-src 'self'; form-action 'self'";
+const CSP_PANEL = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
+  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; " +
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com; " +
+  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com; " +
+  "frame-src 'self' https://aphillipsstore.com https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; " +
+  "font-src 'self'; form-action 'self'";
+
 // Cabeceras de seguridad para las paginas; el panel ademas no se deja meter en iframes ni indexar
 function conCabeceras(res, esPanel) {
   const h = new Headers(res.headers);
   h.set('X-Content-Type-Options', 'nosniff');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   h.set('Cache-Control', 'no-cache');
+  h.set('Content-Security-Policy', esPanel ? CSP_PANEL : CSP_CATALOGO);
   if (esPanel) {
     h.set('X-Frame-Options', 'DENY');
     h.set('X-Robots-Tag', 'noindex, nofollow');
