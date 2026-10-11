@@ -10,6 +10,7 @@ import { renderPickerCompra } from '../finanzas/registrar-compra.js';
 import { renderPicker } from '../finanzas/registrar-venta.js';
 import { renderResumen } from '../finanzas/resumen.js';
 import { renderChecklist, renderInicio } from '../inicio.js';
+import { renderFotosAntiguas } from '../inventario/fotos.js';
 import { renderInventario } from '../inventario/lista.js';
 import { COLECCIONES, state } from '../state.js';
 import { cargarCatalogoPublicoRemoto, marcarInventarioCargado, syncCatalogoPublico } from './catalogo-publico.js';
@@ -27,6 +28,7 @@ function refrescarVista(key){
     try{ renderPickerCompra(); }catch(e){}
     try{ renderClientes(); }catch(e){}
     try{ syncCatalogoPublico(); }catch(e){}
+    try{ renderFotosAntiguas(); }catch(e){}
   }else if(key==='movimientos'){
     try{ renderHistorial(); }catch(e){}
     try{ renderResumen(); }catch(e){}

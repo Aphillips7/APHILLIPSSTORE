@@ -13,6 +13,7 @@
    - Subir fotos requiere internet.
    ============================================================ */
 import { firebase } from '../../firebase.js';
+import { save, state } from '../state.js';
 
 const API_FOTOS = 'https://api.aphillipsstore.com/fotos';
 const MAX_DIM = 1600;
@@ -103,11 +104,11 @@ function _carpeta(){
   if(h && !h.value) h.value='nuevo-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   return h ? h.value : 'sin-id';
 }
-async function _subir(blob){
+async function _subir(blob, carpeta){
   var usuario=firebase.auth().currentUser;
   if(!usuario) throw new Error('Inicia sesion de nuevo para subir fotos');
   var token=await usuario.getIdToken();
-  var r=await fetch(API_FOTOS+'?reloj='+encodeURIComponent(_carpeta()), {
+  var r=await fetch(API_FOTOS+'?reloj='+encodeURIComponent(carpeta||_carpeta()), {
     method:'POST', headers:{ 'Authorization':'Bearer '+token, 'Content-Type':blob.type }, body:blob
   });
   var data={}; try{ data=await r.json(); }catch(e){}
@@ -143,9 +144,56 @@ function _bloquearGuardar(si){
 }
 function fotosSubiendo(){ return _subiendo>0; }
 
+// ---------- pasar fotos antiguas (base64) a la nube ----------
+// Las fotos viejas estan guardadas como texto dentro del reloj: pesan en Firestore y en el
+// catalogo publico. Se suben tal cual (sin volver a comprimir, para no perder calidad) a R2 y
+// el reloj queda apuntando a la URL. Lo corre el dueno desde Configuracion.
+function relojesConFotoAntigua(){
+  return state.inventario.filter(function(p){ return typeof p.foto==='string' && p.foto.indexOf('data:')===0; });
+}
+function renderFotosAntiguas(){
+  var info=document.getElementById('fotos-antiguas-info');
+  var btn=document.getElementById('btn-fotos-antiguas');
+  if(!info) return;
+  var n=relojesConFotoAntigua().length;
+  info.textContent = n ? n+(n===1?' reloj tiene':' relojes tienen')+' la foto guardada a la antigua (como texto).' : 'Todas las fotos ya estan en la nube.';
+  if(btn) btn.style.display = n ? '' : 'none';
+}
+async function migrarFotosAntiguas(){
+  var lista=relojesConFotoAntigua();
+  var info=document.getElementById('fotos-antiguas-info');
+  var btn=document.getElementById('btn-fotos-antiguas');
+  if(!lista.length){ renderFotosAntiguas(); return; }
+  if(!navigator.onLine){ if(info){ info.style.color='var(--red)'; info.textContent='Necesitas internet.'; } return; }
+  if(btn) btn.disabled=true;
+  var ok=0, fallos=0;
+  for(var k=0;k<lista.length;k++){
+    var p=lista[k];
+    if(info){ info.style.color='var(--muted)'; info.textContent='Subiendo foto '+(k+1)+' de '+lista.length+'...'; }
+    try{
+      var blob=await (await fetch(p.foto)).blob();
+      if(!/^image\/(webp|jpeg|png)$/.test(blob.type)) blob=await _comprimir(blob);   // otro formato: convertir
+      var url=await _subir(blob, p.id);
+      var actual=state.inventario.find(function(x){ return x.id===p.id; });
+      if(actual && actual.foto===p.foto){
+        actual.foto=url;
+        actual.fotos=[url].concat((actual.fotos||[]).filter(function(u){ return u!==url; }));
+        ok++;
+      }
+    }catch(err){ fallos++; console.warn('Foto antigua no subida:', p.id, err); }
+  }
+  if(ok) save('inventario');
+  if(btn) btn.disabled=false;
+  renderFotosAntiguas();
+  if(info){
+    info.style.color = fallos ? 'var(--red)' : 'var(--green)';
+    info.textContent = fallos ? ok+' pasadas a la nube, '+fallos+' con error. Vuelve a intentarlo.' : ok+(ok===1?' foto pasada':' fotos pasadas')+' a la nube.';
+  }
+}
+
 // Compatibilidad con el nombre anterior (onchange del HTML viejo)
 function subirFotoLocal(input){ return subirFotos(input); }
 
-export { fotosFormulario, fotosSubiendo, moverFoto, previewFoto, quitarFoto, renderFotos, setFotosFormulario, subirFotoLocal, subirFotos };
+export { fotosFormulario, fotosSubiendo, migrarFotosAntiguas, moverFoto, previewFoto, quitarFoto, renderFotos, renderFotosAntiguas, setFotosFormulario, subirFotoLocal, subirFotos };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { moverFoto, quitarFoto, subirFotoLocal, subirFotos });
+Object.assign(window, { migrarFotosAntiguas, moverFoto, quitarFoto, subirFotoLocal, subirFotos });
