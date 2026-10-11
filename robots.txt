@@ -1,0 +1,7 @@
+# Buscadores: todo el catalogo se puede indexar; el panel privado no.
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /index.html
+
+Sitemap: https://aphillipsstore.com/sitemap.xml
