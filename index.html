@@ -645,6 +645,12 @@ if(location.hostname==='aphillips7.github.io'){
     </div>
   </div>
   <div class="card">
+    <div class="card-title">Respaldos automaticos</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Cloudflare guarda cada noche una copia completa de tus datos en un almacen privado y la conserva 120 dias. Se puede restaurar con "Importar respaldo".</p>
+    <div id="respaldos-nube-lista" style="margin-bottom:12px;font-size:12px;color:var(--muted);">Cargando...</div>
+    <button class="btn btn-outline btn-sm" onclick="hacerRespaldoAhora(this)">Hacer respaldo ahora</button>
+  </div>
+  <div class="card">
     <div class="card-title">Respaldo local (JSON)</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Exporta todos tus datos como archivo y restauralos cuando quieras.</p>
     <div id="respaldo-info" style="margin-bottom:6px;"></div>

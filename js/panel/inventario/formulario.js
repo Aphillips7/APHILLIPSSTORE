@@ -1,7 +1,7 @@
 import { autoRegistrarCompraInv } from '../finanzas/registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { cerrarModal } from './detalle.js';
-import { fotosFormulario, fotosSubiendo, setFotosFormulario } from './fotos.js';
+import { fotoCompartirFormulario, fotosFormulario, fotosSubiendo, jpgsFormulario, setFotosFormulario } from './fotos.js';
 import { renderInventario } from './lista.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 
@@ -72,6 +72,8 @@ function agregarProducto(){
     margen, estado,
     foto:listaFotos[0]||'',                                              // principal (URL, o una foto antigua en base64)
     fotos:listaFotos.filter(function(u){ return /^https:\/\//.test(u); }), // todas las fotos en la nube, en orden
+    fotosJpg:jpgsFormulario(),                                           // copias JPEG para compartir (privado)
+    fotoCompartir:fotoCompartirFormulario(),                             // imagen de la vista previa en WhatsApp
     fecha:new Date().toLocaleDateString('es-MX')
   };
   var esEdicion=editIdx!=='';
@@ -138,7 +140,7 @@ function editarProducto(id){
   document.getElementById('inv-submit-btn').textContent='Guardar cambios';
   var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='inline-flex';
   calcularMargenPreview();
-  setFotosFormulario(fotosDe(p));
+  setFotosFormulario(fotosDe(p), p.fotosJpg);
   toggleFormulario(true);
   cerrarModal();
 }
@@ -168,7 +170,7 @@ function duplicarProducto(id){
   document.getElementById('inv-form-title').textContent='Nueva unidad de '+(p.nombre||'este modelo');
   document.getElementById('inv-submit-btn').textContent='Registrar unidad';
   var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='inline-flex';
-  setFotosFormulario(fotosDe(p));
+  setFotosFormulario(fotosDe(p), p.fotosJpg);
   calcularMargenPreview();
   cerrarModal();
   toggleFormulario(true);

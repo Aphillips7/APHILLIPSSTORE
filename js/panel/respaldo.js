@@ -1,4 +1,5 @@
 // =================== RESPALDO (JSON) ===================
+import { firebase } from '../firebase.js';
 import { save, saveMeta, state } from './state.js';
 import { refrescarVistaCompleta } from './sync/listeners.js';
 import { borrarDatosLocales } from './sync/nube.js';
@@ -107,6 +108,61 @@ function importarJSON(e){
   reader.readAsText(file);
 }
 
-export { borrarYRecargarDesdeNube, construirDatosRespaldo, copiarRespaldoComoTexto, exportarJSON, importarJSON, renderResumenRespaldo };
+// =================== RESPALDOS AUTOMATICOS (Cloudflare) ===================
+// Cada noche Cloudflare guarda una copia completa en un almacen privado (se conservan 120 dias).
+// Aqui se listan, se descargan (mismo formato que "Exportar respaldo") y se puede hacer uno ahora.
+const API = 'https://api.aphillipsstore.com';
+async function pedirApi(ruta, opciones){
+  var u = firebase.auth().currentUser;
+  if(!u) throw new Error('Inicia sesion de nuevo');
+  opciones = opciones || {};
+  opciones.headers = Object.assign({ 'Authorization': 'Bearer ' + await u.getIdToken() }, opciones.headers || {});
+  var r = await fetch(API + ruta, opciones);
+  if(!r.ok){ var d = {}; try{ d = await r.json(); }catch(e){} throw new Error(d.error || ('Error ' + r.status)); }
+  return r;
+}
+function _esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+async function cargarRespaldosNube(){
+  var cont = document.getElementById('respaldos-nube-lista');
+  if(!cont) return;
+  try{
+    var d = await (await pedirApi('/respaldos')).json();
+    var lista = (d.respaldos || []).slice(0, 10);
+    if(!lista.length){ cont.innerHTML = '<div style="font-size:12px;color:var(--muted);">Todavia no hay respaldos automaticos (el primero se hace esta noche a las 3:00 a. m.).</div>'; return; }
+    cont.innerHTML = lista.map(function(r){
+      var fecha = new Date(r.fecha).toLocaleString('es-MX', { dateStyle:'medium', timeStyle:'short' });
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">' +
+        '<span>' + _esc(fecha) + (r.nombre.indexOf('manual') !== -1 ? ' · manual' : '') + ' · ' + Math.max(1, Math.round(r.bytes/1024)) + ' KB</span>' +
+        '<button class="btn btn-outline btn-sm" onclick="descargarRespaldoNube(\'' + _esc(r.nombre) + '\')">Descargar</button></div>';
+    }).join('');
+  }catch(e){
+    cont.innerHTML = '<div style="font-size:12px;color:var(--red);">No se pudieron cargar los respaldos: ' + _esc(e.message) + '</div>';
+  }
+}
+async function descargarRespaldoNube(nombre){
+  try{
+    var blob = await (await pedirApi('/respaldos/archivo?nombre=' + encodeURIComponent(nombre))).blob();
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'respaldo-tienda-' + nombre + '.json';
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+  }catch(e){ alert('No se pudo descargar: ' + e.message); }
+}
+async function hacerRespaldoAhora(btn){
+  if(btn){ btn.disabled = true; btn.textContent = 'Haciendo respaldo...'; }
+  try{
+    var inf = await (await pedirApi('/mantenimiento', { method:'POST' })).json();
+    if(inf.respaldo && inf.respaldo.error) throw new Error(inf.respaldo.error);
+    await cargarRespaldosNube();
+    if(btn) btn.textContent = 'Respaldo listo';
+  }catch(e){
+    alert('No se pudo hacer el respaldo: ' + e.message);
+    if(btn) btn.textContent = 'Hacer respaldo ahora';
+  }
+  if(btn) setTimeout(function(){ btn.disabled = false; btn.textContent = 'Hacer respaldo ahora'; }, 2500);
+}
+
+export { borrarYRecargarDesdeNube, cargarRespaldosNube, construirDatosRespaldo, copiarRespaldoComoTexto, exportarJSON, importarJSON, renderResumenRespaldo };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { borrarYRecargarDesdeNube, copiarRespaldoComoTexto, exportarJSON, importarJSON });
+Object.assign(window, { borrarYRecargarDesdeNube, copiarRespaldoComoTexto, descargarRespaldoNube, exportarJSON, hacerRespaldoAhora, importarJSON });

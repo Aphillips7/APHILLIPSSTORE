@@ -24,7 +24,7 @@ function camposPublicos(p){
     mm:p.mm||'', materialCaja:p.materialCaja||'', materialCorrea:p.materialCorrea||'',
     colorEsfera:p.colorEsfera||'', movimiento:p.movimiento||'', agua:p.agua||'',
     cristal:p.cristal||'', color:p.color||'', notas:p.notas||'', descripcion:p.descripcion||'', eta:p.eta||'',
-    precio:p.precio||0, foto:p.foto||'', fotos:Array.isArray(p.fotos)?p.fotos.slice(0,12):[],
+    precio:p.precio||0, foto:p.foto||'', fotos:Array.isArray(p.fotos)?p.fotos.slice(0,12):[], fotoCompartir:p.fotoCompartir||'',
     estado:p.estado||'', _ts:p._ts||0
   };
 }

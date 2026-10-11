@@ -41,6 +41,17 @@ Las fotos se guardan como `relojes/<id del reloj>/<fecha>-<aleatorio>.<ext>` con
 | `POST /datos/lote` | admin | `{ops:[{col,id,json}|{col,id,borrar:true}]}`, max 200, todo o nada. Borrar conserva el contenido (`borrado=1`). |
 | `POST /datos/estado` | admin | Vender/reservar sin venta doble: comprueba `estadoEsperado` y escribe condicionado a la huella; 409 si cambio. |
 
+| `GET /respaldos` | admin | Lista de respaldos automaticos (bucket privado `aphillips-respaldos`). |
+| `GET /respaldos/archivo?nombre=` | admin | Descarga un respaldo (formato de "Exportar respaldo" + authSettings, metricas y borrados). |
+| `POST /mantenimiento` | admin | Hace ahora el respaldo y la limpieza (lo mismo que el cron). |
+
+**Tarea diaria** (cron `0 8 * * *` = 3:00 a. m. Panama): respaldo en `aphillips-respaldos/respaldos/AAAA-MM-DD.json`
+(se borran los de mas de 120 dias) y borrado de fotos de `relojes/` que ningun reloj usa desde hace mas de 30 dias
+(si no hay relojes, no borra nada). El bucket de respaldos NO tiene dominio publico: tiene datos privados.
+
+**Vista previa de links** (`?id=<reloj>`): el Worker de la tienda lee el catalogo por el service binding `API`
+y cambia `og:title`, `og:description` y `og:image` (usa `fotoCompartir`, JPEG) con HTMLRewriter.
+
 Colecciones en `docs`: `inventario`, `movimientos`, `clientes`, `config` (doc `main`), `authSettings`.
 Para recuperar algo borrado o volver atras: D1 Time Travel (`npx wrangler@4 d1 time-travel restore aphillips-db --timestamp=...`)
 o tus respaldos JSON del panel (Firestore ya no recibe copias; queda como archivo hasta el 10/10/2026).
