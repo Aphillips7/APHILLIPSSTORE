@@ -592,7 +592,7 @@ if(location.hostname==='aphillips7.github.io'){
 <!-- SYNC -->
 <div id="page-config" class="page">
   <div class="section-title">Sincronizacion y Respaldo</div>
-  <div class="section-sub">Tus datos en la nube (Firebase), visibles en todos tus dispositivos en tiempo real.</div>
+  <div class="section-sub">Tus datos en la nube (Cloudflare), visibles en todos tus dispositivos.</div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div><div class="card-title" style="margin-bottom:4px;">Sesion activa</div><div id="sesion-usuario-email" style="font-size:13px;color:var(--muted);">—</div></div>
     <button class="btn btn-outline btn-sm" onclick="cerrarSesion()">Cerrar sesion</button>
@@ -610,7 +610,7 @@ if(location.hostname==='aphillips7.github.io'){
     </div>
   </div>
   <div class="card">
-    <div class="card-title" style="margin-bottom:10px;">Espacio usado en la nube</div>
+    <div class="card-title" style="margin-bottom:10px;">Espacio usado en la nube (Cloudflare)</div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
       <span id="espacio-texto" style="font-size:13px;color:var(--muted);">Calculando...</span>
       <span id="espacio-pct" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;"></span>
@@ -628,8 +628,8 @@ if(location.hostname==='aphillips7.github.io'){
   </div>
   <div class="card">
     <div class="card-title" style="margin-bottom:6px;">Datos en Cloudflare</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Tus datos se guardan en Cloudflare y se revisan cada 10 segundos. Firebase recibe una copia de respaldo. Sin internet, los cambios quedan en este dispositivo y se envian solos.</div>
-    <div id="espejo-cf-texto" style="font-size:13px;color:var(--muted);">Preparando la copia...</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Tus datos se guardan en Cloudflare y se revisan cada 10 segundos. Sin internet, los cambios quedan en este dispositivo y se envian solos. Para tener tu propia copia, usa "Exportar respaldo".</div>
+    <div id="espejo-cf-texto" style="font-size:13px;color:var(--muted);">Conectando...</div>
   </div>
   <div class="card">
     <div class="card-title" style="margin-bottom:10px;">Diagnostico</div>
@@ -754,7 +754,6 @@ if(location.hostname==='aphillips7.github.io'){
 </div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module" src="js/panel/main.js"></script>

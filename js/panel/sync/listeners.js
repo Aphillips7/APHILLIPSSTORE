@@ -1,4 +1,4 @@
-import { db, firebase } from '../../firebase.js';
+import { firebase } from '../../firebase.js';
 import { renderConfigPage } from '../auth/auth-overlay.js';
 import { renderCatalogoAdmin } from '../catalogo-admin.js';
 import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
@@ -12,14 +12,11 @@ import { renderResumen } from '../finanzas/resumen.js';
 import { renderChecklist, renderInicio } from '../inicio.js';
 import { renderFotosAntiguas } from '../inventario/fotos.js';
 import { renderInventario } from '../inventario/lista.js';
-import { COLECCIONES, state } from '../state.js';
-import { cargarCatalogoPublicoRemoto, marcarInventarioCargado, syncCatalogoPublico } from './catalogo-publico.js';
+import { state } from '../state.js';
+import { marcarInventarioCargado, syncCatalogoPublico } from './catalogo-publico.js';
 import { renderEspacioUsado } from './espacio.js';
-import { iniciarEspejo } from './espejo-cloudflare.js';
-import { FUENTE_DATOS } from './fuente.js';
 import { iniciarNube } from './nube.js';
-import { setSyncStatus } from './estado-sync.js';
-import { _lastSynced, _remoteIds, marcarSyncListo } from './sync.js';
+import { marcarSyncListo } from './sync.js';
 
 function refrescarVista(key){
   try{ renderInicio(); }catch(e){}
@@ -51,89 +48,41 @@ function refrescarVista(key){
   }
 }
 
+// Arranque de los datos del panel cuando hay sesion: todo viene de Cloudflare (ver nube.js).
+// (El nombre se conserva porque lo llama sesion.js.)
 function iniciarListenersFirebase(){
   if(!marcarSyncListo()) return;
-
-  // Etapa 3b: los datos del panel vienen de Cloudflare (Firestore solo recibe la copia de respaldo)
-  var desdeCloudflare = FUENTE_DATOS==='cloudflare';
-  if(desdeCloudflare){
-    iniciarNube({ refrescarVista: refrescarVista, refrescarVistaCompleta: refrescarVistaCompleta, marcarInventarioCargado: marcarInventarioCargado });
-  }
-
-  if(!desdeCloudflare) COLECCIONES.forEach(function(key){
-    db.collection(key).onSnapshot(function(snap){
-      var items=[];
-      var ids=new Set();
-      var cache=_lastSynced[key];
-      snap.forEach(function(doc){
-        var data=doc.data();
-        data.id=doc.id;
-        items.push(data);
-        ids.add(doc.id);
-        cache[doc.id]=JSON.stringify(data);
-      });
-      Object.keys(cache).forEach(function(id){ if(!ids.has(id)) delete cache[id]; });
-      items.sort(function(a,b){return (b._ts||0)-(a._ts||0);});
-      _remoteIds[key]=ids;
-      state[key]=items;
-      // Solo una lectura confirmada por el servidor sirve para decidir que despublicar
-      if(key==='inventario' && !(snap.metadata && snap.metadata.fromCache)) marcarInventarioCargado();
-      refrescarVista(key);
-    }, function(err){
-      // permission-denied = las reglas de Firestore rechazan esta cuenta (no es la del admin)
-      if(err && err.code==='permission-denied') setSyncStatus('Sin permiso: esta cuenta no es la del administrador','var(--red)','error');
-      else setSyncStatus('Sin conexion','var(--red)','error');
-    });
-  });
-
-  // Lo que hay publicado de verdad en el catalogo (para limpiar lo que ya no debe verse)
-  db.collection('catalogo_publico').onSnapshot(function(snap){
-    if(snap.metadata && snap.metadata.fromCache) return;
-    cargarCatalogoPublicoRemoto(snap);
-    syncCatalogoPublico();
-  }, function(){ /* el catalogo publico es un extra; si falla no afecta el panel */ });
-
-  if(!desdeCloudflare) db.collection('config').doc('main').onSnapshot(function(doc){
-    if(!doc.exists) return;
-    var data=doc.data();
-    if(typeof data.meta==='number'){ state.meta=data.meta; localStorage.setItem('meta',state.meta); }
-    if(Array.isArray(data.tasks)){ state.tasks=data.tasks; localStorage.setItem('tasks',JSON.stringify(state.tasks)); }
-    if(data.weekTasks){ state.weekTasks=data.weekTasks; localStorage.setItem('weekTasks',JSON.stringify(state.weekTasks)); }
-    if(Array.isArray(data.ideas)){ state.ideas=data.ideas; localStorage.setItem('ideas',JSON.stringify(state.ideas)); }
-    refrescarVista('config');
-  }, function(){
-    setSyncStatus('Sin conexion','var(--red)','error');
-  });
-
-  // Metricas: las antiguas siguen en Firestore (historial) y las nuevas llegan de Cloudflare (D1).
-  // El panel muestra la suma de las dos.
-  db.collection('metricas_catalogo').onSnapshot(function(snap){
-    var m={};
-    snap.forEach(function(doc){ m[doc.id]=doc.data(); });
-    _metricasFS=m;
-    combinarMetricas();
-  }, function(){ /* las metricas son un extra; si fallan no afectan el resto del panel */ });
+  iniciarNube({ refrescarVista: refrescarVista, refrescarVistaCompleta: refrescarVistaCompleta, marcarInventarioCargado: marcarInventarioCargado });
   cargarMetricasCloudflare();
   if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(!document.hidden) cargarMetricasCloudflare(); }, 120000);
-
-  if(!desdeCloudflare){
-    setSyncStatus('Conectado','var(--green)','ok');
-    try{ iniciarEspejo(); }catch(e){}
-  }
 }
 
-var _metricasFS={}, _metricasCF={}, _timerMetricas=null;
-function combinarMetricas(){
+// Metricas del catalogo (vistas, aperturas, clics), guardadas en Cloudflare (D1).
+var _timerMetricas=null, _importando=false;
+function mostrarMetricas(origen){
   var m={};
-  [_metricasFS,_metricasCF].forEach(function(origen){
-    Object.keys(origen).forEach(function(id){
-      var a=m[id]||(m[id]={vistas:0,aperturas:0,clics:0,_ultima:0}), b=origen[id]||{};
-      a.vistas+=b.vistas||0; a.aperturas+=b.aperturas||0; a.clics+=b.clics||0;
-      a._ultima=Math.max(a._ultima, b._ultima||0);
-    });
+  Object.keys(origen||{}).forEach(function(id){
+    var b=origen[id]||{};
+    m[id]={ vistas:b.vistas||0, aperturas:b.aperturas||0, clics:b.clics||0, _ultima:b._ultima||0 };
   });
   state.metricas=m;
   try{ renderCatalogoAdmin(); }catch(e){}
+}
+// Una sola vez: las metricas antiguas que quedaron en Firestore (metricas_catalogo) se suman a las
+// de Cloudflare. Se carga el SDK de Firestore solo para esto; el Worker solo acepta importar una vez.
+function cargarScript(src){
+  return new Promise(function(res, rej){ var s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+}
+async function importarMetricasAntiguas(token){
+  if(_importando) return; _importando=true;
+  try{
+    if(!firebase.firestore) await cargarScript('https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js');
+    var snap=await firebase.firestore().collection('metricas_catalogo').get();
+    var antiguas={};
+    snap.forEach(function(doc){ antiguas[doc.id]=doc.data(); });
+    var r=await fetch('https://api.aphillipsstore.com/metricas/importar',{ method:'POST', headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}, body: JSON.stringify({ metricas: antiguas }) });
+    if(r.ok) cargarMetricasCloudflare();
+  }catch(e){ /* se reintenta la proxima vez que se abra el panel */ }
 }
 async function cargarMetricasCloudflare(){
   try{
@@ -142,8 +91,8 @@ async function cargarMetricasCloudflare(){
     var r=await fetch('https://api.aphillipsstore.com/metricas',{headers:{'Authorization':'Bearer '+token}});
     if(!r.ok) return;
     var d=await r.json();
-    _metricasCF=d.metricas||{};
-    combinarMetricas();
+    mostrarMetricas(d.metricas);
+    if(d.importado===false) importarMetricasAntiguas(token);
   }catch(e){ /* sin conexion: se reintenta despues */ }
 }
 

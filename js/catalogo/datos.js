@@ -1,14 +1,13 @@
 import { render } from './grid.js';
 import { abrir } from './modal.js';
-import { db } from '../firebase.js';
 
 // Relojes del catalogo publico.
-// 1) Se leen de Cloudflare (https://api.aphillipsstore.com/catalogo): rapido y sin gastar
-//    lecturas de Firebase. Se vuelven a pedir cada minuto mientras la pagina esta visible.
-// 2) Si Cloudflare no responde (o el catalogo aun no se publico), se usa Firestore
-//    (catalogo_publico) como antes, en tiempo real.
+// Se leen de Cloudflare (https://api.aphillipsstore.com/catalogo) y se vuelven a pedir cada minuto
+// mientras la pagina esta visible (si no cambio, el servidor responde 304 sin mandar nada).
+// La ultima lista buena se guarda en el navegador: si Cloudflare no responde, se muestra esa.
 const API_CATALOGO = 'https://api.aphillipsstore.com/catalogo';
 const REFRESCO_MS = 60000;
+const CLAVE_LOCAL = 'aphillips_catalogo';
 
 let relojes = [];
 
@@ -43,30 +42,24 @@ async function pedirCloudflare(){
   return d.relojes;
 }
 
-let _usandoFirestore = false;
-function usarFirestore(){
-  if(_usandoFirestore) return;
-  _usandoFirestore = true;
-  db.collection('catalogo_publico').onSnapshot(function(snap){
-    var lista = [];
-    snap.forEach(function(doc){ var d = doc.data(); d.id = doc.id; lista.push(d); });
-    aplicar(lista);
-  }, function(){ if(!relojes.length) errorCarga(); });
+function guardarLocal(lista){ try{ localStorage.setItem(CLAVE_LOCAL, JSON.stringify(lista)); }catch(e){} }
+function leerLocal(){ try{ var l = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || 'null'); return Array.isArray(l) ? l : null; }catch(e){ return null; } }
+function actualizar(){
+  return pedirCloudflare().then(function(lista){ guardarLocal(lista); aplicar(lista); });
 }
 
 (async function(){
   try{
-    aplicar(await pedirCloudflare());
+    await actualizar();
   }catch(e){
-    usarFirestore();
-    return;
+    var guardada = leerLocal();
+    if(guardada) aplicar(guardada); else errorCarga();
   }
   setInterval(function(){
-    if(document.hidden || _usandoFirestore) return;
-    pedirCloudflare().then(aplicar).catch(function(){});
+    if(!document.hidden) actualizar().catch(function(){});
   }, REFRESCO_MS);
   document.addEventListener('visibilitychange', function(){
-    if(!document.hidden && !_usandoFirestore) pedirCloudflare().then(aplicar).catch(function(){});
+    if(!document.hidden) actualizar().catch(function(){});
   });
 })();
 

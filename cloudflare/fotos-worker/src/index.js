@@ -13,7 +13,8 @@
 //   GET    /salud              -> { ok: true }
 // Rutas de admin:
 //   PUT    /catalogo           cuerpo { relojes:[...] } -> publica la copia (se quitan campos no publicos)
-//   GET    /metricas           -> { metricas: { id: {vistas, aperturas, clics, _ultima} } }
+//   GET    /metricas           -> { metricas: { id: {vistas, aperturas, clics, _ultima} }, importado }
+//   POST   /metricas/importar  cuerpo { metricas: {...} } suma las metricas antiguas de Firestore (solo una vez)
 //   POST   /fotos?reloj=<id>   cuerpo = la imagen (WebP/JPEG/PNG, max 4 MB) -> { url, clave }
 //   DELETE /fotos?clave=<clave>  borra una foto (solo claves "relojes/...")
 //   GET    /datos/resumen      -> { version, hashes: { col: { id: hash } } }   (datos del panel, etapa 3)
@@ -50,6 +51,7 @@ export default {
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
 
     const conocida = (ruta === '/catalogo' && metodo === 'PUT') || (ruta === '/metricas' && metodo === 'GET') ||
+      (ruta === '/metricas/importar' && metodo === 'POST') ||
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
@@ -67,6 +69,7 @@ export default {
 
     if (ruta === '/catalogo') return publicarCatalogo(request, env, cors);
     if (ruta === '/metricas') return leerMetricas(env, cors);
+    if (ruta === '/metricas/importar') return importarMetricas(request, env, cors);
     if (ruta === '/datos/resumen') return resumenDatos(env, cors);
     if (ruta === '/datos') return cambiosDatos(url, env, cors);
     if (ruta === '/datos/lote') return loteDatos(request, env, cors);
@@ -206,7 +209,28 @@ async function leerMetricas(env, cors) {
   const { results } = await env.DB.prepare('SELECT id, vistas, aperturas, clics, ultima FROM metricas').all();
   const metricas = {};
   for (const r of results) metricas[r.id] = { vistas: r.vistas, aperturas: r.aperturas, clics: r.clics, _ultima: r.ultima };
-  return json({ metricas }, 200, cors);
+  const marca = await env.DB.prepare("SELECT valor FROM ajustes WHERE nombre = 'metricas_importadas'").first();
+  return json({ metricas, importado: !!marca }, 200, cors);
+}
+
+// Suma una sola vez las metricas antiguas de Firestore. La marca va en la misma transaccion:
+// si ya existe, el INSERT falla y no se suma nada (no se puede importar dos veces).
+async function importarMetricas(request, env, cors) {
+  let b;
+  try { b = await request.json(); } catch (e) { return json({ error: 'JSON invalido' }, 400, cors); }
+  const m = b && b.metricas && typeof b.metricas === 'object' ? b.metricas : null;
+  if (!m) return json({ error: 'Faltan las metricas' }, 400, cors);
+  const num = (v) => Math.max(0, Math.min(1e7, Math.floor(Number(v) || 0)));
+  const sumar = env.DB.prepare('INSERT INTO metricas (id, vistas, aperturas, clics, ultima) VALUES (?1, ?2, ?3, ?4, ?5) ' +
+    'ON CONFLICT(id) DO UPDATE SET vistas = vistas + excluded.vistas, aperturas = aperturas + excluded.aperturas, ' +
+    'clics = clics + excluded.clics, ultima = MAX(COALESCE(ultima, 0), excluded.ultima)');
+  const sentencias = [env.DB.prepare("INSERT INTO ajustes (nombre, valor) VALUES ('metricas_importadas', ?1)").bind(String(Date.now()))];
+  for (const [id, v] of Object.entries(m).slice(0, 5000)) {
+    if (!/^[A-Za-z0-9_-]{1,120}$/.test(id) || !v || typeof v !== 'object') continue;
+    sentencias.push(sumar.bind(id, num(v.vistas), num(v.aperturas), num(v.clics), num(v._ultima)));
+  }
+  try { await env.DB.batch(sentencias); } catch (e) { return json({ error: 'Las metricas ya se habian importado' }, 409, cors); }
+  return json({ ok: true, importadas: sentencias.length - 1 }, 200, cors);
 }
 
 // ---------- datos del panel (D1, etapa 3) ----------

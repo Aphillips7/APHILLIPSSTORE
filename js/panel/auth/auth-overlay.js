@@ -5,7 +5,7 @@ import { renderResumenRespaldo } from '../respaldo.js';
 import { esPropietario } from '../state.js';
 import { renderEspacioUsado } from '../sync/espacio.js';
 import { renderSyncHistory, setSyncStatus } from '../sync/estado-sync.js';
-import { _firebaseListo } from '../sync/sync.js';
+import { _syncListo } from '../sync/sync.js';
 
 var _authBuffer='';
 var _secretoTemporal='';
@@ -21,10 +21,13 @@ async function showAuth(){
     return;
   }
   if(!navegadorSoportaAuth()){
-    alert('Este navegador no puede verificar codigos de autenticacion aqui. Esto pasa si abres el archivo directamente (doble clic) en vez de visitarlo desde una direccion https:// o localhost. Abre la app desde el enlace publicado (Firebase Hosting) e intenta de nuevo.');
+    alert('Este navegador no puede verificar codigos de autenticacion aqui. Esto pasa si abres el archivo directamente (doble clic) en vez de visitarlo desde una direccion https:// o localhost. Abre la app desde el enlace publicado (aphillipsstore.com/admin) e intenta de nuevo.');
     return;
   }
-  await cargarAuthSettingsNube();
+  if(await cargarAuthSettingsNube()===false){
+    alert('No se pudo conectar con la nube para revisar tu codigo de seguridad. Revisa tu internet e intenta de nuevo.');
+    return;
+  }
   if(!getTotpSecret()){
     iniciarConfiguracionAuth();
   }else{
@@ -74,7 +77,7 @@ function onAuthSuccess(){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); if(t.textContent.trim()==='Sync')t.classList.add('active'); });
   document.getElementById('page-config').classList.add('active');
-  var lastSync=localStorage.getItem('lastSync');if(lastSync&&!_firebaseListo)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)','info');
+  var lastSync=localStorage.getItem('lastSync');if(lastSync&&!_syncListo)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)','info');
   renderConfigPage();
 }
 function irABackupCode(){ mostrarVistaAuth('backup'); document.getElementById('auth-backup-input').value=''; }
@@ -97,7 +100,7 @@ function navegadorSoportaAuth(){
 }
 async function iniciarConfiguracionAuth(){
   if(!navegadorSoportaAuth()){
-    alert('Este navegador no puede generar codigos de autenticacion aqui. Esto pasa si abres el archivo directamente (doble clic) en vez de visitarlo desde una direccion https:// o localhost. Abre la app desde el enlace publicado (Firebase Hosting) e intenta de nuevo.');
+    alert('Este navegador no puede generar codigos de autenticacion aqui. Esto pasa si abres el archivo directamente (doble clic) en vez de visitarlo desde una direccion https:// o localhost. Abre la app desde el enlace publicado (aphillipsstore.com/admin) e intenta de nuevo.');
     return;
   }
   var pendiente=localStorage.getItem('authTotpPendiente');

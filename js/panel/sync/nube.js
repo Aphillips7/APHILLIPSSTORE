@@ -1,4 +1,4 @@
-// =================== DATOS DEL PANEL EN CLOUDFLARE (etapa 3b) ===================
+// =================== DATOS DEL PANEL EN CLOUDFLARE ===================
 // Cloudflare (D1, via https://api.aphillipsstore.com/datos) es la fuente principal del panel:
 // - Al entrar se cargan los datos guardados en este dispositivo (IndexedDB) y despues se piden a
 //   Cloudflare solo los cambios desde la ultima vez. Cada 10 s (con la pantalla visible) se vuelven
@@ -6,10 +6,9 @@
 // - save() -> se compara lo que hay en pantalla con lo ultimo que confirmo Cloudflare (_base) y se
 //   envian solo las diferencias. Sin internet, los cambios quedan guardados en el dispositivo y se
 //   envian solos al volver la conexion.
-// - Cada envio confirmado se copia tambien a Firestore como respaldo (sin leer nada de Firestore).
 // - Si llega de otro dispositivo un cambio de un documento que aqui tiene cambios sin enviar, se
 //   conserva el de aqui (se envia despues y queda como el ultimo).
-import { db, firebase } from '../../firebase.js';
+import { firebase } from '../../firebase.js';
 import { COLECCIONES, state } from '../state.js';
 import { setSyncStatus } from './estado-sync.js';
 
@@ -159,16 +158,6 @@ async function recibir(){
 }
 
 // ---------- enviar cambios ----------
-function respaldoFirestore(ops){
-  try{
-    var batch = db.batch();
-    ops.forEach(function(op){
-      var ref = db.collection(op.col).doc(op.id);
-      if(op.borrar) batch.delete(ref); else batch.set(ref, op.obj);
-    });
-    batch.commit().catch(function(){ /* el respaldo es un extra */ });
-  }catch(e){}
-}
 async function enviarOps(ops){
   for(var i = 0; i < ops.length; i += LOTE){
     var parte = ops.slice(i, i+LOTE);
@@ -177,7 +166,6 @@ async function enviarOps(ops){
     parte.forEach(function(op){
       if(op.borrar) delete _base.docs[op.col][op.id]; else _base.docs[op.col][op.id] = op.json;
     });
-    respaldoFirestore(parte);
   }
 }
 function opsColeccion(col){
@@ -306,7 +294,6 @@ async function cambiarEstadoNube(id, estadoEsperado, cambios, quitar){
     body: JSON.stringify({ id: id, estadoEsperado: estadoEsperado, cambios: cambios, quitar: quitar || [] }) });
   var final = conId(r.datos, id);
   _base.docs.inventario[id] = canonico(final);
-  respaldoFirestore([{ col: 'inventario', id: id, obj: final }]);
   guardarLocal();
 }
 
@@ -325,7 +312,6 @@ async function escribirDocNube(col, id, datos){
   var json = canonico(datos);
   await pedir('/lote', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ ops: [{ col: col, id: id, json: json }] }) });
   _base.docs[col][id] = json;
-  respaldoFirestore([{ col: col, id: id, obj: datos }]);
   guardarLocal();
 }
 

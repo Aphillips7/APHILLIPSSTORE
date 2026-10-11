@@ -1,7 +1,9 @@
-// =================== ESPACIO USADO (FIRESTORE 1GB GRATIS) ===================
+// =================== ESPACIO USADO (CLOUDFLARE D1) ===================
 import { state } from '../state.js';
 
-var LIMITE_FIRESTORE_BYTES = 1024*1024*1024; // 1 GiB
+// Limite de una base D1 en el plan gratis de Cloudflare (500 MB). Es una estimacion: suma el tamano
+// de los datos del panel tal como estan en pantalla.
+var LIMITE_FIRESTORE_BYTES = 500*1024*1024;
 function calcularEspacioUsado(){
   var totalBytes=0;
   var porColeccion={inventario:0,movimientos:0,clientes:0};
@@ -25,7 +27,7 @@ function renderEspacioUsado(){
   var r=calcularEspacioUsado();
   var pct=(r.totalBytes/LIMITE_FIRESTORE_BYTES)*100;
   var pctMostrar=pct<0.01?'<0.01':pct.toFixed(pct<1?2:1);
-  txt.textContent='Usando '+formatoMB(r.totalBytes)+' de 1024 MB gratis';
+  txt.textContent='Usando '+formatoMB(r.totalBytes)+' de 500 MB gratis (Cloudflare)';
   var pctEl=document.getElementById('espacio-pct');
   if(pctEl)pctEl.textContent=pctMostrar+'%';
   var barra=document.getElementById('espacio-barra');
@@ -40,11 +42,11 @@ function renderEspacioUsado(){
     if(pct>=85){
       aviso.style.display='block';
       aviso.style.background='var(--red-bg)';aviso.style.color='var(--red)';aviso.style.border='1px solid var(--red)';
-      aviso.textContent='Te estas acercando al limite gratis de 1 GB. Cuando lo alcances, la sincronizacion dejara de guardar nueva informacion hasta que actives el plan de pago (Blaze) o liberes espacio (por ejemplo, comprimiendo o quitando fotos antiguas).';
+      aviso.textContent='Te estas acercando al limite gratis de 500 MB de Cloudflare D1. Antes de llegar, activa el plan Workers Paid (10 GB por base) o libera espacio.';
     }else if(pct>=60){
       aviso.style.display='block';
       aviso.style.background='var(--bg2)';aviso.style.color='var(--muted)';aviso.style.border='1px solid var(--border2)';
-      aviso.textContent='Vas usando mas de la mitad del espacio gratis. Todavia no es urgente, pero es buen momento para tenerlo en mente si sigues agregando muchas fotos.';
+      aviso.textContent='Vas usando mas de la mitad del espacio gratis. Todavia no es urgente, pero es buen momento para tenerlo en mente.';
     }else{
       aviso.style.display='none';
     }
