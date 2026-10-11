@@ -19,6 +19,16 @@
 <link rel="stylesheet" href="css/panel/movil.css">
 </head>
 <body>
+<script>
+// Panel abierto desde el link viejo de GitHub: aviso para pasar a aphillipsstore.com/admin.
+// No se redirige solo para no cortar una sincronizacion pendiente.
+if(location.hostname==='aphillips7.github.io'){
+  document.write('<div id="aviso-dominio" style="position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:#09090b;color:#fff;border:1px solid #333;border-radius:12px;padding:12px 14px;font:13px system-ui,sans-serif;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 6px 24px rgba(0,0,0,.35);">'+
+    '<span style="flex:1;min-width:180px;">El panel ahora esta en <b>aphillipsstore.com/admin</b>. Este link de GitHub dejara de usarse.</span>'+
+    '<a href="https://aphillipsstore.com/admin" style="background:#fff;color:#09090b;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:600;">Ir al panel nuevo</a>'+
+    '<button onclick="this.parentNode.remove()" style="background:none;border:0;color:#aaa;font-size:18px;cursor:pointer;" aria-label="Cerrar">&#10005;</button></div>');
+}
+</script>
 <!-- LOGIN GATE — bloquea TODA la app hasta iniciar sesion -->
 <div id="login-gate" style="position:fixed;inset:0;background:#09090b;z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;">
