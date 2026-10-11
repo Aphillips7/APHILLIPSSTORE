@@ -35,6 +35,7 @@ function _ponerTitulo(titulo, desc){
 function setGenero(g){
   if(g !== _filtroGenero || _filtroMarca){ limpiarFiltros(); }
   _filtroGenero = g; _filtroMarca = '';
+  document.dispatchEvent(new CustomEvent('marca-cambiada', { detail: '' }));
   _ponerTitulo(_TITULOS_GEN[g] || _TITULOS_GEN[''], _DESC_GEN[g] || _DESC_GEN['']);
   if(document.body.classList.contains('vista-catalogo')){ history.replaceState(history.state, '', '#'+(g||'todos')); }
   render();
@@ -42,6 +43,8 @@ function setGenero(g){
 function setMarca(m){
   if(m !== _filtroMarca){ limpiarFiltros(); }
   _filtroMarca = m; _filtroGenero = '';
+  // cuenta.js muestra el boton "Avisame de nuevos ..." de la marca
+  document.dispatchEvent(new CustomEvent('marca-cambiada', { detail: m }));
   _ponerTitulo('Relojes '+_MARCAS[m].nombre, _MARCAS[m].desc);
   if(document.body.classList.contains('vista-catalogo')){ history.replaceState(history.state, '', '#marca-'+m); }
   render();
