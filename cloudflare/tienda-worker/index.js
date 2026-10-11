@@ -7,6 +7,7 @@
 //   /manifest.json   -> la app instalable del panel abre /admin en este dominio
 //   www.             -> redirige al dominio sin www
 //   /__/auth/, /__/firebase/ -> se reenvian a Firebase (login de Google con nuestro dominio)
+//   /sitemap.xml     -> lista para Google: el catalogo y un enlace por cada reloj publicado (no vendido)
 // Todo lo demas se sirve tal cual (catalogo.html, index.html, css/, js/, img/...).
 // En GitHub Pages los archivos siguen funcionando igual: este Worker no los modifica.
 
@@ -26,6 +27,8 @@ export default {
     if (url.pathname.startsWith('/__/auth/') || url.pathname.startsWith('/__/firebase/')) {
       return fetch(new Request(FIREBASE + url.pathname + url.search, request), { redirect: 'manual' });
     }
+
+    if (url.pathname === '/sitemap.xml') return await sitemap(env);
 
     if (url.pathname === '/admin/') {
       url.pathname = '/admin';
@@ -57,17 +60,31 @@ export default {
   }
 };
 
+// ---------- sitemap para Google ----------
+async function sitemap(env) {
+  const d = await catalogo(env);
+  const urls = ['https://' + DOMINIO + '/'];
+  for (const r of (d && d.relojes) || []) {
+    if (r.estado !== 'vendido' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id || '')) urls.push('https://' + DOMINIO + '/?id=' + r.id);
+  }
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    urls.map((u) => '  <url><loc>' + u + '</loc></url>').join('\n') + '\n</urlset>\n';
+  return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+}
+
 // ---------- vista previa del link de un reloj ----------
 const ESTADOS = { disponible: 'Disponible', transito: 'En tránsito', bajopedido: 'Bajo pedido', vendido: 'Agotado' };
 
-async function relojDelCatalogo(id, env) {
+async function catalogo(env) {
   try {
     const pedido = new Request('https://api.aphillipsstore.com/catalogo');
     const r = env.API ? await env.API.fetch(pedido) : await fetch(pedido);
-    if (!r.ok) return null;
-    const d = await r.json();
-    return (d.relojes || []).find((x) => x.id === id) || null;
+    return r.ok ? await r.json() : null;
   } catch (e) { return null; }
+}
+async function relojDelCatalogo(id, env) {
+  const d = await catalogo(env);
+  return d ? (d.relojes || []).find((x) => x.id === id) || null : null;
 }
 function imagenCompartir(r) {
   if (r.fotoCompartir) return r.fotoCompartir;
@@ -92,6 +109,8 @@ async function vistaPreviaReloj(pagina, id, url, env) {
   if (imagen) { meta['og:image'] = imagen; meta['twitter:image'] = imagen; }
   return new HTMLRewriter()
     .on('title', { element(e) { e.setInnerContent(titulo); } })
+    // para Google cada reloj es su propia pagina (no una copia del catalogo)
+    .on('link[rel="canonical"]', { element(e) { e.setAttribute('href', enlace); } })
     .on('meta', { element(e) {
       const clave = e.getAttribute('property') || e.getAttribute('name');
       if (clave && meta[clave] !== undefined) e.setAttribute('content', meta[clave]);
