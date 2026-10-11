@@ -627,6 +627,11 @@ if(location.hostname==='aphillips7.github.io'){
     <button class="btn btn-gold btn-sm" id="btn-fotos-antiguas" style="display:none;" onclick="migrarFotosAntiguas()">Pasar fotos a la nube</button>
   </div>
   <div class="card">
+    <div class="card-title" style="margin-bottom:6px;">Copia en Cloudflare</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Tus datos se copian solos a Cloudflare mientras el panel esta abierto (preparando el cambio de Firebase a Cloudflare).</div>
+    <div id="espejo-cf-texto" style="font-size:13px;color:var(--muted);">Preparando la copia...</div>
+  </div>
+  <div class="card">
     <div class="card-title" style="margin-bottom:10px;">Diagnostico</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ultimos eventos de sincronizacion</div>
     <div id="sync-history-lista"></div>

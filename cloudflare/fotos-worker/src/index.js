@@ -16,6 +16,9 @@
 //   GET    /metricas           -> { metricas: { id: {vistas, aperturas, clics, _ultima} } }
 //   POST   /fotos?reloj=<id>   cuerpo = la imagen (WebP/JPEG/PNG, max 4 MB) -> { url, clave }
 //   DELETE /fotos?clave=<clave>  borra una foto (solo claves "relojes/...")
+//   GET    /datos/resumen      -> { version, hashes: { col: { id: hash } } }   (datos del panel, etapa 3)
+//   GET    /datos?desde=<n>    -> { version, docs: [{col, id, datos, borrado, version}] }  (cambios desde n)
+//   POST   /datos/lote         cuerpo { ops: [{col, id, json} | {col, id, borrar:true}] } -> { ok, version, hashes }
 
 const TIPOS = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -45,7 +48,8 @@ export default {
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
 
     const conocida = (ruta === '/catalogo' && metodo === 'PUT') || (ruta === '/metricas' && metodo === 'GET') ||
-      (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE'));
+      (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
+      ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || (ruta === '/datos/lote' && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -61,6 +65,9 @@ export default {
 
     if (ruta === '/catalogo') return publicarCatalogo(request, env, cors);
     if (ruta === '/metricas') return leerMetricas(env, cors);
+    if (ruta === '/datos/resumen') return resumenDatos(env, cors);
+    if (ruta === '/datos') return cambiosDatos(url, env, cors);
+    if (ruta === '/datos/lote') return loteDatos(request, env, cors);
 
     if (metodo === 'POST') {
       const reloj = (url.searchParams.get('reloj') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
@@ -197,6 +204,66 @@ async function leerMetricas(env, cors) {
   const metricas = {};
   for (const r of results) metricas[r.id] = { vistas: r.vistas, aperturas: r.aperturas, clics: r.clics, _ultima: r.ultima };
   return json({ metricas }, 200, cors);
+}
+
+// ---------- datos del panel (D1, etapa 3) ----------
+// Copia de las colecciones de Firestore del panel. Solo el admin puede leer o escribir.
+const COLECCIONES_DATOS = ['inventario', 'movimientos', 'clientes', 'config', 'authSettings'];
+const MAX_DOC = 900 * 1024;
+const MAX_OPS = 200;
+
+async function sha256(texto) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+async function versionActual(env) {
+  const r = await env.DB.prepare("SELECT valor FROM contador WHERE nombre = 'docs'").first();
+  return r ? r.valor : 0;
+}
+
+async function resumenDatos(env, cors) {
+  const { results } = await env.DB.prepare('SELECT col, id, hash FROM docs WHERE borrado = 0').all();
+  const hashes = {};
+  for (const c of COLECCIONES_DATOS) hashes[c] = {};
+  for (const r of results) (hashes[r.col] || (hashes[r.col] = {}))[r.id] = r.hash;
+  return json({ version: await versionActual(env), hashes }, 200, cors);
+}
+
+async function cambiosDatos(url, env, cors) {
+  const desde = Math.max(0, parseInt(url.searchParams.get('desde') || '0', 10) || 0);
+  const { results } = await env.DB.prepare(
+    'SELECT col, id, datos, borrado, version FROM docs WHERE version > ?1 ORDER BY version LIMIT 5000').bind(desde).all();
+  const docs = results.map((r) => ({ col: r.col, id: r.id, borrado: !!r.borrado, version: r.version, datos: r.borrado ? null : JSON.parse(r.datos) }));
+  return json({ version: await versionActual(env), docs }, 200, cors);
+}
+
+async function loteDatos(request, env, cors) {
+  let cuerpo;
+  try { cuerpo = await request.json(); } catch (e) { return json({ error: 'JSON invalido' }, 400, cors); }
+  const ops = cuerpo && Array.isArray(cuerpo.ops) ? cuerpo.ops : null;
+  if (!ops || !ops.length) return json({ error: 'Faltan operaciones' }, 400, cors);
+  if (ops.length > MAX_OPS) return json({ error: 'Maximo ' + MAX_OPS + ' operaciones por envio' }, 413, cors);
+
+  const subir = env.DB.prepare("UPDATE contador SET valor = valor + 1 WHERE nombre = 'docs'");
+  const guardar = env.DB.prepare(
+    "INSERT INTO docs (col, id, datos, hash, version, borrado) VALUES (?1, ?2, ?3, ?4, (SELECT valor FROM contador WHERE nombre = 'docs'), 0) " +
+    'ON CONFLICT(col, id) DO UPDATE SET datos = excluded.datos, hash = excluded.hash, version = excluded.version, borrado = 0');
+  const borrar = env.DB.prepare(
+    "UPDATE docs SET datos = '{}', hash = '', borrado = 1, version = (SELECT valor FROM contador WHERE nombre = 'docs') WHERE col = ?1 AND id = ?2 AND borrado = 0");
+  const sentencias = [subir];
+  const hashes = {};
+  for (const op of ops) {
+    if (!op || !COLECCIONES_DATOS.includes(op.col)) return json({ error: 'Coleccion no permitida' }, 400, cors);
+    if (typeof op.id !== 'string' || !/^[A-Za-z0-9_-]{1,120}$/.test(op.id)) return json({ error: 'Id invalido' }, 400, cors);
+    if (op.borrar) { sentencias.push(borrar.bind(op.col, op.id)); continue; }
+    if (typeof op.json !== 'string' || op.json.length > MAX_DOC) return json({ error: 'Documento invalido o muy grande: ' + op.id }, 400, cors);
+    try { if (typeof JSON.parse(op.json) !== 'object') throw 0; } catch (e) { return json({ error: 'JSON invalido en ' + op.id }, 400, cors); }
+    const h = await sha256(op.json);
+    (hashes[op.col] || (hashes[op.col] = {}))[op.id] = h;
+    sentencias.push(guardar.bind(op.col, op.id, op.json, h));
+  }
+  await env.DB.batch(sentencias);   // todo o nada (transaccion)
+  return json({ ok: true, version: await versionActual(env), hashes }, 200, cors);
 }
 
 // ---------- verificacion del ID token de Firebase (sin librerias) ----------
