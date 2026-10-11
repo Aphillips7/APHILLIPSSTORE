@@ -16,6 +16,8 @@ import { COLECCIONES, state } from '../state.js';
 import { cargarCatalogoPublicoRemoto, marcarInventarioCargado, syncCatalogoPublico } from './catalogo-publico.js';
 import { renderEspacioUsado } from './espacio.js';
 import { iniciarEspejo } from './espejo-cloudflare.js';
+import { FUENTE_DATOS } from './fuente.js';
+import { iniciarNube } from './nube.js';
 import { setSyncStatus } from './estado-sync.js';
 import { _lastSynced, _remoteIds, marcarSyncListo } from './sync.js';
 
@@ -52,7 +54,13 @@ function refrescarVista(key){
 function iniciarListenersFirebase(){
   if(!marcarSyncListo()) return;
 
-  COLECCIONES.forEach(function(key){
+  // Etapa 3b: los datos del panel vienen de Cloudflare (Firestore solo recibe la copia de respaldo)
+  var desdeCloudflare = FUENTE_DATOS==='cloudflare';
+  if(desdeCloudflare){
+    iniciarNube({ refrescarVista: refrescarVista, refrescarVistaCompleta: refrescarVistaCompleta, marcarInventarioCargado: marcarInventarioCargado });
+  }
+
+  if(!desdeCloudflare) COLECCIONES.forEach(function(key){
     db.collection(key).onSnapshot(function(snap){
       var items=[];
       var ids=new Set();
@@ -85,7 +93,7 @@ function iniciarListenersFirebase(){
     syncCatalogoPublico();
   }, function(){ /* el catalogo publico es un extra; si falla no afecta el panel */ });
 
-  db.collection('config').doc('main').onSnapshot(function(doc){
+  if(!desdeCloudflare) db.collection('config').doc('main').onSnapshot(function(doc){
     if(!doc.exists) return;
     var data=doc.data();
     if(typeof data.meta==='number'){ state.meta=data.meta; localStorage.setItem('meta',state.meta); }
@@ -108,8 +116,10 @@ function iniciarListenersFirebase(){
   cargarMetricasCloudflare();
   if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(!document.hidden) cargarMetricasCloudflare(); }, 120000);
 
-  setSyncStatus('Conectado','var(--green)','ok');
-  try{ iniciarEspejo(); }catch(e){}
+  if(!desdeCloudflare){
+    setSyncStatus('Conectado','var(--green)','ok');
+    try{ iniciarEspejo(); }catch(e){}
+  }
 }
 
 var _metricasFS={}, _metricasCF={}, _timerMetricas=null;

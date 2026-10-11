@@ -1,5 +1,7 @@
 import { db, firebase } from '../../firebase.js';
 import { espejarDoc } from '../sync/espejo-cloudflare.js';
+import { FUENTE_DATOS } from '../sync/fuente.js';
+import { escribirDocNube, leerDocNube } from '../sync/nube.js';
 
 let _totpSecretCache = null;
 let _backupCodesCache = null;
@@ -64,6 +66,13 @@ function getTotpSecret(){ return _totpSecretCache||''; }
 async function cargarAuthSettingsNube(){
   var u=firebase.auth().currentUser;
   if(!u){ _totpSecretCache=''; _backupCodesCache=[]; return; }
+  if(FUENTE_DATOS==='cloudflare'){
+    try{
+      var enNube=await leerDocNube('authSettings', u.uid);
+      if(enNube){ _totpSecretCache=enNube.secret||''; _backupCodesCache=enNube.backupCodes||[]; return; }
+    }catch(e){}
+    // si Cloudflare no lo tiene (o no respondio), se consulta Firestore como antes
+  }
   try{
     var doc=await db.collection('authSettings').doc(u.uid).get();
     if(doc.exists){
@@ -84,8 +93,11 @@ async function guardarAuthSettingsNube(secret,backupCodes){
   var u=firebase.auth().currentUser;
   if(!u)return;
   var datos={secret:secret,backupCodes:backupCodes,actualizado:Date.now()};
-  await db.collection('authSettings').doc(u.uid).set(datos);
-  try{ espejarDoc('authSettings', u.uid, datos); }catch(e){}
+  if(FUENTE_DATOS==='cloudflare') await escribirDocNube('authSettings', u.uid, datos);   // tambien copia a Firestore
+  else{
+    await db.collection('authSettings').doc(u.uid).set(datos);
+    try{ espejarDoc('authSettings', u.uid, datos); }catch(e){}
+  }
   _totpSecretCache=secret;
   _backupCodesCache=backupCodes;
 }

@@ -1,6 +1,7 @@
 // =================== RESPALDO (JSON) ===================
 import { save, saveMeta, state } from './state.js';
 import { refrescarVistaCompleta } from './sync/listeners.js';
+import { borrarDatosLocales } from './sync/nube.js';
 import { asegurarIds } from './sync/sync.js';
 
 function construirDatosRespaldo(){
@@ -58,9 +59,10 @@ async function copiarRespaldoComoTexto(){
     alert('No se pudo copiar automaticamente en este dispositivo. Usa el boton "Exportar respaldo" en su lugar.');
   }
 }
-function borrarYRecargarDesdeNube(){
-  if(!confirm('Esto borra los datos guardados en ESTE dispositivo (no en la nube) y los vuelve a descargar desde Firebase. Usalo solo si ves algo raro o desactualizado en este dispositivo. Continuar?'))return;
+async function borrarYRecargarDesdeNube(){
+  if(!confirm('Esto borra los datos guardados en ESTE dispositivo (no en la nube) y los vuelve a descargar desde la nube. Usalo solo si ves algo raro o desactualizado en este dispositivo. Continuar?'))return;
   ['inventario','movimientos','clientes','tasks','meta','weekTasks','ideas','lastSync','syncHistory'].forEach(function(k){ localStorage.removeItem(k); });
+  try{ await borrarDatosLocales(); }catch(e){}
   location.reload();
 }
 function importarJSON(e){
