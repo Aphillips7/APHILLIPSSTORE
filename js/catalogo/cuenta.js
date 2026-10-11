@@ -29,7 +29,8 @@ let _compras = null;         // respuesta de /cuenta/compras
 let _admin = null;           // datos de la seccion del administrador
 let _modo = 'entrar';        // formulario de correo: 'entrar' | 'crear' | 'recuperar'
 let _porVerificar = '';      // correo de una cuenta nueva que aun no se verifico
-const VOLVER = { url: 'https://aphillipsstore.com/?cuenta=1' };   // a donde vuelven los enlaces de los correos
+const VOLVER = { url: 'https://aphillipsstore.com/?cuenta=1' };   // a donde vuelven los enlaces de los correos de Firebase (respaldo)
+let _accion = null;          // enlace de un correo abierto en la tienda: { modo: 'verificar'|'contrasena', codigo, email }
 
 // ---------- Firebase (solo Auth) ----------
 function cargarScript(src){
@@ -132,6 +133,15 @@ function errorAuth(e){
 }
 function valor(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function cambiarModo(m){ _modo = m; _mensaje = ''; render(); }
+// Los correos salen de noreply@aphillipsstore.com (servidor). Si el servidor no puede enviarlos, se usa
+// el correo de Firebase como respaldo, para que nadie se quede sin poder activar su cuenta.
+async function enviarVerificacion(u, nombre){
+  try{ await pedir('/cuenta/verificacion', { method: 'POST', body: { nombre: nombre || '' } }); }
+  catch(e){
+    if(e.datos && !e.datos.respaldo){ var err = new Error(e.message); err.code = 'propio'; throw err; }
+    await u.sendEmailVerification(VOLVER);
+  }
+}
 async function conBoton(id, texto, fn){
   var b = document.getElementById(id);
   var original = b ? b.textContent : '';
@@ -162,7 +172,7 @@ function crearCuenta(ev){
     _mensaje = '';
     var cred = await fb.auth().createUserWithEmailAndPassword(correo, clave);
     await cred.user.updateProfile({ displayName: nombre.slice(0, 60) });
-    await cred.user.sendEmailVerification(VOLVER);
+    try{ await enviarVerificacion(cred.user, nombre); }catch(e){ /* la cuenta ya existe: puede pedir otro correo desde la vista de verificar */ }
     _porVerificar = correo;
     render();
   });
@@ -173,9 +183,20 @@ function recuperarContrasena(ev){
   var correo = valor('cta-email');
   if(!correo){ _mensaje = 'Escribe tu correo.'; render(); return false; }
   conBoton('cta-recuperar', 'Enviando...', async function(){
-    var fb = await cargarFirebase();
-    try{ await fb.auth().sendPasswordResetEmail(correo, VOLVER); }
-    catch(e){ if(e.code === 'auth/too-many-requests' || e.code === 'auth/invalid-email' || e.code === 'auth/network-request-failed') throw e; }
+    var respaldo = false;
+    try{
+      var r = await fetch(API + '/correo/recuperar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: correo }) });
+      var d = {}; try{ d = await r.json(); }catch(e){}
+      if(!r.ok){
+        if(d.respaldo) respaldo = true;
+        else { _mensaje = d.error || 'No se pudo enviar. Intenta de nuevo.'; render(); return; }
+      }
+    }catch(e){ respaldo = true; }
+    if(respaldo){
+      var fb = await cargarFirebase();
+      try{ await fb.auth().sendPasswordResetEmail(correo, VOLVER); }
+      catch(e){ if(e.code === 'auth/too-many-requests' || e.code === 'auth/invalid-email' || e.code === 'auth/network-request-failed') throw e; }
+    }
     // mismo mensaje exista o no la cuenta (no se revela que correos estan registrados)
     _modo = 'entrar';
     _mensaje = 'Si ese correo tiene una cuenta, te llegará un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.';
@@ -183,6 +204,52 @@ function recuperarContrasena(ev){
   });
   return false;
 }
+// ---------- enlaces de los correos (?modo=verificar|contrasena&oobCode=...) ----------
+async function procesarAccion(){
+  if(!_accion) return;
+  _mensaje = ''; render();
+  try{
+    var fb = await cargarFirebase();
+    if(_accion.modo === 'verificar'){
+      await fb.auth().applyActionCode(_accion.codigo);
+      _accion = null;
+      _mensaje = '¡Listo! Tu correo quedó verificado.';
+      var u = fb.auth().currentUser;
+      if(u){ await u.reload(); await u.getIdToken(true); await alCambiarSesion(u); return; }
+      _modo = 'entrar'; _mensaje += ' Ya puedes iniciar sesión.';
+    }else{
+      _accion.email = await fb.auth().verifyPasswordResetCode(_accion.codigo);
+    }
+  }catch(e){
+    _accion = null;
+    var c = e && e.code;
+    _mensaje = (c === 'auth/invalid-action-code' || c === 'auth/expired-action-code')
+      ? 'Este enlace ya se usó o venció. Pide uno nuevo desde Mi cuenta.'
+      : 'No se pudo completar. Revisa tu conexión e intenta de nuevo.';
+  }
+  render();
+}
+function guardarContrasenaNueva(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var clave = document.getElementById('cta-pass').value, otra = document.getElementById('cta-pass2').value;
+  if(clave.length < 8 || !/[A-Z]/.test(clave) || !/[a-z]/.test(clave)){ _mensaje = 'La contraseña debe tener al menos 8 caracteres, con una mayúscula y una minúscula.'; render(); return false; }
+  if(clave !== otra){ _mensaje = 'Las dos contraseñas no coinciden.'; render(); return false; }
+  conBoton('cta-guardar-clave', 'Guardando...', async function(){
+    var fb = await cargarFirebase();
+    try{ await fb.auth().confirmPasswordReset(_accion.codigo, clave); }
+    catch(e){
+      if(e.code === 'auth/invalid-action-code' || e.code === 'auth/expired-action-code'){ _accion = null; _mensaje = 'Este enlace ya se usó o venció. Pide uno nuevo.'; render(); return; }
+      throw e;
+    }
+    var correo = _accion.email;
+    _accion = null; _modo = 'entrar';
+    _mensaje = 'Tu contraseña se cambió. Ya puedes iniciar sesión.';
+    render();
+    var campo = document.getElementById('cta-email'); if(campo) campo.value = correo || '';
+  });
+  return false;
+}
+
 async function yaVerifique(){
   await conBoton('cta-verifique', 'Revisando...', async function(){
     var fb = await cargarFirebase();
@@ -198,7 +265,10 @@ async function yaVerifique(){
 async function reenviarVerificacion(){
   await conBoton('cta-reenviar', 'Enviando...', async function(){
     var u = (await cargarFirebase()).auth().currentUser;
-    if(u){ await u.sendEmailVerification(VOLVER); _mensaje = 'Te enviamos otro correo a ' + (u.email || '') + '.'; render(); }
+    if(!u) return;
+    try{ await enviarVerificacion(u, u.displayName); _mensaje = 'Te enviamos otro correo a ' + (u.email || '') + '.'; }
+    catch(e){ if(e.code === 'propio'){ _mensaje = e.message; } else throw e; }
+    render();
   });
 }
 
@@ -430,6 +500,17 @@ function render(){
   var cont = document.getElementById('cuenta-contenido');
   if(!cont) return;
   var aviso = _mensaje ? '<p class="cta-mensaje">' + esc(_mensaje) + '</p>' : '';
+  if(_accion){
+    if(_accion.modo === 'contrasena' && _accion.email){
+      cont.innerHTML = aviso + '<section class="cta-seccion"><h2 class="cta-titulo">Crea tu contraseña nueva</h2>' +
+        '<p class="cta-texto">Para <b>' + esc(_accion.email) + '</b></p>' +
+        '<form onsubmit="return guardarContrasenaNueva(event)" novalidate>' +
+          '<div class="cta-campo"><input type="password" id="cta-pass" placeholder=" " autocomplete="new-password" maxlength="100"><label for="cta-pass">Contraseña nueva (8+ caracteres, mayúscula y minúscula) <b>*</b></label></div>' +
+          '<div class="cta-campo"><input type="password" id="cta-pass2" placeholder=" " autocomplete="new-password" maxlength="100"><label for="cta-pass2">Repite la contraseña <b>*</b></label></div>' +
+          '<button type="submit" class="cta-btn primario" id="cta-guardar-clave">Guardar contraseña</button></form></section>';
+    }else cont.innerHTML = aviso + '<p class="cta-texto">Un momento...</p>';
+    return;
+  }
   if(_cargando){ cont.innerHTML = aviso + '<p class="cta-texto">Cargando tu cuenta...</p>'; return; }
   if(!sesion.activa && _porVerificar){
     cont.innerHTML = aviso +
@@ -536,7 +617,17 @@ function cerrarCuenta(){
 document.getElementById('panel-cuenta').addEventListener('click', function(e){ if(e.target===this) cerrarCuenta(); });
 document.addEventListener('keydown', function(e){ if(e.key === 'Escape') cerrarCuenta(); });
 
-// Al volver desde el enlace de un correo (verificacion o contrasena) se abre "Mi cuenta"
+// Enlace de un correo de la tienda: verificar la cuenta o crear una contrasena nueva
+(function(){
+  var p = new URLSearchParams(location.search);
+  var modo = p.get('modo'), codigo = p.get('oobCode');
+  if((modo === 'verificar' || modo === 'contrasena') && codigo){
+    history.replaceState(history.state, '', location.pathname + location.hash);
+    _accion = { modo: modo, codigo: codigo };
+    setTimeout(function(){ abrirCuenta(); procesarAccion(); }, 300);
+  }
+})();
+// Al volver desde el enlace de un correo de Firebase (respaldo) se abre "Mi cuenta"
 if(new URLSearchParams(location.search).get('cuenta') === '1'){
   history.replaceState(history.state, '', location.pathname + location.hash);
   setTimeout(abrirCuenta, 300);
@@ -547,4 +638,4 @@ try{ if(localStorage.getItem(CLAVE_SESION) === '1') setTimeout(function(){ carga
 export { abrirCuenta, cerrarCuenta, toggleAviso };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { abrirCuenta, abrirFavoritos, cambiarModo, cambiarNoContar, cargarAdmin, cerrarCuenta, cerrarSesionCliente, crearCuenta, eliminarCuenta,
-  entrarConCorreo, entrarConGoogle, forzarActualizacion, guardarPerfil, hacerRespaldoCuenta, recuperarContrasena, reenviarVerificacion, toggleAviso, yaVerifique });
+  entrarConCorreo, entrarConGoogle, forzarActualizacion, guardarContrasenaNueva, guardarPerfil, hacerRespaldoCuenta, recuperarContrasena, reenviarVerificacion, toggleAviso, yaVerifique });

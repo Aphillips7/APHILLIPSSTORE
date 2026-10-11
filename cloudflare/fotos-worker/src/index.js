@@ -31,6 +31,9 @@
 //   POST   /cuenta/avisos      { tipo: 'reloj'|'marca', valor }   DELETE /cuenta/avisos?tipo=&valor=
 //   GET    /cuenta/compras     -> compras y apartados (solo si el admin vinculo la cuenta a un cliente)
 //   DELETE /cuenta             borra la cuenta y sus datos
+//   POST   /cuenta/verificacion  envia (desde noreply@aphillipsstore.com) el correo para verificar la cuenta
+// Publica (sin sesion), con limites por correo y por IP:
+//   POST   /correo/recuperar   { email } -> envia el correo para crear una contrasena nueva (siempre { ok })
 // Rutas de admin para cuentas:
 //   GET    /admin/cuentas      -> todas las cuentas con sus avisos y cuantos favoritos tienen
 //   POST   /admin/cuentas/vincular  { uid, clienteId|null }
@@ -73,6 +76,9 @@ export default {
     if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
 
+    // ---------- recuperar contrasena (publica, con limites) ----------
+    if (ruta === '/correo/recuperar' && metodo === 'POST') return correoRecuperar(request, env, cors);
+
     // ---------- cuentas de clientes (su propia sesion) ----------
     if (ruta === '/cuenta' || ruta.startsWith('/cuenta/')) {
       let sesion;
@@ -80,6 +86,8 @@ export default {
       catch (e) { return json({ error: 'Sesion invalida: ' + e.message }, 401, cors); }
       const proveedor = sesion.firebase && sesion.firebase.sign_in_provider;
       if (!proveedor || proveedor === 'anonymous' || proveedor === 'custom') return json({ error: 'Inicia sesion con tu cuenta' }, 403, cors);
+      // el correo de verificacion se pide justamente antes de estar verificado
+      if (ruta === '/cuenta/verificacion' && metodo === 'POST') return correoVerificacion(request, env, cors, sesion);
       // cuentas con correo y contrasena: deben verificar el correo (el dueno queda exento)
       if (proveedor === 'password' && !sesion.email_verified && !esDueno(sesion.sub, env)) {
         return json({ error: 'Verifica tu correo para usar tu cuenta.', falta: 'verificacion' }, 403, cors);
@@ -538,6 +546,143 @@ async function adminAvisado(request, env, cors) {
   return json({ ok: true }, 200, cors);
 }
 
+// ---------- correos de la cuenta (verificacion y contrasena) ----------
+// Firebase genera el enlace (con la llave de servicio FIREBASE_SA) y el correo sale con Cloudflare
+// Email Sending desde noreply@aphillipsstore.com, con el diseno de la tienda. El enlace lleva a la
+// tienda (?modo=verificar|contrasena&oobCode=...) y alli el catalogo termina la accion.
+// Sin FIREBASE_SA o sin el binding EMAIL se responde 503 y el catalogo usa los correos de Firebase.
+const REMITENTE = { email: 'noreply@aphillipsstore.com', name: 'Aphillips Store' };
+const RESPONDER_A = 'info@aphillipsstore.com';
+const TIENDA = 'https://aphillipsstore.com/';
+const MINUTO = 60000;
+
+function b64urlTexto(t) { return b64urlDeBytes(new TextEncoder().encode(t)); }
+function b64urlDeBytes(bytes) {
+  let bin = ''; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+let _tokenGoogle = { token: null, vence: 0 };
+async function tokenGoogle(env) {
+  if (_tokenGoogle.token && Date.now() < _tokenGoogle.vence) return _tokenGoogle.token;
+  // (al guardarlo desde PowerShell puede llegar con un BOM invisible al inicio)
+  const sa = JSON.parse(String(env.FIREBASE_SA).replace(/^\uFEFF/, '').trim());
+  const ahora = Math.floor(Date.now() / 1000);
+  const cab = b64urlTexto(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const cuerpo = b64urlTexto(JSON.stringify({ iss: sa.client_email, aud: 'https://oauth2.googleapis.com/token', iat: ahora, exp: ahora + 3600,
+    scope: 'https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/identitytoolkit' }));
+  const pem = String(sa.private_key).replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+  const llave = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const firma = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', llave, new TextEncoder().encode(cab + '.' + cuerpo)));
+  const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=' + encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer') + '&assertion=' + cab + '.' + cuerpo + '.' + b64urlDeBytes(firma) });
+  const d = await r.json();
+  if (!r.ok) throw new Error('token de Google: ' + (d.error_description || d.error || r.status));
+  _tokenGoogle = { token: d.access_token, vence: Date.now() + Math.max(60, (d.expires_in || 3600) - 300) * 1000 };
+  return d.access_token;
+}
+// tipo: 'VERIFY_EMAIL' | 'PASSWORD_RESET'. Devuelve el enlace a la tienda, o null si el correo no tiene cuenta.
+async function enlaceFirebase(env, tipo, email) {
+  const r = await fetch('https://identitytoolkit.googleapis.com/v1/projects/' + env.FIREBASE_PROJECT_ID + '/accounts:sendOobCode', {
+    method: 'POST', headers: { 'Authorization': 'Bearer ' + await tokenGoogle(env), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestType: tipo, email, returnOobLink: true })
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    const msg = (d.error && d.error.message) || String(r.status);
+    if (/EMAIL_NOT_FOUND|USER_NOT_FOUND/.test(msg)) return null;
+    throw new Error('Firebase: ' + msg);
+  }
+  // con la proteccion contra enumeracion de correos, Firebase responde sin enlace si el correo no tiene cuenta
+  if (!d.oobLink) return null;
+  const codigo = new URL(d.oobLink).searchParams.get('oobCode');
+  return TIENDA + '?modo=' + (tipo === 'VERIFY_EMAIL' ? 'verificar' : 'contrasena') + '&oobCode=' + encodeURIComponent(codigo);
+}
+function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota }) {
+  const e = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + e(titulo) + '</title></head>' +
+    '<body style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#09090b;">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 12px;"><tr><td align="center">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;">' +
+    '<tr><td style="background:#09090b;padding:26px 32px;text-align:center;font-family:Georgia,\'Times New Roman\',serif;font-size:24px;letter-spacing:4px;color:#ffffff;font-weight:bold;">APHILLIPS</td></tr>' +
+    '<tr><td style="padding:36px 32px 8px;">' +
+      '<p style="margin:0 0 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6a6a6a;">' + e(titulo) + '</p>' +
+      '<p style="margin:0 0 16px;font-size:16px;line-height:24px;">' + e(saludo) + '</p>' +
+      '<p style="margin:0 0 28px;font-size:15px;line-height:23px;color:#333333;">' + e(texto) + '</p>' +
+      '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#09090b;">' +
+        '<a href="' + e(enlace) + '" style="display:inline-block;padding:16px 30px;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#ffffff;text-decoration:none;">' + e(boton) + '</a>' +
+      '</td></tr></table>' +
+      '<p style="margin:28px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="' + e(enlace) + '" style="color:#09090b;word-break:break-all;">' + e(enlace) + '</a></p>' +
+      '<p style="margin:18px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">' + e(nota) + '</p>' +
+    '</td></tr>' +
+    '<tr><td style="padding:28px 32px 32px;border-top:1px solid #e4e4e7;margin-top:24px;font-size:11px;line-height:17px;color:#8a8a8a;text-align:center;">' +
+      'Aphillips Store · Relojes en Panamá<br><a href="' + TIENDA + '" style="color:#8a8a8a;">aphillipsstore.com</a> · ¿Dudas? Responde a este correo.' +
+    '</td></tr></table></td></tr></table></body></html>';
+}
+async function enviarCorreo(env, para, asunto, datos) {
+  const texto = datos.saludo + '\n\n' + datos.texto + '\n\n' + datos.boton + ': ' + datos.enlace + '\n\n' + datos.nota + '\n\nAphillips Store · aphillipsstore.com';
+  await env.EMAIL.send({ from: REMITENTE, to: para, replyTo: RESPONDER_A, subject: asunto, html: htmlCorreo({ titulo: asunto, ...datos }), text: texto });
+}
+// cuantos envios hubo con esta clave en la ventana; si no paso el limite, anota uno nuevo
+async function dentroDelLimite(env, clave, max, ventanaMs) {
+  const r = await env.DB.prepare('SELECT count(*) AS n FROM envios WHERE clave = ?1 AND ts > ?2').bind(clave, Date.now() - ventanaMs).first();
+  if (r && r.n >= max) return false;
+  await env.DB.prepare('INSERT INTO envios (clave, ts) VALUES (?1, ?2)').bind(clave, Date.now()).run();
+  return true;
+}
+function correoConfigurado(env) { return !!(env.EMAIL && env.FIREBASE_SA); }
+
+async function correoVerificacion(request, env, cors, sesion) {
+  if (!correoConfigurado(env)) return json({ error: 'Correo propio no configurado', respaldo: true }, 503, cors);
+  if (!sesion.email) return json({ error: 'La cuenta no tiene correo' }, 400, cors);
+  if (sesion.email_verified) return json({ ok: true, yaVerificado: true }, 200, cors);
+  if (!(await dentroDelLimite(env, 'verif:' + sesion.sub, 1, MINUTO)) || !(await dentroDelLimite(env, 'verifdia:' + sesion.sub, 6, 1440 * MINUTO))) {
+    return json({ error: 'Ya te enviamos un correo hace poco. Espera un momento antes de pedir otro.' }, 429, cors);
+  }
+  const b = (await leerJson(request)) || {};
+  const nombre = limpiarTexto(b.nombre || sesion.name || '', 60).split(' ')[0];
+  try {
+    const enlace = await enlaceFirebase(env, 'VERIFY_EMAIL', sesion.email);
+    if (!enlace) return json({ error: 'No encontramos la cuenta' }, 404, cors);
+    await enviarCorreo(env, sesion.email, 'Activa tu cuenta de Aphillips Store', {
+      saludo: 'Hola' + (nombre ? ' ' + nombre : '') + ',',
+      texto: 'Gracias por crear tu cuenta en Aphillips Store. Toca el botón para confirmar tu correo y empezar a guardar tus favoritos y recibir avisos de tus relojes.',
+      boton: 'Activar mi cuenta', enlace,
+      nota: 'Si no creaste esta cuenta, puedes ignorar este correo.'
+    });
+    return json({ ok: true }, 200, cors);
+  } catch (e) {
+    console.log('correo verificacion', e.message);
+    return json({ error: 'No se pudo enviar el correo', respaldo: true }, 502, cors);
+  }
+}
+
+async function correoRecuperar(request, env, cors) {
+  if (!correoConfigurado(env)) return json({ error: 'Correo propio no configurado', respaldo: true }, 503, cors);
+  const b = await leerJson(request);
+  const email = String((b && b.email) || '').trim().toLowerCase().slice(0, 120);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Revisa el correo electrónico.' }, 400, cors);
+  const ip = await sha256(request.headers.get('CF-Connecting-IP') || 'sin-ip');
+  if (!(await dentroDelLimite(env, 'ip:' + ip, 20, 60 * MINUTO))) return json({ error: 'Demasiados intentos. Espera unos minutos e intenta de nuevo.' }, 429, cors);
+  // por correo: maximo 1 cada 2 minutos y 5 al dia; si se pasa, se responde ok igual (no se revela nada)
+  if (!(await dentroDelLimite(env, 'clave:' + email, 1, 2 * MINUTO)) || !(await dentroDelLimite(env, 'clavedia:' + email, 5, 1440 * MINUTO))) return json({ ok: true }, 200, cors);
+  try {
+    const enlace = await enlaceFirebase(env, 'PASSWORD_RESET', email);
+    if (enlace) {
+      await enviarCorreo(env, email, 'Crea una contraseña nueva para Aphillips Store', {
+        saludo: 'Hola,',
+        texto: 'Recibimos una solicitud para cambiar la contraseña de tu cuenta en Aphillips Store. Toca el botón para crear una nueva.',
+        boton: 'Crear contraseña nueva', enlace,
+        nota: 'El enlace vence en 1 hora. Si no lo pediste, ignora este correo: tu contraseña no cambia.'
+      });
+    }
+    return json({ ok: true }, 200, cors);   // mismo resultado exista o no la cuenta
+  } catch (e) {
+    console.log('correo recuperar', e.message);
+    return json({ error: 'No se pudo enviar el correo', respaldo: true }, 502, cors);
+  }
+}
+
 // ---------- respaldos automaticos y limpieza de fotos ----------
 const RETENCION_DIAS = 120;
 const DIAS_FOTO_HUERFANA = 30;
@@ -549,6 +694,7 @@ async function mantenimiento(env, tipo) {
   try { informe.respaldo = await hacerRespaldo(env, tipo); } catch (e) { informe.respaldo = { error: e.message }; }
   try { informe.respaldosBorrados = await borrarRespaldosViejos(env); } catch (e) { informe.respaldosBorrados = { error: e.message }; }
   try { informe.fotos = await limpiarFotos(env); } catch (e) { informe.fotos = { error: e.message }; }
+  try { await env.DB.prepare('DELETE FROM envios WHERE ts < ?1').bind(Date.now() - 2 * DIA_MS).run(); } catch (e) { /* tabla aun no creada */ }
   console.log('mantenimiento', JSON.stringify(informe));
   return informe;
 }

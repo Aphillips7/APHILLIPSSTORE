@@ -58,6 +58,13 @@ y cambia `og:title`, `og:description` y `og:image` (usa `fotoCompartir`, JPEG) c
 `POST /admin/cuentas/vincular`, `POST /admin/avisos/avisado`. Las compras solo devuelven monto, fecha y
 descripcion (nunca costos). El respaldo diario incluye estas tablas.
 
+**Correos de la cuenta** (Cloudflare Email Sending, binding `EMAIL`, solo desde noreply@aphillipsstore.com; responder a info@):
+`POST /cuenta/verificacion` (sesion) y `POST /correo/recuperar` (publica). Firebase genera el enlace con la llave de servicio
+(secreto `FIREBASE_SA`: JSON de Firebase > Configuracion > Cuentas de servicio; se guarda con `npx wrangler@4 secret put FIREBASE_SA`)
+y el enlace lleva a la tienda (`?modo=verificar|contrasena&oobCode=`), donde cuenta.js termina la accion. Limites en la tabla
+`envios` (1/min y 6/dia por cuenta; 1 cada 2 min y 5/dia por correo; 20/hora por IP). Sin la llave o el binding responde 503
+y el catalogo usa los correos de Firebase. Correo entrante: info@aphillipsstore.com se reenvia a aphillipsstore@gmail.com (Email Routing).
+
 Colecciones en `docs`: `inventario`, `movimientos`, `clientes`, `config` (doc `main`), `authSettings`.
 Para recuperar algo borrado o volver atras: D1 Time Travel (`npx wrangler@4 d1 time-travel restore aphillips-db --timestamp=...`)
 o tus respaldos JSON del panel (Firestore ya no recibe copias; queda como archivo hasta el 10/10/2026).
