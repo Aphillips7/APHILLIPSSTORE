@@ -64,6 +64,8 @@
   /* ---------- Mi cuenta (cuenta.js) ---------- */
   .cta-google{gap:12px;width:100%;}
   .cta-google svg{flex:none;background:#fff;border-radius:50%;padding:2px;width:22px;height:22px;}
+  .cta-o{display:flex;align-items:center;gap:14px;margin:26px 0 24px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gris-texto);}
+  .cta-o::before,.cta-o::after{content:'';flex:1;border-top:1px solid var(--border2);}
   .cta-legal{font-size:11.5px;line-height:17px;color:var(--gris-texto);margin-top:16px;max-width:46ch;}
   .cta-mensaje{background:#f4f4f5;border-left:2px solid var(--black);padding:12px 14px;font-size:var(--fs-texto);line-height:19px;color:var(--black);margin-bottom:26px;}
   .cta-ancho{width:100%;text-decoration:none;}

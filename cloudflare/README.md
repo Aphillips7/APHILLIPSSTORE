@@ -54,7 +54,7 @@ y cambia `og:title`, `og:description` y `og:image` (usa `fotoCompartir`, JPEG) c
 
 **Cuentas de clientes** (tablas `cuentas`, `favoritos`, `avisos`; migracion `0004_cuentas.sql`):
 `GET/DELETE /cuenta`, `PUT /cuenta/perfil`, `PUT /cuenta/favoritos`, `POST/DELETE /cuenta/avisos`, `GET /cuenta/compras`
-(cualquier sesion de Firebase no anonima; todo filtrado por el UID del token) y de admin `GET /admin/cuentas`,
+(cualquier sesion de Firebase no anonima; con correo y contrasena el correo debe estar verificado, salvo el dueno; todo filtrado por el UID del token) y de admin `GET /admin/cuentas`,
 `POST /admin/cuentas/vincular`, `POST /admin/avisos/avisado`. Las compras solo devuelven monto, fecha y
 descripcion (nunca costos). El respaldo diario incluye estas tablas.
 

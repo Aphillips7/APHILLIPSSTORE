@@ -80,6 +80,10 @@ export default {
       catch (e) { return json({ error: 'Sesion invalida: ' + e.message }, 401, cors); }
       const proveedor = sesion.firebase && sesion.firebase.sign_in_provider;
       if (!proveedor || proveedor === 'anonymous' || proveedor === 'custom') return json({ error: 'Inicia sesion con tu cuenta' }, 403, cors);
+      // cuentas con correo y contrasena: deben verificar el correo (el dueno queda exento)
+      if (proveedor === 'password' && !sesion.email_verified && !esDueno(sesion.sub, env)) {
+        return json({ error: 'Verifica tu correo para usar tu cuenta.', falta: 'verificacion' }, 403, cors);
+      }
       return rutaCuenta(ruta, metodo, request, url, env, cors, sesion);
     }
 
