@@ -122,11 +122,12 @@ function errorAuth(e){
   var c = e && e.code;
   if(c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-login-credentials') return 'Correo o contraseña incorrectos.';
   if(c === 'auth/email-already-in-use') return 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.';
-  if(c === 'auth/weak-password' || c === 'auth/password-does-not-meet-requirements') return 'La contraseña debe tener al menos 8 caracteres.';
+  if(c === 'auth/weak-password' || c === 'auth/password-does-not-meet-requirements') return 'La contraseña debe tener al menos 8 caracteres, con una mayúscula y una minúscula.';
   if(c === 'auth/invalid-email' || c === 'auth/missing-email') return 'Revisa el correo electrónico.';
   if(c === 'auth/too-many-requests') return 'Demasiados intentos. Espera unos minutos e intenta de nuevo.';
   if(c === 'auth/network-request-failed') return 'Sin conexión. Revisa tu internet e intenta de nuevo.';
   if(c === 'auth/operation-not-allowed') return 'Esta forma de entrar aún no está activada.';
+  if(c === 'auth/admin-restricted-operation') return 'Por ahora no se pueden crear cuentas nuevas. Intenta más tarde.';
   return 'No se pudo completar. Intenta de nuevo.';
 }
 function valor(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -154,7 +155,8 @@ function crearCuenta(ev){
   if(ev && ev.preventDefault) ev.preventDefault();
   var nombre = valor('cta-nuevo-nombre'), correo = valor('cta-email'), clave = document.getElementById('cta-pass').value;
   if(!nombre || !correo){ _mensaje = 'Escribe tu nombre y tu correo.'; render(); return false; }
-  if(clave.length < 8){ _mensaje = 'La contraseña debe tener al menos 8 caracteres.'; render(); return false; }
+  // misma regla que la politica de contrasenas de Firebase: 8+ caracteres, una mayuscula y una minuscula
+  if(clave.length < 8 || !/[A-Z]/.test(clave) || !/[a-z]/.test(clave)){ _mensaje = 'La contraseña debe tener al menos 8 caracteres, con una mayúscula y una minúscula.'; render(); return false; }
   conBoton('cta-crear', 'Creando cuenta...', async function(){
     var fb = await cargarFirebase();
     _mensaje = '';
@@ -489,7 +491,7 @@ function htmlFormCorreo(){
   if(_modo === 'crear'){
     return '<form onsubmit="return crearCuenta(event)" novalidate>' +
       '<div class="cta-campo"><input type="text" id="cta-nuevo-nombre" placeholder=" " autocomplete="name" maxlength="60"><label for="cta-nuevo-nombre">Nombre <b>*</b></label></div>' + campoCorreo +
-      '<div class="cta-campo"><input type="password" id="cta-pass" placeholder=" " autocomplete="new-password" minlength="8" maxlength="100"><label for="cta-pass">Contraseña (mínimo 8 caracteres) <b>*</b></label></div>' +
+      '<div class="cta-campo"><input type="password" id="cta-pass" placeholder=" " autocomplete="new-password" minlength="8" maxlength="100"><label for="cta-pass">Contraseña (8+ caracteres, mayúscula y minúscula) <b>*</b></label></div>' +
       '<div class="cta-fila"><button type="submit" class="cta-btn primario" id="cta-crear">Crear cuenta</button>' +
       '<button type="button" class="cta-link" onclick="cambiarModo(\'entrar\')">Ya tengo una cuenta</button></div></form>';
   }
