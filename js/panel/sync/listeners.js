@@ -12,6 +12,7 @@ import { renderResumen } from '../finanzas/resumen.js';
 import { renderChecklist, renderInicio } from '../inicio.js';
 import { renderFotosAntiguas } from '../inventario/fotos.js';
 import { renderInventario } from '../inventario/lista.js';
+import { cargarRespaldosNube } from '../respaldo.js';
 import { state } from '../state.js';
 import { marcarInventarioCargado, syncCatalogoPublico } from './catalogo-publico.js';
 import { renderEspacioUsado } from './espacio.js';
@@ -54,6 +55,7 @@ function iniciarListenersFirebase(){
   if(!marcarSyncListo()) return;
   iniciarNube({ refrescarVista: refrescarVista, refrescarVistaCompleta: refrescarVistaCompleta, marcarInventarioCargado: marcarInventarioCargado });
   cargarMetricasCloudflare();
+  try{ cargarRespaldosNube(); }catch(e){}
   if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(!document.hidden) cargarMetricasCloudflare(); }, 120000);
 }
 

@@ -20,6 +20,13 @@
 //   GET    /datos/resumen      -> { version, hashes: { col: { id: hash } } }   (datos del panel, etapa 3)
 //   GET    /datos?desde=<n>    -> { version, docs: [{col, id, datos, borrado, version}] }  (cambios desde n)
 //   POST   /datos/lote         cuerpo { ops: [{col, id, json} | {col, id, borrar:true}] } -> { ok, version, hashes }
+//   GET    /respaldos          -> { respaldos: [{ nombre, bytes, fecha }] }   (respaldos automaticos)
+//   GET    /respaldos/archivo?nombre=<n>  descarga un respaldo (mismo formato que "Exportar respaldo")
+//   POST   /mantenimiento      hace ahora el respaldo y la limpieza de fotos (lo mismo que el cron diario)
+//
+// Tarea diaria (cron, 3:00 a. m. de Panama): respaldo de los datos en el bucket PRIVADO
+// aphillips-respaldos (se guardan RETENCION_DIAS dias) y borrado de fotos que ningun reloj usa
+// desde hace mas de 30 dias.
 //   POST   /datos/estado       cuerpo { id, estadoEsperado, cambios, quitar } -> { ok, version, datos }
 //                              cambio de estado de un reloj sin venta doble (409 si cambio en otro dispositivo)
 
@@ -31,12 +38,16 @@ const JWKS_URL = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken
 // Todo lo demas (costo, proveedor, margen, serie, tracking...) se descarta aqui aunque llegue.
 const CAMPOS_PUBLICOS = ['id', 'nombre', 'sku', 'coleccion', 'genero', 'mm', 'materialCaja', 'materialCorrea',
   'colorEsfera', 'movimiento', 'agua', 'cristal', 'color', 'notas', 'descripcion', 'eta', 'precio', 'foto', 'fotos',
-  'estado', '_ts'];
+  'estado', '_ts', 'fotoCompartir'];
 const CLAVE_CATALOGO = 'publico/catalogo.json';
 const URL_CACHE_CATALOGO = 'https://api.aphillipsstore.com/__cache/catalogo';
 const CAMPOS_METRICA = ['vistas', 'aperturas', 'clics'];
 
 export default {
+  async scheduled(evento, env, ctx) {
+    ctx.waitUntil(mantenimiento(env, 'automatico'));
+  },
+
   async fetch(request, env) {
     const url = new URL(request.url);
     const ruta = url.pathname, metodo = request.method;
@@ -53,7 +64,8 @@ export default {
     const conocida = (ruta === '/catalogo' && metodo === 'PUT') || (ruta === '/metricas' && metodo === 'GET') ||
       (ruta === '/metricas/importar' && metodo === 'POST') ||
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
-      ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado') && metodo === 'POST');
+      ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
+      ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -74,6 +86,9 @@ export default {
     if (ruta === '/datos') return cambiosDatos(url, env, cors);
     if (ruta === '/datos/lote') return loteDatos(request, env, cors);
     if (ruta === '/datos/estado') return cambiarEstado(request, env, cors);
+    if (ruta === '/mantenimiento') return json(await mantenimiento(env, 'manual'), 200, cors);
+    if (ruta === '/respaldos') return listarRespaldos(env, cors);
+    if (ruta === '/respaldos/archivo') return descargarRespaldo(url, env, cors);
 
     if (metodo === 'POST') {
       const reloj = (url.searchParams.get('reloj') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
@@ -343,6 +358,104 @@ async function loteDatos(request, env, cors) {
   }
   await env.DB.batch(sentencias);   // todo o nada (transaccion)
   return json({ ok: true, version: await versionActual(env), hashes }, 200, cors);
+}
+
+// ---------- respaldos automaticos y limpieza de fotos ----------
+const RETENCION_DIAS = 120;
+const DIAS_FOTO_HUERFANA = 30;
+const MAX_BORRAR_FOTOS = 500;
+const DIA_MS = 86400000;
+
+async function mantenimiento(env, tipo) {
+  const informe = { tipo, fecha: new Date().toISOString() };
+  try { informe.respaldo = await hacerRespaldo(env, tipo); } catch (e) { informe.respaldo = { error: e.message }; }
+  try { informe.respaldosBorrados = await borrarRespaldosViejos(env); } catch (e) { informe.respaldosBorrados = { error: e.message }; }
+  try { informe.fotos = await limpiarFotos(env); } catch (e) { informe.fotos = { error: e.message }; }
+  console.log('mantenimiento', JSON.stringify(informe));
+  return informe;
+}
+
+// Mismo formato que "Exportar respaldo" del panel (se puede restaurar con "Importar respaldo"),
+// mas authSettings, metricas y los documentos borrados (por si hay que recuperar algo).
+async function hacerRespaldo(env, tipo) {
+  if (!env.RESPALDOS) throw new Error('falta el bucket de respaldos');
+  const { results } = await env.DB.prepare('SELECT col, id, datos, borrado FROM docs').all();
+  const r = { exportado: new Date().toISOString(), origen: 'cloudflare-' + tipo, version: await versionActual(env),
+    inventario: [], movimientos: [], clientes: [], authSettings: {}, borrados: [] };
+  for (const f of results) {
+    let d; try { d = JSON.parse(f.datos); } catch (e) { continue; }
+    if (f.borrado) { r.borrados.push({ col: f.col, id: f.id, datos: d }); continue; }
+    if (f.col === 'config' && f.id === 'main') { r.meta = d.meta; r.tasks = d.tasks; r.weekTasks = d.weekTasks; r.ideas = d.ideas; }
+    else if (f.col === 'authSettings') r.authSettings[f.id] = d;
+    else if (r[f.col]) { d.id = f.id; r[f.col].push(d); }
+  }
+  ['inventario', 'movimientos', 'clientes'].forEach((c) => r[c].sort((a, b) => (b._ts || 0) - (a._ts || 0)));
+  const met = await env.DB.prepare('SELECT id, vistas, aperturas, clics, ultima FROM metricas').all();
+  r.metricas = {};
+  for (const m of met.results) r.metricas[m.id] = { vistas: m.vistas, aperturas: m.aperturas, clics: m.clics, _ultima: m.ultima };
+  const ahora = new Date();
+  const dia = ahora.toISOString().slice(0, 10);
+  const nombre = tipo === 'manual' ? dia + '-manual-' + ahora.toISOString().slice(11, 16).replace(':', '') : dia;
+  const cuerpo = JSON.stringify(r);
+  await env.RESPALDOS.put('respaldos/' + nombre + '.json', cuerpo, { httpMetadata: { contentType: 'application/json; charset=utf-8' } });
+  return { nombre, bytes: cuerpo.length, relojes: r.inventario.length, movimientos: r.movimientos.length, clientes: r.clientes.length };
+}
+
+async function listarTodo(bucket, prefijo) {
+  const todos = [];
+  let cursor;
+  do {
+    const l = await bucket.list({ prefix: prefijo, cursor, limit: 1000 });
+    todos.push(...l.objects);
+    cursor = l.truncated ? l.cursor : undefined;
+  } while (cursor);
+  return todos;
+}
+
+async function borrarRespaldosViejos(env) {
+  if (!env.RESPALDOS) return 0;
+  const limite = Date.now() - RETENCION_DIAS * DIA_MS;
+  const viejos = (await listarTodo(env.RESPALDOS, 'respaldos/')).filter((o) => o.uploaded.getTime() < limite).map((o) => o.key);
+  if (viejos.length) await env.RESPALDOS.delete(viejos.slice(0, 1000));
+  return viejos.length;
+}
+
+// Fotos que ningun reloj usa (ni como foto, ni en fotos[], ni como copia JPEG para compartir) y que
+// se subieron hace mas de DIAS_FOTO_HUERFANA dias. Si no hay relojes (algo raro), no borra nada.
+async function limpiarFotos(env) {
+  const { results } = await env.DB.prepare("SELECT datos FROM docs WHERE col = 'inventario' AND borrado = 0").all();
+  if (!results.length) return { revisadas: 0, borradas: 0, nota: 'sin relojes: no se borra nada' };
+  const base = (env.FOTOS_URL_BASE || '') + '/';
+  const usadas = new Set();
+  const anotar = (u) => { if (typeof u === 'string' && u.startsWith(base)) usadas.add(u.slice(base.length)); };
+  for (const f of results) {
+    let d; try { d = JSON.parse(f.datos); } catch (e) { continue; }
+    anotar(d.foto); anotar(d.fotoCompartir);
+    (Array.isArray(d.fotos) ? d.fotos : []).forEach(anotar);
+    Object.values(d.fotosJpg && typeof d.fotosJpg === 'object' ? d.fotosJpg : {}).forEach(anotar);
+  }
+  const limite = Date.now() - DIAS_FOTO_HUERFANA * DIA_MS;
+  const objetos = await listarTodo(env.FOTOS, 'relojes/');
+  const borrar = objetos.filter((o) => !usadas.has(o.key) && o.uploaded.getTime() < limite).map((o) => o.key).slice(0, MAX_BORRAR_FOTOS);
+  if (borrar.length) await env.FOTOS.delete(borrar);
+  return { revisadas: objetos.length, usadas: usadas.size, borradas: borrar.length };
+}
+
+async function listarRespaldos(env, cors) {
+  if (!env.RESPALDOS) return json({ respaldos: [] }, 200, cors);
+  const lista = (await listarTodo(env.RESPALDOS, 'respaldos/'))
+    .map((o) => ({ nombre: o.key.slice('respaldos/'.length).replace(/\.json$/, ''), bytes: o.size, fecha: o.uploaded.toISOString() }))
+    .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  return json({ respaldos: lista }, 200, cors);
+}
+
+async function descargarRespaldo(url, env, cors) {
+  const nombre = url.searchParams.get('nombre') || '';
+  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}(-manual-[0-9]{4})?$/.test(nombre)) return json({ error: 'Nombre invalido' }, 400, cors);
+  const obj = env.RESPALDOS && await env.RESPALDOS.get('respaldos/' + nombre + '.json');
+  if (!obj) return json({ error: 'No existe ese respaldo' }, 404, cors);
+  return new Response(obj.body, { headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8',
+    'Content-Disposition': 'attachment; filename="respaldo-tienda-' + nombre + '.json"', 'Cache-Control': 'no-store' } });
 }
 
 // ---------- verificacion del ID token de Firebase (sin librerias) ----------

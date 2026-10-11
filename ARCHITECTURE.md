@@ -56,7 +56,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `catalogo-admin.js` | Pestana Catalogo: visibilidad, metricas, links al catalogo |
 | `contenido.js` | Pestana Contenido: plan semanal e ideas |
 | `sesion.js` | Login con correo/contrasena, recuperar contrasena, cerrar sesion |
-| `respaldo.js` | Exportar/importar respaldo JSON |
+| `respaldo.js` | Exportar/importar respaldo JSON; respaldos automaticos de Cloudflare (listar, descargar, hacer uno ahora) |
 | `pwa.js` | Boton "instalar app" y registro del service worker |
 | `finanzas/fechas.js` | Helpers de fechas `d/m/aaaa` y meses |
 | `finanzas/registrar-venta.js` | Selector de tipo y registrar venta desde el inventario |
@@ -65,7 +65,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `finanzas/historial.js` · `resumen.js` · `analisis.js` · `finanzas.js` | Sub-pantallas de Finanzas y saldo por metodo |
 | `inventario/lista.js` | Lista/vista por modelo, filtros, cambiar estado, eliminar |
 | `inventario/formulario.js` | Registrar/editar/duplicar unidad, vista previa de margen |
-| `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal |
+| `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal. De cada una sube ademas una copia JPEG (1200 px, < 600 KB) para la vista previa en WhatsApp (`fotosJpg`, y la de la principal en `fotoCompartir`) |
 | `inventario/detalle.js` | Modal de detalle de una unidad |
 | `inventario/venta-modal.js` | Modal "vender" desde el inventario |
 | `inventario/reservas.js` | Reservar, abonos, completar y cancelar reserva |
@@ -121,7 +121,8 @@ No hay coleccion de pedidos.
 ### `inventario/{id}`
 `nombre, sku, coleccion, genero (hombre|mujer|unisex), mm, materialCaja, materialCorrea,
 colorEsfera, movimiento, agua, cristal, color, descripcion, notas, fotos (URLs en R2, en orden), foto
-(principal = fotos[0]; en unidades antiguas puede ser JPEG base64), eta (aaaa-mm-dd),
+(principal = fotos[0]), fotoCompartir (JPEG de la principal para la vista previa del link),
+fotosJpg (privado: {urlFoto: urlJpeg}), eta (aaaa-mm-dd),
 ocultoCatalogo` y **privados**: `costo, importacion (aduana/envio), costoTotal, precio (venta
 objetivo), precioMin, margen (%), proveedor, serie, paqueteria, tracking, fecha (alta, d/m/aaaa),
 precioVenta, fechaVenta, reserva {clienteId, clienteNombre, precioAcordado, fechaInicio,
@@ -130,7 +131,7 @@ abonos:[{monto, fecha, metodoPago}]}, estado, _ts`.
 ### Catalogo publico (`GET /catalogo`)
 Solo lo que devuelve `camposPublicos()` en `js/products.js`:
 `nombre, sku, coleccion, genero, mm, materialCaja, materialCorrea, colorEsfera, movimiento, agua,
-cristal, color, notas, descripcion, eta, precio, foto, fotos, estado, _ts`. **Ojo: `notas` y `descripcion` son publicos.**
+cristal, color, notas, descripcion, eta, precio, foto, fotos, fotoCompartir, estado, _ts`. **Ojo: `notas` y `descripcion` son publicos.**
 
 ### `movimientos/{id}`
 `tipo` = `venta | compra | gasto | retiro | abono | traspaso | reserva_cancelada`, `desc, monto,

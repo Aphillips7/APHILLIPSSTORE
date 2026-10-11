@@ -11,6 +11,9 @@
    - Fotos antiguas guardadas como texto (base64) se siguen viendo
      hasta que se reemplacen.
    - Subir fotos requiere internet.
+   - De cada foto se sube tambien una copia JPEG (1200 px) para la
+     vista previa al compartir el link por WhatsApp (WhatsApp no
+     garantiza WebP). La de la foto principal queda en fotoCompartir.
    ============================================================ */
 import { firebase } from '../../firebase.js';
 import { save, state } from '../state.js';
@@ -18,6 +21,7 @@ import { save, state } from '../state.js';
 const API_FOTOS = 'https://api.aphillipsstore.com/fotos';
 const MAX_DIM = 1600;
 let _fotos = [];          // lista de fotos del formulario (URLs https o una data: antigua)
+let _jpg = {};            // URL de la foto -> URL de su copia JPEG para compartir
 let _subiendo = 0;
 
 function _esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -28,9 +32,22 @@ function _estado(txt, color){
 
 // ---------- lista del formulario ----------
 function fotosFormulario(){ return _fotos.slice(); }
-function setFotosFormulario(lista){
+function setFotosFormulario(lista, mapaJpg){
   _fotos = (lista||[]).filter(Boolean);
+  _jpg = Object.assign({}, mapaJpg||{});
   renderFotos();
+}
+// copias JPEG de las fotos que siguen en el formulario
+function jpgsFormulario(){
+  var m = {};
+  _fotos.forEach(function(u){ if(_jpg[u]) m[u] = _jpg[u]; });
+  return m;
+}
+// imagen para la vista previa del link: la copia JPEG de la principal, o la principal si ya es JPEG/PNG
+function fotoCompartirFormulario(){
+  var p = _fotos[0] || '';
+  if(_jpg[p]) return _jpg[p];
+  return /^https:\/\/.+\.(jpe?g|png)$/i.test(p) ? p : '';
 }
 function renderFotos(){
   var cont=document.getElementById('inv-fotos-lista');
@@ -87,6 +104,9 @@ function _aBlob(canvas, tipo, calidad){
 }
 async function _comprimir(file){
   var img=await _leerImagen(file);
+  return _comprimirImg(img);
+}
+async function _comprimirImg(img){
   var w=img.naturalWidth, h=img.naturalHeight;
   if(w>MAX_DIM||h>MAX_DIM){ if(w>h){ h=Math.round(h*MAX_DIM/w); w=MAX_DIM; } else { w=Math.round(w*MAX_DIM/h); h=MAX_DIM; } }
   var c=document.createElement('canvas'); c.width=w; c.height=h;
@@ -94,6 +114,17 @@ async function _comprimir(file){
   var blob=await _aBlob(c,'image/webp',0.86);
   if(!blob || blob.type!=='image/webp') blob=await _aBlob(c,'image/jpeg',0.86);   // Safari antiguo
   if(!blob) throw new Error('No se pudo convertir la imagen');
+  return blob;
+}
+// copia JPEG chica (max 1200 px, fondo blanco por si la foto es PNG con transparencia)
+async function _jpegCompartir(img){
+  var lado=1200, w=img.naturalWidth, h=img.naturalHeight;
+  if(w>lado||h>lado){ if(w>h){ h=Math.round(h*lado/w); w=lado; } else { w=Math.round(w*lado/h); h=lado; } }
+  var c=document.createElement('canvas'); c.width=w; c.height=h;
+  var ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
+  ctx.imageSmoothingQuality='high'; ctx.drawImage(img,0,0,w,h);
+  var blob=await _aBlob(c,'image/jpeg',0.82);
+  if(blob && blob.size>580*1024) blob=await _aBlob(c,'image/jpeg',0.68);   // WhatsApp pide menos de 600 KB
   return blob;
 }
 function _carpeta(){
@@ -127,10 +158,13 @@ async function subirFotos(input){
   for(var k=0;k<archivos.length;k++){
     _estado('Subiendo foto '+(k+1)+' de '+archivos.length+'...');
     try{
-      var blob=await _comprimir(archivos[k]);
+      var img=await _leerImagen(archivos[k]);
+      var blob=await _comprimirImg(img);
       var url=await _subir(blob);
       _fotos.push(url); ok++;
       renderFotos();
+      // la copia para compartir es un extra: si falla, la foto queda igual
+      try{ var jpg=await _jpegCompartir(img); if(jpg) _jpg[url]=await _subir(jpg); }catch(e){ console.warn('Copia JPEG no subida:', e); }
     }catch(err){ fallos++; console.warn('Foto no subida:', err); _estado('No se pudo subir una foto: '+err.message,'var(--red)'); }
     _subiendo--;
   }
@@ -194,6 +228,6 @@ async function migrarFotosAntiguas(){
 // Compatibilidad con el nombre anterior (onchange del HTML viejo)
 function subirFotoLocal(input){ return subirFotos(input); }
 
-export { fotosFormulario, fotosSubiendo, migrarFotosAntiguas, moverFoto, previewFoto, quitarFoto, renderFotos, renderFotosAntiguas, setFotosFormulario, subirFotoLocal, subirFotos };
+export { fotoCompartirFormulario, fotosFormulario, fotosSubiendo, jpgsFormulario, migrarFotosAntiguas, moverFoto, previewFoto, quitarFoto, renderFotos, renderFotosAntiguas, setFotosFormulario, subirFotoLocal, subirFotos };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { migrarFotosAntiguas, moverFoto, quitarFoto, subirFotoLocal, subirFotos });

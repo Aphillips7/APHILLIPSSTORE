@@ -10,8 +10,12 @@
     { "pattern": "api.aphillipsstore.com", "custom_domain": true }
   ],
   "r2_buckets": [
-    { "binding": "FOTOS", "bucket_name": "aphillips-photos" }
+    { "binding": "FOTOS", "bucket_name": "aphillips-photos" },
+    // PRIVADO (sin dominio publico): respaldos diarios con datos del negocio
+    { "binding": "RESPALDOS", "bucket_name": "aphillips-respaldos" }
   ],
+  // Respaldo y limpieza diaria: 08:00 UTC = 3:00 a. m. en Panama
+  "triggers": { "crons": ["0 8 * * *"] },
   // Metricas del catalogo (vistas / aperturas / clics)
   "d1_databases": [
     { "binding": "DB", "database_name": "aphillips-db", "database_id": "c034e54e-c004-456d-b31c-58146a31f1a5", "migrations_dir": "migrations" }

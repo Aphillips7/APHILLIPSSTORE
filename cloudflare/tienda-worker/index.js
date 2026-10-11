@@ -1,6 +1,7 @@
 // =================== WORKER DE LA TIENDA (aphillipsstore.com) ===================
 // Sirve los archivos del repositorio (catalogo, panel, css, js, img) desde Cloudflare.
-//   /                -> catalogo publico (catalogo.html)
+//   /                -> catalogo publico (catalogo.html). Con ?id=<reloj> la vista previa del link
+//                       (WhatsApp, Facebook...) muestra la foto, el nombre y el estado de ese reloj.
 //   /admin           -> panel privado (index.html)
 //   /admin/          -> redirige a /admin (las rutas relativas del panel cuelgan de "/")
 //   /manifest.json   -> la app instalable del panel abre /admin en este dominio
@@ -24,7 +25,11 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
 
-    if (url.pathname === '/') return conCabeceras(await servir(env, request, '/catalogo.html'));
+    if (url.pathname === '/') {
+      const pagina = conCabeceras(await servir(env, request, '/catalogo.html'));
+      const id = url.searchParams.get('id');
+      return id ? await vistaPreviaReloj(pagina, id, url, env) : pagina;
+    }
     if (url.pathname === '/admin') return conCabeceras(await servir(env, request, '/index.html'), true);
 
     if (url.pathname === '/manifest.json') {
@@ -44,6 +49,49 @@ export default {
     return tipo.includes('text/html') ? conCabeceras(res, url.pathname === '/index.html') : res;
   }
 };
+
+// ---------- vista previa del link de un reloj ----------
+const ESTADOS = { disponible: 'Disponible', transito: 'En tránsito', bajopedido: 'Bajo pedido', vendido: 'Agotado' };
+
+async function relojDelCatalogo(id, env) {
+  try {
+    const pedido = new Request('https://api.aphillipsstore.com/catalogo');
+    const r = env.API ? await env.API.fetch(pedido) : await fetch(pedido);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return (d.relojes || []).find((x) => x.id === id) || null;
+  } catch (e) { return null; }
+}
+function imagenCompartir(r) {
+  if (r.fotoCompartir) return r.fotoCompartir;
+  const f = typeof r.foto === 'string' && r.foto.startsWith('https://') ? r.foto : '';
+  return f || null;
+}
+async function vistaPreviaReloj(pagina, id, url, env) {
+  if (!/^[A-Za-z0-9_-]{1,120}$/.test(id) || !pagina.ok) return pagina;
+  const r = await relojDelCatalogo(id, env);
+  if (!r) return pagina;
+  const titulo = (r.nombre || 'Reloj') + ' — Aphillips Store';
+  const partes = [ESTADOS[r.estado] || ''];
+  if ((r.estado === 'disponible' || r.estado === 'transito') && r.precio > 0) partes.push('$' + r.precio);
+  partes.push(r.estado === 'bajopedido' ? 'Cotiza por WhatsApp' : 'Escríbenos por WhatsApp');
+  const descripcion = partes.filter(Boolean).join(' · ');
+  const imagen = imagenCompartir(r);
+  const enlace = 'https://' + DOMINIO + '/?id=' + encodeURIComponent(id);
+  const meta = {
+    'og:title': titulo, 'twitter:title': titulo,
+    'og:description': descripcion, 'twitter:description': descripcion, description: descripcion
+  };
+  if (imagen) { meta['og:image'] = imagen; meta['twitter:image'] = imagen; }
+  return new HTMLRewriter()
+    .on('title', { element(e) { e.setInnerContent(titulo); } })
+    .on('meta', { element(e) {
+      const clave = e.getAttribute('property') || e.getAttribute('name');
+      if (clave && meta[clave] !== undefined) e.setAttribute('content', meta[clave]);
+      if (clave === 'og:type') e.after('<meta property="og:url" content="' + enlace + '">', { html: true });
+    } })
+    .transform(pagina);
+}
 
 // Pide un archivo concreto al almacen de archivos manteniendo metodo y cabeceras
 function servir(env, request, ruta) {
