@@ -4,7 +4,9 @@
 // Worker de Cloudflare verifica la sesion (ID token) y que sea la cuenta del dueno.
 const firebaseConfig = {
   apiKey: "AIzaSyCz8cHrafrPGYvp-x9iv1ccFQSobJrFmxo",
-  authDomain: "aphillips-store-733df.firebaseapp.com",
+  // El login de Google pasa por nuestro dominio (el Worker de la tienda reenvia /__/auth/ a Firebase),
+  // asi Google muestra "aphillipsstore.com" en la ventana y en su correo, no el nombre de Firebase.
+  authDomain: "aphillipsstore.com",
   projectId: "aphillips-store-733df",
   storageBucket: "aphillips-store-733df.firebasestorage.app",
   messagingSenderId: "679941981880",

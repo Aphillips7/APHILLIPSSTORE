@@ -1,7 +1,7 @@
 // Service Worker de Aphillips Store — version del cache
 // Cada vez que publiques cambios en HTML, CSS o JS, sube este numero
 // (ej: 'aphillips-v3'). Al activarse la version nueva se borra el cache viejo.
-const CACHE_NAME = 'aphillips-v24';
+const CACHE_NAME = 'aphillips-v25';
 
 // Solo el "cascaron" de la app: nunca datos, nunca Firebase, nunca fuentes externas.
 // Si agregas o renombras un archivo en /css o /js, agregalo tambien aqui.
@@ -131,6 +131,8 @@ self.addEventListener('fetch', function (event) {
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) {
     return;
   }
+  // Las paginas del login (/__/auth/) tampoco: van siempre a la red, sin guardarse
+  if (new URL(req.url).pathname.indexOf('/__/') === 0) return;
 
   // Red primero (para que siempre uses la version mas nueva si hay internet),
   // y si no hay conexion, cae al cascaron guardado para que la app abra igual.
