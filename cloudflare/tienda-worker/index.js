@@ -6,10 +6,12 @@
 //   /admin/          -> redirige a /admin (las rutas relativas del panel cuelgan de "/")
 //   /manifest.json   -> la app instalable del panel abre /admin en este dominio
 //   www.             -> redirige al dominio sin www
+//   /__/auth/, /__/firebase/ -> se reenvian a Firebase (login de Google con nuestro dominio)
 // Todo lo demas se sirve tal cual (catalogo.html, index.html, css/, js/, img/...).
 // En GitHub Pages los archivos siguen funcionando igual: este Worker no los modifica.
 
 const DOMINIO = 'aphillipsstore.com';
+const FIREBASE = 'https://aphillips-store-733df.firebaseapp.com';
 
 export default {
   async fetch(request, env) {
@@ -18,6 +20,11 @@ export default {
     if (url.hostname === 'www.' + DOMINIO) {
       url.hostname = DOMINIO;
       return Response.redirect(url.toString(), 301);
+    }
+
+    // Paginas del login de Firebase (ventana de Google): se piden a Firebase tal cual
+    if (url.pathname.startsWith('/__/auth/') || url.pathname.startsWith('/__/firebase/')) {
+      return fetch(new Request(FIREBASE + url.pathname + url.search, request), { redirect: 'manual' });
     }
 
     if (url.pathname === '/admin/') {
