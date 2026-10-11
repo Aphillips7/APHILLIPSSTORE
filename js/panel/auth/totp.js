@@ -1,4 +1,5 @@
 import { db, firebase } from '../../firebase.js';
+import { espejarDoc } from '../sync/espejo-cloudflare.js';
 
 let _totpSecretCache = null;
 let _backupCodesCache = null;
@@ -67,6 +68,7 @@ async function cargarAuthSettingsNube(){
     var doc=await db.collection('authSettings').doc(u.uid).get();
     if(doc.exists){
       var data=doc.data();
+      try{ if(!(doc.metadata && doc.metadata.fromCache)) espejarDoc('authSettings', u.uid, data); }catch(e){}
       _totpSecretCache=data.secret||'';
       _backupCodesCache=data.backupCodes||[];
     }else{
@@ -81,7 +83,9 @@ async function cargarAuthSettingsNube(){
 async function guardarAuthSettingsNube(secret,backupCodes){
   var u=firebase.auth().currentUser;
   if(!u)return;
-  await db.collection('authSettings').doc(u.uid).set({secret:secret,backupCodes:backupCodes,actualizado:Date.now()});
+  var datos={secret:secret,backupCodes:backupCodes,actualizado:Date.now()};
+  await db.collection('authSettings').doc(u.uid).set(datos);
+  try{ espejarDoc('authSettings', u.uid, datos); }catch(e){}
   _totpSecretCache=secret;
   _backupCodesCache=backupCodes;
 }
