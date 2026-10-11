@@ -564,7 +564,8 @@ function b64urlDeBytes(bytes) {
 let _tokenGoogle = { token: null, vence: 0 };
 async function tokenGoogle(env) {
   if (_tokenGoogle.token && Date.now() < _tokenGoogle.vence) return _tokenGoogle.token;
-  const sa = JSON.parse(env.FIREBASE_SA);
+  // (al guardarlo desde PowerShell puede llegar con un BOM invisible al inicio)
+  const sa = JSON.parse(String(env.FIREBASE_SA).replace(/^\uFEFF/, '').trim());
   const ahora = Math.floor(Date.now() / 1000);
   const cab = b64urlTexto(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
   const cuerpo = b64urlTexto(JSON.stringify({ iss: sa.client_email, aud: 'https://oauth2.googleapis.com/token', iat: ahora, exp: ahora + 3600,
@@ -592,6 +593,8 @@ async function enlaceFirebase(env, tipo, email) {
     if (/EMAIL_NOT_FOUND|USER_NOT_FOUND/.test(msg)) return null;
     throw new Error('Firebase: ' + msg);
   }
+  // con la proteccion contra enumeracion de correos, Firebase responde sin enlace si el correo no tiene cuenta
+  if (!d.oobLink) return null;
   const codigo = new URL(d.oobLink).searchParams.get('oobCode');
   return TIENDA + '?modo=' + (tipo === 'VERIFY_EMAIL' ? 'verificar' : 'contrasena') + '&oobCode=' + encodeURIComponent(codigo);
 }
