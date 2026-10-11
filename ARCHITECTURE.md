@@ -1,8 +1,9 @@
 # Arquitectura de APHILLIPS STORE
 
 Web de reventa de relojes publicada en **GitHub Pages** (rama `main`), sin herramientas de
-compilacion. Usa **Firebase Firestore + Firebase Auth** (plan Spark, sin Storage) y **Cloudflare**
-para las fotos (R2 + Worker, ver `cloudflare/README.md`). Dominio: `aphillipsstore.com`.
+compilacion. **Cloudflare** (ver `cloudflare/README.md`) guarda los datos del panel (D1), las fotos
+(R2), el catalogo publico y las metricas. **Firebase Auth** sigue siendo el login, y **Firestore**
+recibe una copia de respaldo de todo (y es el respaldo del catalogo publico). Dominio: `aphillipsstore.com`.
 
 - `index.html` — **panel interno** (PWA instalable): inventario, finanzas, clientes, contenido.
 - `catalogo.html` — **catalogo publico**: los clientes ven relojes y escriben por WhatsApp.
@@ -69,8 +70,11 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/transacciones.js` | `cambiarEstadoSeguro()`: transaccion anti venta doble |
 | `clientes/clientes.js` | Alta/edicion/lista de clientes, `poblarSelectClientes` |
 | `clientes/cliente-detalle.js` | Ficha del cliente, historial, "contactado hoy" |
-| `sync/sync.js` | Envio de cambios a Firestore (`syncColeccion`, `syncConfig`, `forzarSyncTodo`) |
-| `sync/listeners.js` | Escucha Firestore (`onSnapshot`) y refresca pantallas |
+| `sync/fuente.js` | `FUENTE_DATOS`: `'cloudflare'` (actual) o `'firebase'` (volver atras con un cambio) |
+| `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), copia de respaldo a Firestore, `cambiarEstadoNube` |
+| `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare (o a Firestore si `FUENTE_DATOS='firebase'`) |
+| `sync/listeners.js` | Arranque de los datos (Cloudflare o Firestore), catalogo publico, metricas; refresca pantallas |
+| `sync/espejo-cloudflare.js` | Solo con `FUENTE_DATOS='firebase'`: copia lo de Firestore a D1 |
 | `sync/catalogo-publico.js` | Mantiene `catalogo_publico` igual a lo publicable del inventario |
 | `sync/estado-sync.js` | Indicador de sincronizacion e historial |
 | `sync/espacio.js` | Espacio usado de Firestore (1 GB gratis) |
@@ -154,8 +158,11 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
   el estado en la nube sigue siendo el que se veia en pantalla, y en la misma transaccion actualiza
   `catalogo_publico`. **Requiere internet**; sin conexion avisa y no registra nada.
 - **Resto de cambios** (editar, gastos, clientes, tareas): se guardan en memoria y `save()` los
-  envia a Firestore 1,2 s despues, comparando con lo ultimo sincronizado. Funcionan sin conexion
-  (persistencia offline de Firestore).
+  envia a Cloudflare 1,2 s despues, comparando con lo ultimo que confirmo la nube. Funcionan sin
+  conexion: quedan en IndexedDB y se envian al volver. Si otro dispositivo cambio el mismo documento,
+  gana el cambio que todavia no se habia enviado (se envia despues).
+- **Venta doble (Cloudflare)**: `POST /datos/estado` comprueba el estado y escribe condicionado a la
+  huella leida; 409 si cambio en otro dispositivo.
 - **Costo y margen**: `costoTotal = costo + importacion`; `margen = round((precio - costoTotal) / precio * 100)`.
   Colores: ≥30 % verde, ≥15 % ambar, menos rojo.
 - **Compra automatica**: al registrar una unidad `disponible` con costo (o pasar de transito a

@@ -2,13 +2,15 @@ import { db } from '../../firebase.js';
 import { COLECCIONES, idAleatorio, state } from '../state.js';
 import { syncCatalogoPublico } from './catalogo-publico.js';
 import { setSyncStatus } from './estado-sync.js';
+import { FUENTE_DATOS } from './fuente.js';
+import { detenerNube, enviar } from './nube.js';
 
 let _remoteIds = { inventario: new Set(), movimientos: new Set(), clientes: new Set() };
 let _syncTimers = {};
 let _firebaseListo = false;
 // true la primera vez (cuando hay que conectar los listeners), false si ya estaba conectado
 function marcarSyncListo(){ if(_firebaseListo) return false; _firebaseListo = true; return true; }
-function detenerSync(){ _firebaseListo = false; }
+function detenerSync(){ _firebaseListo = false; if(FUENTE_DATOS==='cloudflare') detenerNube(); }
 
 function scheduleSync(key) {
   clearTimeout(_syncTimers[key]);
@@ -30,6 +32,11 @@ let _lastSynced = { inventario:{}, movimientos:{}, clientes:{} };
 async function syncColeccion(key){
   if(!_firebaseListo) return;
   asegurarIds(key);
+  if(FUENTE_DATOS==='cloudflare'){
+    await enviar(key);
+    if(key==='inventario'){ await syncCatalogoPublico(); }
+    return;
+  }
   setSyncStatus('Sincronizando...','var(--accent)','warn');
   try{
     var coll=db.collection(key);
@@ -71,6 +78,7 @@ async function syncColeccion(key){
 
 async function syncConfig(){
   if(!_firebaseListo) return;
+  if(FUENTE_DATOS==='cloudflare'){ await enviar('config'); return; }
   setSyncStatus('Guardando...','var(--accent)','warn');
   try{
     await db.collection('config').doc('main').set({

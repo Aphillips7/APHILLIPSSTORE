@@ -19,6 +19,8 @@
 //   GET    /datos/resumen      -> { version, hashes: { col: { id: hash } } }   (datos del panel, etapa 3)
 //   GET    /datos?desde=<n>    -> { version, docs: [{col, id, datos, borrado, version}] }  (cambios desde n)
 //   POST   /datos/lote         cuerpo { ops: [{col, id, json} | {col, id, borrar:true}] } -> { ok, version, hashes }
+//   POST   /datos/estado       cuerpo { id, estadoEsperado, cambios, quitar } -> { ok, version, datos }
+//                              cambio de estado de un reloj sin venta doble (409 si cambio en otro dispositivo)
 
 const TIPOS = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -49,7 +51,7 @@ export default {
 
     const conocida = (ruta === '/catalogo' && metodo === 'PUT') || (ruta === '/metricas' && metodo === 'GET') ||
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
-      ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || (ruta === '/datos/lote' && metodo === 'POST');
+      ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -68,6 +70,7 @@ export default {
     if (ruta === '/datos/resumen') return resumenDatos(env, cors);
     if (ruta === '/datos') return cambiosDatos(url, env, cors);
     if (ruta === '/datos/lote') return loteDatos(request, env, cors);
+    if (ruta === '/datos/estado') return cambiarEstado(request, env, cors);
 
     if (metodo === 'POST') {
       const reloj = (url.searchParams.get('reloj') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
@@ -211,6 +214,7 @@ async function leerMetricas(env, cors) {
 const COLECCIONES_DATOS = ['inventario', 'movimientos', 'clientes', 'config', 'authSettings'];
 const MAX_DOC = 900 * 1024;
 const MAX_OPS = 200;
+const MAX_CAMBIOS = 5000;
 
 async function sha256(texto) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
@@ -229,12 +233,62 @@ async function resumenDatos(env, cors) {
   return json({ version: await versionActual(env), hashes }, 200, cors);
 }
 
+// Se lee primero el contador y despues solo las filas hasta ese numero: una escritura que entre a la
+// mitad queda con un numero mayor y llega en la siguiente consulta (nunca se pierde).
 async function cambiosDatos(url, env, cors) {
   const desde = Math.max(0, parseInt(url.searchParams.get('desde') || '0', 10) || 0);
+  let hasta = await versionActual(env);
   const { results } = await env.DB.prepare(
-    'SELECT col, id, datos, borrado, version FROM docs WHERE version > ?1 ORDER BY version LIMIT 5000').bind(desde).all();
-  const docs = results.map((r) => ({ col: r.col, id: r.id, borrado: !!r.borrado, version: r.version, datos: r.borrado ? null : JSON.parse(r.datos) }));
-  return json({ version: await versionActual(env), docs }, 200, cors);
+    'SELECT col, id, datos, borrado, version FROM docs WHERE version > ?1 AND version <= ?2 ORDER BY version LIMIT ?3')
+    .bind(desde, hasta, MAX_CAMBIOS + 1).all();
+  let filas = results;
+  if (filas.length > MAX_CAMBIOS) {   // demasiados: se entregan por partes, sin cortar una misma version
+    hasta = filas[MAX_CAMBIOS - 1].version - 1;
+    filas = filas.filter((r) => r.version <= hasta);
+  }
+  const docs = filas.map((r) => ({ col: r.col, id: r.id, borrado: !!r.borrado, version: r.version, datos: r.borrado ? null : JSON.parse(r.datos) }));
+  return json({ version: hasta, completo: filas.length === results.length, docs }, 200, cors);
+}
+
+// JSON con las claves ordenadas (igual que canonico() del panel)
+function canonico(v) {
+  if (Array.isArray(v)) return '[' + v.map(canonico).join(',') + ']';
+  if (v && typeof v === 'object') {
+    return '{' + Object.keys(v).sort().filter((k) => v[k] !== undefined).map((k) => JSON.stringify(k) + ':' + canonico(v[k])).join(',') + '}';
+  }
+  return JSON.stringify(v === undefined ? null : v);
+}
+
+const NOMBRES_ESTADO = { disponible: 'disponible', transito: 'en transito', bajopedido: 'bajo pedido', reservado: 'reservado', vendido: 'vendido' };
+// Igual que cambiarEstadoSeguro() del panel con Firestore: solo escribe si el estado en la nube sigue
+// siendo el que se veia en pantalla. La escritura se condiciona a la huella leida, asi que si otro
+// dispositivo escribio entre la lectura y la escritura, no se aplica y se avisa.
+async function cambiarEstado(request, env, cors) {
+  let b;
+  try { b = await request.json(); } catch (e) { return json({ error: 'JSON invalido' }, 400, cors); }
+  if (!b || typeof b.id !== 'string' || !/^[A-Za-z0-9_-]{1,120}$/.test(b.id)) return json({ error: 'Id invalido' }, 400, cors);
+  if (!b.cambios || typeof b.cambios !== 'object' || Array.isArray(b.cambios)) return json({ error: 'Faltan los cambios' }, 400, cors);
+  const fila = await env.DB.prepare("SELECT datos, hash FROM docs WHERE col = 'inventario' AND id = ?1 AND borrado = 0").bind(b.id).first();
+  if (!fila) return json({ conflicto: true, error: 'Este reloj ya no existe en la nube (pudo eliminarse en otro dispositivo).' }, 409, cors);
+  const actual = JSON.parse(fila.datos);
+  if (actual.estado !== b.estadoEsperado || (b.cambios.estado === 'vendido' && actual.estado === 'vendido')) {
+    const quien = actual.reserva && actual.reserva.clienteNombre ? ' (reserva de ' + actual.reserva.clienteNombre + ')' : '';
+    return json({ conflicto: true, error: 'Este reloj cambio a "' + (NOMBRES_ESTADO[actual.estado] || actual.estado) + '"' + quien +
+      ' desde otro dispositivo. No se registro nada; refresca y revisa antes de continuar.' }, 409, cors);
+  }
+  const final = Object.assign({}, actual, b.cambios);
+  (Array.isArray(b.quitar) ? b.quitar : []).forEach((k) => { delete final[k]; });
+  const texto = canonico(final);
+  const h = await sha256(texto);
+  const r = await env.DB.batch([
+    env.DB.prepare("UPDATE contador SET valor = valor + 1 WHERE nombre = 'docs'"),
+    env.DB.prepare("UPDATE docs SET datos = ?1, hash = ?2, version = (SELECT valor FROM contador WHERE nombre = 'docs') " +
+      "WHERE col = 'inventario' AND id = ?3 AND hash = ?4 AND borrado = 0").bind(texto, h, b.id, fila.hash)
+  ]);
+  if (!r[1].meta || r[1].meta.changes !== 1) {
+    return json({ conflicto: true, error: 'Este reloj se modifico en otro dispositivo en este mismo momento. No se registro nada; intentalo de nuevo.' }, 409, cors);
+  }
+  return json({ ok: true, version: await versionActual(env), datos: final }, 200, cors);
 }
 
 async function loteDatos(request, env, cors) {
@@ -249,7 +303,8 @@ async function loteDatos(request, env, cors) {
     "INSERT INTO docs (col, id, datos, hash, version, borrado) VALUES (?1, ?2, ?3, ?4, (SELECT valor FROM contador WHERE nombre = 'docs'), 0) " +
     'ON CONFLICT(col, id) DO UPDATE SET datos = excluded.datos, hash = excluded.hash, version = excluded.version, borrado = 0');
   const borrar = env.DB.prepare(
-    "UPDATE docs SET datos = '{}', hash = '', borrado = 1, version = (SELECT valor FROM contador WHERE nombre = 'docs') WHERE col = ?1 AND id = ?2 AND borrado = 0");
+    // se conserva el contenido (borrado = 1) por si hay que recuperarlo
+    "UPDATE docs SET hash = '', borrado = 1, version = (SELECT valor FROM contador WHERE nombre = 'docs') WHERE col = ?1 AND id = ?2 AND borrado = 0");
   const sentencias = [subir];
   const hashes = {};
   for (const op of ops) {

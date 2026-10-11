@@ -35,6 +35,14 @@ Las fotos se guardan como `relojes/<id del reloj>/<fecha>-<aleatorio>.<ext>` con
 | `PUT /catalogo` | admin | La publica el panel despues de cada sincronizacion. El Worker solo deja pasar campos publicos. |
 | `POST /metricas` | publico | Lote de `[id, "vistas"|"aperturas"|"clics"]` (texto JSON). Solo ids del catalogo; max 1 de cada tipo por reloj y envio. |
 | `GET /metricas` | admin | Metricas guardadas en D1 (`aphillips-db`, tabla `metricas`). El panel las suma a las antiguas de Firestore. |
+| `GET /datos?desde=n` | admin | Datos del panel (tabla `docs`) cambiados despues de la version `n`. `completo:false` = pedir de nuevo. |
+| `GET /datos/resumen` | admin | Huellas SHA-256 de cada documento (lo usa la copia de `espejo-cloudflare.js`). |
+| `POST /datos/lote` | admin | `{ops:[{col,id,json}|{col,id,borrar:true}]}`, max 200, todo o nada. Borrar conserva el contenido (`borrado=1`). |
+| `POST /datos/estado` | admin | Vender/reservar sin venta doble: comprueba `estadoEsperado` y escribe condicionado a la huella; 409 si cambio. |
+
+Colecciones en `docs`: `inventario`, `movimientos`, `clientes`, `config` (doc `main`), `authSettings`.
+Para recuperar algo borrado o volver atras: D1 Time Travel (`npx wrangler@4 d1 time-travel restore aphillips-db --timestamp=...`)
+o la copia de respaldo en Firestore.
 
 Base de datos D1 `aphillips-db`: migraciones en `fotos-worker/migrations/`
 (`npx wrangler@4 d1 migrations apply aphillips-db --remote`).
