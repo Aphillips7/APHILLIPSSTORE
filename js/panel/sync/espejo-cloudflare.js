@@ -3,7 +3,7 @@
 // el servidor de Firestore, este modulo deja una copia identica en Cloudflare (D1), enviando solo
 // lo que cambio (compara huellas SHA-256 con las que ya tiene Cloudflare). La primera vez que se
 // abre el panel se copia todo; despues, solo las diferencias. No gasta lecturas extra de Firebase.
-import { firebase } from '../../firebase.js';
+import { db, firebase } from '../../firebase.js';
 
 const API_DATOS = 'https://api.aphillipsstore.com/datos';
 const LOTE = 150;
@@ -124,4 +124,21 @@ function renderEspejo(){
   }
 }
 
-export { espejarColeccionSnap, espejarDoc, renderEspejo };
+// Escuchas propias con includeMetadataChanges: con la persistencia offline, si lo guardado en el
+// dispositivo ya es igual a la nube, Firestore no vuelve a avisar a las escuchas normales cuando
+// el servidor lo confirma (solo cambia metadata.fromCache). Estas si reciben ese aviso. Firestore
+// comparte la misma conexion con las escuchas del panel, asi que no cuesta lecturas extra.
+var _iniciado=false;
+function iniciarEspejo(){
+  if(_iniciado) return;
+  _iniciado=true;
+  COMPLETAS.forEach(function(col){
+    db.collection(col).onSnapshot({ includeMetadataChanges: true }, function(snap){ espejarColeccionSnap(col, snap); }, function(){ _iniciado=false; });
+  });
+  db.collection('config').doc('main').onSnapshot({ includeMetadataChanges: true }, function(doc){
+    if(doc.exists && !(doc.metadata && doc.metadata.fromCache)) espejarDoc('config', 'main', doc.data());
+  }, function(){ _iniciado=false; });
+  renderEspejo();
+}
+
+export { espejarColeccionSnap, espejarDoc, iniciarEspejo, renderEspejo };
