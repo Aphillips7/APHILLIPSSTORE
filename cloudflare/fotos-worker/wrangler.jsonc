@@ -14,6 +14,9 @@
     // PRIVADO (sin dominio publico): respaldos diarios con datos del negocio
     { "binding": "RESPALDOS", "bucket_name": "aphillips-respaldos" }
   ],
+  // Correos de la tienda (verificacion de cuenta y contrasena) con Cloudflare Email Sending.
+  // Solo puede enviar desde noreply@. Ademas necesita el secreto FIREBASE_SA (llave de servicio de Firebase).
+  "send_email": [{ "name": "EMAIL", "allowed_sender_addresses": ["noreply@aphillipsstore.com"] }],
   // Respaldo y limpieza diaria: 08:00 UTC = 3:00 a. m. en Panama
   "triggers": { "crons": ["0 8 * * *"] },
   // Metricas del catalogo (vistas / aperturas / clics)
