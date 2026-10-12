@@ -139,13 +139,17 @@ document.addEventListener('click', function(e){
   var a = e.target.closest ? e.target.closest('a') : null;
   if(a && a.getAttribute('href') === '#'){ e.preventDefault(); }
 });
-// aparicion suave de las tarjetas de genero y de marca
+// aparicion suave de las tarjetas de genero y de marca: aparecen al entrar en pantalla y se ocultan
+// al salir (bajando o subiendo), asi la animacion se repite cada vez que vuelven a verse
 (function(){
   var els = document.querySelectorAll('.gen-reveal');
   if(!('IntersectionObserver' in window)){ els.forEach(function(e){ e.classList.add('in'); }); return; }
   var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
-  }, {threshold:0.15});
+    entries.forEach(function(en){
+      if(en.intersectionRatio >= 0.15) en.target.classList.add('in');
+      else if(!en.isIntersecting) en.target.classList.remove('in');   // solo cuando ya salio del todo
+    });
+  }, {threshold:[0, 0.15]});
   els.forEach(function(e){ io.observe(e); });
 })();
 // si abren la pagina directo en #hombre / #mujer / #todos / #marca-...
