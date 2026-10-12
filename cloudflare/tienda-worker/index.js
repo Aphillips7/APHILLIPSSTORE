@@ -131,19 +131,24 @@ function servir(env, request, ruta) {
 // 'unsafe-inline' (la defensa real contra XSS es escapar los datos del catalogo en el JS); la CSP
 // anade object-src 'none', base-uri y frame-ancestors (anti-clickjacking) y acota de donde se cargan
 // imagenes, conexiones y scripts.
+// Firebase Auth carga apis.google.com al iniciar (tambien con login de correo) y crea un iframe
+// en /__/auth/ de este dominio.
 // Catalogo: "Mi cuenta" carga Firebase Auth desde gstatic al abrirse; los clientes entran con
-// correo/contrasena o con Google (popup por /__/auth/ de este dominio, que usa apis.google.com).
-// Panel: Firebase Auth (solo correo y contrasena) y qrcode (cdnjs).
+// correo/contrasena o con Google. Fuentes Jost y Syne de Google Fonts (css/catalogo/base.css).
+// Panel: Firebase Auth (solo correo y contrasena), qrcode (cdnjs) y la fuente Satoshi de
+// Fontshare (css/panel/base.css).
 const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
-  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; " +
+  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+  "font-src 'self' https://fonts.gstatic.com; " +
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; " +
   "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com; " +
-  "frame-src 'self' https://*.firebaseapp.com; font-src 'self'; form-action 'self'";
+  "frame-src 'self' https://*.firebaseapp.com; form-action 'self'";
 const CSP_PANEL = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
-  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; " +
-  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com; " +
+  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://api.fontshare.com; " +
+  "font-src 'self' https://cdn.fontshare.com; " +
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com; " +
   "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com; " +
-  "frame-src 'self' https://*.firebaseapp.com; font-src 'self'; form-action 'self'";
+  "frame-src 'self' https://*.firebaseapp.com; form-action 'self'";
 
 // Cabeceras de seguridad para las paginas; el panel ademas no se deja meter en iframes ni indexar
 function conCabeceras(res, esPanel) {
