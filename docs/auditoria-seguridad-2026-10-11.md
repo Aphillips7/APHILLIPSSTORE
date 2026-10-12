@@ -15,14 +15,19 @@ siguen buenas prácticas. Los hallazgos son en su mayoría de **defensa en profu
 agujeros explotables por un visitante anónimo. Prioridad real: añadir CSP y escapar el
 catálogo en `grid.js`.
 
-| # | Severidad | Área | Hallazgo |
-|---|-----------|------|----------|
-| 1 | Media | Cabeceras | No hay `Content-Security-Policy` en ninguna página |
-| 2 | Media–Baja | XSS | `grid.js` inserta campos del catálogo sin escapar (a diferencia de `modal.js`) |
-| 3 | Baja | Validación | `publicarCatalogo` no valida el formato del `id` del reloj |
-| 4 | Baja | Abuso | `POST /metricas` (público) no tiene límite de tasa |
-| 5 | Info | Auth | TOTP del panel es solo cliente (correcto, pero conviene documentarlo) |
-| 6 | Info | Config | `firestore.rules` con el marcador `PEGA_AQUI_TU_UID` (seguro por diseño "fail-closed") |
+| # | Severidad | Área | Hallazgo | Estado |
+|---|-----------|------|----------|--------|
+| 1 | Media | Cabeceras | No hay `Content-Security-Policy` en ninguna página | ✅ CSP bloqueante en catálogo y panel (2026-10-12) |
+| 2 | Media–Baja | XSS | `grid.js` inserta campos del catálogo sin escapar (a diferencia de `modal.js`) | ✅ escapado en `grid.js`, `buscador.js` y `favoritos.js` |
+| 3 | Baja | Validación | `publicarCatalogo` no valida el formato del `id` del reloj | ✅ valida `^[A-Za-z0-9_-]{1,120}$` |
+| 4 | Baja | Abuso | `POST /metricas` (público) no tiene límite de tasa | ✅ 200 envíos por IP cada 10 min |
+| 5 | Info | Auth | TOTP del panel es solo cliente (correcto, pero conviene documentarlo) | ✅ ventana reducida a ±30 s |
+| 6 | Info | Config | `firestore.rules` con el marcador `PEGA_AQUI_TU_UID` (seguro por diseño "fail-closed") | ✅ ya publicado con el UID real el 2026-10-10 (el repo conserva el marcador a propósito) |
+
+> **Nota (2026-10-12):** la CSP propuesta en el hallazgo #1 quedó desactualizada. La válida es la de
+> `cloudflare/tienda-worker/index.js` (`CSP_CATALOGO` y `CSP_PANEL`), que se probó en producción en modo
+> solo-reporte antes de activarla e incluye Firebase Auth, `apis.google.com`, las fuentes (Google Fonts y
+> Fontshare), cdnjs y Cloudflare Web Analytics.
 
 ---
 
