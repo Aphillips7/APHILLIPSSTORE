@@ -209,17 +209,24 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
   <div class="regla-seccion" aria-hidden="true"></div>
 </section>
 
-<!-- ESTUCHE: se abre con el scroll y muestra los relojes del carrusel (js/catalogo/estuche.js) -->
-<section id="estuche" aria-label="Estuche de relojes">
-  <div class="est-cab">
-    <h2 class="est-titulo">Cada reloj, en su lugar</h2>
+<!-- CAJA DE RELOJES: la tapa se abre con el scroll y aparecen los relojes del carrusel (js/catalogo/estuche.js) -->
+<section id="estuche" aria-label="Caja de relojes">
+  <div class="cj-fijo">
+    <h2 class="cj-titulo">Cada reloj, en su lugar</h2>
+    <div class="cj-marco" id="cj-marco">
+      <div class="cj-caja" id="cj-caja">
+        <img class="cj-cuerpo" src="assets/watchbox/caja-cuerpo.webp" width="805" height="427" alt="" loading="lazy" decoding="async">
+        <div class="cj-sombra" aria-hidden="true"></div>
+        <div class="cj-relojes" id="cj-relojes"></div>
+        <img class="cj-frente" src="assets/watchbox/caja-frente.webp" width="805" height="427" alt="" loading="lazy" decoding="async" aria-hidden="true">
+        <div class="cj-tapa" aria-hidden="true">
+          <img class="cj-cara ext" src="assets/watchbox/tapa-exterior.webp" width="431" height="273" alt="" loading="lazy" decoding="async">
+          <img class="cj-cara int" src="assets/watchbox/tapa-interior.webp" width="431" height="288" alt="" loading="lazy" decoding="async">
+        </div>
+        <div class="cj-etiqueta" id="cj-etiqueta" aria-live="polite"></div>
+      </div>
+    </div>
   </div>
-  <div class="est-caja" id="est-caja">
-    <div class="est-interior" id="est-interior"></div>
-    <div class="est-frente" aria-hidden="true"><i class="est-broche"></i><i class="est-broche"></i><i class="est-broche"></i><i class="est-broche"></i></div>
-    <div class="est-tapa" aria-hidden="true"><div class="est-cara ext"><span class="est-marca">APHILLIPS</span></div><div class="est-cara int"></div></div>
-  </div>
-  <div class="est-info" id="est-info" aria-live="polite"></div>
 </section>
 
 <!-- SECCION DE GENEROS -->
