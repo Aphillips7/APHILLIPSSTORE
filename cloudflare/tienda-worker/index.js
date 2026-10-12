@@ -148,10 +148,16 @@ function conCabeceras(res, esPanel) {
   h.set('X-Content-Type-Options', 'nosniff');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   h.set('Cache-Control', 'no-cache');
-  h.set('Content-Security-Policy', esPanel ? CSP_PANEL : CSP_CATALOGO);
   if (esPanel) {
+    // FASE DE PRUEBA: la CSP del panel va en "solo reporte" para no arriesgar el login de
+    // Firebase/Google. No bloquea nada; solo avisa en la consola lo que bloquearia. Cuando se
+    // confirme que el login entra sin avisos "[Report Only] Refused...", cambiar esta linea por:
+    //   h.set('Content-Security-Policy', CSP_PANEL);
+    h.set('Content-Security-Policy-Report-Only', CSP_PANEL);
     h.set('X-Frame-Options', 'DENY');
     h.set('X-Robots-Tag', 'noindex, nofollow');
+  } else {
+    h.set('Content-Security-Policy', CSP_CATALOGO);
   }
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
 }
