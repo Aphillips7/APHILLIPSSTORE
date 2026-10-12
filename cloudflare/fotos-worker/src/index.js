@@ -57,6 +57,7 @@ const CAMPOS_PUBLICOS = ['id', 'nombre', 'sku', 'coleccion', 'genero', 'mm', 'ma
 const CLAVE_CATALOGO = 'publico/catalogo.json';
 const URL_CACHE_CATALOGO = 'https://api.aphillipsstore.com/__cache/catalogo';
 const CAMPOS_METRICA = ['vistas', 'aperturas', 'clics'];
+const MAX_ENVIOS_METRICAS = 200;   // por IP cada 10 minutos (ver sumarMetricas)
 
 export default {
   async scheduled(evento, env, ctx) {
@@ -249,6 +250,11 @@ async function sumarMetricas(request, env, cors) {
     suma.set(id, s);
   }
   if (!suma.size) return json({ ok: true, sumadas: 0 }, 200, cors);
+  // Limite por IP para que nadie infle los contadores a base de envios. El catalogo envia como
+  // maximo cada 20 s, asi que 200 cada 10 min deja margen para varios visitantes que compartan
+  // IP (datos moviles). Pasado el limite se responde ok sin sumar (la pagina no muestra error).
+  const ip = await sha256(request.headers.get('CF-Connecting-IP') || 'sin-ip');
+  if (!(await dentroDelLimite(env, 'met:' + ip, MAX_ENVIOS_METRICAS, 10 * MINUTO))) return json({ ok: true, sumadas: 0 }, 200, cors);
   const ahora = Date.now();
   const sql = 'INSERT INTO metricas (id, vistas, aperturas, clics, ultima) VALUES (?1, ?2, ?3, ?4, ?5) ' +
     'ON CONFLICT(id) DO UPDATE SET vistas = vistas + excluded.vistas, aperturas = aperturas + excluded.aperturas, ' +

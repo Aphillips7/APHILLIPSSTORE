@@ -54,7 +54,8 @@ async function totpCodigoParaPaso(secretBase32,step){
 async function totpVerificar(secretBase32,codigoIngresado){
   if(!secretBase32||!/^\d{6}$/.test(codigoIngresado))return false;
   var pasoActual=Math.floor(Date.now()/1000/30);
-  for(var delta=-2;delta<=2;delta++){
+  // +-1 paso (+-30 s): tolera un pequeno desfase del reloj del celular sin aceptar codigos viejos
+  for(var delta=-1;delta<=1;delta++){
     var c=await totpCodigoParaPaso(secretBase32,pasoActual+delta);
     if(c===codigoIngresado)return true;
   }
