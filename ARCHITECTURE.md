@@ -96,7 +96,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `whatsapp.js` | Numero, boton flotante, confirmaciones, cotizar |
 | `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
 | `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
-| `estuche.js` | Caja de madera debajo del carrusel: queda fija con el scroll, la tapa gira en 3D y aparecen 3 relojes propios (`RELOJES_CAJA`: nombre, precio, enlace); piezas en `assets/watchbox/`, ajustes en variables de `css/catalogo/estuche.css` |
+| `estuche.js` | Foto de la caja abierta con 3 relojes debajo del carrusel (`assets/watchbox/caja-relojes.webp`); aparece con una animacion al entrar en pantalla |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |
 | `cuenta.js` | "Mi cuenta": login con Google o con correo y contrasena (con verificacion de correo obligatoria; los correos de verificacion y de contrasena salen de noreply@aphillipsstore.com via el Worker y sus enlaces se abren en la tienda con ?modo=; Firebase Auth, el SDK se descarga solo al abrir el panel o si ya habia sesion), perfil y WhatsApp, avisos ("Avisame" en un reloj o una marca), compras y apartados, favoritos en la nube. Con la cuenta del dueno: ir al panel, metricas y opciones de desarrollador (estado del sistema, no contar mis visitas, forzar actualizacion, respaldo) |
 | `sesion.js` | Estado de la sesion del cliente (`sesion`, `saludo()` para los mensajes de WhatsApp, `tieneAviso`) sin dependencias |
