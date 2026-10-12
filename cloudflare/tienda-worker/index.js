@@ -130,17 +130,20 @@ function servir(env, request, ruta) {
 // Content-Security-Policy. Como el sitio usa <script> y onclick en linea, script-src lleva
 // 'unsafe-inline' (la defensa real contra XSS es escapar los datos del catalogo en el JS); la CSP
 // anade object-src 'none', base-uri y frame-ancestors (anti-clickjacking) y acota de donde se cargan
-// imagenes, conexiones y scripts. El panel ademas necesita Firebase (gstatic), qrcode (cdnjs) y el
-// login de Google.
+// imagenes, conexiones y scripts.
+// Catalogo: "Mi cuenta" carga Firebase Auth desde gstatic al abrirse; los clientes entran con
+// correo/contrasena o con Google (popup por /__/auth/ de este dominio, que usa apis.google.com).
+// Panel: Firebase Auth (solo correo y contrasena) y qrcode (cdnjs).
 const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
-  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; " +
-  "connect-src 'self' https://api.aphillipsstore.com; font-src 'self'; form-action 'self'";
+  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; " +
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; " +
+  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com; " +
+  "frame-src 'self' https://*.firebaseapp.com; font-src 'self'; form-action 'self'";
 const CSP_PANEL = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
   "img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; " +
-  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com; " +
-  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://*.firebaseapp.com https://*.firebaseio.com; " +
-  "frame-src 'self' https://aphillipsstore.com https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; " +
-  "font-src 'self'; form-action 'self'";
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com; " +
+  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com; " +
+  "frame-src 'self' https://*.firebaseapp.com; font-src 'self'; form-action 'self'";
 
 // Cabeceras de seguridad para las paginas; el panel ademas no se deja meter en iframes ni indexar
 function conCabeceras(res, esPanel) {
@@ -148,16 +151,14 @@ function conCabeceras(res, esPanel) {
   h.set('X-Content-Type-Options', 'nosniff');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   h.set('Cache-Control', 'no-cache');
+  // FASE DE PRUEBA: las dos CSP van en "solo reporte" para no arriesgar los logins (panel y
+  // "Mi cuenta" del catalogo). No bloquean nada; solo avisan en la consola lo que bloquearian.
+  // Cuando ambos logins entren sin avisos "[Report Only] Refused...", cambiar el nombre de la
+  // cabecera a 'Content-Security-Policy' para activarlas.
+  h.set('Content-Security-Policy-Report-Only', esPanel ? CSP_PANEL : CSP_CATALOGO);
   if (esPanel) {
-    // FASE DE PRUEBA: la CSP del panel va en "solo reporte" para no arriesgar el login de
-    // Firebase/Google. No bloquea nada; solo avisa en la consola lo que bloquearia. Cuando se
-    // confirme que el login entra sin avisos "[Report Only] Refused...", cambiar esta linea por:
-    //   h.set('Content-Security-Policy', CSP_PANEL);
-    h.set('Content-Security-Policy-Report-Only', CSP_PANEL);
     h.set('X-Frame-Options', 'DENY');
     h.set('X-Robots-Tag', 'noindex, nofollow');
-  } else {
-    h.set('Content-Security-Policy', CSP_CATALOGO);
   }
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
 }
