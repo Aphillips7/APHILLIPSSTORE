@@ -29,10 +29,10 @@
     .card{opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease), transform .5s var(--ease), box-shadow var(--fast) var(--ease);}
     .card.visible{opacity:1;transform:translateY(0);}
   }
-  .card:not(.skeleton-card):hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+  @media (hover:hover) and (pointer:fine){ .card:not(.skeleton-card):hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);} }
   .card:not(.skeleton-card):active{transform:scale(0.99);}
   .card-foto{position:relative;width:100%;aspect-ratio:1/1;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  @media(hover:hover){
+  @media (hover:hover) and (pointer:fine){
     .card-foto img{transition:transform 0.45s var(--ease);}
     .card:hover .card-foto img{transform:scale(1.07);}
   }

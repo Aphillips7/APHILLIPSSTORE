@@ -19,9 +19,9 @@
   .cta-campo{position:relative;margin-bottom:22px;}
   .cta-campo input{width:100%;height:50px;background:#fff;border:1px solid var(--border2);border-radius:0;padding:18px 16px 0;font-family:inherit;font-size:16px;color:var(--black);outline:none;transition:border-color var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
   .cta-campo input:focus{border-color:var(--black);box-shadow:0 0 0 1px var(--black);}
-  .cta-campo label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--gris-texto);pointer-events:none;transition:top .18s var(--ease),font-size .18s var(--ease),transform .18s var(--ease);}
+  .cta-campo label{position:absolute;left:16px;top:50%;transform:translateY(-50%);transform-origin:0 50%;font-size:14px;color:var(--gris-texto);pointer-events:none;transition:transform .18s var(--ease);}
   .cta-campo label b{font-weight:500;color:var(--black);}
-  .cta-campo input:focus + label,.cta-campo input:not(:placeholder-shown) + label{top:9px;transform:none;font-size:11.5px;letter-spacing:.04em;}
+  .cta-campo input:focus + label,.cta-campo input:not(:placeholder-shown) + label{transform:translateY(calc(-50% - 10px)) scale(.82);}
   .cta-fila{display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
   .cta-btn{display:inline-flex;align-items:center;justify-content:center;min-width:120px;padding:16px 28px;font-family:inherit;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid var(--black);transition:background-color .25s var(--ease),color .25s var(--ease),transform .12s var(--ease);}
   .cta-btn.primario{background:var(--black);color:#fff;}

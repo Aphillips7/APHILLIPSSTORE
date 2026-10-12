@@ -12,7 +12,7 @@
   /* Los tres logos (simbolo + nombre) con la misma altura, centrados en la barra */
   .marca-logo{display:block;width:auto;height:clamp(28px,2.9vw,44px);max-width:80%;object-fit:contain;margin:0 auto;}
   .marca-card:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
-  @media (hover:hover){ .marca-card:hover .marca-foto img{transform:scale(1.04);} }
+  @media (hover:hover) and (pointer:fine){ .marca-card:hover .marca-foto img{transform:scale(1.04);} }
   #marcas .regla-seccion{width:100%;margin-top:clamp(40px,5vw,72px);}
   .marcas-grid .gen-reveal:nth-child(2){transition-delay:.1s;}
   .marcas-grid .gen-reveal:nth-child(3){transition-delay:.2s;}
