@@ -157,16 +157,13 @@ function conCabeceras(res, esPanel) {
   h.set('X-Content-Type-Options', 'nosniff');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   h.set('Cache-Control', 'no-cache');
-  // El panel ya se probo (login y datos sin avisos): su CSP esta activa.
-  // FASE DE PRUEBA del catalogo: va en "solo reporte" (no bloquea, solo avisa en la consola)
-  // hasta probar "Mi cuenta" entrando con Google; si entra sin avisos "[Report Only] Refused...",
-  // cambiar su cabecera a 'Content-Security-Policy' para activarla.
+  // Ambas CSP se probaron en produccion en modo solo-reporte (login del panel con correo y
+  // "Mi cuenta" del catalogo con Google) sin avisos. Si se agrega un servicio externo nuevo,
+  // hay que sumar su dominio aqui o el navegador lo bloqueara.
+  h.set('Content-Security-Policy', esPanel ? CSP_PANEL : CSP_CATALOGO);
   if (esPanel) {
-    h.set('Content-Security-Policy', CSP_PANEL);
     h.set('X-Frame-Options', 'DENY');
     h.set('X-Robots-Tag', 'noindex, nofollow');
-  } else {
-    h.set('Content-Security-Policy-Report-Only', CSP_CATALOGO);
   }
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
 }
