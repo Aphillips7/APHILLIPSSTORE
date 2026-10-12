@@ -30,6 +30,7 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
 <link rel="stylesheet" href="css/catalogo/buscador.css">
 <link rel="stylesheet" href="css/catalogo/hero.css">
 <link rel="stylesheet" href="css/catalogo/destacados.css">
+<link rel="stylesheet" href="css/catalogo/estuche.css">
 <link rel="stylesheet" href="css/catalogo/listado.css">
 <link rel="stylesheet" href="css/catalogo/filtros.css">
 <link rel="stylesheet" href="css/catalogo/marcas.css">
@@ -206,6 +207,19 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
   </div>
   <!-- regla de puntos (estilo TAG) que separa el carrusel de la siguiente seccion -->
   <div class="regla-seccion" aria-hidden="true"></div>
+</section>
+
+<!-- ESTUCHE: se abre con el scroll y muestra los relojes del carrusel (js/catalogo/estuche.js) -->
+<section id="estuche" aria-label="Estuche de relojes">
+  <div class="est-cab">
+    <h2 class="est-titulo">Cada reloj, en su lugar</h2>
+  </div>
+  <div class="est-caja" id="est-caja">
+    <div class="est-interior" id="est-interior"></div>
+    <div class="est-frente" aria-hidden="true"><i class="est-broche"></i><i class="est-broche"></i><i class="est-broche"></i><i class="est-broche"></i></div>
+    <div class="est-tapa" aria-hidden="true"><div class="est-cara ext"><span class="est-marca">APHILLIPS</span></div><div class="est-cara int"></div></div>
+  </div>
+  <div class="est-info" id="est-info" aria-live="polite"></div>
 </section>
 
 <!-- SECCION DE GENEROS -->
