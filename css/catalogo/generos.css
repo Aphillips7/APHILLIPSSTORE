@@ -12,7 +12,7 @@
   .gen-tile:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
   .gen-tile:focus-visible .hero-btn{background:#fff;color:var(--black);}
   .gen-tile:active .hero-btn{background:#d4d4d8;border-color:#d4d4d8;color:var(--black);}
-  @media (hover:hover){
+  @media (hover:hover) and (pointer:fine){
     .gen-tile:hover img{transform:scale(1.04);}
     .gen-tile:hover .hero-btn{background:#fff;color:var(--black);}
   }

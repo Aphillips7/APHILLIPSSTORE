@@ -71,7 +71,7 @@
   .desktop-link:hover { color: var(--black); }
 
   .header-bottom { display: flex; justify-content: center; gap: 32px; padding: 0 24px 16px; max-width: 1200px; margin: 0 auto; }
-  .header-bottom a { text-decoration: none; font-size: var(--fs-etiqueta); font-weight: 500; letter-spacing: 1px; color: #555; transition: all var(--fast) var(--ease); border-bottom: 1px solid transparent; padding-bottom: 2px; }
+  .header-bottom a { text-decoration: none; font-size: var(--fs-etiqueta); font-weight: 500; letter-spacing: 1px; color: #555; transition: color var(--fast) var(--ease), border-color var(--fast) var(--ease); border-bottom: 1px solid transparent; padding-bottom: 2px; }
   .header-bottom a:hover { color: var(--black); border-bottom: 1px solid var(--black); }
 
   /* Clases para controlar qué se ve en PC vs Celular */
@@ -83,4 +83,12 @@
     .mobile-only { display: flex !important; }
     .header-left, .header-right { gap: 12px; }
     .header-top { padding: 14px 16px; }
+  }
+
+  /* Movimiento reducido (ajuste del telefono/computadora): se quitan los desplazamientos y escalas de las
+     apariciones; se conserva el fundido, que ayuda a entender el cambio sin marear */
+  @media (prefers-reduced-motion: reduce){
+    .gen-reveal{transform:none !important;transition:opacity .3s var(--ease) !important;}
+    .dest-track.anim{transition-duration:.01s !important;}
+    .search-panel{transform:none !important;}
   }
