@@ -8,6 +8,7 @@ import './menu.js';
 import './metricas.js';
 import './datos.js';
 import './destacados.js';
+import './estuche.js';
 import './vistas.js';
 import './filtros.js';
 import './grid.js';
