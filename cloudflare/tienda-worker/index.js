@@ -137,17 +137,18 @@ function servir(env, request, ruta) {
 // correo/contrasena o con Google. Fuentes Jost y Syne de Google Fonts (css/catalogo/base.css).
 // Panel: Firebase Auth (solo correo y contrasena), qrcode (cdnjs) y la fuente Satoshi de
 // Fontshare (css/panel/base.css).
+// Ambos: Cloudflare Web Analytics (Cloudflare inserta el script beacon y envia a cloudflareinsights.com).
 const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
   "img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "font-src 'self' https://fonts.gstatic.com; " +
-  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; " +
-  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com; " +
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://static.cloudflareinsights.com; " +
+  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://cloudflareinsights.com; " +
   "frame-src 'self' https://*.firebaseapp.com; form-action 'self'";
 const CSP_PANEL = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
   "img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://api.fontshare.com; " +
   "font-src 'self' https://cdn.fontshare.com; " +
-  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com; " +
-  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com; " +
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://static.cloudflareinsights.com; " +
+  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://cloudflareinsights.com; " +
   "frame-src 'self' https://*.firebaseapp.com; form-action 'self'";
 
 // Cabeceras de seguridad para las paginas; el panel ademas no se deja meter en iframes ni indexar
@@ -156,14 +157,16 @@ function conCabeceras(res, esPanel) {
   h.set('X-Content-Type-Options', 'nosniff');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   h.set('Cache-Control', 'no-cache');
-  // FASE DE PRUEBA: las dos CSP van en "solo reporte" para no arriesgar los logins (panel y
-  // "Mi cuenta" del catalogo). No bloquean nada; solo avisan en la consola lo que bloquearian.
-  // Cuando ambos logins entren sin avisos "[Report Only] Refused...", cambiar el nombre de la
-  // cabecera a 'Content-Security-Policy' para activarlas.
-  h.set('Content-Security-Policy-Report-Only', esPanel ? CSP_PANEL : CSP_CATALOGO);
+  // El panel ya se probo (login y datos sin avisos): su CSP esta activa.
+  // FASE DE PRUEBA del catalogo: va en "solo reporte" (no bloquea, solo avisa en la consola)
+  // hasta probar "Mi cuenta" entrando con Google; si entra sin avisos "[Report Only] Refused...",
+  // cambiar su cabecera a 'Content-Security-Policy' para activarla.
   if (esPanel) {
+    h.set('Content-Security-Policy', CSP_PANEL);
     h.set('X-Frame-Options', 'DENY');
     h.set('X-Robots-Tag', 'noindex, nofollow');
+  } else {
+    h.set('Content-Security-Policy-Report-Only', CSP_CATALOGO);
   }
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
 }
