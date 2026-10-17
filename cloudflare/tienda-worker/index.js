@@ -31,6 +31,8 @@ export default {
     }
 
     if (url.pathname === '/sitemap.xml') return await sitemap(env);
+    // icono de la pestana que algunos navegadores piden por defecto
+    if (url.pathname === '/favicon.ico') return servir(env, request, '/img/favicon-48.png');
 
     if (url.pathname === '/admin/') {
       url.pathname = '/admin';
