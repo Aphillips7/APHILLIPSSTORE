@@ -142,6 +142,54 @@ function galeriaMover(dir){ galeriaIr(_galIdx + dir); }
   }, {passive:true});
 })();
 
+// ---------- "Tambien te puede gustar": relojes parecidos al abierto ----------
+// Puntaje: misma marca, mismo genero (unisex cuenta para ambos), precio cercano, tamano parecido y mismo
+// tipo de movimiento. Los disponibles van primero y los agotados al final.
+var MARCAS_CLAVE = ['invicta', 'bulova', 'technomarine'];
+function sinAcentos(t){ return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,''); }
+function marcaDe(r){ var t = sinAcentos((r.nombre||'')+' '+(r.coleccion||'')); return MARCAS_CLAVE.find(function(m){ return t.indexOf(m) >= 0; }) || ''; }
+function tipoMov(r){ var m = sinAcentos(r.movimiento); return m.indexOf('auto') >= 0 ? 'auto' : m.indexOf('cuarzo') >= 0 || m.indexOf('quartz') >= 0 ? 'cuarzo' : m; }
+function parecidos(r, max){
+  var marca = marcaDe(r), mm = parseFloat(r.mm) || 0, precio = r.precio || 0, mov = tipoMov(r);
+  return relojes.filter(function(x){ return x.id !== r.id; }).map(function(x){
+    var p = 0;
+    if(marca && marcaDe(x) === marca) p += 3;
+    if(r.coleccion && x.coleccion && sinAcentos(x.coleccion) === sinAcentos(r.coleccion)) p += 2;
+    if(r.genero && (x.genero === r.genero || x.genero === 'unisex' || r.genero === 'unisex')) p += 2;
+    var xp = x.precio || 0;
+    if(precio > 0 && xp > 0){ var d = Math.abs(xp - precio) / precio; p += d <= .2 ? 2 : d <= .45 ? 1 : 0; }
+    var xm = parseFloat(x.mm) || 0;
+    if(mm && xm){ var dm = Math.abs(xm - mm); p += dm <= 1 ? 1.5 : dm <= 3 ? .8 : 0; }
+    if(mov && tipoMov(x) === mov) p += 1;
+    if(x.estado === 'disponible') p += 1.2; else if(x.estado === 'transito') p += .6; else if(x.estado === 'vendido') p -= 3;
+    if(!x.foto) p -= 2;
+    return { x: x, p: p };
+  }).sort(function(a, b){ return b.p - a.p; }).slice(0, max).map(function(o){ return o.x; });
+}
+function pintarParecidos(r){
+  var sec = document.getElementById('modal-parecidos'); if(!sec) return;
+  var lista = parecidos(r, 8);
+  if(!lista.length){ sec.hidden = true; return; }
+  sec.hidden = false;
+  sec.querySelector('.par-fila').innerHTML = lista.map(function(x){
+    var eti = etiquetaEstado(x.estado);
+    var foto = typeof x.foto === 'string' && x.foto ? '<img src="'+esc(x.foto)+'" alt="" loading="lazy" decoding="async">' : '<span class="sinfoto">Sin foto</span>';
+    var precio = x.estado === 'bajopedido' ? 'Bajo cotización' : x.precio ? '$'+Number(x.precio).toLocaleString() : '';
+    return '<button type="button" class="par-card" onclick="abrirParecido(\''+esc(x.id)+'\')" aria-label="'+esc(x.nombre||'Reloj')+'">'+
+      '<span class="par-foto">'+foto+'<span class="prod-eti '+eti.cls+'">'+eti.txt+'</span></span>'+
+      '<span class="par-nombre">'+esc(x.nombre||'')+'</span>'+
+      '<span class="par-detalle">'+esc([x.mm ? x.mm+' mm' : '', x.movimiento].filter(Boolean).join(' · '))+'</span>'+
+      (precio ? '<span class="par-precio">'+esc(precio)+'</span>' : '')+
+    '</button>';
+  }).join('');
+  sec.querySelector('.par-fila').scrollLeft = 0;
+}
+// abre el reloj parecido en la misma pagina (reemplaza la entrada del historial: "atras" vuelve al catalogo)
+function abrirParecido(id){
+  if(history.state && history.state.modal) history.replaceState({modal:id}, '', '?id='+encodeURIComponent(id));
+  abrir(id);
+}
+
 function copiarSku(e, sku){
   e.stopPropagation();
   if(navigator.clipboard){ navigator.clipboard.writeText(sku).then(function(){ toast('Referencia copiada: '+sku); }); }
@@ -212,6 +260,10 @@ function abrir(id){
     msg = saludo()+' Me interesa el '+nombreRef+' que vi en el catalogo, ¿sigue disponible?';
   }
   document.getElementById('modal-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent(msg);
+  // guia de tamanos con el tamano de este reloj ya puesto
+  var guia = document.getElementById('modal-guia');
+  if(guia){ guia.hidden = !r.mm; guia.href = 'guia-de-tamanos' + (parseFloat(r.mm) ? '?mm=' + encodeURIComponent(parseFloat(r.mm)) : ''); }
+  pintarParecidos(r);
   // cuenta.js pinta el boton "Avisame" de este reloj
   document.dispatchEvent(new CustomEvent('reloj-abierto', { detail: r }));
 
@@ -244,4 +296,4 @@ document.getElementById('modal-wa').addEventListener('click', function(){ if(_id
 
 export { _idAbierto, abrir, cerrar, cerrarModalUI, copiarSku, etiquetaEstado, spec };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { abrir, cerrar, copiarSku, galeriaIr, galeriaMover });
+Object.assign(window, { abrir, abrirParecido, cerrar, copiarSku, galeriaIr, galeriaMover });

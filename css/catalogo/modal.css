@@ -127,3 +127,26 @@
   .btn-aviso.activo{border-color:var(--estado-disponible);color:var(--estado-disponible);}
   .btn-aviso-marca{width:auto;min-height:42px;margin:0;padding:0 18px;}
   .btn-aviso-marca[hidden]{display:none;}
+  /* enlace a la guia de tamanos (debajo de "Automatico, 43 mm, ...") */
+  .prod-guia{display:inline-flex;align-items:center;gap:7px;margin-top:8px;font-size:var(--fs-etiqueta);color:var(--black);text-decoration:underline;text-underline-offset:3px;}
+  .prod-guia svg{width:16px;height:16px;flex:none;}
+  .prod-guia[hidden]{display:none;}
+  /* === TAMBIEN TE PUEDE GUSTAR: fila que se desliza con el dedo === */
+  .prod-parecidos{max-width:1560px;margin:clamp(40px,5vw,80px) auto 0;padding:0 clamp(16px,1.6vw,24px);}
+  .prod-parecidos[hidden]{display:none;}
+  .par-titulo{font-family:var(--font-titulo);font-size:var(--fs-titulo);font-weight:800;text-transform:uppercase;letter-spacing:.01em;text-align:center;margin-bottom:clamp(18px,2vw,28px);}
+  @media (min-width:821px){ .par-titulo{font-size:clamp(22px,1.9vw,30px);} }
+  .par-fila{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 3 * 12px) / 4);gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding-bottom:10px;scrollbar-width:thin;}
+  .par-card{scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:0 0 6px;background:none;border:0;font-family:inherit;color:var(--black);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .par-foto{position:relative;display:block;width:100%;aspect-ratio:1/1;background:linear-gradient(180deg,#d6d6d8 0%,#ececee 50%,#fafafa 100%);overflow:hidden;margin-bottom:10px;}
+  .par-foto img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s var(--ease);}
+  .par-foto .prod-eti{position:absolute;top:10px;left:10px;margin:0;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.92);font-size:10px;line-height:12px;}
+  .par-foto .sinfoto{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted2);}
+  .par-nombre{font-size:var(--fs-etiqueta);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.3;padding:0 6px;}
+  .par-detalle{font-size:12px;color:var(--gris-texto);}
+  .par-precio{font-size:var(--fs-etiqueta);margin-top:2px;}
+  .par-card:active .par-foto img{transform:scale(.98);}
+  @media (hover:hover) and (pointer:fine){ .par-card:hover .par-foto img{transform:scale(1.04);} }
+  .par-card:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
+  @media (max-width:900px){ .par-fila{grid-auto-columns:calc((100% - 2 * 12px) / 2.6);} }
+  @media (max-width:560px){ .par-fila{grid-auto-columns:46%;gap:10px;margin:0 calc(-1 * clamp(16px,1.6vw,24px));padding-left:clamp(16px,1.6vw,24px);scroll-padding-left:clamp(16px,1.6vw,24px);} }

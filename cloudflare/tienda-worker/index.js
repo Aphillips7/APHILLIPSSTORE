@@ -3,6 +3,7 @@
 //   /                -> catalogo publico (catalogo.html). Con ?id=<reloj> la vista previa del link
 //                       (WhatsApp, Facebook...) muestra la foto, el nombre y el estado de ese reloj.
 //   /admin           -> panel privado (index.html)
+//   /guia-de-tamanos -> guia de tamanos con probador (guia-de-tamanos.html; acepta ?mm=42)
 //   /preguntas       -> preguntas frecuentes (preguntas.html; /preguntas.html redirige aqui)
 //   /legal           -> terminos, garantia, devoluciones, privacidad y cookies (legal.html; /legal.html redirige aqui)
 //   /admin/          -> redirige a /admin (las rutas relativas del panel cuelgan de "/")
@@ -10,7 +11,8 @@
 //   www.             -> redirige al dominio sin www
 //   /__/auth/, /__/firebase/ -> se reenvian a Firebase (login de Google con nuestro dominio)
 //   /sitemap.xml     -> lista para Google: el catalogo y un enlace por cada reloj publicado (no vendido)
-// Todo lo demas se sirve tal cual (catalogo.html, index.html, css/, js/, img/...).
+// /catalogo.html redirige a / y /index.html a /admin (direcciones sin .html).
+// Todo lo demas se sirve tal cual (css/, js/, img/...).
 // En GitHub Pages los archivos siguen funcionando igual: este Worker no los modifica.
 
 const DOMINIO = 'aphillipsstore.com';
@@ -34,6 +36,10 @@ export default {
     // icono de la pestana que algunos navegadores piden por defecto
     if (url.pathname === '/favicon.ico') return servir(env, request, '/img/favicon-48.png');
 
+    // direcciones limpias: nunca se muestra .html (los ?id= y #seccion se conservan)
+    if (url.pathname === '/catalogo.html') { url.pathname = '/'; return Response.redirect(url.toString(), 301); }
+    if (url.pathname === '/index.html') { url.pathname = '/admin'; return Response.redirect(url.toString(), 301); }
+
     if (url.pathname === '/admin/') {
       url.pathname = '/admin';
       return Response.redirect(url.toString(), 301);
@@ -51,6 +57,8 @@ export default {
     if (url.pathname === '/legal') return conCabeceras(await servir(env, request, '/legal.html'));
     if (url.pathname === '/preguntas.html') { url.pathname = '/preguntas'; return Response.redirect(url.toString(), 301); }
     if (url.pathname === '/preguntas') return conCabeceras(await servir(env, request, '/preguntas.html'));
+    if (url.pathname === '/guia-de-tamanos.html') { url.pathname = '/guia-de-tamanos'; return Response.redirect(url.toString(), 301); }
+    if (url.pathname === '/guia-de-tamanos') return conCabeceras(await servir(env, request, '/guia-de-tamanos.html'));
 
     if (url.pathname === '/manifest.json') {
       const res = await servir(env, request, '/manifest.json');
@@ -73,7 +81,7 @@ export default {
 // ---------- sitemap para Google ----------
 async function sitemap(env) {
   const d = await catalogo(env);
-  const urls = ['https://' + DOMINIO + '/', 'https://' + DOMINIO + '/legal', 'https://' + DOMINIO + '/preguntas'];
+  const urls = ['https://' + DOMINIO + '/', 'https://' + DOMINIO + '/legal', 'https://' + DOMINIO + '/preguntas', 'https://' + DOMINIO + '/guia-de-tamanos'];
   for (const r of (d && d.relojes) || []) {
     if (r.estado !== 'vendido' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id || '')) urls.push('https://' + DOMINIO + '/?id=' + r.id);
   }

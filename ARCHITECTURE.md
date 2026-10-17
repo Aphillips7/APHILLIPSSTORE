@@ -33,6 +33,7 @@ index.html            estructura del panel (sin CSS ni JS en linea)
 catalogo.html         estructura del catalogo
 legal.html            terminos, apartados, envios, garantia, devoluciones, privacidad y cookies (en /legal)
 preguntas.html        preguntas frecuentes con datos FAQPage para Google (en /preguntas); ambas usan css/legal.css
+guia-de-tamanos.html  guia de tamanos con SVG y probador a escala (en /guia-de-tamanos, acepta ?mm=); js/guia.js + css/guia.css
 manifest.json         PWA del panel
 sw.js                 service worker (cache del "cascaron")
 firestore.rules       reglas del archivo historico de Firestore: solo lectura del admin (se publican a mano)
@@ -93,7 +94,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `grid.js` | Dibuja la grilla de relojes (`render`), vista 1 o 2 columnas |
 | `vistas.js` | Inicio vs. catalogo, genero (`#hombre`, `#mujer`, `#todos`), marca (`#marca-invicta`, `#marca-bulova`, `#marca-technomarine`: el reloj es de la marca si su nombre o coleccion la mencionan), descripcion |
 | `filtros.js` | Panel de filtros (coleccion, movimiento, tamano, esfera, correa, caja), orden y `coincideBusqueda()` (busca cada palabra en todos los datos publicos, sin acentos) |
-| `modal.js` | Pagina de un reloj (estilo TAG Heuer): barras desplegables con icono, garantias y boton de WhatsApp. Usa `descripcion` si existe; si no, `notas` o una descripcion armada con los datos |
+| `modal.js` | Pagina de un reloj (estilo TAG Heuer): barras desplegables con icono, garantias y boton de WhatsApp. Usa `descripcion` si existe; si no, `notas` o una descripcion armada con los datos (incluye "Tambien te puede gustar": relojes parecidos por marca, coleccion, genero, precio, tamano y movimiento) |
 | `favoritos.js` | Favoritos (en el navegador) y consulta multiple por WhatsApp |
 | `whatsapp.js` | Numero, boton flotante, confirmaciones, cotizar |
 | `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
