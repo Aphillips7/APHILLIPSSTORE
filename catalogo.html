@@ -365,7 +365,7 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
     </div>
     <div class="pie-acciones">
       <a href="#" class="pie-accion wa-link" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Escríbenos<br>por WhatsApp</span></a>
-      <a href="#" class="pie-accion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 6l9 7 9-7"/></svg><span>Suscríbete<br>al boletín</span></a>
+      <a href="#" class="pie-accion" onclick="abrirBoletin(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 6l9 7 9-7"/></svg><span>Suscríbete<br>al boletín</span></a>
     </div>
   </div>
   <div class="pie-cols">
@@ -390,17 +390,17 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
       <button type="button" class="pie-col-btn" onclick="this.parentElement.classList.toggle('abierta')">Ayuda<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg></button>
       <ul>
         <li><a href="#" class="wa-link" target="_blank" rel="noopener">Contáctanos</a></li>
-        <li><a href="legal.html#envios">Envíos</a></li>
-        <li><a href="legal.html#garantia">Garantía</a></li>
-        <li><a href="#">Preguntas frecuentes</a></li>
+        <li><a href="legal#envios">Envíos</a></li>
+        <li><a href="legal#garantia">Garantía</a></li>
+        <li><a href="preguntas">Preguntas frecuentes</a></li>
       </ul>
     </div>
     <div class="pie-col">
       <button type="button" class="pie-col-btn" onclick="this.parentElement.classList.toggle('abierta')">Legal<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg></button>
       <ul>
-        <li><a href="legal.html#terminos">Términos y condiciones</a></li>
-        <li><a href="legal.html#privacidad">Política de privacidad</a></li>
-        <li><a href="legal.html#devoluciones">Cambios y devoluciones</a></li>
+        <li><a href="legal#terminos">Términos y condiciones</a></li>
+        <li><a href="legal#privacidad">Política de privacidad</a></li>
+        <li><a href="legal#devoluciones">Cambios y devoluciones</a></li>
       </ul>
     </div>
   </div>

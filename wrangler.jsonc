@@ -16,7 +16,7 @@
     "binding": "ASSETS",
     "html_handling": "none",
     "not_found_handling": "none",
-    "run_worker_first": ["/__/*", "/", "/admin", "/admin/", "/manifest.json", "/sitemap.xml", "/index.html", "/catalogo.html"]
+    "run_worker_first": ["/__/*", "/", "/admin", "/admin/", "/manifest.json", "/sitemap.xml", "/legal", "/legal.html", "/preguntas", "/preguntas.html", "/index.html", "/catalogo.html"]
   },
   // La API (Worker aphillips-fotos), para leer el catalogo al armar la vista previa de un reloj
   "services": [{ "binding": "API", "service": "aphillips-fotos" }],

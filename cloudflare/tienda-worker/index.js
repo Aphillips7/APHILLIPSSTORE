@@ -3,6 +3,8 @@
 //   /                -> catalogo publico (catalogo.html). Con ?id=<reloj> la vista previa del link
 //                       (WhatsApp, Facebook...) muestra la foto, el nombre y el estado de ese reloj.
 //   /admin           -> panel privado (index.html)
+//   /preguntas       -> preguntas frecuentes (preguntas.html; /preguntas.html redirige aqui)
+//   /legal           -> terminos, garantia, devoluciones, privacidad y cookies (legal.html; /legal.html redirige aqui)
 //   /admin/          -> redirige a /admin (las rutas relativas del panel cuelgan de "/")
 //   /manifest.json   -> la app instalable del panel abre /admin en este dominio
 //   www.             -> redirige al dominio sin www
@@ -42,6 +44,12 @@ export default {
     }
     if (url.pathname === '/admin') return conCabeceras(await servir(env, request, '/index.html'), true);
 
+    // pagina legal con direccion limpia: /legal (la vieja /legal.html redirige; el #seccion lo conserva el navegador)
+    if (url.pathname === '/legal.html') { url.pathname = '/legal'; return Response.redirect(url.toString(), 301); }
+    if (url.pathname === '/legal') return conCabeceras(await servir(env, request, '/legal.html'));
+    if (url.pathname === '/preguntas.html') { url.pathname = '/preguntas'; return Response.redirect(url.toString(), 301); }
+    if (url.pathname === '/preguntas') return conCabeceras(await servir(env, request, '/preguntas.html'));
+
     if (url.pathname === '/manifest.json') {
       const res = await servir(env, request, '/manifest.json');
       if (!res.ok) return res;
@@ -63,7 +71,7 @@ export default {
 // ---------- sitemap para Google ----------
 async function sitemap(env) {
   const d = await catalogo(env);
-  const urls = ['https://' + DOMINIO + '/', 'https://' + DOMINIO + '/legal.html'];
+  const urls = ['https://' + DOMINIO + '/', 'https://' + DOMINIO + '/legal', 'https://' + DOMINIO + '/preguntas'];
   for (const r of (d && d.relojes) || []) {
     if (r.estado !== 'vendido' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id || '')) urls.push('https://' + DOMINIO + '/?id=' + r.id);
   }

@@ -8,7 +8,7 @@
   aviso.className = 'aviso-cookies';
   aviso.setAttribute('role', 'region');
   aviso.setAttribute('aria-label', 'Aviso de cookies');
-  aviso.innerHTML = '<p>Usamos solo lo necesario para que la tienda funcione, como tu sesión y tus favoritos. No usamos cookies de publicidad. <a href="legal.html#cookies">Más información</a></p>' +
+  aviso.innerHTML = '<p>Usamos solo lo necesario para que la tienda funcione, como tu sesión y tus favoritos. No usamos cookies de publicidad. <a href="legal#cookies">Más información</a></p>' +
     '<button type="button">Entendido</button>';
   aviso.querySelector('button').addEventListener('click', function(){
     try{ localStorage.setItem(CLAVE, '1'); }catch(e){}

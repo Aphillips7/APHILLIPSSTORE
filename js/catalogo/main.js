@@ -15,3 +15,4 @@ import './modal.js';
 import './buscador.js';
 import './reloj-vivo.js';
 import './aviso-cookies.js';
+import './boletin.js';

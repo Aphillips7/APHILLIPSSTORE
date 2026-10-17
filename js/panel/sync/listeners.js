@@ -3,6 +3,7 @@ import { renderConfigPage } from '../auth/auth-overlay.js';
 import { renderCatalogoAdmin } from '../catalogo-admin.js';
 import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
 import { cargarCuentasWeb, renderCuentasWeb } from '../clientes/cuentas-web.js';
+import { cargarBoletin } from '../clientes/boletin.js';
 import { renderContenido, renderIdeas } from '../contenido.js';
 import { renderAnalisis } from '../finanzas/analisis.js';
 import { renderFinanzas } from '../finanzas/finanzas.js';
@@ -60,7 +61,8 @@ function iniciarListenersFirebase(){
   cargarMetricasCloudflare();
   try{ cargarRespaldosNube(); }catch(e){}
   try{ cargarCuentasWeb(); }catch(e){}
-  if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(document.hidden) return; cargarMetricasCloudflare(); try{ cargarCuentasWeb(); }catch(e){} }, 120000);
+  try{ cargarBoletin(); }catch(e){}
+  if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(document.hidden) return; cargarMetricasCloudflare(); try{ cargarCuentasWeb(); }catch(e){} try{ cargarBoletin(); }catch(e){} }, 120000);
 }
 
 // Metricas del catalogo (vistas, aperturas, clics), guardadas en Cloudflare (D1).

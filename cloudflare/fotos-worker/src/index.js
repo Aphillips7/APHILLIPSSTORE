@@ -34,6 +34,10 @@
 //   POST   /cuenta/verificacion  envia (desde noreply@aphillipsstore.com) el correo para verificar la cuenta
 // Publica (sin sesion), con limites por correo y por IP:
 //   POST   /correo/recuperar   { email } -> envia el correo para crear una contrasena nueva (siempre { ok })
+// Boletin (publicas, con limites por IP):
+//   POST   /boletin            { email, nombre? } -> guarda el suscriptor y le manda un correo de bienvenida (siempre { ok })
+//   GET    /boletin/baja?t=    da de baja al suscriptor del enlace del correo (pagina simple)
+//   GET    /admin/boletin      -> { suscriptores: [{ email, nombre, activo, creado, baja }] }   (solo admin)
 // Rutas de admin para cuentas:
 //   GET    /admin/cuentas      -> todas las cuentas con sus avisos y cuantos favoritos tienen
 //   POST   /admin/cuentas/vincular  { uid, clienteId|null }
@@ -67,15 +71,19 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const ruta = url.pathname, metodo = request.method;
-    const publica = (ruta === '/catalogo' && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST';
+    const publica = (ruta === '/catalogo' && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST' || ruta === '/boletin';
     const cors = encabezadosCors(request, env, publica);
 
-    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/metricas') });
+    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/metricas' || ruta === '/boletin') });
     if (ruta === '/salud') return json({ ok: true }, 200, cors);
 
     // ---------- publicas ----------
     if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
+
+    // ---------- boletin (publicas, con limites) ----------
+    if (ruta === '/boletin' && metodo === 'POST') return suscribirBoletin(request, env, cors);
+    if (ruta === '/boletin/baja' && metodo === 'GET') return bajaBoletin(url, env);
 
     // ---------- recuperar contrasena (publica, con limites) ----------
     if (ruta === '/correo/recuperar' && metodo === 'POST') return correoRecuperar(request, env, cors);
@@ -101,7 +109,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      (ruta === '/admin/cuentas' && metodo === 'GET') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin') && metodo === 'GET') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -126,6 +134,7 @@ export default {
     if (ruta === '/respaldos') return listarRespaldos(env, cors);
     if (ruta === '/respaldos/archivo') return descargarRespaldo(url, env, cors);
     if (ruta === '/admin/cuentas') return adminCuentas(env, cors);
+    if (ruta === '/admin/boletin') return adminBoletin(env, cors);
     if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
     if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
 
@@ -604,30 +613,37 @@ async function enlaceFirebase(env, tipo, email) {
   const codigo = new URL(d.oobLink).searchParams.get('oobCode');
   return TIENDA + '?modo=' + (tipo === 'VERIFY_EMAIL' ? 'verificar' : 'contrasena') + '&oobCode=' + encodeURIComponent(codigo);
 }
-function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota }) {
+function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota, baja }) {
   const e = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + e(titulo) + '</title></head>' +
-    '<body style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#09090b;">' +
+  // Modo oscuro: Gmail (iPhone) invierte los colores y dejaba el logo y el boton en blanco. Lo negro se pinta
+  // tambien como imagen de fondo (linear-gradient), que Gmail no invierte, y el texto del boton usa el truco
+  // "gmail-blend" (u + .body ...: mix-blend-mode screen/difference) para seguir viendose blanco.
+  const NEGRO = 'background-color:#000000;background-image:linear-gradient(#000000,#000000);';
+  return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only"><title>' + e(titulo) + '</title>' +
+    '<style>u + .body .gb-scr{background:#000;mix-blend-mode:screen;} u + .body .gb-dif{background:#000;mix-blend-mode:difference;}</style></head>' +
+    '<body class="body" style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#09090b;"><u></u>' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 12px;"><tr><td align="center">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;">' +
     // logo de la tienda (img/logo-correo.png); si el correo bloquea imagenes se ve el texto APHILLIPS
-    '<tr><td style="background:#000000;padding:24px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo.png" width="240" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;outline:none;width:240px;max-width:100%;height:auto;color:#ffffff;font-family:Georgia,serif;font-size:24px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
+    '<tr><td bgcolor="#000000" style="' + NEGRO + 'padding:24px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo.png" width="240" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;outline:none;width:240px;max-width:100%;height:auto;color:#ffffff;font-family:Georgia,serif;font-size:24px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
     '<tr><td style="padding:36px 32px 8px;">' +
       '<p style="margin:0 0 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6a6a6a;">' + e(titulo) + '</p>' +
       '<p style="margin:0 0 16px;font-size:16px;line-height:24px;">' + e(saludo) + '</p>' +
       '<p style="margin:0 0 28px;font-size:15px;line-height:23px;color:#333333;">' + e(texto) + '</p>' +
-      '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#09090b;">' +
-        '<a href="' + e(enlace) + '" style="display:inline-block;padding:16px 30px;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#ffffff;text-decoration:none;">' + e(boton) + '</a>' +
+      '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="' + NEGRO + '">' +
+        '<a href="' + e(enlace) + '" style="display:inline-block;padding:16px 30px;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#ffffff;text-decoration:none;' + NEGRO + '">' +
+          '<span class="gb-scr" style="display:block;"><span class="gb-dif" style="display:block;color:#ffffff;">' + e(boton) + '</span></span></a>' +
       '</td></tr></table>' +
       '<p style="margin:28px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="' + e(enlace) + '" style="color:#09090b;word-break:break-all;">' + e(enlace) + '</a></p>' +
-      '<p style="margin:18px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">' + e(nota) + '</p>' +
+      '<p style="margin:18px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">' + e(nota) + (baja ? ' <a href="' + e(baja) + '" style="color:#09090b;">Darme de baja</a>' : '') + '</p>' +
     '</td></tr>' +
     '<tr><td style="padding:28px 32px 32px;border-top:1px solid #e4e4e7;margin-top:24px;font-size:11px;line-height:17px;color:#8a8a8a;text-align:center;">' +
       'Aphillips Store · Relojes en Panamá<br><a href="' + TIENDA + '" style="color:#8a8a8a;">aphillipsstore.com</a> · ¿Dudas? Responde a este correo.' +
     '</td></tr></table></td></tr></table></body></html>';
 }
 async function enviarCorreo(env, para, asunto, datos) {
-  const texto = datos.saludo + '\n\n' + datos.texto + '\n\n' + datos.boton + ': ' + datos.enlace + '\n\n' + datos.nota + '\n\nAphillips Store · aphillipsstore.com';
+  const texto = datos.saludo + '\n\n' + datos.texto + '\n\n' + datos.boton + ': ' + datos.enlace + '\n\n' + datos.nota + (datos.baja ? ' ' + datos.baja : '') + '\n\nAphillips Store · aphillipsstore.com';
   await env.EMAIL.send({ from: REMITENTE, to: para, replyTo: RESPONDER_A, subject: asunto, html: htmlCorreo({ titulo: asunto, ...datos }), text: texto });
 }
 // cuantos envios hubo con esta clave en la ventana; si no paso el limite, anota uno nuevo
@@ -688,6 +704,55 @@ async function correoRecuperar(request, env, cors) {
     console.log('correo recuperar', e.message);
     return json({ error: 'No se pudo enviar el correo', respaldo: true }, 502, cors);
   }
+}
+
+// ---------- boletin ----------
+const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+async function suscribirBoletin(request, env, cors) {
+  const b = await leerJson(request);
+  const email = String((b && b.email) || '').trim().toLowerCase().slice(0, 120);
+  if (!RE_CORREO.test(email)) return json({ error: 'Revisa el correo electrónico.' }, 400, cors);
+  const nombre = limpiarTexto(b && b.nombre, 60);
+  const ip = await sha256(request.headers.get('CF-Connecting-IP') || 'sin-ip');
+  if (!(await dentroDelLimite(env, 'bol:' + ip, 10, 60 * MINUTO))) return json({ error: 'Demasiados intentos. Espera unos minutos e intenta de nuevo.' }, 429, cors);
+  const ahora = Date.now();
+  const previo = await env.DB.prepare('SELECT activo, token FROM boletin WHERE email = ?1').bind(email).first();
+  if (previo && previo.activo) return json({ ok: true, ya: true }, 200, cors);
+  const token = previo ? previo.token : crypto.randomUUID().replace(/-/g, '');
+  if (previo) await env.DB.prepare('UPDATE boletin SET activo = 1, baja = NULL, creado = ?2, nombre = COALESCE(?3, nombre) WHERE email = ?1').bind(email, ahora, nombre || null).run();
+  else await env.DB.prepare('INSERT INTO boletin (email, nombre, activo, token, creado) VALUES (?1, ?2, 1, ?3, ?4)').bind(email, nombre || null, token, ahora).run();
+  // correo de bienvenida (maximo 1 por correo al dia, por si alguien se suscribe y se da de baja varias veces)
+  if (env.EMAIL && (await dentroDelLimite(env, 'boldia:' + email, 1, 1440 * MINUTO))) {
+    try {
+      const baja = 'https://api.aphillipsstore.com/boletin/baja?t=' + token;
+      await enviarCorreo(env, email, 'Ya estás suscrito a Aphillips Store', {
+        saludo: 'Hola' + (nombre ? ' ' + nombre.split(' ')[0] : '') + ',',
+        texto: 'Gracias por suscribirte. Te avisaremos cuando lleguen relojes nuevos, de ofertas especiales y de novedades de la tienda. Nada de spam: solo lo que vale la pena.',
+        boton: 'Ver los relojes', enlace: 'https://aphillipsstore.com/',
+        nota: '¿No quieres recibir más correos?', baja
+      });
+    } catch (e) { console.log('correo boletin', e.message); }
+  }
+  return json({ ok: true }, 200, cors);
+}
+async function bajaBoletin(url, env) {
+  const t = String(url.searchParams.get('t') || '').replace(/[^a-f0-9]/g, '').slice(0, 40);
+  let ok = false;
+  if (t.length >= 16) {
+    const r = await env.DB.prepare('UPDATE boletin SET activo = 0, baja = ?2 WHERE token = ?1 AND activo = 1').bind(t, Date.now()).run();
+    ok = true;   // si ya estaba dado de baja tambien se muestra el mensaje
+    if (!r.meta || r.meta.changes === 0) { const e = await env.DB.prepare('SELECT 1 FROM boletin WHERE token = ?1').bind(t).first(); ok = !!e; }
+  }
+  const msg = ok ? 'Listo, ya no recibirás más correos del boletín.' : 'Este enlace no es válido.';
+  const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boletín — Aphillips Store</title></head>' +
+    '<body style="margin:0;font-family:Arial,sans-serif;background:#f4f4f5;color:#18181b;display:flex;min-height:100vh;align-items:center;justify-content:center;">' +
+    '<div style="background:#fff;padding:32px 28px;max-width:420px;margin:16px;text-align:center;border-radius:12px;"><p style="font-size:17px;line-height:1.5;margin:0 0 20px;">' + msg + '</p>' +
+    '<a href="https://aphillipsstore.com/" style="display:inline-block;background:#09090b;color:#fff;text-decoration:none;padding:12px 22px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;">Volver a la tienda</a></div></body></html>';
+  return new Response(html, { status: ok ? 200 : 400, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
+}
+async function adminBoletin(env, cors) {
+  const r = (await env.DB.prepare('SELECT email, nombre, activo, creado, baja FROM boletin ORDER BY creado DESC').all()).results;
+  return json({ suscriptores: r }, 200, cors);
 }
 
 // ---------- respaldos automaticos y limpieza de fotos ----------
