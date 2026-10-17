@@ -6,6 +6,8 @@
 // El catalogo vive en aphillipsstore.com: quien entre por el link viejo de GitHub va directo al dominio
 // (se conservan ?id= de los links compartidos y el #marca).
 if(location.hostname==='aphillips7.github.io') location.replace('https://aphillipsstore.com/'+location.search+location.hash);
+// y si se llego por /catalogo.html (copias guardadas, enlaces viejos), la direccion se muestra limpia
+else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname === 'aphillipsstore.com') history.replaceState(history.state, '', '/'+location.search+location.hash);
 </script>
 <link rel="canonical" href="https://aphillipsstore.com/">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -395,6 +397,7 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
         <li><a href="#" class="wa-link" target="_blank" rel="noopener">Contáctanos</a></li>
         <li><a href="legal#envios">Envíos</a></li>
         <li><a href="legal#garantia">Garantía</a></li>
+        <li><a href="guia-de-tamanos">Guía de tamaños</a></li>
         <li><a href="preguntas">Preguntas frecuentes</a></li>
       </ul>
     </div>
@@ -428,6 +431,7 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
             <span class="prod-eti" id="modal-badge"></span>
             <h1 class="prod-nombre" id="modal-nombre"></h1>
             <div class="prod-spec" id="modal-spec"></div>
+            <a class="prod-guia" id="modal-guia" href="guia-de-tamanos" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="2" y="8" width="20" height="8" rx="1"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/></svg>¿Qué tamaño me queda? Ver guía</a>
             <div class="prod-ref" id="modal-sub"></div>
           </div>
           <button type="button" class="btn-favorito prod-fav" id="modal-fav" aria-label="Guardar en favoritos"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
@@ -444,6 +448,11 @@ if(location.hostname==='aphillips7.github.io') location.replace('https://aphilli
       </div>
     </div>
   </div>
+  <!-- Tambien te puede gustar (lo arma modal.js con relojes parecidos) -->
+  <section class="prod-parecidos" id="modal-parecidos" aria-label="Relojes parecidos" hidden>
+    <h2 class="par-titulo">También te puede gustar</h2>
+    <div class="par-fila"></div>
+  </section>
   <section class="prod-garantias" aria-label="Garantias de compra">
     <div class="prod-regla" aria-hidden="true"></div>
     <div class="prod-gar-fila">
