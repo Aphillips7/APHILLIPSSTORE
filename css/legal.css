@@ -27,3 +27,15 @@
   .lg-pie{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:24px clamp(16px,4vw,48px);background:#111;color:#9a9aa0;font-size:var(--fs-etiqueta);}
   .lg-pie a{color:#fff;text-decoration:none;}
   @media (max-width:560px){ .lg-volver span{display:none;} .lg-volver,.lg-hueco{width:40px;} .lg-sec p,.lg-sec li{font-size:14.5px;} }
+  /* === PREGUNTAS FRECUENTES (preguntas.html): acordeon con <details> === */
+  .fq{border-bottom:1px solid var(--border);}
+  .fq summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;cursor:pointer;font-size:15px;font-weight:600;color:var(--black);line-height:1.4;-webkit-tap-highlight-color:transparent;}
+  .fq summary::-webkit-details-marker{display:none;}
+  .fq summary::after{content:'';flex:none;width:9px;height:9px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-3px) rotate(45deg);transition:transform .2s var(--ease);}
+  .fq[open] summary::after{transform:translateY(2px) rotate(-135deg);}
+  .fq summary:focus-visible{outline:2px solid var(--black);outline-offset:2px;}
+  .fq > div{padding:0 0 18px;}
+  .fq[open] > div{animation:fqAbre .2s var(--ease);}
+  @keyframes fqAbre{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){ .fq[open] > div{animation:none;} .fq summary::after{transition:none;} }
+  .lg-sec .fq ul{margin:8px 0;}
