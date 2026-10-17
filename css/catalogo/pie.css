@@ -34,3 +34,14 @@
     .pie-col.abierta .pie-col-btn svg{transform:rotate(180deg);}
     .pie-copy{border-top:none;padding-top:32px;padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));}
   }
+  /* === AVISO DE COOKIES (js/catalogo/aviso-cookies.js): pequeno, abajo a la izquierda, solo la primera vez === */
+  .aviso-cookies{position:fixed;z-index:160;left:16px;bottom:16px;max-width:380px;display:flex;align-items:center;gap:14px;padding:14px 16px;background:#111;color:#e4e4e7;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.28);
+    opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s var(--ease),transform .25s var(--ease);}
+  .aviso-cookies.on{opacity:1;transform:none;pointer-events:auto;}
+  .aviso-cookies p{font-size:12.5px;line-height:1.5;}
+  .aviso-cookies a{color:#fff;text-underline-offset:2px;}
+  .aviso-cookies button{flex:none;font-family:inherit;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#111;background:#fff;border:0;padding:10px 14px;border-radius:999px;cursor:pointer;transition:transform .12s var(--ease);}
+  .aviso-cookies button:active{transform:scale(.97);}
+  /* en celular deja libre el boton de WhatsApp de la derecha */
+  @media (max-width:560px){ .aviso-cookies{left:12px;right:80px;bottom:14px;max-width:none;padding:12px;gap:10px;} .aviso-cookies p{font-size:12px;} }
+  @media (prefers-reduced-motion:reduce){ .aviso-cookies{transform:none;} }
