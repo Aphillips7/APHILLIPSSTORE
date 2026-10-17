@@ -31,6 +31,8 @@ quedo como archivo historico de solo lectura (ya no se escribe). Dominio: `aphil
 ```
 index.html            estructura del panel (sin CSS ni JS en linea)
 catalogo.html         estructura del catalogo
+legal.html            terminos, apartados, envios, garantia, devoluciones, privacidad y cookies (en /legal)
+preguntas.html        preguntas frecuentes con datos FAQPage para Google (en /preguntas); ambas usan css/legal.css
 manifest.json         PWA del panel
 sw.js                 service worker (cache del "cascaron")
 firestore.rules       reglas del archivo historico de Firestore: solo lectura del admin (se publican a mano)
@@ -96,7 +98,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `whatsapp.js` | Numero, boton flotante, confirmaciones, cotizar |
 | `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
 | `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
-| `aviso-cookies.js` | Aviso pequeno de cookies la primera vez (localStorage `aphillips_aviso_cookies`); enlaza a `legal.html#cookies` |
+| `aviso-cookies.js` | Aviso pequeno de cookies la primera vez (localStorage `aphillips_aviso_cookies`); enlaza a `/legal#cookies` |
 | `boletin.js` | "Suscribete al boletin" del pie: ventana con el correo -> POST /boletin (D1, correo de bienvenida con baja) |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |
 | `cuenta.js` | "Mi cuenta": login con Google o con correo y contrasena (con verificacion de correo obligatoria; los correos de verificacion y de contrasena salen de noreply@aphillipsstore.com via el Worker y sus enlaces se abren en la tienda con ?modo=; Firebase Auth, el SDK se descarga solo al abrir el panel o si ya habia sesion), perfil y WhatsApp, avisos ("Avisame" en un reloj o una marca), compras y apartados, favoritos en la nube. Con la cuenta del dueno: ir al panel, metricas y opciones de desarrollador (estado del sistema, no contar mis visitas, forzar actualizacion, respaldo) |
