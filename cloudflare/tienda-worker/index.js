@@ -63,7 +63,7 @@ export default {
 // ---------- sitemap para Google ----------
 async function sitemap(env) {
   const d = await catalogo(env);
-  const urls = ['https://' + DOMINIO + '/'];
+  const urls = ['https://' + DOMINIO + '/', 'https://' + DOMINIO + '/legal.html'];
   for (const r of (d && d.relojes) || []) {
     if (r.estado !== 'vendido' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id || '')) urls.push('https://' + DOMINIO + '/?id=' + r.id);
   }
