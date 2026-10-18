@@ -168,15 +168,14 @@ function parecidos(r, max){
 }
 function pintarParecidos(r){
   var sec = document.getElementById('modal-parecidos'); if(!sec) return;
-  var lista = parecidos(r, 8);
+  var lista = parecidos(r, 4);
   if(!lista.length){ sec.hidden = true; return; }
   sec.hidden = false;
   sec.querySelector('.par-fila').innerHTML = lista.map(function(x){
-    var eti = etiquetaEstado(x.estado);
     var foto = typeof x.foto === 'string' && x.foto ? '<img src="'+esc(x.foto)+'" alt="" loading="lazy" decoding="async">' : '<span class="sinfoto">Sin foto</span>';
     var precio = x.estado === 'bajopedido' ? 'Bajo cotización' : x.precio ? '$'+Number(x.precio).toLocaleString() : '';
     return '<button type="button" class="par-card" onclick="abrirParecido(\''+esc(x.id)+'\')" aria-label="'+esc(x.nombre||'Reloj')+'">'+
-      '<span class="par-foto">'+foto+'<span class="prod-eti '+eti.cls+'">'+eti.txt+'</span></span>'+
+      '<span class="par-foto">'+foto+'</span>'+
       '<span class="par-nombre">'+esc(x.nombre||'')+'</span>'+
       '<span class="par-detalle">'+esc([x.mm ? x.mm+' mm' : '', x.movimiento].filter(Boolean).join(' · '))+'</span>'+
       (precio ? '<span class="par-precio">'+esc(precio)+'</span>' : '')+
