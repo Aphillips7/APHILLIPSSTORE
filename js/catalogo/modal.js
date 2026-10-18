@@ -290,6 +290,24 @@ function cerrar(){
   if(history.state && history.state.modal){ history.back(); } else { cerrarModalUI(); }
 }
 window.addEventListener('popstate', function(){ cerrarModalUI(); });
+// El reloj en vivo y el pie de pagina tambien van al final de la ficha del reloj: mientras esta abierta se muda dentro
+// de ella y al cerrarla vuelve a su lugar (se vigila la clase "open" porque hay varias formas de cerrarla).
+(function(){
+  var m = document.getElementById('modal'), pie = document.querySelector('footer.pie'), hora = document.getElementById('hora');
+  if(!m || !pie) return;
+  var marca = document.createComment('pie');
+  pie.parentNode.insertBefore(marca, hora || pie);
+  new MutationObserver(function(){
+    var abierta = m.classList.contains('open');
+    if(abierta && pie.parentNode !== m){ if(hora) m.appendChild(hora); m.appendChild(pie); }
+    else if(!abierta && pie.parentNode === m){ if(hora) marca.parentNode.insertBefore(hora, marca); marca.parentNode.insertBefore(pie, marca); }
+  }).observe(m, { attributes:true, attributeFilter:['class'] });
+  // un enlace del pie que cambia de vista (marca, genero, favoritos) primero cierra la ficha
+  pie.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a[onclick]') : null;
+    if(a && pie.parentNode === m && !/abrirBoletin/.test(a.getAttribute('onclick'))) cerrarModalUI();
+  }, true);
+})();
 document.addEventListener('keydown', function(e){ if(e.key==='Escape' && _idAbierto) cerrar(); });
 document.getElementById('modal-wa').addEventListener('click', function(){ if(_idAbierto) incMetrica(_idAbierto,'clics'); });
 
