@@ -8,7 +8,7 @@
   .hero picture { display: block; width: 100%; height: 100%; }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; display: block; }
   .hero::after { content:''; position:absolute; inset:0 0 auto 0; height:240px; pointer-events:none; background:linear-gradient(to bottom, rgba(0,0,0,.72) 0%, rgba(0,0,0,.38) 55%, rgba(0,0,0,0) 100%); }
-  .wrap { padding-top: 120px; }
+  .wrap { padding-top: 152px; }
 
   /* Efecto Omega: la portada se queda atras y las secciones de abajo suben por encima.
      header.js pone --hero-p (0 a 1) segun cuanto se ha bajado y --hero-y (px bajados).
