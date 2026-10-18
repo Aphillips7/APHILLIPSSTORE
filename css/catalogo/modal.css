@@ -29,7 +29,7 @@
   .pf-punto.on{width:18px;background:var(--black);}
   @media (hover:none){ .pf-flecha{width:32px;height:32px;margin-top:-16px;} }
   .prod-foto .sinfoto{font-size:var(--fs-etiqueta);letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
-  .prod-info{width:100%;max-width:560px;justify-self:center;padding:clamp(32px,14vh,150px) clamp(24px,4vw,64px) 32px;}
+  .prod-info{width:100%;max-width:560px;justify-self:center;padding:8px clamp(24px,4vw,64px) 32px;}
   .prod-cabeza{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
   .prod-txt{min-width:0;}
   .prod-eti{display:block;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.02em;text-transform:uppercase;line-height:14px;margin-bottom:8px;}
