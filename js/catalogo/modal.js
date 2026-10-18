@@ -80,6 +80,30 @@ function grupo(icono, titulo, filas){
   return '<div class="esp-grupo"><span class="esp-ico">'+ICONOS[icono]+'</span><div class="esp-txt"><h3 class="esp-titulo">'+titulo+'</h3>'+filas+'</div></div>';
 }
 
+// Ficha tecnica pegada en el panel (grupos de la pagina de la marca): cada grupo con el icono
+// que mas se le parece. Al final va siempre "Informacion" (referencia, coleccion, genero).
+function iconoGrupo(t){
+  var s = min(t).normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if(/movim|calibre|movement/.test(s)) return 'movimiento';
+  if(/banda|correa|brazalete|pulsera|band|strap|bracelet/.test(s)) return 'correa';
+  if(/esfera|dial/.test(s) && !/caja|case/.test(s)) return 'esfera';
+  if(/caja|case|agua|water|cristal/.test(s)) return 'caja';
+  return 'info';
+}
+function fichaPegada(r){
+  if(!Array.isArray(r.ficha) || !r.ficha.length) return '';
+  var tieneMov = false;
+  var html = r.ficha.map(function(g){
+    if(!g || !Array.isArray(g.f)) return '';
+    var ico = iconoGrupo(g.t), filas = g.f.map(function(x){ return spec(x[0], esc(x[1])); }).join('');
+    if(ico === 'movimiento'){ tieneMov = true; if(r.movimiento) filas = spec('Tipo', esc(r.movimiento)) + filas; }
+    return grupo(ico, esc(g.t), filas);
+  }).join('');
+  if(!tieneMov && r.movimiento) html = grupo('movimiento', 'Movimiento', spec('Tipo', esc(r.movimiento))) + html;
+  var genero = r.genero==='hombre'?'Hombre':r.genero==='mujer'?'Mujer':r.genero==='unisex'?'Unisex':'';
+  return html + grupo('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero));
+}
+
 // Una barra desplegable (details/summary: se abre y cierra sin JS)
 function barra(titulo, contenido){
   if(!contenido) return '';
@@ -232,7 +256,7 @@ function abrir(id){
   // Dos barras desplegables: Descripcion y Especificaciones tecnicas (todas juntas, cada grupo con su icono)
   var desc = r.descripcion || r.notas;
   var genero = r.genero==='hombre'?'Hombre':r.genero==='mujer'?'Mujer':r.genero==='unisex'?'Unisex':'';
-  var especificaciones =
+  var especificaciones = fichaPegada(r) ||
     grupo('movimiento', 'Movimiento', spec('Movimiento', esc(r.movimiento))) +
     grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Resistencia al agua', esc(r.agua))) +
     grupo('esfera', 'Esfera', spec('Color de esfera', esc(r.colorEsfera))) +

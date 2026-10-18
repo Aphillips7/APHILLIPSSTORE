@@ -18,12 +18,17 @@ function saldoPendienteReserva(p){
 // =================== CATALOGO PUBLICO ===================
 // Solo estos campos salen a la luz publica. Nunca costo, margen, precio minimo,
 // proveedor, numero de serie ni tracking.
+// ficha tecnica pegada: solo texto, con tope de tamano
+function fichaPublica(f){
+  if(!Array.isArray(f)) return [];
+  return f.slice(0,12).map(function(g){ return { t:String(g&&g.t||'').slice(0,60), f:(Array.isArray(g&&g.f)?g.f:[]).slice(0,40).map(function(r){ return [String(r&&r[0]||'').slice(0,60), String(r&&r[1]||'').slice(0,160)]; }) }; }).filter(function(g){ return g.f.length; });
+}
 function camposPublicos(p){
   return {
     nombre:p.nombre||'', sku:p.sku||'', coleccion:p.coleccion||'', genero:p.genero||'',
     mm:p.mm||'', materialCaja:p.materialCaja||'', materialCorrea:p.materialCorrea||'',
     colorEsfera:p.colorEsfera||'', movimiento:p.movimiento||'', agua:p.agua||'',
-    cristal:p.cristal||'', color:p.color||'', notas:p.notas||'', descripcion:p.descripcion||'', eta:p.eta||'',
+    cristal:p.cristal||'', color:p.color||'', ficha:fichaPublica(p.ficha), notas:p.notas||'', descripcion:p.descripcion||'', eta:p.eta||'',
     precio:p.precio||0, foto:p.foto||'', fotos:Array.isArray(p.fotos)?p.fotos.slice(0,12):[], fotoCompartir:p.fotoCompartir||'',
     estado:p.estado||'', _ts:p._ts||0
   };

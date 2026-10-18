@@ -107,3 +107,11 @@
   .inv-foto-acciones button{width:24px;height:22px;border:none;border-radius:6px;background:rgba(255,255,255,.92);color:var(--black);font-size:12px;line-height:1;cursor:pointer;padding:0;}
   .inv-foto-acciones button:hover{background:#fff;}
   .inv-fotos-btn{cursor:pointer;}
+  /* ficha tecnica pegada: vista previa de los grupos */
+  .ficha-acciones{margin-top:8px;}
+  .ficha-vista{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px;}
+  .ficha-vista:empty{display:none;}
+  .ficha-aviso{grid-column:1/-1;font-size:12.5px;color:var(--muted);}
+  .ficha-grupo{border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:12.5px;line-height:1.5;}
+  .ficha-grupo b{display:block;margin-bottom:4px;font-size:13px;}
+  .ficha-grupo span{color:var(--muted);}

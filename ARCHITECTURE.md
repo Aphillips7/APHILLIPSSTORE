@@ -68,6 +68,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `finanzas/historial.js` · `resumen.js` · `analisis.js` · `finanzas.js` | Sub-pantallas de Finanzas y saldo por metodo |
 | `inventario/lista.js` | Lista/vista por modelo, filtros, cambiar estado, eliminar |
 | `inventario/formulario.js` | Registrar/editar/duplicar unidad, vista previa de margen |
+| `inventario/ficha.js` | "Pegar especificaciones": ordena la tabla de la marca en grupos (`p.ficha`), rellena los campos de siempre; el catalogo la muestra agrupada |
 | `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal. De cada una sube ademas una copia JPEG (1200 px, < 600 KB) para la vista previa en WhatsApp (`fotosJpg`, y la de la principal en `fotoCompartir`) |
 | `inventario/detalle.js` | Modal de detalle de una unidad |
 | `inventario/venta-modal.js` | Modal "vender" desde el inventario |
