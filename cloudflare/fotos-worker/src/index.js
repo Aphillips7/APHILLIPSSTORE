@@ -707,7 +707,8 @@ async function correoRecuperar(request, env, cors) {
 }
 
 // ---------- boletin ----------
-const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// solo caracteres normales de un correo (sin < > " ' ni espacios), dominio con punto y terminacion de letras
+const RE_CORREO = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 async function suscribirBoletin(request, env, cors) {
   const b = await leerJson(request);
   const email = String((b && b.email) || '').trim().toLowerCase().slice(0, 120);

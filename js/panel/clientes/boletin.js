@@ -48,7 +48,9 @@ async function copiarBoletin(){
 }
 function descargarBoletin(){
   var filas = [['correo', 'nombre', 'desde']].concat(activos().map(function(s){ return [s.email, s.nombre || '', new Date(s.creado).toISOString().slice(0, 10)]; }));
-  var csv = filas.map(function(f){ return f.map(function(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+  // una celda que empieza con = + - @ se antepone con ' para que Excel no la ejecute como formula
+  var celda = function(v){ v = String(v); if(/^[=+\-@\t\r]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+  var csv = filas.map(function(f){ return f.map(celda).join(','); }).join('\n');
   var a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
   a.download = 'boletin-aphillips-' + new Date().toISOString().slice(0, 10) + '.csv';

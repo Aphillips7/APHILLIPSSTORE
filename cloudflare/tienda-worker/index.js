@@ -148,7 +148,8 @@ function productoJsonLd(r, enlace) {
   const texto = (r.nombre || '') + ' ' + (r.coleccion || '');
   const marca = MARCAS_TIENDA.find((m) => texto.toLowerCase().includes(m.toLowerCase()));
   const fotos = (Array.isArray(r.fotos) && r.fotos.length ? r.fotos : [r.foto]).filter((f) => typeof f === 'string' && f.startsWith('https://')).slice(0, 6);
-  const descripcion = String(r.descripcion || r.notas || [r.nombre, r.movimiento, r.mm ? r.mm + ' mm' : '', r.materialCaja].filter(Boolean).join(', ')).slice(0, 500);
+  const movimiento = String(r.movimiento || '').replace(/^cuarzo japon[eé]s$/i, 'Cuarzo');
+  const descripcion = String(r.descripcion || r.notas || [r.nombre, movimiento, r.mm ? r.mm + ' mm' : '', r.materialCaja].filter(Boolean).join(', ')).slice(0, 500);
   const p = { '@context': 'https://schema.org', '@type': 'Product', name: r.nombre || 'Reloj', url: enlace, description: descripcion };
   if (fotos.length) p.image = fotos;
   if (r.sku) p.sku = String(r.sku);

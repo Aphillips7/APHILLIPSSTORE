@@ -1,4 +1,4 @@
-  @import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,301,400,401,500,501,700,701,900,901&display=swap');
+  /* La fuente Satoshi se carga con <link> en index.html (antes era @import aqui y llegaba tarde). */
   :root {
     /* Neutrales */
     --bg:#f7f7f8;--bg2:#f1f1f3;--card:#ffffff;--card2:#fafafa;--white:#ffffff;
