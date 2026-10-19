@@ -12,3 +12,4 @@ docs
 *.md
 firestore.rules
 .claude
+reporte-noche
