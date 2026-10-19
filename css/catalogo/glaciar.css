@@ -1,0 +1,45 @@
+  /* === PRUEBA: AZUL GLACIAR (#A7C4D6) COMO COLOR SECUNDARIO ===
+     Solo se aplica con la clase html.glaciar, que pone el script del <head> al abrir la tienda con
+     ?colores=glaciar (se recuerda en ese navegador; ?colores=antes la quita). Los clientes no la ven.
+     El negro y el blanco siguen siendo los protagonistas: el glaciar va en detalles. Los botones de
+     compra se quedan negros y el texto nunca va en glaciar (es muy claro para leerse). */
+  html.glaciar{
+    --glaciar:#A7C4D6;
+    --glaciar-suave:#EDF3F7;    /* fondos muy claros */
+    --glaciar-oscuro:#3C6E8F;   /* para lineas finas sobre blanco, donde el glaciar casi no se ve */
+  }
+
+  /* barra de arriba: glaciar con letras negras */
+  html.glaciar .barra-aviso{background:var(--glaciar);color:var(--black);}
+
+  /* texto seleccionado y foco del teclado */
+  html.glaciar ::selection{background:var(--glaciar);color:var(--black);}
+  html.glaciar :focus-visible{outline-color:var(--glaciar-oscuro);}
+
+  /* menu: subrayado glaciar al pasar el mouse */
+  @media (hover:hover) and (pointer:fine){
+    html.glaciar .header-bottom a:hover{border-bottom:2px solid var(--glaciar);}
+  }
+
+  /* filtros y orden elegidos: marca glaciar en vez de negra */
+  html.glaciar .flt-opt input:checked{background:var(--glaciar-oscuro);}
+  html.glaciar .ord-opt.on .ord-radio::after{background:var(--glaciar-oscuro);}
+
+  /* seccion del reloj: los puntos del marco en glaciar sobre el negro */
+  html.glaciar .hora{--hora-punto:rgba(167,196,214,.85);}
+  html.glaciar .hora-esq{border-color:var(--glaciar);}
+  html.glaciar .hora-t::before,html.glaciar .hora-t::after{background:var(--glaciar);}
+
+  /* pie de pagina: linea glaciar arriba */
+  html.glaciar .pie{border-top:3px solid var(--glaciar);}
+
+  /* fondos suaves: notas de la guia, aviso del boletin, preguntas abiertas */
+  html.glaciar .gu-nota{background:var(--glaciar-suave);padding:10px 12px;border-left:3px solid var(--glaciar);}
+  html.glaciar .bol-caja{border-top:4px solid var(--glaciar);}
+  html.glaciar .lg-indice a:active{background:var(--glaciar-suave);}
+  @media (hover:hover) and (pointer:fine){ html.glaciar .lg-indice a:hover{border-color:var(--glaciar-oscuro);background:var(--glaciar-suave);} }
+
+  /* ficha del reloj: la linea de puntos y los iconos de garantias con un toque glaciar */
+  html.glaciar .prod-gar svg{color:var(--glaciar-oscuro);}
+
+  /* "Avísame" activo y estado "Disponible" se quedan como estan (verde = disponible es una convencion) */
