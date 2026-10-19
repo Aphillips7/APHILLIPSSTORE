@@ -1,7 +1,7 @@
   /* === LISTADO DE RELOJES (estilo TAG Heuer: "Men's watches") === */
   body.vista-catalogo{background:#fff;}
   body.vista-catalogo .wrap{max-width:1560px;padding-left:clamp(16px,1.6vw,24px);padding-right:clamp(16px,1.6vw,24px);}
-  .cat-head{display:block;margin-bottom:0;}
+  .cat-head{display:block;margin-bottom:0;padding-top:30px;}  /* espacio que antes ocupaba el boton "Inicio" (si no, el titulo queda bajo el encabezado fijo) */
   .cat-eyebrow{display:block;font-size:var(--fs-etiqueta);font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--black);line-height:14px;}
   .cat-titulo{font-family:var(--font-titulo);font-weight:800;font-size:var(--fs-titulo);letter-spacing:.01em;line-height:24px;text-transform:uppercase;color:var(--black);margin-top:2px;}
   .cat-desc{display:flex;align-items:flex-end;gap:14px;max-width:560px;margin-top:12px;}
@@ -46,7 +46,8 @@
     .cat-controles{gap:8px;}
     .ctl-btn{padding:0 12px;gap:8px;}
     .ci-eti{font-size:10px;line-height:12px;}
-    #btn-ordenar{flex:1;min-width:0;background:var(--black);color:#fff;}
+    #btn-ordenar{flex:1;min-width:0;overflow:hidden;white-space:nowrap;background:var(--black);color:#fff;}
+    .ctl-por{display:none;}
     .vista-sel button{width:30px;}
     .grid{grid-template-columns:repeat(2,1fr);gap:30px 12px;}
     .grid.vista-1{grid-template-columns:1fr;}
@@ -57,3 +58,4 @@
   /* etiqueta "Nuevo" sobre la foto (relojes de los ultimos 14 dias) y foco con teclado en las tarjetas */
   .card-nuevo{position:absolute;top:10px;left:10px;z-index:2;padding:4px 9px;background:var(--black);color:#fff;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;line-height:12px;}
   .card:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
+  @media (max-width:380px){ .cat-controles{gap:6px;} .ctl-btn{padding:0 9px;gap:6px;} .vista-sel button{width:28px;} }

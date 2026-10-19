@@ -50,6 +50,21 @@
   .mm-sec{display:flex;flex-direction:column;margin-top:30px;}
   .mm-link{display:flex;align-items:center;gap:14px;padding:12px 0;font-size:15px;color:var(--black);text-decoration:none;}
   .mm-link svg{flex:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linejoin:round;}
+
+  /* menu del celular mas ordenado: lineas separadoras entre las opciones, marcas con sangria y
+     la seccion de abajo con su etiqueta, alineada al mismo borde */
+  .mm-cuerpo{padding-top:6px;}
+  .mm-item{padding:19px 2px;font-size:15px;letter-spacing:.06em;border-bottom:1px solid var(--border2);}
+  .mm-item svg{width:18px;height:18px;color:var(--muted);}
+  .mm-grupo.abierto>.mm-item{border-bottom-color:transparent;}
+  .mm-sub{padding:0 0 14px 14px;margin-left:2px;border-left:1px solid var(--border2);border-bottom:1px solid var(--border2);}
+  .mm-grupo.abierto .mm-sub{padding-bottom:14px;}
+  .mm-sub a{padding:12px 0 12px 4px;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:#3f3f46;}
+  .mm-sec{margin-top:34px;padding:0 2px;}
+  .mm-sec>span.mm-link:first-child{padding:16px 0 10px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  .mm-link{padding:14px 0;font-size:14px;}
+  .mm-sec .mm-link + .mm-link{border-top:1px solid var(--border2);}
+  .mm-sec>span.mm-link:first-child + .mm-link{border-top:none;}
   @media (min-width:821px){ .menu-movil{display:none;} }
   /* con el menu abierto el encabezado es blanco y la hamburguesa se vuelve X */
   header.menu-open{background:#fff !important;border-bottom-color:var(--border) !important;}

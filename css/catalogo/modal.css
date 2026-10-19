@@ -125,7 +125,10 @@
   .btn-aviso svg{width:16px;height:16px;flex:none;}
   @media (hover:hover) and (pointer:fine){ .btn-aviso:hover{border-color:var(--black);} }
   .btn-aviso.activo{border-color:var(--estado-disponible);color:var(--estado-disponible);}
-  .btn-aviso-marca{width:auto;min-height:42px;margin:0;padding:0 18px;}
+  /* "Avisame de nuevos <marca>": solo la campanita, cuadrada como los demas controles (el texto queda para lectores de pantalla y como tooltip) */
+  .btn-aviso-marca{flex:none;width:42px;height:42px;min-height:42px;margin:0;padding:0;border-color:#1b1b1d;}
+  .btn-aviso-marca svg{width:18px;height:18px;}
+  .btn-aviso-marca span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
   .btn-aviso-marca[hidden]{display:none;}
   /* enlace a la guia de tamanos (debajo de "Automatico, 43 mm, ...") */
   .prod-guia{display:inline-flex;align-items:center;gap:7px;margin-top:8px;font-size:var(--fs-etiqueta);color:var(--black);text-decoration:underline;text-underline-offset:3px;}
