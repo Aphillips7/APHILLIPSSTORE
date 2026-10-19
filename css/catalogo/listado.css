@@ -53,3 +53,7 @@
     .grid .card-info.ci-tag{grid-template-columns:1fr;grid-template-areas:"fav" "txt";padding-top:10px;}
     .ci-tag .btn-favorito{justify-self:start;margin:0 0 14px;}
   }
+
+  /* etiqueta "Nuevo" sobre la foto (relojes de los ultimos 14 dias) y foco con teclado en las tarjetas */
+  .card-nuevo{position:absolute;top:10px;left:10px;z-index:2;padding:4px 9px;background:var(--black);color:#fff;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;line-height:12px;}
+  .card:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
