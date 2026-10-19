@@ -94,7 +94,15 @@ function previewFoto(){
 }
 
 // ---------- comprimir y subir ----------
-function _leerImagen(file){
+// Se lee con createImageBitmap (no necesita URL blob:, que la CSP del panel no permitia); si el
+// navegador no puede, se intenta con <img> y una URL blob: (permitida en img-src desde v53).
+async function _leerImagen(file){
+  if(window.createImageBitmap){
+    try{ return await createImageBitmap(file); }catch(e){ console.warn('createImageBitmap fallo, se intenta con <img>:', e); }
+  }
+  return _leerImagenBlob(file);
+}
+function _leerImagenBlob(file){
   return new Promise(function(resolve, reject){
     var url=URL.createObjectURL(file);
     var img=new Image();

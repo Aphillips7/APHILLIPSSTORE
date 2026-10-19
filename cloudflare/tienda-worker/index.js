@@ -163,7 +163,7 @@ const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; fr
   "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://cloudflareinsights.com; " +
   "frame-src 'self' https://*.firebaseapp.com; form-action 'self'";
 const CSP_PANEL = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
-  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://api.fontshare.com; " +
+  "img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://api.fontshare.com; " +
   "font-src 'self' https://cdn.fontshare.com; " +
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://static.cloudflareinsights.com; " +
   "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://cloudflareinsights.com; " +
