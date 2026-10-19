@@ -458,7 +458,7 @@ if(location.hostname==='aphillips7.github.io'){
       <div class="field">
         <div class="inv-fotos-lista" id="inv-fotos-lista"><div class="inv-foto-vacia">Sin fotos</div></div>
         <label class="btn btn-outline inv-fotos-btn" for="inv-foto-input">+ Agregar fotos</label>
-        <input type="file" id="inv-foto-input" accept="image/*" multiple onchange="subirFotos(this)" style="display:none;" />
+        <input type="file" id="inv-foto-input" accept="image/*" multiple onchange="subirFotos(this)" style="display:none;" /><label class="inv-fondo-op"><input type="checkbox" id="inv-quitar-fondo" checked /> Quitar fondo y centrar el reloj</label><button type="button" class="btn btn-outline inv-arreglar-btn" onclick="arreglarFotos()">Arreglar fotos ya subidas</button>
         <input type="hidden" id="inv-foto" />
         <input type="hidden" id="inv-foto-carpeta" />
         <div id="inv-foto-status" style="font-size:11px;color:var(--muted);margin-top:8px;">Puedes elegir varias a la vez (camara o galeria). La primera es la principal; usa las flechas para cambiar el orden. Se suben a la nube, necesitas internet.</div>
