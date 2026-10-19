@@ -278,8 +278,12 @@
     pintarSugeridos();
     try{ localStorage.setItem('aphillips_muneca', String(cm)); }catch(e){}
   }
+  // miniatura de la foto (480 px, en fotos.aphillipsstore.com/miniaturas/...); si no existe, la foto completa
+  var BASE_FOTOS = 'https://fotos.aphillipsstore.com/';
+  function miniatura(u){ return u.indexOf(BASE_FOTOS + 'relojes/') === 0 ? BASE_FOTOS + 'miniaturas/' + u.slice(BASE_FOTOS.length) : u; }
+  window.guFotoRespaldo = function(img){ var c = img.getAttribute('data-completa'); if(c && img.src !== c){ img.removeAttribute('data-completa'); img.src = c; } };
   function tarjeta(r){
-    var foto = typeof r.foto === 'string' && r.foto ? '<img src="'+esc(r.foto)+'" alt="" loading="lazy" decoding="async">' : '';
+    var foto = typeof r.foto === 'string' && r.foto ? '<img src="'+esc(miniatura(r.foto))+'" data-completa="'+esc(r.foto)+'" alt="" loading="lazy" decoding="async" onerror="guFotoRespaldo(this)">' : '';
     var precio = r.estado === 'bajopedido' ? 'Bajo cotización' : r.precio ? '$' + Number(r.precio).toLocaleString() : '';
     return '<a class="gu-reloj" href="/?id='+encodeURIComponent(r.id)+'"><span class="gu-reloj-foto">'+foto+'<span class="gu-mm">'+esc(parseFloat(r.mm))+' mm</span></span><span class="gu-reloj-nombre">'+esc(r.nombre)+'</span>'+(precio ? '<span class="gu-reloj-precio">'+esc(precio)+'</span>' : '')+'</a>';
   }

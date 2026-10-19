@@ -113,7 +113,7 @@ async function entrarConGoogle(){
     if(c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return;
     if(c === 'auth/operation-not-allowed') _mensaje = 'El inicio de sesión con Google aún no está activado. Inténtalo más tarde.';
     else if(c === 'auth/unauthorized-domain') _mensaje = 'Este sitio todavía no está autorizado para iniciar sesión. Inténtalo más tarde.';
-    else if(c === 'auth/network-request-failed') _mensaje = 'Sin conexion. Revisa tu internet e intenta de nuevo.';
+    else if(c === 'auth/network-request-failed') _mensaje = 'Sin conexión. Revisa tu internet e intenta de nuevo.';
     else _mensaje = 'No se pudo iniciar sesión. Intenta de nuevo.';
     render();
   }

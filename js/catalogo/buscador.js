@@ -7,7 +7,7 @@ import { cerrarFavoritos } from './favoritos.js';
 import { coincideBusqueda } from './filtros.js';
 import { render } from './grid.js';
 import { abrir, etiquetaEstado } from './modal.js';
-import { _destEsc as esc, normalizar } from './ui.js';
+import { _destEsc as esc, miniatura, normalizar } from './ui.js';
 import { irAGenero, irAMarca, mostrarCatalogo } from './vistas.js';
 import { ordenPeso } from '../products.js';
 
@@ -49,7 +49,7 @@ function _tarjeta(r){
   var eti = etiquetaEstado(r.estado);
   var sub = [r.movimiento, r.mm ? r.mm+' mm' : '', r.materialCaja].filter(Boolean).join(', ') || r.coleccion || '';
   return '<div class="bs-card" role="button" tabindex="0" onclick="verDesdeBuscador(\''+r.id+'\')">'+
-      (r.foto ? '<img src="'+esc(r.foto)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'" />' : '<div class="bs-sinfoto"></div>')+
+      (r.foto ? '<img src="'+esc(miniatura(r.foto))+'" data-completa="'+esc(r.foto)+'" alt="" loading="lazy" onerror="if(!fotoRespaldo(this))this.style.visibility=\'hidden\'" />' : '<div class="bs-sinfoto"></div>')+
       '<div class="bs-info">'+
         '<span class="bs-eti '+eti.cls+'">'+eti.txt+'</span>'+
         '<span class="bs-name">'+esc(r.nombre || 'Reloj')+'</span>'+

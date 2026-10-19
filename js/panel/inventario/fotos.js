@@ -139,6 +139,24 @@ async function _jpegCompartir(img){
   if(blob && blob.size>580*1024) blob=await _aBlob(c,'image/jpeg',0.68);   // WhatsApp pide menos de 600 KB
   return blob;
 }
+// Miniatura (480 px) para las tarjetas del catalogo: se guarda en miniaturas/<clave de la foto> y el
+// catalogo la busca ahi (si no existe, usa la foto completa). Es un extra: si falla, la foto queda igual.
+var FOTOS_BASE='https://fotos.aphillipsstore.com/';
+async function _subirMiniatura(img, url){
+  if(typeof url!=='string' || url.indexOf(FOTOS_BASE+'relojes/')!==0) return;
+  var clave=url.slice(FOTOS_BASE.length), carpeta=clave.split('/')[1];
+  var lado=480, w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+  if(w>lado||h>lado){ if(w>h){ h=Math.round(h*lado/w); w=lado; } else { w=Math.round(w*lado/h); h=lado; } }
+  var c=document.createElement('canvas'); c.width=w; c.height=h;
+  var ctx=c.getContext('2d'); ctx.imageSmoothingQuality='high'; ctx.drawImage(img,0,0,w,h);
+  var blob=await _aBlob(c,'image/webp',0.8);
+  if(!blob || blob.type!=='image/webp'){ ctx.globalCompositeOperation='destination-over'; ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); blob=await _aBlob(c,'image/jpeg',0.82); }
+  if(!blob) return;
+  var usuario=firebase.auth().currentUser; if(!usuario) return;
+  await fetch(API_FOTOS+'?reloj='+encodeURIComponent(carpeta)+'&mini='+encodeURIComponent(clave), {
+    method:'POST', headers:{ 'Authorization':'Bearer '+await usuario.getIdToken(), 'Content-Type':blob.type }, body:blob
+  });
+}
 function _carpeta(){
   // carpeta en R2: el id del reloj si se esta editando; si es nuevo, una carpeta temporal del formulario
   var edit=document.getElementById('inv-edit-index');
@@ -179,6 +197,7 @@ async function subirFotos(input){
       renderFotos();
       // la copia para compartir es un extra: si falla, la foto queda igual
       try{ var jpg=await _jpegCompartir(img); if(jpg) _jpg[url]=await _subir(jpg); }catch(e){ console.warn('Copia JPEG no subida:', e); }
+      try{ await _subirMiniatura(img, url); }catch(e){ console.warn('Miniatura no subida:', e); }
     }catch(err){ fallos++; console.warn('Foto no subida:', err); _estado('No se pudo subir una foto: '+err.message,'var(--red)'); }
     _subiendo--;
   }
@@ -214,6 +233,7 @@ async function arreglarFotos(){
       var i=_fotos.indexOf(vieja); if(i>=0) _fotos[i]=url;
       delete _jpg[vieja];
       try{ var jpg=await _jpegCompartir(prep.canvas); if(jpg) _jpg[url]=await _subir(jpg); }catch(e){ console.warn('Copia JPEG no subida:', e); }
+      try{ await _subirMiniatura(prep.canvas, url); }catch(e){ console.warn('Miniatura no subida:', e); }
       ok++; renderFotos();
     }catch(err){ fallos++; console.warn('Foto no arreglada:', err); }
   }
