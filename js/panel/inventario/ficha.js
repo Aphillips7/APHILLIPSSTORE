@@ -18,16 +18,80 @@ function nombreCristal(v){
   return v;
 }
 
+// ---------- Paginas en ingles (ej. invictawatch.com): se traduce al espanol para la tienda ----------
+var GRUPOS_ES = {
+  'case and dial':'Caja y esfera', 'case & dial':'Caja y esfera', 'case':'Caja', 'dial':'Esfera', 'movement':'Movimiento',
+  'band':'Banda', 'strap':'Correa', 'bracelet':'Brazalete', 'water resistance':'Resistencia al agua', 'features':'Características',
+  'additional features':'Otras características', 'general':'General', 'bezel':'Bisel', 'crystal':'Cristal'
+};
+var ETIQUETAS_ES = {
+  'case size':'Tamaño de la caja', 'case diameter':'Tamaño de la caja', 'case thickness':'Grosor de la caja', 'case shape':'Forma de la caja',
+  'crown type':'Tipo de corona', 'crown':'Corona', 'crystal type':'Tipo de cristal', 'crystal':'Tipo de cristal',
+  'bezel material':'Material del bisel', 'bezel color':'Color del bisel', 'bezel function':'Función del bisel',
+  'case material':'Material de la caja', 'case color':'Color de la caja', 'case finish':'Acabado de la caja',
+  'dial color':'Color de la esfera', 'dial material':'Material de la esfera', 'dial type':'Tipo de esfera', 'hands':'Agujas', 'luminous':'Luminiscencia',
+  'caliber':'Calibre', 'calibre':'Calibre', 'movement':'Movimiento', 'movement type':'Tipo de movimiento', 'jewels':'Rubíes', 'power reserve':'Reserva de marcha',
+  'size':'Tamaño', 'width':'Ancho', 'band width':'Ancho', 'length':'Longitud', 'band length':'Longitud', 'material':'Material', 'band material':'Material',
+  'tone':'Tono', 'color':'Color', 'band color':'Color', 'clasp':'Cierre', 'clasp type':'Tipo de cierre',
+  'water resistance':'Resistencia al agua', 'weight':'Peso', 'functions':'Funciones', 'display':'Pantalla', 'gender':'Género'
+};
+var VALORES_ES = {
+  'stainless steel':'Acero inoxidable', 'steel':'Acero', 'gold':'Dorado', 'yellow gold':'Dorado', 'rose gold':'Oro rosa', 'silver':'Plateado',
+  'black':'Negro', 'blue':'Azul', 'white':'Blanco', 'green':'Verde', 'red':'Rojo', 'grey':'Gris', 'gray':'Gris', 'brown':'Marrón',
+  'orange':'Naranja', 'yellow':'Amarillo', 'purple':'Morado', 'pink':'Rosa', 'gunmetal':'Gris oscuro', 'two tone':'Dos tonos', 'two-tone':'Dos tonos',
+  'push':'Pulsador', 'push pull':'Pulsador', 'screw down':'De rosca', 'screw-down':'De rosca', 'metal':'Metal', 'silicone':'Silicona', 'leather':'Cuero',
+  'rubber':'Caucho', 'polyurethane':'Poliuretano', 'titanium':'Titanio', 'ceramic':'Cerámica', 'carbon fiber':'Fibra de carbono',
+  'mother of pearl':'Nácar', 'quartz':'Cuarzo', 'automatic':'Automático', 'mechanical':'Mecánico', 'solar':'Solar', 'chronograph':'Cronógrafo',
+  'unidirectional':'Unidireccional', 'bidirectional':'Bidireccional', 'fixed':'Fijo', 'fold over clasp':'Cierre desplegable', 'buckle':'Hebilla'
+};
+function traducir(dic, t){ var s = String(t||'').toLowerCase().replace(/\s+/g, ' ').trim(); return dic[s] || t; }
+function traducirValor(v){
+  // "48mm" -> "48 mm", "200m" -> "200 m"; cada parte de "Black, Gold" por separado
+  v = String(v).replace(/(\d)(mm|m)\b/gi, '$1 $2');
+  return v.split(/\s*([,\/&])\s*/).map(function(p){ return /^[,\/&]$/.test(p) ? (p === ',' ? ', ' : ' ' + p + ' ') : traducir(VALORES_ES, p); }).join('');
+}
+// lineas que no son datos: las pestanas de la pagina ("Features  Specs")
+var RE_RUIDO = /^(features|specs|specifications|caracteristicas|especificaciones|details|detalles)$/;
+
+// Encabezado de la pagina de la marca: "Pro Diver SCUBA Men" / "Model 0072 Men's Watch"
+var COLECCIONES = ['Pro Diver', 'Speedway', 'Bolt', 'Specialty', 'Subaqua', 'Reserve', 'Venom', 'Lupah', 'Aviator', 'Russian Diver', 'Excursion',
+  'Angel', 'Wildflower', 'Objet D Art', 'Coalition Forces', 'Sea Base', 'Akula', 'I-Force', 'S1 Rally', 'Corduba', 'Hydromax', 'Marvel', 'Disney',
+  'Star Wars', 'NFL', 'Character Collection', 'Sea Hunter', 'Sea Wizard', 'Grand Diver', 'Pro Diver Scuba', 'Manta Ray', 'Ocean Reef', 'Cruise', 'Sea Rock'];
+function datosCabecera(texto){
+  var r = {}, lineas = String(texto||'').split(/\r?\n/).map(limpiar).filter(Boolean);
+  for(var i = 0; i < Math.min(lineas.length, 6); i++){
+    var l = lineas[i], s = sinAcentos(l);
+    if(l.indexOf(':') >= 0 || RE_RUIDO.test(s)) continue;
+    var m = s.match(/^(?:model|modelo|ref(?:erence|erencia)?\.?)\s*#?\s*([a-z0-9-]+)/);
+    if(m){ r.sku = m[1].toUpperCase(); }
+    if(/\b(women|woman|ladies|mujer|dama)/.test(s)) r.genero = 'mujer';
+    else if(/\b(men|man|hombre|caballero)/.test(s) && !r.genero) r.genero = 'hombre';
+    else if(/\bunisex\b/.test(s)) r.genero = 'unisex';
+    if(!m && !r.nombre && i === 0){
+      r.nombre = l.replace(/\s+(men'?s?|women'?s?|ladies|unisex|watch)\b.*$/i, '').trim();
+      var col = COLECCIONES.filter(function(c){ return sinAcentos(r.nombre).indexOf(sinAcentos(c)) === 0; })
+        .sort(function(a, b){ return b.length - a.length; })[0];
+      if(col) r.coleccion = col === 'Pro Diver Scuba' ? 'Pro Diver' : col;
+    }
+  }
+  // marca: por su nombre en el texto o por el calibre (Invicta usa "IM-...")
+  var todo = String(texto||'');
+  var marca = /invicta|\bIM-[A-Z0-9]/i.test(todo) ? 'Invicta' : /technomarine|\bTM-\d/i.test(todo) ? 'TechnoMarine' : /bulova/i.test(todo) ? 'Bulova' : '';
+  if(r.nombre && marca && sinAcentos(r.nombre).indexOf(sinAcentos(marca)) < 0) r.nombre = marca + ' ' + r.nombre;
+  return r;
+}
+
 function parsearFicha(texto){
   var grupos = [], actual = null;
-  function grupo(titulo){ actual = { t: titulo, f: [] }; grupos.push(actual); }
+  function grupo(titulo){ actual = { t: traducir(GRUPOS_ES, titulo), f: [] }; grupos.push(actual); }
   function fila(k, v){
     if(!actual) grupo('Especificaciones');
+    k = traducir(ETIQUETAS_ES, k); v = traducirValor(v);
     if(/cristal|crystal/.test(sinAcentos(k))) v = nombreCristal(v);
     if(actual.f.length < MAX_FILAS) actual.f.push([k.slice(0, 60), v.slice(0, 160)]);
   }
   String(texto||'').split(/\r?\n/).forEach(function(linea){
-    var partes = linea.split(/\t+/).map(limpiar).filter(Boolean);
+    var partes = linea.split(/\t+/).map(limpiar).filter(function(p){ return p && !RE_RUIDO.test(sinAcentos(p)); });
     if(!partes.length) return;
     // tabla de dos columnas sin dos puntos: "Material	Acero inoxidable"
     if(partes.length === 2 && partes[0].indexOf(':') < 0 && partes[1].indexOf(':') < 0 && actual){
@@ -109,6 +173,12 @@ function ordenarFicha(){
   var ficha = parsearFicha(ta.value);
   if(!ficha.length){ pintarVista([], 'No encontre datos. Pega lineas del tipo "Tamaño de la caja: 48 mm".'); return; }
   var n = rellenarCampos(ficha);
+  // encabezado (nombre, modelo, coleccion, genero): solo llena lo que este vacio
+  var cab = datosCabecera(ta.value);
+  [['inv-nombre', cab.nombre], ['inv-sku', cab.sku], ['inv-coleccion', cab.coleccion]].forEach(function(x){
+    var el = document.getElementById(x[0]); if(el && x[1] && !el.value.trim()){ el.value = x[1]; n++; }
+  });
+  if(cab.genero){ var g = document.getElementById('inv-genero'); if(g){ g.value = cab.genero; n++; } }
   ta.value = fichaATexto(ficha);
   pintarVista(ficha, 'Listo: ' + ficha.reduce(function(s, g){ return s + g.f.length; }, 0) + ' datos en ' + ficha.length + ' grupos' + (n ? ', ' + n + ' campos rellenados.' : '.'));
 }
@@ -120,6 +190,6 @@ function cargarFicha(ficha){
   pintarVista(Array.isArray(ficha) ? ficha : [], '');
 }
 
-export { cargarFicha, fichaATexto, fichaFormulario, ordenarFicha, parsearFicha };
+export { cargarFicha, datosCabecera, fichaATexto, fichaFormulario, ordenarFicha, parsearFicha };
 // Usada desde el onclick del boton en index.html
 Object.assign(window, { ordenarFicha });
