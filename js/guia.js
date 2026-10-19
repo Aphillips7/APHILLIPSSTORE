@@ -12,49 +12,151 @@
 
   // ---------- un reloj visto de frente (esfera negra, bisel, indices, agujas a las 10:10) ----------
   // d = diametro en px; l2l = de asa a asa en px; correa = ancho entre asas en px; corona a la derecha
+  // Cronografo de acero: bisel taquimetrico, corona con estrias y dos pulsadores, esfera clara con
+  // XII, indices de barra, riel de minutos, 3 subesferas, ventana de fecha, agujas de espada y
+  // correa de cuero con costuras. Con poco tamano (comparacion) se omiten los textos finos.
+  var _idReloj = 0;
+  function pol(cx, cy, rad, ang){ return [cx + Math.sin(ang) * rad, cy - Math.cos(ang) * rad]; }
   function reloj(cx, cy, d, opc){
     opc = opc || {};
     var r = d / 2, l2l = opc.l2l || d * 1.2, correa = opc.correa || d * 0.5, h = l2l / 2;
-    var asaAncho = Math.max(3, d * 0.11), s = '';
-    // correa / brazalete que sigue mas alla de las asas
-    if(opc.correaLargo){
-      s += '<rect x="'+n(cx-correa/2)+'" y="'+n(cy-h-opc.correaLargo)+'" width="'+n(correa)+'" height="'+n(opc.correaLargo+2)+'" fill="url(#gu-correa)"/>';
-      s += '<rect x="'+n(cx-correa/2)+'" y="'+n(cy+h-2)+'" width="'+n(correa)+'" height="'+n(opc.correaLargo+2)+'" fill="url(#gu-correa2)"/>';
+    var det = d >= 120 ? 2 : d >= 60 ? 1 : 0;        // nivel de detalle
+    var sw = function(f){ return n(Math.max(.4, d * f)); };
+    var id = 'gr' + (++_idReloj), s = '', i, a, p, q;
+
+    // ---- correa de cuero (arriba y abajo), se desvanece en las puntas ----
+    // (empieza debajo de la caja, entre las asas, y sigue opc.correaLargo mas alla de ellas)
+    if(opc.correaLargo !== undefined){
+      [-1, 1].forEach(function(lado){
+        var ancho = correa * 0.94, x = cx - ancho / 2, m = correa * 0.11, ext = 0;
+        function tramo(y, alto){
+          var t = '<rect x="'+n(x)+'" y="'+n(y)+'" width="'+n(ancho)+'" height="'+n(alto)+'" rx="'+n(correa*0.06)+'" fill="url(#gu-cuero)"/>';
+          if(det) [x + m, x + ancho - m].forEach(function(xs){
+            t += '<line x1="'+n(xs)+'" y1="'+n(y)+'" x2="'+n(xs)+'" y2="'+n(y+alto)+'" stroke="#d9b48a" stroke-width="'+sw(.006)+'" stroke-dasharray="'+n(d*.018)+' '+n(d*.012)+'" opacity=".8"/>';
+          });
+          return t;
+        }
+        // tramo entre las asas (sale de debajo de la caja), solido
+        s += tramo(lado < 0 ? cy - h : cy + r * 0.8, h - r * 0.8 + 1);
+        if(!opc.correaLargo) return;
+        // tramo que sigue mas alla de las asas, se desvanece
+        var y = lado < 0 ? cy - h - opc.correaLargo : cy + h - 1, alto = opc.correaLargo + 1;
+        s += '<g mask="url(#gu-desv-' + (lado < 0 ? 'arr' : 'aba') + ')">' + tramo(y, alto);
+        if(det){
+          if(lado > 0 && opc.correaLargo > d * 0.5){
+            // pasador y agujeros en la parte de abajo
+            s += '<rect x="'+n(x-correa*0.03)+'" y="'+n(y+ext+d*0.12)+'" width="'+n(ancho+correa*0.06)+'" height="'+n(d*0.05)+'" rx="'+n(d*0.012)+'" fill="#3a2a1f" stroke="#1f1610" stroke-width="'+sw(.004)+'"/>';
+            for(i = 0; i < 4; i++){ var yy = y + ext + d*0.3 + i * d*0.085; if(yy < y + alto - d*0.05) s += '<ellipse cx="'+n(cx)+'" cy="'+n(yy)+'" rx="'+n(d*0.016)+'" ry="'+n(d*0.022)+'" fill="#1f1610"/>'; }
+          }
+        }
+        s += '</g>';
+      });
     }
-    // asas (4)
+
+    // ---- asas (4), con forma: anchas en la caja y redondeadas en la punta ----
+    var asa = Math.max(3, d * 0.1);
     [-1, 1].forEach(function(lado){ [-1, 1].forEach(function(arr){
-      var x = lado < 0 ? cx - correa/2 - asaAncho : cx + correa/2;
-      var y = arr < 0 ? cy - h : cy + r * 0.55;
-      s += '<rect x="'+n(x)+'" y="'+n(y)+'" width="'+n(asaAncho)+'" height="'+n(h - r*0.55)+'" rx="'+n(asaAncho*0.35)+'" fill="#d4d4d8" stroke="#a1a1aa" stroke-width="'+n(Math.max(.6, d*.006))+'"/>';
+      var xi = lado < 0 ? cx - correa/2 - asa : cx + correa/2, xe = xi + asa;
+      var y0 = cy + arr * r * 0.62, y1 = cy + arr * h;
+      var ext = lado < 0 ? xi : xe;                      // borde exterior (se abre hacia la caja)
+      var abre = lado < 0 ? -d*0.035 : d*0.035;
+      s += '<path d="M'+n(xi)+' '+n(y1)+' Q'+n((xi+xe)/2)+' '+n(y1+arr*asa*0.25)+' '+n(xe)+' '+n(y1)+' L'+n(lado<0?xe:xe+abre)+' '+n(y0)+' L'+n(lado<0?xi+abre:xi)+' '+n(y0)+' Z" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.006)+'"/>';
+      if(det) s += '<line x1="'+n((xi+xe)/2)+'" y1="'+n(y1 - arr*asa*0.2)+'" x2="'+n((xi+xe)/2 + (lado<0?abre*0.5:abre*0.5))+'" y2="'+n(y0)+'" stroke="#fff" stroke-width="'+sw(.005)+'" opacity=".7"/>';
+      void ext;
     }); });
-    // corona
-    s += '<rect x="'+n(cx + r - 1)+'" y="'+n(cy - d*0.055)+'" width="'+n(d*0.08)+'" height="'+n(d*0.11)+'" rx="'+n(d*0.015)+'" fill="#c4c4c8" stroke="#a1a1aa" stroke-width=".8"/>';
-    // caja, bisel y esfera
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r)+'" fill="#e4e4e7" stroke="#a1a1aa" stroke-width="'+n(Math.max(.8, d*.008))+'"/>';
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.9)+'" fill="#18181b"/>';
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.72)+'" fill="#0b0b0c" stroke="#3f3f46" stroke-width="'+n(Math.max(.4, d*.004))+'"/>';
-    // indices
-    for(var i = 0; i < 12; i++){
-      var a = i * Math.PI / 6, largo = i % 3 === 0 ? r*0.16 : r*0.1, ancho = i % 3 === 0 ? d*0.022 : d*0.014;
-      var x1 = cx + Math.sin(a) * r*0.66, y1 = cy - Math.cos(a) * r*0.66, x2 = cx + Math.sin(a) * (r*0.66 - largo), y2 = cy - Math.cos(a) * (r*0.66 - largo);
-      s += '<line x1="'+n(x1)+'" y1="'+n(y1)+'" x2="'+n(x2)+'" y2="'+n(y2)+'" stroke="#f4f4f5" stroke-width="'+n(ancho)+'" stroke-linecap="round"/>';
+
+    // ---- pulsadores (a las 2 y a las 4) y corona con estrias (a las 3) ----
+    [-1, 1].forEach(function(k){
+      var ang = Math.PI/2 + k * 0.62;
+      p = pol(cx, cy, r * 0.98, ang);
+      s += '<g transform="translate('+n(p[0])+' '+n(p[1])+') rotate('+n(ang*180/Math.PI - 90)+')">' +
+        '<rect x="0" y="'+n(-d*0.035)+'" width="'+n(d*0.07)+'" height="'+n(d*0.07)+'" rx="'+n(d*0.008)+'" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/>' +
+        '<rect x="'+n(d*0.07)+'" y="'+n(-d*0.045)+'" width="'+n(d*0.035)+'" height="'+n(d*0.09)+'" rx="'+n(d*0.01)+'" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/></g>';
+    });
+    s += '<rect x="'+n(cx + r*0.95)+'" y="'+n(cy - d*0.075)+'" width="'+n(d*0.09)+'" height="'+n(d*0.15)+'" rx="'+n(d*0.018)+'" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/>';
+    if(det) for(i = 1; i < 7; i++){ var yc = cy - d*0.075 + i * d*0.15/7; s += '<line x1="'+n(cx + r*0.95 + d*0.01)+'" y1="'+n(yc)+'" x2="'+n(cx + r*0.95 + d*0.085)+'" y2="'+n(yc)+'" stroke="#8e8e95" stroke-width="'+sw(.004)+'"/>'; }
+
+    // ---- caja y bisel taquimetrico ----
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r)+'" fill="url(#gu-acero-r)" stroke="#8e8e95" stroke-width="'+sw(.008)+'"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.93)+'" fill="#f4f4f5" stroke="#a1a1aa" stroke-width="'+sw(.004)+'"/>';
+    if(det){
+      for(i = 0; i < 60; i++){ a = i * Math.PI / 30; p = pol(cx, cy, r*0.93, a); q = pol(cx, cy, r*(i % 5 ? 0.9 : 0.885), a);
+        s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#27272a" stroke-width="'+sw(i % 5 ? .003 : .005)+'"/>'; }
     }
-    // bisel graduado (marcas cortas)
-    for(var j = 0; j < 60; j += 5){
-      var b = j * Math.PI / 30;
-      s += '<line x1="'+n(cx+Math.sin(b)*r*0.88)+'" y1="'+n(cy-Math.cos(b)*r*0.88)+'" x2="'+n(cx+Math.sin(b)*r*0.8)+'" y2="'+n(cy-Math.cos(b)*r*0.8)+'" stroke="#a1a1aa" stroke-width="'+n(Math.max(.5, d*.008))+'"/>';
+    if(det === 2){
+      [60,65,70,75,80,85,90,95,100,110,120,130,150,180,200,250,300,400].forEach(function(v){
+        a = (3600 / v) / 60 * 2 * Math.PI; p = pol(cx, cy, r*0.835, a);
+        s += '<text x="'+n(p[0])+'" y="'+n(p[1])+'" font-size="'+n(d*0.034)+'" font-weight="600" fill="#27272a" text-anchor="middle" dominant-baseline="central" transform="rotate('+n(a*180/Math.PI + (a > Math.PI/2 && a < Math.PI*1.5 ? 180 : 0))+' '+n(p[0])+' '+n(p[1])+')">'+v+'</text>';
+      });
+      s += '<path id="'+id+'-arco" d="M'+n(cx + Math.sin(0.1)*r*0.835)+' '+n(cy - Math.cos(0.1)*r*0.835)+' A'+n(r*0.835)+' '+n(r*0.835)+' 0 0 1 '+n(cx + Math.sin(0.86)*r*0.835)+' '+n(cy - Math.cos(0.86)*r*0.835)+'" fill="none"/>';
+      s += '<text font-size="'+n(d*0.03)+'" font-weight="700" letter-spacing="'+n(d*0.004)+'" fill="#27272a" dominant-baseline="central"><textPath href="#'+id+'-arco" startOffset="50%" text-anchor="middle">TACHYMETER</textPath></text>';
     }
-    // agujas 10:10
-    var hora = -60 * Math.PI / 180, min = 60 * Math.PI / 180;
-    s += '<line x1="'+cx+'" y1="'+cy+'" x2="'+n(cx+Math.sin(hora)*r*0.4)+'" y2="'+n(cy-Math.cos(hora)*r*0.4)+'" stroke="#f4f4f5" stroke-width="'+n(d*0.035)+'" stroke-linecap="round"/>';
-    s += '<line x1="'+cx+'" y1="'+cy+'" x2="'+n(cx+Math.sin(min)*r*0.58)+'" y2="'+n(cy-Math.cos(min)*r*0.58)+'" stroke="#f4f4f5" stroke-width="'+n(d*0.025)+'" stroke-linecap="round"/>';
-    s += '<line x1="'+n(cx-Math.sin(.6)*r*0.15)+'" y1="'+n(cy+Math.cos(.6)*r*0.15)+'" x2="'+n(cx+Math.sin(.6)*r*0.62)+'" y2="'+n(cy-Math.cos(.6)*r*0.62)+'" stroke="'+ORO+'" stroke-width="'+n(Math.max(.5, d*0.01))+'"/>';
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(d*0.025)+'" fill="#f4f4f5"/>';
+    // aro interior del bisel y esfera clara
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.78)+'" fill="#d4d4d8" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.75)+'" fill="url(#gu-esfera)"/>';
+    // riel de minutos
+    if(det) for(i = 0; i < 60; i++){ a = i * Math.PI / 30; p = pol(cx, cy, r*0.745, a); q = pol(cx, cy, r*(i % 5 ? 0.715 : 0.7), a);
+      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#3f3f46" stroke-width="'+sw(i % 5 ? .003 : .005)+'"/>'; }
+    // indices de barra (dobles, como facetados); XII a las 12; a las 3, 6 y 9 hay subesferas; fecha entre 4 y 5
+    for(i = 1; i < 12; i++){
+      if(i === 3 || i === 6 || i === 9) continue;
+      a = i * Math.PI / 6; p = pol(cx, cy, r*0.68, a); q = pol(cx, cy, r*0.53, a);
+      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#27272a" stroke-width="'+sw(.03)+'" stroke-linecap="square"/>';
+      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#fafafa" stroke-width="'+sw(.01)+'"/>';
+    }
+    if(det){
+      s += '<text x="'+cx+'" y="'+n(cy - r*0.56)+'" font-family="Georgia, \'Times New Roman\', serif" font-size="'+n(d*0.11)+'" font-weight="700" fill="#27272a" text-anchor="middle" dominant-baseline="central">XII</text>';
+    } else {
+      p = pol(cx, cy, r*0.68, 0); q = pol(cx, cy, r*0.5, 0);
+      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#27272a" stroke-width="'+sw(.04)+'"/>';
+    }
+    if(det === 2) s += '<text x="'+cx+'" y="'+n(cy - r*0.33)+'" font-size="'+n(d*0.032)+'" letter-spacing="'+n(d*0.006)+'" fill="#52525b" text-anchor="middle" dominant-baseline="central">AUTOMATIC</text>';
+    // ventana de fecha (entre las 4 y las 5)
+    p = pol(cx, cy, r*0.5, 2.45);
+    s += '<circle cx="'+n(p[0])+'" cy="'+n(p[1])+'" r="'+n(r*0.085)+'" fill="#fff" stroke="#3f3f46" stroke-width="'+sw(.006)+'"/>';
+    if(det) s += '<text x="'+n(p[0])+'" y="'+n(p[1])+'" font-size="'+n(d*0.06)+'" font-weight="600" fill="#27272a" text-anchor="middle" dominant-baseline="central">6</text>';
+
+    // ---- subesferas: 30 min (a las 9), segundos (a las 3) y 12 horas (a las 6) ----
+    [[-0.36, 0, ['30', '10', '20']], [0.36, 0, null], [0, 0.36, ['3', '6', '9']]].forEach(function(sd, k){
+      var sx = cx + sd[0]*r, sy = cy + sd[1]*r, sr = r*0.2;
+      s += '<circle cx="'+n(sx)+'" cy="'+n(sy)+'" r="'+n(sr)+'" fill="#e4e4e7" stroke="#52525b" stroke-width="'+sw(.006)+'"/>';
+      if(det) for(i = 0; i < 12; i++){ a = i * Math.PI / 6; p = pol(sx, sy, sr*0.95, a); q = pol(sx, sy, sr*(i % 3 ? 0.84 : 0.76), a);
+        s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#3f3f46" stroke-width="'+sw(.004)+'"/>'; }
+      if(det === 2 && sd[2]){
+        // numeros: en la de las 9 -> 30 arriba, 10 a la derecha, 20 a la izquierda; en la de las 6 -> 3, 6, 9
+        var pos = k === 0 ? [[0, -0.55], [0.55, 0.05], [-0.55, 0.05]] : [[0.55, 0.02], [0, 0.55], [-0.55, 0.02]];
+        pos.forEach(function(pp, j){ s += '<text x="'+n(sx + pp[0]*sr)+'" y="'+n(sy + pp[1]*sr)+'" font-size="'+n(d*0.042)+'" font-weight="700" fill="#27272a" text-anchor="middle" dominant-baseline="central">'+sd[2][j]+'</text>'; });
+      }
+      var ah = [-1.9, 1.05, -0.5][k]; p = pol(sx, sy, sr*0.8, ah); q = pol(sx, sy, sr*0.2, ah + Math.PI);
+      s += '<line x1="'+n(q[0])+'" y1="'+n(q[1])+'" x2="'+n(p[0])+'" y2="'+n(p[1])+'" stroke="#18181b" stroke-width="'+sw(.012)+'" stroke-linecap="round"/>';
+      s += '<circle cx="'+n(sx)+'" cy="'+n(sy)+'" r="'+n(sr*0.12)+'" fill="#18181b"/>';
+    });
+
+    // ---- agujas de espada (10:08) y segundero central largo ----
+    function espada(ang, largo, ancho){
+      var pt = pol(cx, cy, largo, ang), b1 = pol(cx, cy, largo*0.18, ang - Math.PI/2*0.0), l = pol(cx, cy, ancho, ang - Math.PI/2), rr = pol(cx, cy, ancho, ang + Math.PI/2);
+      var c1 = pol(l[0], l[1], largo*0.8, ang), c2 = pol(rr[0], rr[1], largo*0.8, ang), cola = pol(cx, cy, largo*0.12, ang + Math.PI);
+      void b1;
+      return '<path d="M'+n(cola[0])+' '+n(cola[1])+' L'+n(l[0])+' '+n(l[1])+' L'+n(c1[0])+' '+n(c1[1])+' L'+n(pt[0])+' '+n(pt[1])+' L'+n(c2[0])+' '+n(c2[1])+' L'+n(rr[0])+' '+n(rr[1])+' Z" fill="#fafafa" stroke="#27272a" stroke-width="'+sw(.007)+'" stroke-linejoin="round"/>';
+    }
+    s += espada(-1.05, r*0.45, d*0.024) + espada(0.98, r*0.66, d*0.019);
+    p = pol(cx, cy, r*0.72, 0); q = pol(cx, cy, r*0.2, Math.PI);
+    s += '<line x1="'+n(q[0])+'" y1="'+n(q[1])+'" x2="'+n(p[0])+'" y2="'+n(p[1])+'" stroke="#18181b" stroke-width="'+sw(.008)+'"/>';
+    s += '<circle cx="'+n(q[0])+'" cy="'+n(q[1])+'" r="'+n(d*0.016)+'" fill="#18181b"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(d*0.022)+'" fill="#18181b"/><circle cx="'+cx+'" cy="'+cy+'" r="'+n(d*0.009)+'" fill="#d4d4d8"/>';
+    // reflejo del cristal
+    if(det) s += '<path d="M'+n(cx - r*0.62)+' '+n(cy - r*0.28)+' A'+n(r*0.74)+' '+n(r*0.74)+' 0 0 1 '+n(cx + r*0.2)+' '+n(cy - r*0.7)+'" fill="none" stroke="#fff" stroke-width="'+sw(.02)+'" stroke-linecap="round" opacity=".35"/>';
     return s;
   }
   var DEFS = '<defs>' +
-    '<linearGradient id="gu-correa" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3f3f46"/><stop offset="1" stop-color="#3f3f46" stop-opacity="0"/></linearGradient>' +
-    '<linearGradient id="gu-correa2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f3f46"/><stop offset="1" stop-color="#3f3f46" stop-opacity="0"/></linearGradient>' +
+    '<linearGradient id="gu-acero" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8b8be"/><stop offset=".45" stop-color="#f4f4f5"/><stop offset="1" stop-color="#a1a1aa"/></linearGradient>' +
+    '<radialGradient id="gu-acero-r" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#fafafa"/><stop offset=".6" stop-color="#d4d4d8"/><stop offset="1" stop-color="#9a9aa1"/></radialGradient>' +
+    '<radialGradient id="gu-esfera" cx=".45" cy=".4" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e9ec"/></radialGradient>' +
+    '<linearGradient id="gu-cuero" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2b1d14"/><stop offset=".18" stop-color="#5a3b27"/><stop offset=".5" stop-color="#6b4630"/><stop offset=".82" stop-color="#5a3b27"/><stop offset="1" stop-color="#2b1d14"/></linearGradient>' +
+    '<linearGradient id="gu-desv-g-arr" x1="0" y1="1" x2="0" y2="0"><stop offset=".35" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>' +
+    '<linearGradient id="gu-desv-g-aba" x1="0" y1="0" x2="0" y2="1"><stop offset=".35" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>' +
+    '<mask id="gu-desv-arr" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#gu-desv-g-arr)"/></mask>' +
+    '<mask id="gu-desv-aba" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#gu-desv-g-aba)"/></mask>' +
     '<marker id="gu-flecha" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L9 5L0 9" fill="none" stroke="'+ORO+'" stroke-width="1.6"/></marker>' +
     '</defs>';
   function cota(x1, y1, x2, y2){ return '<line x1="'+n(x1)+'" y1="'+n(y1)+'" x2="'+n(x2)+'" y2="'+n(y2)+'" stroke="'+ORO+'" stroke-width="1.4" marker-start="url(#gu-flecha)" marker-end="url(#gu-flecha)"/>'; }
