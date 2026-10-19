@@ -1,5 +1,5 @@
-  /* 1. Tipografias de la marca: Syne (titulos) + Jost (subtitulos y textos) */
-  @import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Syne:wght@700;800&display=swap');
+  /* 1. Tipografias de la marca: Syne (titulos) + Jost (subtitulos y textos). Se cargan con <link> en cada
+     pagina (catalogo, legal, preguntas, guia, 404): con @import aqui el navegador las pedia tarde. */
 
   :root{
     --font-titulo:'Syne','Jost',Arial,sans-serif;
