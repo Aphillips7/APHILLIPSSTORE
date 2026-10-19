@@ -25,7 +25,7 @@ var GRUPOS_ES = {
   'additional features':'Otras características', 'general':'General', 'bezel':'Bisel', 'crystal':'Cristal'
 };
 var ETIQUETAS_ES = {
-  'case size':'Tamaño de la caja', 'case diameter':'Tamaño de la caja', 'case thickness':'Grosor de la caja', 'case shape':'Forma de la caja',
+  'case size':'Tamaño de la caja', 'lug to lug':'De asa a asa', 'lug-to-lug':'De asa a asa', 'lug to lug width':'De asa a asa', 'case length':'De asa a asa', 'case diameter':'Tamaño de la caja', 'case thickness':'Grosor de la caja', 'case shape':'Forma de la caja',
   'crown type':'Tipo de corona', 'crown':'Corona', 'crystal type':'Tipo de cristal', 'crystal':'Tipo de cristal',
   'bezel material':'Material del bisel', 'bezel color':'Color del bisel', 'bezel function':'Función del bisel',
   'case material':'Material de la caja', 'case color':'Color de la caja', 'case finish':'Acabado de la caja',
@@ -133,6 +133,8 @@ function rellenarCampos(ficha){
     g.f.forEach(function(r){
       var k = sinAcentos(r[0]), v = r[1];
       if(/tamano de la caja|diametro|case size|case diameter/.test(k)){ var mm = parseFloat(String(v).replace(',', '.')); if(mm) poner('inv-mm', String(mm)); }
+      else if(/de asa a asa|lug/.test(k)){ var l = parseFloat(String(v).replace(',', '.')); if(l) poner('inv-l2l', String(l)); }
+      else if(/grosor|espesor|thickness/.test(k)){ var g = parseFloat(String(v).replace(',', '.')); if(g) poner('inv-grosor', String(g)); }
       else if(/calibre|caliber/.test(k)) poner('inv-calibre', v);
       else if(/corona|crown/.test(k)) poner('inv-corona', v);
       else if(/material del bisel|bezel material/.test(k)) poner('inv-material-bisel', v);

@@ -77,6 +77,8 @@ function agregarProducto(){
     cristal:document.getElementById('inv-cristal').value.trim(),
     color:document.getElementById('inv-color').value.trim(),
     calibre:document.getElementById('inv-calibre').value.trim(),
+    l2l:document.getElementById('inv-l2l').value.trim(),             // de asa a asa (mm), medida real
+    grosor:document.getElementById('inv-grosor').value.trim(),       // grosor de la caja (mm)
     corona:document.getElementById('inv-corona').value.trim(),
     materialBisel:document.getElementById('inv-material-bisel').value.trim(),
     colorBisel:document.getElementById('inv-color-bisel').value.trim(),
@@ -131,7 +133,7 @@ function limpiarFormulario(){
   toggleFormulario(false);
 }
 function resetCamposFormulario(){
-  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-calibre','inv-corona','inv-material-bisel','inv-color-bisel','inv-material-esfera','inv-ancho-correa','inv-largo-correa','inv-color-correa','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto','inv-foto-carpeta','inv-descripcion'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-calibre','inv-l2l','inv-grosor','inv-corona','inv-material-bisel','inv-color-bisel','inv-material-esfera','inv-ancho-correa','inv-largo-correa','inv-color-correa','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto','inv-foto-carpeta','inv-descripcion'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-oculto-catalogo').checked=false;
   cargarFicha([]);
   document.getElementById('inv-genero').value='hombre';
@@ -157,7 +159,7 @@ function editarProducto(id){
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); return; }
   var p=state.inventario[i];
-  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-calibre':p.calibre,'inv-corona':p.corona,'inv-material-bisel':p.materialBisel,'inv-color-bisel':p.colorBisel,'inv-material-esfera':p.materialEsfera,'inv-ancho-correa':p.anchoCorrea,'inv-largo-correa':p.largoCorrea,'inv-color-correa':p.colorCorrea,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion};
+  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-calibre':p.calibre,'inv-l2l':p.l2l,'inv-grosor':p.grosor,'inv-corona':p.corona,'inv-material-bisel':p.materialBisel,'inv-color-bisel':p.colorBisel,'inv-material-esfera':p.materialEsfera,'inv-ancho-correa':p.anchoCorrea,'inv-largo-correa':p.largoCorrea,'inv-color-correa':p.colorCorrea,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion};
   Object.entries(fields).forEach(([id,v])=>{var el=document.getElementById(id);if(el)el.value=v||'';});
   document.getElementById('inv-oculto-catalogo').checked=!!p.ocultoCatalogo;
   cargarFicha(p.ficha);
@@ -189,7 +191,7 @@ function duplicarProducto(id){
   var copiar={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,
     'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,
     'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-notas':p.notas,
-    'inv-calibre':p.calibre,'inv-corona':p.corona,'inv-material-bisel':p.materialBisel,'inv-color-bisel':p.colorBisel,'inv-material-esfera':p.materialEsfera,'inv-ancho-correa':p.anchoCorrea,'inv-largo-correa':p.largoCorrea,'inv-color-correa':p.colorCorrea,
+    'inv-calibre':p.calibre,'inv-l2l':p.l2l,'inv-grosor':p.grosor,'inv-corona':p.corona,'inv-material-bisel':p.materialBisel,'inv-color-bisel':p.colorBisel,'inv-material-esfera':p.materialEsfera,'inv-ancho-correa':p.anchoCorrea,'inv-largo-correa':p.largoCorrea,'inv-color-correa':p.colorCorrea,
     'inv-proveedor':p.proveedor,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion};
   Object.entries(copiar).forEach(function(e){var el=document.getElementById(e[0]);if(el)el.value=e[1]||'';});
   document.getElementById('inv-genero').value=p.genero||'hombre';
