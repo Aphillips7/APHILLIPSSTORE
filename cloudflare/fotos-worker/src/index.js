@@ -38,6 +38,7 @@
 //   POST   /boletin            { email, nombre? } -> guarda el suscriptor y le manda un correo de bienvenida (siempre { ok })
 //   GET    /boletin/baja?t=    da de baja al suscriptor del enlace del correo (pagina simple)
 //   GET    /admin/boletin      -> { suscriptores: [{ email, nombre, activo, creado, baja }] }   (solo admin)
+//   GET    /admin/avisos/correo -> avisos de clientes que se enviarian por correo; POST los envia (solo admin)
 //   GET    /admin/informe      -> informe semanal en HTML; POST /admin/informe/enviar lo manda a info@ (solo admin)
 // Rutas de admin para cuentas:
 //   GET    /admin/cuentas      -> todas las cuentas con sus avisos y cuantos favoritos tienen
@@ -67,6 +68,8 @@ const MAX_ENVIOS_METRICAS = 200;   // por IP cada 10 minutos (ver sumarMetricas)
 export default {
   async scheduled(evento, env, ctx) {
     ctx.waitUntil(mantenimiento(env, 'automatico'));
+    // avisos a clientes por correo (reloj disponible, bajo de precio o marca con nuevos), si esta activado
+    if (env.AVISOS_CORREO === '1') ctx.waitUntil(avisosPorCorreo(env, true).catch((e) => console.log('avisos por correo', e.message)));
     // informe semanal: solo los lunes y solo si esta activado (INFORME_SEMANAL = "1")
     if (env.INFORME_SEMANAL === '1' && new Date(evento.scheduledTime || Date.now()).getUTCDay() === 1) {
       ctx.waitUntil(enviarInforme(env).catch((e) => console.log('informe semanal', e.message)));
@@ -114,7 +117,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -141,6 +144,7 @@ export default {
     if (ruta === '/admin/cuentas') return adminCuentas(env, cors);
     if (ruta === '/admin/boletin') return adminBoletin(env, cors);
     if (ruta === '/admin/informe') return new Response(htmlInforme(await datosInforme(env)), { headers: { ...cors, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+    if (ruta === '/admin/avisos/correo') return json(await avisosPorCorreo(env, metodo === 'POST'), 200, cors);
     if (ruta === '/admin/informe/enviar') { try { return json(await enviarInforme(env), 200, cors); } catch (e) { return json({ error: e.message }, 502, cors); } }
     if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
     if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
@@ -761,6 +765,65 @@ async function bajaBoletin(url, env) {
 async function adminBoletin(env, cors) {
   const r = (await env.DB.prepare('SELECT email, nombre, activo, creado, baja FROM boletin ORDER BY creado DESC').all()).results;
   return json({ suscriptores: r }, 200, cors);
+}
+
+// ---------- avisos por correo a los clientes ----------
+// Mismo criterio que "Avisos para enviar" del panel (clientes/cuentas-web.js): un reloj pedido que ya
+// esta disponible (o bajo de precio) y marcas con relojes nuevos desde el ultimo aviso. Se manda un
+// correo al cliente y el aviso queda marcado como enviado (igual que al mandarlo por WhatsApp).
+// Corre con el cron diario si AVISOS_CORREO = "1".
+//   GET  /admin/avisos/correo   -> lista de lo que se enviaria (no envia nada)
+//   POST /admin/avisos/correo   -> los envia ahora
+const MARCAS_NOMBRE = { invicta: 'Invicta', bulova: 'Bulova', technomarine: 'TechnoMarine' };
+const MAX_AVISOS_CORREO = 50;   // por ejecucion
+function normalMarca(t) { return String(t == null ? '' : t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ''); }
+async function avisosPorCorreo(env, enviar) {
+  const obj = await env.FOTOS.get(CLAVE_CATALOGO);
+  if (!obj) return { avisos: [] };
+  const relojes = (JSON.parse(await obj.text()).relojes) || [];
+  const porId = new Map(relojes.map((r) => [r.id, r]));
+  const filas = (await env.DB.prepare('SELECT a.uid, a.tipo, a.valor, a.estado_base, a.precio_base, a.creado, a.avisado, c.email, c.nombre ' +
+    'FROM avisos a JOIN cuentas c ON c.uid = a.uid').all()).results;
+  const salida = [];
+  for (const a of filas) {
+    if (!a.email || salida.length >= MAX_AVISOS_CORREO) continue;
+    let asunto = '', texto = '', enlace = '', boton = 'Ver el reloj', estadoNuevo = a.estado_base, precioNuevo = a.precio_base;
+    if (a.tipo === 'reloj') {
+      const r = porId.get(a.valor);
+      if (!r || r.estado !== 'disponible') continue;
+      const precio = Number(r.precio) || 0;
+      const llego = a.estado_base !== 'disponible';
+      const bajo = !llego && precio > 0 && a.precio_base > 0 && precio < a.precio_base;
+      if (!llego && !bajo) continue;
+      const nombre = r.nombre || 'El reloj';
+      asunto = llego ? nombre + ' ya está disponible' : nombre + ' bajó de precio';
+      texto = llego ? 'El ' + nombre + ' que pediste ya está disponible' + (precio ? ' por $' + precio : '') + '. Escríbenos por WhatsApp para apartarlo antes de que se agote.'
+        : 'El ' + nombre + ' que te interesa bajó de $' + a.precio_base + ' a $' + precio + '. Escríbenos por WhatsApp si lo quieres.';
+      enlace = TIENDA + '?id=' + encodeURIComponent(r.id);
+      estadoNuevo = 'disponible'; precioNuevo = precio;
+    } else if (a.tipo === 'marca') {
+      const desde = Math.max(a.creado || 0, a.avisado || 0);
+      const nuevos = relojes.filter((r) => (r.estado === 'disponible' || r.estado === 'transito') && (r._ts || 0) > desde &&
+        normalMarca((r.nombre || '') + ' ' + (r.coleccion || '')).includes(a.valor));
+      if (!nuevos.length) continue;
+      const marca = MARCAS_NOMBRE[a.valor] || a.valor;
+      const nombres = nuevos.slice(0, 3).map((r) => r.nombre).join(', ') + (nuevos.length > 3 ? ' y ' + (nuevos.length - 3) + ' más' : '');
+      asunto = 'Llegaron relojes ' + marca + ' nuevos';
+      texto = 'Llegaron relojes ' + marca + ' nuevos a la tienda: ' + nombres + '.';
+      enlace = TIENDA + '#marca-' + a.valor; boton = 'Ver los relojes ' + marca;
+    } else continue;
+    salida.push({ email: a.email, tipo: a.tipo, valor: a.valor, asunto });
+    if (!enviar) continue;
+    try {
+      await enviarCorreo(env, a.email, asunto, {
+        saludo: 'Hola' + (a.nombre ? ' ' + String(a.nombre).split(' ')[0] : '') + ',', texto, boton, enlace,
+        nota: 'Recibes este correo porque pediste un aviso en tu cuenta de Aphillips Store. Puedes quitarlo cuando quieras desde "Mi cuenta".'
+      });
+      await env.DB.prepare('UPDATE avisos SET avisado = ?4, estado_base = ?5, precio_base = ?6 WHERE uid = ?1 AND tipo = ?2 AND valor = ?3')
+        .bind(a.uid, a.tipo, a.valor, Date.now(), estadoNuevo || '', Number(precioNuevo) || 0).run();
+    } catch (e) { console.log('aviso por correo', e.message); salida[salida.length - 1].error = e.message; }
+  }
+  return { avisos: salida, enviados: enviar ? salida.filter((x) => !x.error).length : 0 };
 }
 
 // ---------- informe semanal para el dueno ----------

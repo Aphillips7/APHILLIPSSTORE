@@ -28,6 +28,8 @@
     "FOTOS_URL_BASE": "https://fotos.aphillipsstore.com",
     // Informe semanal por correo a info@ los lunes: "1" = activado, "0" = apagado
     "INFORME_SEMANAL": "0",
+    // Avisos a clientes por correo cuando llega o baja de precio el reloj que pidieron: "1" = activado
+    "AVISOS_CORREO": "0",
     "ORIGENES_PERMITIDOS": "https://aphillipsstore.com,https://www.aphillipsstore.com,https://aphillips7.github.io,http://localhost:8765"
   },
   "observability": { "enabled": true }
