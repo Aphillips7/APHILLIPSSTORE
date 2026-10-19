@@ -151,3 +151,8 @@
   /* celular y tablet: fila que se desliza con el dedo, sin barra de desplazamiento */
   @media (max-width:900px){ .par-fila{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 3 * 12px) / 3.4);gap:12px;max-width:none;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;} .par-fila::-webkit-scrollbar{display:none;} }
   @media (max-width:560px){ .par-titulo{font-size:18px;} .par-fila{grid-auto-columns:42%;gap:10px;margin:0 calc(-1 * clamp(16px,1.6vw,24px));padding-left:clamp(16px,1.6vw,24px);scroll-padding-left:clamp(16px,1.6vw,24px);} }
+  /* compartir y favorito, arriba a la derecha de la ficha */
+  .prod-acciones-top{display:flex;align-items:flex-start;gap:6px;flex:none;}
+  .prod-compartir{width:30px;height:30px;margin-top:-4px;padding:0;border:0;background:none;color:var(--black);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .12s var(--ease);}
+  .prod-compartir svg{width:21px;height:21px;}
+  .prod-compartir:active{transform:scale(.92);}

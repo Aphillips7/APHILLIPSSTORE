@@ -7,11 +7,11 @@ import { vibrar } from './ui.js';
 const WHATSAPP_NUM = '50762615442';
 
 // Boton flotante de WhatsApp
-document.getElementById('fab-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('Hola! Tengo una pregunta sobre el catalogo de relojes.');
+document.getElementById('fab-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('¡Hola! Tengo una pregunta sobre los relojes de la tienda.');
 document.getElementById('fab-wa').addEventListener('click', function(){ vibrar(10); });
 // Enlaces de contacto del encabezado y del pie de pagina
 document.querySelectorAll('.wa-link').forEach(function(a){
-  a.href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('Hola! Tengo una pregunta sobre Aphillips Store.');
+  a.href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('¡Hola! Tengo una pregunta sobre Aphillips Store.');
 });
 
 // =================== CONFIRMACION AL ABRIR WHATSAPP ===================
@@ -44,7 +44,7 @@ function confirmarWaFavoritos(el, e){
   textoEl.textContent = '✓ Abriendo WhatsApp...';
   vibrar(10);
   var lineas = items.map(function(r){ return '• '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':''); });
-  var msg = saludo()+' Me interesan estos relojes del catalogo:\n'+lineas.join('\n')+'\n¿Me confirman disponibilidad?';
+  var msg = saludo()+' Me interesan estos relojes del catálogo:\n'+lineas.join('\n')+'\n¿Me confirman disponibilidad?';
   var url = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent(msg);
   setTimeout(function(){
     window.open(url, '_blank');
@@ -58,7 +58,7 @@ function cotizarDirecto(id){
   var r = relojes.find(function(x){ return x.id === id; });
   if(!r) return;
   vibrar(10);
-  var msg = encodeURIComponent(saludo()+' Quiero cotizar el modelo '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que vi en el catalogo bajo pedido.');
+  var msg = encodeURIComponent(saludo()+' Quiero cotizar el modelo '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que vi en el catálogo bajo pedido.\n' + 'https://aphillipsstore.com/?id=' + encodeURIComponent(r.id));
   incMetrica(id, 'clics');
   window.open('https://wa.me/'+WHATSAPP_NUM+'?text='+msg, '_blank');
 }

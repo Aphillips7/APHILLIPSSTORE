@@ -23,7 +23,7 @@ const CLAVE_NO_CONTAR = 'aphillips_no_contar';
 
 let _fb = null;              // promesa con window.firebase ya iniciado
 let _cargando = false;       // esperando la respuesta de /cuenta
-let _mensaje = '';           // aviso arriba del panel (p. ej. "Inicia sesion para recibir avisos")
+let _mensaje = '';           // aviso arriba del panel (p. ej. "Inicia sesión para recibir avisos")
 let _pendiente = null;       // aviso que el cliente pidio antes de entrar o de poner su WhatsApp
 let _compras = null;         // respuesta de /cuenta/compras
 let _admin = null;           // datos de la seccion del administrador
@@ -55,7 +55,7 @@ function cargarFirebase(){
 async function pedir(ruta, opciones){
   var fb = await cargarFirebase();
   var u = fb.auth().currentUser;
-  if(!u) throw new Error('Inicia sesion de nuevo');
+  if(!u) throw new Error('Inicia sesión de nuevo');
   opciones = opciones || {};
   opciones.headers = Object.assign({ 'Authorization': 'Bearer ' + await u.getIdToken() }, opciones.headers || {});
   if(opciones.body && typeof opciones.body !== 'string'){ opciones.body = JSON.stringify(opciones.body); opciones.headers['Content-Type'] = 'application/json'; }
@@ -111,10 +111,10 @@ async function entrarConGoogle(){
       try{ await fb.auth().signInWithRedirect(prov); return; }catch(e2){ c = e2.code; }
     }
     if(c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return;
-    if(c === 'auth/operation-not-allowed') _mensaje = 'El inicio de sesion con Google aun no esta activado. Intentalo mas tarde.';
-    else if(c === 'auth/unauthorized-domain') _mensaje = 'Este sitio todavia no esta autorizado para iniciar sesion. Intentalo mas tarde.';
+    if(c === 'auth/operation-not-allowed') _mensaje = 'El inicio de sesión con Google aún no está activado. Inténtalo más tarde.';
+    else if(c === 'auth/unauthorized-domain') _mensaje = 'Este sitio todavía no está autorizado para iniciar sesión. Inténtalo más tarde.';
     else if(c === 'auth/network-request-failed') _mensaje = 'Sin conexion. Revisa tu internet e intenta de nuevo.';
-    else _mensaje = 'No se pudo iniciar sesion. Intenta de nuevo.';
+    else _mensaje = 'No se pudo iniciar sesión. Intenta de nuevo.';
     render();
   }
 }
@@ -326,7 +326,7 @@ async function guardarPerfil(ev){
 async function toggleAviso(tipo, valor){
   if(!sesion.activa){
     _pendiente = { tipo: tipo, valor: valor };
-    _mensaje = 'Inicia sesion para que te avisemos por WhatsApp.';
+    _mensaje = 'Inicia sesión para que te avisemos por WhatsApp.';
     abrirCuenta();
     return;
   }
@@ -359,7 +359,7 @@ async function activarAviso(tipo, valor){
 function textoAviso(a){
   if(a.tipo === 'marca') return 'Nuevos ingresos de ' + (MARCAS[a.valor] || a.valor);
   var r = relojes.find(function(x){ return x.id === a.valor; });
-  return r ? (r.nombre || 'Reloj') : 'Reloj que ya no esta en el catalogo';
+  return r ? (r.nombre || 'Reloj') : 'Reloj que ya no está en el catálogo';
 }
 
 // Boton "Avisame" en la pagina de un reloj

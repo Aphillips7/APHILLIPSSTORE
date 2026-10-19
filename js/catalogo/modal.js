@@ -219,6 +219,19 @@ function abrirParecido(id){
   abrir(id);
 }
 
+function enlaceReloj(id){ return 'https://aphillipsstore.com/?id=' + encodeURIComponent(id); }
+// Compartir un reloj: en el celular abre el menu de compartir del sistema (WhatsApp, Instagram...);
+// en la computadora copia el enlace
+function compartirReloj(r){
+  var url = enlaceReloj(r.id);
+  if(navigator.share){
+    navigator.share({ title: (r.nombre || 'Reloj') + ' — Aphillips Store', text: 'Mira este reloj en Aphillips Store', url: url }).catch(function(){});
+    return;
+  }
+  var listo = function(){ toast('Enlace copiado. Pégalo donde quieras compartirlo.'); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(listo, function(){ prompt('Copia el enlace:', url); });
+  else prompt('Copia el enlace:', url);
+}
 function copiarSku(e, sku){
   e.stopPropagation();
   if(navigator.clipboard){ navigator.clipboard.writeText(sku).then(function(){ toast('Referencia copiada: '+sku); }); }
@@ -244,6 +257,8 @@ function abrir(id){
   fav.setAttribute('data-fav-id', id);
   fav.classList.toggle('activo', _favoritos.has(id));
   fav.onclick = function(e){ window.toggleFavorito(e, id); };
+  var comp = document.getElementById('modal-compartir');
+  if(comp) comp.onclick = function(){ compartirReloj(r); };
 
   var precioEl = document.getElementById('modal-precio');
   if(r.estado==='bajopedido'){ precioEl.textContent = 'Precio bajo cotización'; precioEl.className = 'prod-precio cotizar'; }
@@ -278,17 +293,19 @@ function abrir(id){
   var msg;
   if(r.estado==='transito'){
     waTexto.textContent = 'Apartar por WhatsApp';
-    msg = saludo()+' Vi en el catalogo el '+nombreRef+' que esta en transito, ¿me lo pueden apartar?';
+    msg = saludo()+' Vi en el catálogo el '+nombreRef+' que está en tránsito, ¿me lo pueden apartar?';
   } else if(r.estado==='vendido'){
     waTexto.textContent = 'Preguntar por uno similar';
-    msg = saludo()+' Vi el '+nombreRef+' en el catalogo pero ya esta vendido, ¿tienen algo similar o se puede conseguir de nuevo?';
+    msg = saludo()+' Vi el '+nombreRef+' en el catálogo pero ya está vendido, ¿tienen algo similar o se puede conseguir de nuevo?';
   } else if(r.estado==='bajopedido'){
     waTexto.textContent = 'Cotizar por WhatsApp';
-    msg = saludo()+' Quiero cotizar el modelo '+nombreRef+' que vi en el catalogo bajo pedido.';
+    msg = saludo()+' Quiero cotizar el modelo '+nombreRef+' que vi en el catálogo bajo pedido.';
   } else {
     waTexto.textContent = 'Comprar por WhatsApp';
-    msg = saludo()+' Me interesa el '+nombreRef+' que vi en el catalogo, ¿sigue disponible?';
+    msg = saludo()+' Me interesa el '+nombreRef+' que vi en el catálogo, ¿sigue disponible?';
   }
+  // el enlace del reloj va al final: en WhatsApp sale con su foto y sabes exactamente cual es
+  msg += '\n' + enlaceReloj(id);
   document.getElementById('modal-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent(msg);
   // guia de tamanos con el tamano de este reloj ya puesto
   var guia = document.getElementById('modal-guia');
