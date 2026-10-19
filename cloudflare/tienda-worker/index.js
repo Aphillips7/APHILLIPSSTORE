@@ -10,7 +10,9 @@
 //   /manifest.json   -> la app instalable del panel abre /admin en este dominio
 //   www.             -> redirige al dominio sin www
 //   /__/auth/, /__/firebase/ -> se reenvian a Firebase (login de Google con nuestro dominio)
-//   /sitemap.xml     -> lista para Google: el catalogo y un enlace por cada reloj publicado (no vendido)
+//   /relojes, /relojes-hombre, /relojes-mujer, /invicta, /bulova, /technomarine -> el catalogo en esa seccion,
+//                       con su propio titulo y descripcion para Google
+//   /sitemap.xml     -> lista para Google: el catalogo, sus secciones y un enlace por cada reloj publicado (no vendido)
 // /catalogo.html redirige a / y /index.html a /admin (direcciones sin .html).
 // Todo lo demas se sirve tal cual (css/, js/, img/...).
 // En GitHub Pages los archivos siguen funcionando igual: este Worker no los modifica.
@@ -52,6 +54,10 @@ export default {
     }
     if (url.pathname === '/admin') return conCabeceras(await servir(env, request, '/index.html'), true);
 
+    // secciones con direccion propia para Google (/relojes-hombre, /invicta...): es el catalogo con su
+    // titulo, descripcion y canonica; al abrirse pasa a la vista de siempre (/#hombre, /#marca-invicta)
+    if (SECCIONES[url.pathname]) return seccion(await servir(env, request, '/catalogo.html'), url.pathname);
+
     // pagina legal con direccion limpia: /legal (la vieja /legal.html redirige; el #seccion lo conserva el navegador)
     if (url.pathname === '/legal.html') { url.pathname = '/legal'; return Response.redirect(url.toString(), 301); }
     if (url.pathname === '/legal') return conCabeceras(await servir(env, request, '/legal.html'));
@@ -78,10 +84,42 @@ export default {
   }
 };
 
+// ---------- secciones del catalogo con direccion propia ----------
+const SECCIONES = {
+  '/relojes': { hash: '#todos', titulo: 'Relojes originales en Panamá — Aphillips Store',
+    desc: 'Todos los relojes originales de Aphillips Store: Invicta, Bulova y TechnoMarine para hombre y mujer. Disponibles, en tránsito y bajo pedido, con envío a todo Panamá.' },
+  '/relojes-hombre': { hash: '#hombre', titulo: 'Relojes para hombre en Panamá — Aphillips Store',
+    desc: 'Relojes originales para hombre en Panamá: buceo, cronógrafos y automáticos de Invicta, Bulova y TechnoMarine. Garantía de 1 año y envío a todo el país.' },
+  '/relojes-mujer': { hash: '#mujer', titulo: 'Relojes para mujer en Panamá — Aphillips Store',
+    desc: 'Relojes originales para mujer en Panamá: diseños elegantes y precisos de Invicta, Bulova y TechnoMarine. Garantía de 1 año y envío a todo el país.' },
+  '/invicta': { hash: '#marca-invicta', titulo: 'Relojes Invicta originales en Panamá — Aphillips Store',
+    desc: 'Relojes Invicta originales en Panamá: Pro Diver, Speedway, Bolt y más. Precios, fotos reales, garantía de 1 año y envío a todo el país. Compra por WhatsApp.' },
+  '/bulova': { hash: '#marca-bulova', titulo: 'Relojes Bulova originales en Panamá — Aphillips Store',
+    desc: 'Relojes Bulova originales en Panamá: automáticos, esqueleto y clásicos. Precios, fotos reales, garantía de 1 año y envío a todo el país. Compra por WhatsApp.' },
+  '/technomarine': { hash: '#marca-technomarine', titulo: 'Relojes TechnoMarine originales en Panamá — Aphillips Store',
+    desc: 'Relojes TechnoMarine originales en Panamá: Manta Ray, Cruise y más, con estilo deportivo. Precios, fotos reales, garantía de 1 año y envío a todo el país.' }
+};
+function seccion(pagina, ruta) {
+  if (!pagina.ok) return conCabeceras(pagina);
+  const s = SECCIONES[ruta], enlace = 'https://' + DOMINIO + ruta;
+  const meta = { 'og:title': s.titulo, 'twitter:title': s.titulo, 'og:description': s.desc, 'twitter:description': s.desc, description: s.desc };
+  const res = new HTMLRewriter()
+    .on('title', { element(e) { e.setInnerContent(s.titulo); } })
+    .on('link[rel="canonical"]', { element(e) { e.setAttribute('href', enlace); } })
+    .on('meta', { element(e) {
+      const clave = e.getAttribute('property') || e.getAttribute('name');
+      if (clave && meta[clave] !== undefined) e.setAttribute('content', meta[clave]);
+    } })
+    // antes que todo lo demas: el catalogo arranca en la seccion (el hash de siempre)
+    .on('head', { element(e) { e.prepend('<script>if(!location.hash)history.replaceState(null,"","/"+location.search+"' + s.hash + '");</script>', { html: true }); } })
+    .transform(pagina);
+  return conCabeceras(res);
+}
+
 // ---------- sitemap para Google ----------
 async function sitemap(env) {
   const d = await catalogo(env);
-  const urls = ['https://' + DOMINIO + '/', 'https://' + DOMINIO + '/legal', 'https://' + DOMINIO + '/preguntas', 'https://' + DOMINIO + '/guia-de-tamanos'];
+  const urls = ['https://' + DOMINIO + '/', ...Object.keys(SECCIONES).map((r) => 'https://' + DOMINIO + r), 'https://' + DOMINIO + '/legal', 'https://' + DOMINIO + '/preguntas', 'https://' + DOMINIO + '/guia-de-tamanos'];
   for (const r of (d && d.relojes) || []) {
     if (r.estado !== 'vendido' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id || '')) urls.push('https://' + DOMINIO + '/?id=' + r.id);
   }
