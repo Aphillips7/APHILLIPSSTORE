@@ -121,7 +121,7 @@ export default {
     }
     // OWNER_UID puede traer espacios o saltos de linea al guardarlo; tambien admite varios separados por coma
     const duenos = String(env.OWNER_UID || '').split(',').map((s) => s.trim()).filter(Boolean);
-    if (!duenos.includes(uid)) return json({ error: 'Sin permiso (tu UID es ' + uid + ')' }, 403, cors);
+    if (!duenos.includes(uid)) return json({ error: 'Sin permiso' }, 403, cors);
 
     if (ruta === '/catalogo') return publicarCatalogo(request, env, cors);
     if (ruta === '/metricas') return leerMetricas(env, cors);

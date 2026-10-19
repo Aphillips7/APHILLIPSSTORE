@@ -15,7 +15,7 @@
     "directory": ".",
     "binding": "ASSETS",
     "html_handling": "none",
-    "not_found_handling": "none",
+    "not_found_handling": "404-page",
     "run_worker_first": ["/__/*", "/", "/admin", "/admin/", "/manifest.json", "/sitemap.xml", "/favicon.ico", "/legal", "/legal.html", "/preguntas", "/preguntas.html", "/guia-de-tamanos", "/guia-de-tamanos.html", "/index.html", "/catalogo.html"]
   },
   // La API (Worker aphillips-fotos), para leer el catalogo al armar la vista previa de un reloj
