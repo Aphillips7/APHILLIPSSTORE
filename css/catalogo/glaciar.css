@@ -103,3 +103,7 @@
     html.glaciar .fav-cerrar:hover,
     html.glaciar .gu-ver-todos:hover{background:var(--glaciar);border-color:var(--glaciar);color:var(--black);}
   }
+
+  /* otros azules que habia en la tienda pasan al mismo glaciar (o a negro si son numeros/texto) */
+  html.glaciar .flt-sec>button .mas{color:var(--glaciar);}
+  html.glaciar .fav-count,html.glaciar body.prod-abierto header .fav-count{color:var(--black) !important;}
