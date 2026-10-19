@@ -62,6 +62,12 @@ function toggleDesc(){
   b.textContent = ab ? '−' : '+'; b.setAttribute('aria-expanded', ab ? 'true' : 'false');
 }
 function _refrescarHeader(){ window.dispatchEvent(new Event('resize')); }
+// Titulo de la pestana segun la vista (inicio, genero o marca)
+var TITULO_INICIO = 'Aphillips Store — Relojes de lujo en Panamá';
+function _tituloVista(g, marca){
+  document.title = marca && _MARCAS[marca] ? 'Relojes ' + _MARCAS[marca].nombre + ' — Aphillips Store'
+    : (_TITULOS_GEN[g || ''] || 'Relojes') + ' — Aphillips Store';
+}
 // g = genero ('' = todos). marca opcional: si viene, muestra la pagina de esa marca.
 function mostrarCatalogo(g, push, marca){
   var bus = document.getElementById('buscador'); if(bus) bus.value = '';
@@ -69,13 +75,16 @@ function mostrarCatalogo(g, push, marca){
   var hash = marca ? '#marca-'+marca : '#'+(g||'todos');
   // primero se crea la entrada del historial, y despues se cambia la vista
   if(push && !yaEnCatalogo){ history.pushState({vista:true}, '', hash); }
+  else if(push && location.hash !== hash){ history.replaceState(history.state, '', hash); }   // de hombre a mujer: la direccion tambien cambia
   document.body.classList.add('vista-catalogo');
   if(marca) setMarca(marca); else setGenero(g);
+  _tituloVista(g, marca);
   window.scrollTo(0, 0);
   _refrescarHeader();
 }
 function mostrarInicio(irAGeneros){
   document.body.classList.remove('vista-catalogo');
+  document.title = TITULO_INICIO;
   _refrescarHeader();
   var s = document.getElementById('generos');
   if(irAGeneros && s) s.scrollIntoView();
@@ -94,7 +103,7 @@ function irASeccion(id, e){
   if(e && e.preventDefault) e.preventDefault();
   if(document.body.classList.contains('vista-catalogo')){
     history.replaceState(null, '', location.pathname + location.search);
-    document.body.classList.remove('vista-catalogo');
+    document.body.classList.remove('vista-catalogo'); document.title = TITULO_INICIO;
     _refrescarHeader();
   }
   var s = document.getElementById(id);
@@ -112,7 +121,7 @@ function irAInicio(e){
   if(m && m.classList.contains('open')){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); document.body.classList.remove('prod-abierto'); }
   document.body.style.overflow = '';
   history.replaceState(null, '', location.pathname);
-  document.body.classList.remove('vista-catalogo');
+  document.body.classList.remove('vista-catalogo'); document.title = TITULO_INICIO;
   window.scrollTo(0, 0);
   _refrescarHeader();
 }
@@ -127,6 +136,7 @@ function aplicarVistaDesdeHash(){
     document.body.classList.add('vista-catalogo');
     var m = _marcaDeHash(h);
     if(m) setMarca(m); else setGenero(_HASH_GEN[h]);
+    _tituloVista(_HASH_GEN[h], m);
     if(!yaEn){ window.scrollTo(0,0); }
     _refrescarHeader();
   } else if(document.body.classList.contains('vista-catalogo')){
