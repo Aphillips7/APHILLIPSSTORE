@@ -40,6 +40,7 @@
 //   POST   /boletin            { email, nombre? } -> guarda el suscriptor y le manda un correo de bienvenida (siempre { ok })
 //   GET    /boletin/baja?t=    da de baja al suscriptor del enlace del correo (pagina simple)
 //   GET    /admin/boletin      -> { suscriptores: [{ email, nombre, activo, creado, baja }] }   (solo admin)
+//   POST   /admin/boletin/enviar { asunto, texto, boton?, enlace?, prueba } -> correo a los suscriptores (o prueba a info@)
 //   GET    /admin/errores?dias=7 -> errores de JavaScript agrupados (solo admin)
 //   GET    /admin/avisos/correo -> avisos de clientes que se enviarian por correo; POST los envia (solo admin)
 //   GET    /admin/informe      -> informe semanal en HTML; POST /admin/informe/enviar lo manda a info@ (solo admin)
@@ -122,7 +123,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -148,6 +149,7 @@ export default {
     if (ruta === '/respaldos/archivo') return descargarRespaldo(url, env, cors);
     if (ruta === '/admin/cuentas') return adminCuentas(env, cors);
     if (ruta === '/admin/boletin') return adminBoletin(env, cors);
+    if (ruta === '/admin/boletin/enviar') return enviarBoletin(request, env, cors);
     if (ruta === '/admin/informe') return new Response(htmlInforme(await datosInforme(env)), { headers: { ...cors, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
     if (ruta === '/admin/errores') return json({ errores: await resumenErrores(env, Math.min(30, Math.max(1, Number(url.searchParams.get('dias')) || 7))) }, 200, cors);
     if (ruta === '/admin/avisos/correo') return json(await avisosPorCorreo(env, metodo === 'POST'), 200, cors);
@@ -654,7 +656,7 @@ function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota, baja }) {
     '<tr><td style="padding:36px 32px 8px;">' +
       '<p style="margin:0 0 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6a6a6a;">' + e(titulo) + '</p>' +
       '<p style="margin:0 0 16px;font-size:16px;line-height:24px;">' + e(saludo) + '</p>' +
-      '<p style="margin:0 0 28px;font-size:15px;line-height:23px;color:#333333;">' + e(texto) + '</p>' +
+      '<p style="margin:0 0 28px;font-size:15px;line-height:23px;color:#333333;">' + e(texto).split(String.fromCharCode(10)).join('<br>') + '</p>' +
       '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="' + NEGRO + '">' +
         '<a href="' + e(enlace) + '" style="display:inline-block;padding:16px 30px;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#ffffff;text-decoration:none;' + NEGRO + '">' +
           '<span class="gb-scr" style="display:block;"><span class="gb-dif" style="display:block;color:#ffffff;">' + e(boton) + '</span></span></a>' +
@@ -774,6 +776,32 @@ async function bajaBoletin(url, env) {
     '<div style="background:#fff;padding:32px 28px;max-width:420px;margin:16px;text-align:center;border-radius:12px;"><p style="font-size:17px;line-height:1.5;margin:0 0 20px;">' + msg + '</p>' +
     '<a href="https://aphillipsstore.com/" style="display:inline-block;background:#09090b;color:#fff;text-decoration:none;padding:12px 22px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;">Volver a la tienda</a></div></body></html>';
   return new Response(html, { status: ok ? 200 : 400, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
+}
+// Envio de un correo a todos los suscriptores activos (lo dispara el dueno desde el panel).
+// { asunto, texto, boton?, enlace?, prueba } -> con prueba: true solo va a info@. Cada correo lleva su
+// enlace de baja. Maximo 1 envio masivo cada 10 minutos (evita mandar dos veces por un doble toque).
+async function enviarBoletin(request, env, cors) {
+  if (!env.EMAIL) return json({ error: 'El envio de correos no esta configurado' }, 503, cors);
+  const b = await leerJson(request);
+  const asunto = limpiarTexto(b && b.asunto, 120);
+  const texto = String((b && b.texto) || '').replace(/[\u0000-\u0009\u000b-\u001f]/g, '').trim().slice(0, 3000);
+  const boton = limpiarTexto(b && b.boton, 40) || 'Ver la tienda';
+  let enlace = String((b && b.enlace) || TIENDA).trim();
+  if (!/^https:\/\/(www\.)?aphillipsstore\.com(\/|$)/.test(enlace)) enlace = TIENDA;   // solo enlaces a la tienda
+  if (!asunto || !texto) return json({ error: 'Escribe el asunto y el texto' }, 400, cors);
+  const datos = (para, baja) => ({ saludo: 'Hola,', texto, boton, enlace, nota: '¿No quieres recibir más correos?', baja });
+  if (b.prueba) {
+    await enviarCorreo(env, PARA_INFORME, '[Prueba] ' + asunto, datos(PARA_INFORME, TIENDA));
+    return json({ ok: true, prueba: true, enviados: 1 }, 200, cors);
+  }
+  if (!(await dentroDelLimite(env, 'bolmasivo', 1, 10 * MINUTO))) return json({ error: 'Ya se envió un boletín hace menos de 10 minutos.' }, 429, cors);
+  const subs = (await env.DB.prepare('SELECT email, token FROM boletin WHERE activo = 1 LIMIT 1000').all()).results;
+  let enviados = 0, fallidos = 0;
+  for (const s of subs) {
+    try { await enviarCorreo(env, s.email, asunto, datos(s.email, 'https://api.aphillipsstore.com/boletin/baja?t=' + s.token)); enviados++; }
+    catch (e) { fallidos++; console.log('boletin masivo', e.message); }
+  }
+  return json({ ok: true, enviados, fallidos }, 200, cors);
 }
 async function adminBoletin(env, cors) {
   const r = (await env.DB.prepare('SELECT email, nombre, activo, creado, baja FROM boletin ORDER BY creado DESC').all()).results;
