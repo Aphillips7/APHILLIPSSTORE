@@ -33,7 +33,9 @@ async function confirmarReserva(){
   if(i===-1){ invNoExiste(); cerrarReservaModal(); return; }
   var p=state.inventario[i];
   var hoy=new Date().toLocaleDateString('es-MX');
-  var reserva={clienteId:clienteId,clienteNombre:cliente.nombre,precioAcordado:precioAcordado,fechaInicio:hoy,abonos: abono>0?[{monto:abono,fecha:hoy,metodoPago:metodoPago}]:[]};
+  // estadoAnterior: si se cancela el apartado, el reloj vuelve a ese estado (un reloj en transito no debe
+  // volver como "disponible")
+  var reserva={clienteId:clienteId,clienteNombre:cliente.nombre,precioAcordado:precioAcordado,fechaInicio:hoy,estadoAnterior:p.estado,abonos: abono>0?[{monto:abono,fecha:hoy,metodoPago:metodoPago}]:[]};
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:'reservado', reserva:reserva}); }
   catch(e){ avisarError(e); cerrarReservaModal(); return; }
   i=idxInv(id);
@@ -87,11 +89,19 @@ async function completarVentaReserva(id){
   var saldo=saldoPendienteReserva(p);
   if(!confirm('Completar la venta de '+p.nombre+' a '+p.reserva.clienteNombre+' por el precio acordado de $'+p.reserva.precioAcordado.toLocaleString()+(saldo>0?(' (falta cobrar $'+saldo.toLocaleString()+')'):' (ya esta pagado por completo')+'?')) return;
   var hoy=new Date().toLocaleDateString('es-MX');
+  // forma de pago del saldo, para que cuente en "Saldo por metodo" de Finanzas
+  var metodoSaldo='';
+  if(saldo>0){
+    var METODOS={efectivo:'efectivo',yappy:'yappy',transferencia:'transferencia',tarjeta:'tarjeta',otro:'otro'};
+    var resp=prompt('¿Cómo pagó el saldo de $'+saldo.toLocaleString()+'? Escribe: efectivo, yappy, transferencia, tarjeta u otro','yappy');
+    if(resp===null) return;
+    metodoSaldo=METODOS[String(resp).trim().toLowerCase()]||'otro';
+  }
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:'vendido', precioVenta:p.reserva.precioAcordado, fechaVenta:hoy}, ['reserva']); }
   catch(e){ avisarError(e); cerrarModal(); renderInventario(); return; }
   // "p" conserva los datos de la reserva leidos antes de confirmar con la nube
   if(saldo>0){
-    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Saldo final de '+p.reserva.clienteNombre,monto:saldo,canal:'directo',metodoPago:'',costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Saldo final de '+p.reserva.clienteNombre,monto:saldo,canal:'directo',metodoPago:metodoSaldo,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
   } else {
     state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Venta completada con '+p.reserva.clienteNombre,monto:0,canal:'directo',metodoPago:'',costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy,_soloRegistro:true});
   }
@@ -111,18 +121,20 @@ async function cancelarReserva(id){
   if(i===-1){ invNoExiste(); cerrarModal(); return; }
   var p=state.inventario[i];
   if(!p.reserva)return;
-  if(!confirm('¿Cancelar la reserva de este reloj? El reloj volvera a estar disponible.'))return;
+  var volverA=['disponible','transito','bajopedido'].indexOf(p.reserva.estadoAnterior)>=0?p.reserva.estadoAnterior:'disponible';
+  var nombresEstado={disponible:'disponible',transito:'en tránsito',bajopedido:'bajo pedido'};
+  if(!confirm('¿Cancelar la reserva de este reloj? El reloj volverá a estar '+nombresEstado[volverA]+'.'))return;
   var totalAbonado=totalAbonadoReserva(p);
   var clienteIdRes=p.reserva.clienteId,clienteNombreRes=p.reserva.clienteNombre;
   var seDevolvio=false;
   var devolver=totalAbonado>0 && confirm('Se recibieron $'+totalAbonado.toLocaleString()+' en abono de '+p.reserva.clienteNombre+'.\n\nPulsa Aceptar para DEVOLVER ese dinero al cliente (se registra como gasto).\nPulsa Cancelar para QUEDARTE con el abono (no se devuelve, el dinero ya registrado se queda).');
-  try{ await cambiarEstadoSeguro(id, p.estado, {estado:'disponible'}, ['reserva']); }
+  try{ await cambiarEstadoSeguro(id, p.estado, {estado:volverA}, ['reserva']); }
   catch(e){ avisarError(e); cerrarModal(); renderInventario(); return; }
   // "p" conserva los datos de la reserva leidos antes de confirmar con la nube
   if(totalAbonado>0){
     if(devolver){
       seDevolvio=true;
-      state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:totalAbonado,canal:'reembolso',categoria:'Reembolso',metodoPago:'',costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
+      state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:totalAbonado,canal:'reembolso',categoria:'Reembolso',metodoPago:((p.reserva.abonos||[])[0]||{}).metodoPago||'',costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
       save('movimientos');
     }
   }
@@ -132,7 +144,7 @@ async function cancelarReserva(id){
   }
   i=idxInv(id);
   if(i!==-1){
-    state.inventario[i].estado='disponible';
+    state.inventario[i].estado=volverA;
     delete state.inventario[i].reserva;
     save('inventario');
   }
