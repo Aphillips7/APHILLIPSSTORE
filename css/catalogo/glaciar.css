@@ -78,6 +78,9 @@
   html.glaciar .marca-txt{border-top:3px solid var(--glaciar);}
 
   /* ficha del reloj: iconos de especificaciones y el + de los desplegables */
+  html.glaciar .prod-foto{background:linear-gradient(135deg,#bfd3e1 0%,#dce8f0 45%,#f4f8fb 100%);}
+  html.glaciar .prod-regla{background-image:radial-gradient(circle,var(--glaciar-oscuro) 1px,transparent 1.4px);}
+  html.glaciar .prod-regla::before,html.glaciar .prod-regla::after{background-image:linear-gradient(var(--glaciar-oscuro),var(--glaciar-oscuro));border-color:var(--glaciar-oscuro);}
   html.glaciar .esp-ico{color:var(--glaciar-oscuro);}
   html.glaciar .det-mas::before,html.glaciar .det-mas::after{background:var(--glaciar-oscuro);}
   html.glaciar .det[open] .det-titulo{color:var(--glaciar-oscuro);}
@@ -91,3 +94,4 @@
 
   /* botones secundarios de los paneles (cuenta, boletin) */
   html.glaciar .cta-btn.secundario:hover{background:var(--glaciar);color:var(--black);border-color:var(--glaciar);}
+  html.glaciar .marca-foto{background:var(--glaciar-medio);}
