@@ -21,6 +21,7 @@ function aplicar(lista){
   if(json === _ultimoJson) return;          // sin cambios: no se vuelve a dibujar
   _ultimoJson = json;
   relojes = lista.slice();
+  relojes.forEach(function(r){ if(/^cuarzo japon[eé]s$/i.test(r.movimiento||'')) r.movimiento = 'Cuarzo'; });
   relojes.sort(function(a,b){ return (b._ts||0)-(a._ts||0); });
   render();
   if(!_deepLinkHandled){

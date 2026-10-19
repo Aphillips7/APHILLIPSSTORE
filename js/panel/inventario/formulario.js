@@ -145,7 +145,7 @@ function editarProducto(id){
   document.getElementById('inv-oculto-catalogo').checked=!!p.ocultoCatalogo;
   cargarFicha(p.ficha);
   document.getElementById('inv-genero').value=p.genero||'hombre';
-  document.getElementById('inv-movimiento').value=p.movimiento||'';
+  document.getElementById('inv-movimiento').value=String(p.movimiento||'').replace(/^cuarzo japon[eé]s$/i,'Cuarzo');
   document.getElementById('inv-estado').value=p.estado||'disponible';
   document.getElementById('inv-edit-index').value=p.id;
   document.getElementById('inv-form-title').textContent='Editar unidad';
@@ -176,7 +176,7 @@ function duplicarProducto(id){
     'inv-proveedor':p.proveedor,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion};
   Object.entries(copiar).forEach(function(e){var el=document.getElementById(e[0]);if(el)el.value=e[1]||'';});
   document.getElementById('inv-genero').value=p.genero||'hombre';
-  document.getElementById('inv-movimiento').value=p.movimiento||'';
+  document.getElementById('inv-movimiento').value=String(p.movimiento||'').replace(/^cuarzo japon[eé]s$/i,'Cuarzo');
   cargarFicha(p.ficha);
   // Lo que SI es propio de cada unidad queda en blanco: costo, serie, tracking
   document.getElementById('inv-estado').value='transito';

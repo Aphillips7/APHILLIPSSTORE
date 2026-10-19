@@ -120,7 +120,7 @@ function opcionMovimiento(v){
   if(/automat/.test(s)) return 'Automatico';
   if(/solar/.test(s)) return 'Solar';
   if(/crono|chrono/.test(s)) return 'Cronografo cuarzo';
-  if(/cuarzo|quartz/.test(s)) return 'Cuarzo japones';
+  if(/cuarzo|quartz/.test(s)) return 'Cuarzo';
   return '';
 }
 
