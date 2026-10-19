@@ -384,7 +384,9 @@ function pintarAvisoMarca(){
   if(!_marcaActual) return;
   var activo = sesion.activa && tieneAviso('marca', _marcaActual);
   b.classList.toggle('activo', activo);
-  b.querySelector('span').textContent = activo ? '✓ Te avisaremos de nuevos ' + MARCAS[_marcaActual] : 'Avísame de nuevos ' + MARCAS[_marcaActual];
+  var txt = activo ? 'Te avisaremos de nuevos ' + MARCAS[_marcaActual] : 'Avísame de nuevos ' + MARCAS[_marcaActual];
+  b.querySelector('span').textContent = txt;
+  b.title = txt; b.setAttribute('aria-label', txt);
   b.onclick = function(){ toggleAviso('marca', _marcaActual); };
 }
 document.addEventListener('marca-cambiada', function(e){ _marcaActual = e.detail || ''; pintarAvisoMarca(); });

@@ -46,7 +46,8 @@
     .cat-controles{gap:8px;}
     .ctl-btn{padding:0 12px;gap:8px;}
     .ci-eti{font-size:10px;line-height:12px;}
-    #btn-ordenar{flex:1;min-width:0;background:var(--black);color:#fff;}
+    #btn-ordenar{flex:1;min-width:0;overflow:hidden;white-space:nowrap;background:var(--black);color:#fff;}
+    .ctl-por{display:none;}
     .vista-sel button{width:30px;}
     .grid{grid-template-columns:repeat(2,1fr);gap:30px 12px;}
     .grid.vista-1{grid-template-columns:1fr;}
