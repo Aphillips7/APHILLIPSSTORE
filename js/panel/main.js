@@ -9,6 +9,7 @@ import { renderSyncHistory, setSyncStatus } from './sync/estado-sync.js';
 import { forzarSyncTodo } from './sync/sync.js';
 
 import './state.js';
+import './exportar.js';
 import './nav.js';
 import './inicio.js';
 import './catalogo-admin.js';
