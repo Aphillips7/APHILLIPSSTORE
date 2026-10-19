@@ -748,6 +748,22 @@ if(location.hostname==='aphillips7.github.io'){
     <div class="card-title">Boletín <span id="boletin-badge" class="badge" style="display:none;margin-left:6px;"></span></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Quienes se suscribieron desde "Suscríbete al boletín" en el pie de la tienda. Reciben un correo de bienvenida con un enlace para darse de baja.</div>
     <div id="boletin-subs"></div>
+    <details class="inv-sec" style="margin-top:14px;">
+      <summary><span class="inv-sec-t">Escribir al boletín</span><span class="inv-sec-ayuda">un correo a todos los suscriptores</span><span class="inv-sec-n"></span></summary>
+      <div class="inv-sec-cuerpo">
+        <div class="field"><label>Asunto</label><input type="text" id="bol-asunto" maxlength="120" placeholder="Ej: Llegaron los nuevos Invicta Pro Diver" /></div>
+        <div class="field"><label>Texto</label><textarea id="bol-texto" rows="6" maxlength="3000" placeholder="Escribe el mensaje. Puedes usar varias líneas."></textarea></div>
+        <div class="grid-2">
+          <div class="field"><label>Texto del botón</label><input type="text" id="bol-boton" maxlength="40" placeholder="Ver los relojes" /></div>
+          <div class="field"><label>Enlace del botón <span style="font-weight:300;text-transform:none;letter-spacing:0;">— una página de la tienda</span></label><input type="url" id="bol-enlace" placeholder="https://aphillipsstore.com/invicta" /></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 6px;">
+          <button class="btn btn-outline" onclick="enviarBoletinPanel(true)">Enviarme una prueba</button>
+          <button class="btn btn-gold" onclick="enviarBoletinPanel(false)">Enviar a todos</button>
+        </div>
+        <div id="bol-envio-estado" style="font-size:12px;color:var(--muted);">La prueba llega a info@aphillipsstore.com. Cada correo lleva el enlace para darse de baja.</div>
+      </div>
+    </details>
   </div>
   <div class="card">
     <div class="card-title">Salud de la tienda <span id="salud-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>

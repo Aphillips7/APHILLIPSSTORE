@@ -41,6 +41,27 @@ function renderBoletin(){
   }).join('');
   cont.innerHTML = h;
 }
+// Enviar un correo a los suscriptores (o una prueba a info@). Pide confirmacion antes del envio real.
+async function enviarBoletinPanel(prueba){
+  var val = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var datos = { asunto: val('bol-asunto'), texto: val('bol-texto'), boton: val('bol-boton'), enlace: val('bol-enlace'), prueba: !!prueba };
+  var estado = document.getElementById('bol-envio-estado');
+  var aviso = function(t, color){ if(estado){ estado.textContent = t; estado.style.color = color || 'var(--muted)'; } };
+  if(!datos.asunto || !datos.texto){ aviso('Escribe el asunto y el texto.', 'var(--red)'); return; }
+  var n = activos().length;
+  if(!prueba){
+    if(!n){ aviso('Todavía no hay suscriptores.', 'var(--red)'); return; }
+    if(!confirm('¿Enviar "' + datos.asunto + '" a ' + n + ' suscriptor' + (n === 1 ? '' : 'es') + '? No se puede deshacer.')) return;
+  }
+  aviso(prueba ? 'Enviando la prueba...' : 'Enviando...');
+  try{
+    var u = firebase.auth().currentUser; if(!u) throw new Error('Inicia sesión de nuevo');
+    var r = await fetch(API + '/admin/boletin/enviar', { method: 'POST', headers: { 'Authorization': 'Bearer ' + await u.getIdToken(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
+    var d = {}; try{ d = await r.json(); }catch(e){}
+    if(!r.ok) throw new Error(d.error || ('Error ' + r.status));
+    aviso(prueba ? 'Prueba enviada a info@aphillipsstore.com. Revísala antes de enviar a todos.' : 'Listo: enviado a ' + d.enviados + ' suscriptor' + (d.enviados === 1 ? '' : 'es') + (d.fallidos ? ' (' + d.fallidos + ' con error)' : '') + '.', 'var(--green)');
+  }catch(e){ aviso('No se pudo enviar: ' + e.message, 'var(--red)'); }
+}
 async function copiarBoletin(){
   var txt = activos().map(function(s){ return s.email; }).join(', ');
   try{ await navigator.clipboard.writeText(txt); alert('Copiados ' + activos().length + ' correos.'); }
@@ -59,4 +80,4 @@ function descargarBoletin(){
 
 export { cargarBoletin, renderBoletin };
 // Usadas desde atributos onclick del HTML
-Object.assign(window, { copiarBoletin, descargarBoletin });
+Object.assign(window, { copiarBoletin, descargarBoletin, enviarBoletinPanel });
