@@ -122,9 +122,9 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
 
   <!-- Fila inferior: Categorías (Solo visible en computadora) -->
   <div class="header-bottom desktop-only">
-    <a href="#todos" onclick="irAGenero('',event)">RELOJES</a>
-    <a href="#hombre" onclick="irAGenero('hombre',event)">HOMBRE</a>
-    <a href="#mujer" onclick="irAGenero('mujer',event)">MUJER</a>
+    <a href="/relojes" onclick="irAGenero('',event)">RELOJES</a>
+    <a href="/relojes-hombre" onclick="irAGenero('hombre',event)">HOMBRE</a>
+    <a href="/relojes-mujer" onclick="irAGenero('mujer',event)">MUJER</a>
     <a href="#marcas" onclick="irASeccion('marcas',event)">MARCAS</a>
     <a href="#" class="wa-link" target="_blank" rel="noopener">CONTACTO</a>
   </div>
@@ -226,14 +226,14 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
 <!-- SECCION DE GENEROS -->
 <section id="generos" aria-label="Colecciones">
   <div class="gen-grid">
-    <a href="#hombre" class="gen-tile gen-hombre gen-reveal" onclick="irAGenero('hombre',event)">
+    <a href="/relojes-hombre" class="gen-tile gen-hombre gen-reveal" onclick="irAGenero('hombre',event)">
       <img src="img/genero-hombre.webp" alt="Reloj Bulova para hombre" loading="lazy" decoding="async">
       <div class="gen-info">
         <h2 class="gen-titulo">Relojes<br>de hombre</h2>
         <span class="hero-btn">Ver relojes</span>
       </div>
     </a>
-    <a href="#mujer" class="gen-tile gen-mujer gen-reveal" onclick="irAGenero('mujer',event)">
+    <a href="/relojes-mujer" class="gen-tile gen-mujer gen-reveal" onclick="irAGenero('mujer',event)">
       <img src="img/genero-mujer.webp" alt="Reloj Bulova para mujer" loading="lazy" decoding="async">
       <div class="gen-info">
         <h2 class="gen-titulo">Relojes<br>de mujer</h2>
@@ -248,15 +248,15 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
   <h2 class="marcas-titulo" id="marcas-titulo">Marcas</h2>
   <p class="marcas-sub">Cada marca cuenta una historia distinta. Encuentra la tuya.</p>
   <div class="marcas-grid">
-    <a href="#marca-invicta" class="marca-card gen-reveal" onclick="irAMarca('invicta',event)">
+    <a href="/invicta" class="marca-card gen-reveal" onclick="irAMarca('invicta',event)">
       <div class="marca-foto"><img src="img/marca-invicta.webp" alt="Reloj Invicta de acero sobre una piedra" loading="lazy" decoding="async"></div>
       <div class="marca-txt"><img class="marca-logo logo-invicta" src="img/marca-logo-invicta.png" alt="Invicta" loading="lazy"></div>
     </a>
-    <a href="#marca-bulova" class="marca-card gen-reveal" onclick="irAMarca('bulova',event)">
+    <a href="/bulova" class="marca-card gen-reveal" onclick="irAMarca('bulova',event)">
       <div class="marca-foto"><img src="img/marca-bulova.webp" alt="Reloj Bulova Marine Star dorado" loading="lazy" decoding="async"></div>
       <div class="marca-txt"><img class="marca-logo logo-bulova" src="img/marca-logo-bulova.png" alt="Bulova" loading="lazy"></div>
     </a>
-    <a href="#marca-technomarine" class="marca-card gen-reveal" onclick="irAMarca('technomarine',event)">
+    <a href="/technomarine" class="marca-card gen-reveal" onclick="irAMarca('technomarine',event)">
       <div class="marca-foto"><img src="img/marca-technomarine.jpg" alt="Reloj TechnoMarine con correas intercambiables" loading="lazy" decoding="async"></div>
       <div class="marca-txt"><img class="marca-logo logo-technomarine" src="img/marca-logo-technomarine.png" alt="TechnoMarine" loading="lazy"></div>
     </a>
@@ -388,17 +388,17 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
     <div class="pie-col">
       <button type="button" class="pie-col-btn" onclick="this.parentElement.classList.toggle('abierta')">Marcas<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg></button>
       <ul>
-        <li><a href="#marca-invicta" onclick="irAMarca('invicta',event)">Invicta</a></li>
-        <li><a href="#marca-bulova" onclick="irAMarca('bulova',event)">Bulova</a></li>
-        <li><a href="#marca-technomarine" onclick="irAMarca('technomarine',event)">TechnoMarine</a></li>
+        <li><a href="/invicta" onclick="irAMarca('invicta',event)">Invicta</a></li>
+        <li><a href="/bulova" onclick="irAMarca('bulova',event)">Bulova</a></li>
+        <li><a href="/technomarine" onclick="irAMarca('technomarine',event)">TechnoMarine</a></li>
       </ul>
     </div>
     <div class="pie-col">
       <button type="button" class="pie-col-btn" onclick="this.parentElement.classList.toggle('abierta')">Tienda<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg></button>
       <ul>
-        <li><a href="#hombre" onclick="irAGenero('hombre',event)">Relojes de hombre</a></li>
-        <li><a href="#mujer" onclick="irAGenero('mujer',event)">Relojes de mujer</a></li>
-        <li><a href="#todos" onclick="irAGenero('',event)">Todo el catálogo</a></li>
+        <li><a href="/relojes-hombre" onclick="irAGenero('hombre',event)">Relojes de hombre</a></li>
+        <li><a href="/relojes-mujer" onclick="irAGenero('mujer',event)">Relojes de mujer</a></li>
+        <li><a href="/relojes" onclick="irAGenero('',event)">Todo el catálogo</a></li>
         <li><a href="#" onclick="abrirFavoritos()">Mis favoritos</a></li>
       </ul>
     </div>
