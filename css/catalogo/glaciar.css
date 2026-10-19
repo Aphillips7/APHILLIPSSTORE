@@ -1,8 +1,8 @@
-  /* === PRUEBA: AZUL GLACIAR (#A7C4D6) COMO COLOR SECUNDARIO ===
-     Solo se aplica con la clase html.glaciar, que pone el script del <head> al abrir la tienda con
-     ?colores=glaciar (se recuerda en ese navegador; ?colores=antes la quita). Los clientes no la ven.
-     El negro y el blanco siguen siendo los protagonistas; el glaciar es uno solo (#A7C4D6) en detalles
-     y botones, siempre con el texto encima en negro (el texto nunca va en glaciar: no se leeria). */
+  /* === AZUL GLACIAR (#A7C4D6) COMO COLOR SECUNDARIO ===
+     Activo en toda la tienda: cada pagina lleva <html class="glaciar">. Para volver a los colores
+     anteriores basta con quitar esa clase. El negro y el blanco siguen siendo los protagonistas; el
+     glaciar es uno solo en detalles y botones, siempre con el texto encima en negro (el texto nunca
+     va en glaciar: no se leeria). */
   html.glaciar{
     --glaciar:#A7C4D6;
   }
