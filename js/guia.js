@@ -267,7 +267,7 @@
     else if(razon <= 1.1) v = ['grande', 'Grande', 'Se va a notar. Queda bien si te gustan los relojes con presencia, pero las asas llegan al borde de tu muñeca.'];
     else v = ['muy-grande', 'Muy grande', 'Las asas sobresalen de tu muñeca (línea roja). Te recomendamos un tamaño menor.'];
     $('gu-veredicto').innerHTML = '<span class="gu-pill '+v[0]+'">'+v[1]+'</span><p>'+v[2]+'</p><p class="gu-rec">Para tu muñeca de '+String(cm).replace('.', ',')+' cm te recomendamos relojes de <b>'+rec[0]+' a '+rec[1]+' mm</b>.</p>';
-    pintarSugeridos(rec);
+    pintarSugeridos();
     try{ localStorage.setItem('aphillips_muneca', String(cm)); }catch(e){}
   }
   function tarjeta(r){
@@ -286,10 +286,20 @@
     var abierto = b.parentElement.classList.toggle('todos');
     b.textContent = abierto ? 'Ver menos' : b.dataset.t;
   });
-  function pintarSugeridos(rec){
+  // relojes de la tienda del tamano elegido en el control; si no hay de esa medida exacta,
+  // los mas cercanos (hasta 2 mm de diferencia)
+  function pintarSugeridos(){
     var cont = $('gu-sugeridos'); if(!_catalogo.length){ cont.innerHTML = ''; return; }
-    var lista = _catalogo.filter(function(r){ var mm = parseFloat(r.mm); return mm >= rec[0] && mm <= rec[1] && r.estado !== 'vendido'; });
-    cont.innerHTML = lista.length ? fila(lista, '<h3>Relojes de la tienda en tu tamaño</h3>') : '';
+    var mmSel = parseFloat($('gu-reloj').value);
+    var activos = _catalogo.filter(function(r){ return r.estado !== 'vendido'; });
+    var lista = activos.filter(function(r){ return Math.round(parseFloat(r.mm)) === mmSel; }), titulo = 'Relojes de la tienda de ' + mmSel + ' mm';
+    if(!lista.length){
+      lista = activos.filter(function(r){ return Math.abs(parseFloat(r.mm) - mmSel) <= 2; })
+        .sort(function(a, b){ return Math.abs(parseFloat(a.mm) - mmSel) - Math.abs(parseFloat(b.mm) - mmSel); });
+      titulo = 'Relojes de la tienda cerca de ' + mmSel + ' mm';
+    }
+    cont.innerHTML = lista.length ? fila(lista, '<h3>' + titulo + '</h3>')
+      : '<h3>Relojes de la tienda de ' + mmSel + ' mm</h3><p class="gu-tip">Ahora no tenemos relojes de esta medida. Escríbenos y te ayudamos a conseguirlo.</p>';
   }
   function pintarTienda(){
     var grupos = [['Hasta 38 mm', 0, 38.9], ['39 a 42 mm', 39, 42.9], ['43 a 45 mm', 43, 45.9], ['46 mm o más', 46, 99]];
