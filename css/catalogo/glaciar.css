@@ -1,12 +1,10 @@
   /* === PRUEBA: AZUL GLACIAR (#A7C4D6) COMO COLOR SECUNDARIO ===
      Solo se aplica con la clase html.glaciar, que pone el script del <head> al abrir la tienda con
      ?colores=glaciar (se recuerda en ese navegador; ?colores=antes la quita). Los clientes no la ven.
-     El negro y el blanco siguen siendo los protagonistas: el glaciar va en detalles. Los botones de
-     compra se quedan negros y el texto nunca va en glaciar (es muy claro para leerse). */
+     El negro y el blanco siguen siendo los protagonistas; el glaciar es uno solo (#A7C4D6) en detalles
+     y botones, siempre con el texto encima en negro (el texto nunca va en glaciar: no se leeria). */
   html.glaciar{
     --glaciar:#A7C4D6;
-    --glaciar-suave:#EDF3F7;    /* fondos muy claros */
-    --glaciar-oscuro:#3C6E8F;   /* para lineas finas sobre blanco, donde el glaciar casi no se ve */
   }
 
   /* barra de arriba: glaciar con letras negras */
@@ -14,7 +12,7 @@
 
   /* texto seleccionado y foco del teclado */
   html.glaciar ::selection{background:var(--glaciar);color:var(--black);}
-  html.glaciar :focus-visible{outline-color:var(--glaciar-oscuro);}
+  html.glaciar :focus-visible{outline-color:var(--glaciar);}
 
   /* menu: subrayado glaciar al pasar el mouse */
   @media (hover:hover) and (pointer:fine){
@@ -22,8 +20,9 @@
   }
 
   /* filtros y orden elegidos: marca glaciar en vez de negra */
-  html.glaciar .flt-opt input:checked{background:var(--glaciar-oscuro);}
-  html.glaciar .ord-opt.on .ord-radio::after{background:var(--glaciar-oscuro);}
+  html.glaciar .flt-opt input:checked{background:var(--glaciar);}
+  html.glaciar .flt-opt input:checked::after{border-color:var(--black);}
+  html.glaciar .ord-opt.on .ord-radio::after{background:var(--glaciar);}
 
   /* seccion del reloj: los puntos del marco en glaciar sobre el negro */
   html.glaciar .hora{--hora-punto:rgba(167,196,214,.85);}
@@ -34,18 +33,17 @@
   html.glaciar .pie{border-top:3px solid var(--glaciar);}
 
   /* fondos suaves: notas de la guia, aviso del boletin, preguntas abiertas */
-  html.glaciar .gu-nota{background:var(--glaciar-suave);padding:10px 12px;border-left:3px solid var(--glaciar);}
+  html.glaciar .gu-nota{background:var(--glaciar);padding:10px 12px;border-left:3px solid var(--glaciar);}
   html.glaciar .bol-caja{border-top:4px solid var(--glaciar);}
-  html.glaciar .lg-indice a:active{background:var(--glaciar-suave);}
-  @media (hover:hover) and (pointer:fine){ html.glaciar .lg-indice a:hover{border-color:var(--glaciar-oscuro);background:var(--glaciar-suave);} }
+  html.glaciar .lg-indice a:active{background:var(--glaciar);}
+  @media (hover:hover) and (pointer:fine){ html.glaciar .lg-indice a:hover{border-color:var(--glaciar);background:var(--glaciar);} }
 
   /* ficha del reloj: la linea de puntos y los iconos de garantias con un toque glaciar */
-  html.glaciar .prod-gar svg{color:var(--glaciar-oscuro);}
+  html.glaciar .prod-gar svg{color:var(--glaciar);}
 
   /* "Avísame" activo y estado "Disponible" se quedan como estan (verde = disponible es una convencion) */
 
   /* --- mas presencia (segunda ronda) --- */
-  html.glaciar{--glaciar-medio:#D6E4EE;}
 
   /* encabezado: linea glaciar fina debajo */
   html.glaciar #site-header:not(.on-hero){box-shadow:inset 0 -1px 0 var(--glaciar);}
@@ -60,24 +58,19 @@
 
   /* etiquetas: "Nuevo" y las de destacados/buscador/favoritos */
   html.glaciar .card-nuevo{background:var(--glaciar);color:var(--black);}
-  html.glaciar .dest-badge{background:var(--glaciar-suave);color:var(--black);}
-  html.glaciar .bs-badge,html.glaciar .fav-badge{background:var(--glaciar-suave);color:var(--glaciar-oscuro);}
+  html.glaciar .dest-badge{background:var(--glaciar);color:var(--black);}
+  html.glaciar .bs-badge,html.glaciar .fav-badge{background:var(--glaciar);color:var(--black);}
 
-  /* titulos de seccion: la etiqueta pequena encima en glaciar oscuro */
-  html.glaciar .cat-eyebrow{color:var(--glaciar-oscuro);}
 
   /* pestanas y puntos de los carruseles (la regla de puntos queda negra) */
-  html.glaciar .dest-tab.on{border-bottom:2px solid var(--glaciar-oscuro);}
-  html.glaciar .dest-punto.on,html.glaciar .pf-punto.on{background:var(--glaciar-oscuro);}
+  html.glaciar .dest-tab.on{border-bottom:2px solid var(--glaciar);}
+  html.glaciar .dest-punto.on,html.glaciar .pf-punto.on{background:var(--glaciar);}
 
 
   /* ficha del reloj: iconos de especificaciones y el + de los desplegables */
-  html.glaciar .esp-ico{color:var(--glaciar-oscuro);}
-  html.glaciar .det-mas::before,html.glaciar .det-mas::after{background:var(--glaciar-oscuro);}
-  html.glaciar .det[open] .det-titulo{color:var(--glaciar-oscuro);}
+  html.glaciar .esp-ico{color:var(--glaciar);}
+  html.glaciar .det-mas::before,html.glaciar .det-mas::after{background:var(--glaciar);}
 
-  /* buscador: sugerencias al pasar el mouse */
-  html.glaciar .search-suggestions a:hover{color:var(--glaciar-oscuro);}
 
   /* pie: iconos y enlaces al pasar en glaciar */
   html.glaciar .pie-accion svg{color:var(--glaciar);}
@@ -93,3 +86,24 @@
 
   /* pie: titulos de las columnas (Marcas, Tienda, Ayuda, Legal) en glaciar sobre el negro */
   html.glaciar .pie-col-btn{color:var(--glaciar);}
+
+  /* === botones que eran negros con letras blancas: glaciar con letras negras ===
+     Un solo tono de glaciar en toda la tienda (#A7C4D6), y el texto encima siempre negro. */
+  html.glaciar .cta-btn.primario,
+  html.glaciar .flt-ver,
+  html.glaciar .card-cotizar,
+  html.glaciar .vista-sel button.on,
+  html.glaciar .chip.active,
+  html.glaciar .toggle-vista.on,
+  html.glaciar .gu-boton,
+  html.glaciar .gu-letra{background:var(--glaciar);border-color:var(--glaciar);color:var(--black) !important;}
+  @media (max-width:820px){ html.glaciar #btn-ordenar{background:var(--glaciar);color:var(--black);} }
+  @media (hover:hover) and (pointer:fine){
+    html.glaciar .ctl-btn:hover,
+    html.glaciar .fav-cerrar:hover,
+    html.glaciar .gu-ver-todos:hover{background:var(--glaciar);border-color:var(--glaciar);color:var(--black);}
+  }
+
+  /* otros azules que habia en la tienda pasan al mismo glaciar (o a negro si son numeros/texto) */
+  html.glaciar .flt-sec>button .mas{color:var(--glaciar);}
+  html.glaciar .fav-count,html.glaciar body.prod-abierto header .fav-count{color:var(--black) !important;}
