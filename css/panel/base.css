@@ -46,7 +46,7 @@
   #nav-sync-indicator{font-size:12px;font-family:inherit;letter-spacing:-0.01em;color:rgba(255,255,255,0.5);padding:0 8px;}
 
   /* PAGINA */
-  .page{display:none;padding:36px 24px 64px;max-width:940px;margin:0 auto;}
+  .page{display:none;padding:36px clamp(24px,3vw,48px) 64px;max-width:1600px;margin:0 auto;}   /* en computadora aprovecha el ancho */
   .page.active{display:block;animation:pageIn var(--slow) var(--ease);}
   @keyframes pageIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
   .section-title{font-family:'Satoshi',sans-serif;font-size:32px;font-weight:700;color:var(--black);letter-spacing:-0.03em;line-height:1.15;margin-bottom:6px;}

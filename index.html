@@ -394,75 +394,123 @@ if(location.hostname==='aphillips7.github.io'){
         <button class="btn btn-outline btn-sm" onclick="cancelarEdicion()">Cerrar</button>
       </div>
       <input type="hidden" id="inv-edit-index" value="" />
-      <div class="divider-text">Identificacion</div>
-      <div class="grid-2">
-        <div class="field"><label>Modelo</label><input type="text" id="inv-nombre" placeholder="Ej: Invicta Pro Diver 8926OB" /></div>
-        <div class="field"><label>Referencia</label>
-          <input type="text" id="inv-sku" placeholder="Ej: 8926OB..." />
+      <!-- Formulario por secciones: se abren y cierran al tocar el titulo; el numero dice cuantos datos tiene llenos -->
+      <details class="inv-sec" open>
+        <summary><span class="inv-sec-t">Identificacion</span><span class="inv-sec-ayuda">modelo, referencia, coleccion, genero</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="grid-2">
+            <div class="field"><label>Modelo</label><input type="text" id="inv-nombre" placeholder="Ej: Invicta Pro Diver 8926OB" /></div>
+            <div class="field"><label>Referencia</label><input type="text" id="inv-sku" placeholder="Ej: 8926OB..." /></div>
+            <div class="field"><label>Coleccion</label><input type="text" id="inv-coleccion" placeholder="Ej: Pro Diver, Bolt..." /></div>
+            <div class="field"><label>Genero</label><select id="inv-genero"><option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="unisex">Unisex</option></select></div>
+          </div>
         </div>
-        <div class="field"><label>Coleccion</label><input type="text" id="inv-coleccion" placeholder="Ej: Pro Diver, Bolt..." /></div>
-        <div class="field"><label>Genero</label><select id="inv-genero"><option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="unisex">Unisex</option></select></div>
-      </div>
-      <div class="divider-text">Especificaciones tecnicas</div>
-      <div class="field"><label>Pegar especificaciones <span style="font-weight:300;text-transform:none;letter-spacing:0;">— copia la tabla de la pagina de la marca y pegala aqui</span></label><textarea id="inv-ficha" rows="6" placeholder="Caja y esfera&#10;Tamaño de la caja: 48 mm&#10;Tipo de cristal: Fusion de llamas&#10;&#10;Banda&#10;Material: Acero inoxidable"></textarea><div class="ficha-acciones"><button type="button" class="btn btn-outline" onclick="ordenarFicha()">Ordenar y rellenar campos</button></div><div id="inv-ficha-vista" class="ficha-vista"></div></div>
-      <div class="grid-2">
-        <div class="field"><label>Diametro (mm)</label><input type="number" id="inv-mm" placeholder="Ej: 48" /></div>
-        <div class="field"><label>Material de caja</label><input type="text" id="inv-material-caja" placeholder="Ej: Acero inoxidable 316L" /></div>
-        <div class="field"><label>Correa / brazalete</label><input type="text" id="inv-material-correa" placeholder="Ej: Acero, silicona..." /></div>
-        <div class="field"><label>Color de esfera</label><input type="text" id="inv-color-esfera" placeholder="Ej: Azul, negro..." /></div>
-        <div class="field"><label>Movimiento</label><select id="inv-movimiento"><option value="">Seleccionar</option><option value="Cuarzo">Cuarzo</option><option value="Automatico">Automatico</option><option value="Cronografo cuarzo">Cronografo cuarzo</option><option value="Solar">Solar</option></select></div>
-        <div class="field"><label>Resistencia al agua</label><input type="text" id="inv-agua" placeholder="Ej: 200M, 100M..." /></div>
-        <div class="field"><label>Cristal</label><input type="text" id="inv-cristal" placeholder="Ej: Mineral, Zafiro..." /></div>
-        <div class="field"><label>Color / variante</label><input type="text" id="inv-color" placeholder="Ej: Dorado/negro..." /></div>
-        <div class="field"><label>Calibre</label><input type="text" id="inv-calibre" placeholder="Ej: IM-Q-011, NH35..." /></div>
-        <div class="field"><label>Tipo de corona</label><input type="text" id="inv-corona" placeholder="Ej: Pulsador, rosca..." /></div>
-        <div class="field"><label>Material del bisel</label><input type="text" id="inv-material-bisel" placeholder="Ej: Acero inoxidable" /></div>
-        <div class="field"><label>Color del bisel</label><input type="text" id="inv-color-bisel" placeholder="Ej: Negro, dorado..." /></div>
-        <div class="field"><label>Material de esfera</label><input type="text" id="inv-material-esfera" placeholder="Ej: Metal, nacar..." /></div>
-        <div class="field"><label>Ancho de correa</label><input type="text" id="inv-ancho-correa" placeholder="Ej: 26 mm" /></div>
-        <div class="field"><label>Largo de correa</label><input type="text" id="inv-largo-correa" placeholder="Ej: 215 mm" /></div>
-        <div class="field"><label>Color de correa</label><input type="text" id="inv-color-correa" placeholder="Ej: Dorado, plateado..." /></div>
-      </div>
-      <div class="field"><label>Descripcion <span style="font-weight:300;text-transform:none;letter-spacing:0;">— se muestra en el catalogo</span></label><textarea id="inv-descripcion" rows="4" placeholder="Ej: Reloj de buceo con movimiento automatico, bisel giratorio y esfera negra. Ideal para uso diario..."></textarea></div>
-      <div class="field"><label>Notas adicionales</label><textarea id="inv-notas" rows="2" placeholder="Caracteristicas especiales, edicion limitada..."></textarea></div>
-      <div class="field" style="display:flex;align-items:center;gap:9px;background:var(--bg2);padding:11px 14px;border-radius:var(--r-md);margin-bottom:14px;">
-        <input type="checkbox" id="inv-oculto-catalogo" style="width:16px;height:16px;accent-color:var(--black);cursor:pointer;flex-shrink:0;margin:0;" />
-        <label for="inv-oculto-catalogo" style="margin:0;cursor:pointer;color:var(--text);font-weight:400;">No mostrar en el catalogo publico (aunque este Disponible)</label>
-      </div>
-      <div class="divider-text">Trazabilidad (uso interno)</div>
-      <div class="grid-2">
-        <div class="field"><label>Numero de serie</label><input type="text" id="inv-serie" placeholder="Ej: SN-849213" /></div>
-        <div class="field"><label>Proveedor <span style="font-weight:300;text-transform:none;letter-spacing:0;">— no se muestra al cliente</span></label><input type="text" id="inv-proveedor" placeholder="Ej: Jomashop, Amazon, distribuidor..." /></div>
-      </div>
-      <div class="grid-2">
-        <div class="field"><label>Paqueteria <span style="font-weight:300;text-transform:none;letter-spacing:0;">— si esta en transito</span></label><input type="text" id="inv-paqueteria" placeholder="Ej: DHL, USPS, FedEx..." /></div>
-        <div class="field"><label>Numero de guia / tracking</label><input type="text" id="inv-tracking" placeholder="Ej: 1Z999AA10123456784" /></div>
-      </div>
-      <div class="field"><label>Fecha estimada de llegada</label><input type="date" id="inv-eta" /></div>
-      <div class="divider-text">Costos y precio</div>
-      <div class="grid-2">
-        <div class="field"><label>Costo unitario ($)</label><div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
-        <div class="field"><label>Gastos de importacion ($) <span style="font-weight:300;text-transform:none;letter-spacing:0;">— 0 si esta en transito</span></label><div class="currency-wrap"><input type="number" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
-      </div>
-      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
-        <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Costo total</div><div id="inv-preview-costo" style="font-family:'DM Mono',monospace;font-size:18px;">$0.00</div></div>
-        <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Margen estimado</div><div id="inv-preview-margen" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">--</div></div>
-        <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Ganancia estimada</div><div id="inv-preview-ganancia" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">--</div></div>
-      </div>
-      <div class="grid-2">
-        <div class="field"><label>Precio de venta objetivo ($)</label><div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
-        <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
-        <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="bajopedido">Bajo pedido</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
-      </div>
-<div class="divider-text">Fotos</div>
-      <div class="field">
-        <div class="inv-fotos-lista" id="inv-fotos-lista"><div class="inv-foto-vacia">Sin fotos</div></div>
-        <label class="btn btn-outline inv-fotos-btn" for="inv-foto-input">+ Agregar fotos</label>
-        <input type="file" id="inv-foto-input" accept="image/*" multiple onchange="subirFotos(this)" style="display:none;" /><label class="inv-fondo-op"><input type="checkbox" id="inv-quitar-fondo" checked /> Quitar fondo y centrar el reloj</label><button type="button" class="btn btn-outline inv-arreglar-btn" onclick="arreglarFotos()">Arreglar fotos ya subidas</button>
-        <input type="hidden" id="inv-foto" />
-        <input type="hidden" id="inv-foto-carpeta" />
-        <div id="inv-foto-status" style="font-size:11px;color:var(--muted);margin-top:8px;">Puedes elegir varias a la vez (camara o galeria). La primera es la principal; usa las flechas para cambiar el orden. Se suben a la nube, necesitas internet.</div>
-      </div>
+      </details>
+      <details class="inv-sec">
+        <summary><span class="inv-sec-t">Pegar ficha de la marca</span><span class="inv-sec-ayuda">rellena todo solo</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="field"><label>Pegar especificaciones <span style="font-weight:300;text-transform:none;letter-spacing:0;">— copia la tabla de la pagina de la marca y pegala aqui</span></label><textarea id="inv-ficha" rows="6" placeholder="Caja y esfera&#10;Tamaño de la caja: 48 mm&#10;Tipo de cristal: Fusion de llamas&#10;&#10;Banda&#10;Material: Acero inoxidable"></textarea><div class="ficha-acciones"><button type="button" class="btn btn-outline" onclick="ordenarFicha()">Ordenar y rellenar campos</button></div><div id="inv-ficha-vista" class="ficha-vista"></div></div>
+        </div>
+      </details>
+      <details class="inv-sec">
+        <summary><span class="inv-sec-t">Caja</span><span class="inv-sec-ayuda">tamano, material, cristal, bisel, agua</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="grid-2">
+            <div class="field"><label>Diametro (mm)</label><input type="number" id="inv-mm" placeholder="Ej: 48" /></div>
+            <div class="field"><label>Material de caja</label><input type="text" id="inv-material-caja" placeholder="Ej: Acero inoxidable 316L" /></div>
+            <div class="field"><label>Cristal</label><input type="text" id="inv-cristal" placeholder="Ej: Mineral, Zafiro..." /></div>
+            <div class="field"><label>Tipo de corona</label><input type="text" id="inv-corona" placeholder="Ej: Pulsador, rosca..." /></div>
+            <div class="field"><label>Material del bisel</label><input type="text" id="inv-material-bisel" placeholder="Ej: Acero inoxidable" /></div>
+            <div class="field"><label>Color del bisel</label><input type="text" id="inv-color-bisel" placeholder="Ej: Negro, dorado..." /></div>
+            <div class="field"><label>Resistencia al agua</label><input type="text" id="inv-agua" placeholder="Ej: 200M, 100M..." /></div>
+          </div>
+        </div>
+      </details>
+      <details class="inv-sec">
+        <summary><span class="inv-sec-t">Esfera y color</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="grid-2">
+            <div class="field"><label>Color de esfera</label><input type="text" id="inv-color-esfera" placeholder="Ej: Azul, negro..." /></div>
+            <div class="field"><label>Material de esfera</label><input type="text" id="inv-material-esfera" placeholder="Ej: Metal, nacar..." /></div>
+            <div class="field"><label>Color / variante</label><input type="text" id="inv-color" placeholder="Ej: Dorado/negro..." /></div>
+          </div>
+        </div>
+      </details>
+      <details class="inv-sec">
+        <summary><span class="inv-sec-t">Movimiento</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="grid-2">
+            <div class="field"><label>Movimiento</label><select id="inv-movimiento"><option value="">Seleccionar</option><option value="Cuarzo">Cuarzo</option><option value="Automatico">Automatico</option><option value="Cronografo cuarzo">Cronografo cuarzo</option><option value="Solar">Solar</option></select></div>
+            <div class="field"><label>Calibre</label><input type="text" id="inv-calibre" placeholder="Ej: IM-Q-011, NH35..." /></div>
+          </div>
+        </div>
+      </details>
+      <details class="inv-sec">
+        <summary><span class="inv-sec-t">Correa / brazalete</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="grid-2">
+            <div class="field"><label>Correa / brazalete</label><input type="text" id="inv-material-correa" placeholder="Ej: Acero, silicona..." /></div>
+            <div class="field"><label>Ancho de correa</label><input type="text" id="inv-ancho-correa" placeholder="Ej: 26 mm" /></div>
+            <div class="field"><label>Largo de correa</label><input type="text" id="inv-largo-correa" placeholder="Ej: 215 mm" /></div>
+            <div class="field"><label>Color de correa</label><input type="text" id="inv-color-correa" placeholder="Ej: Dorado, plateado..." /></div>
+          </div>
+        </div>
+      </details>
+      <details class="inv-sec">
+        <summary><span class="inv-sec-t">Descripcion y visibilidad</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="field"><label>Descripcion <span style="font-weight:300;text-transform:none;letter-spacing:0;">— se muestra en el catalogo</span></label><textarea id="inv-descripcion" rows="4" placeholder="Ej: Reloj de buceo con movimiento automatico, bisel giratorio y esfera negra. Ideal para uso diario..."></textarea></div>
+          <div class="field"><label>Notas adicionales</label><textarea id="inv-notas" rows="2" placeholder="Caracteristicas especiales, edicion limitada..."></textarea></div>
+          <div class="field" style="display:flex;align-items:center;gap:9px;background:var(--bg2);padding:11px 14px;border-radius:var(--r-md);margin-bottom:14px;">
+          <input type="checkbox" id="inv-oculto-catalogo" style="width:16px;height:16px;accent-color:var(--black);cursor:pointer;flex-shrink:0;margin:0;" />
+          <label for="inv-oculto-catalogo" style="margin:0;cursor:pointer;color:var(--text);font-weight:400;">No mostrar en el catalogo publico (aunque este Disponible)</label>
+          </div>
+        </div>
+      </details>
+      <details class="inv-sec">
+        <summary><span class="inv-sec-t">Trazabilidad</span><span class="inv-sec-ayuda">uso interno</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="grid-2">
+            <div class="field"><label>Numero de serie</label><input type="text" id="inv-serie" placeholder="Ej: SN-849213" /></div>
+            <div class="field"><label>Proveedor <span style="font-weight:300;text-transform:none;letter-spacing:0;">— no se muestra al cliente</span></label><input type="text" id="inv-proveedor" placeholder="Ej: Jomashop, Amazon, distribuidor..." /></div>
+            <div class="field"><label>Paqueteria <span style="font-weight:300;text-transform:none;letter-spacing:0;">— si esta en transito</span></label><input type="text" id="inv-paqueteria" placeholder="Ej: DHL, USPS, FedEx..." /></div>
+            <div class="field"><label>Numero de guia / tracking</label><input type="text" id="inv-tracking" placeholder="Ej: 1Z999AA10123456784" /></div>
+          </div>
+          <div class="field"><label>Fecha estimada de llegada</label><input type="date" id="inv-eta" /></div>
+        </div>
+      </details>
+      <details class="inv-sec" open>
+        <summary><span class="inv-sec-t">Costos, precio y estado</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="grid-2">
+            <div class="field"><label>Costo unitario ($)</label><div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label>Gastos de importacion ($) <span style="font-weight:300;text-transform:none;letter-spacing:0;">— 0 si esta en transito</span></label><div class="currency-wrap"><input type="number" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+          <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Costo total</div><div id="inv-preview-costo" style="font-family:'DM Mono',monospace;font-size:18px;">$0.00</div></div>
+          <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Margen estimado</div><div id="inv-preview-margen" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">--</div></div>
+          <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Ganancia estimada</div><div id="inv-preview-ganancia" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">--</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Precio de venta objetivo ($)</label><div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="bajopedido">Bajo pedido</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
+          </div>
+        </div>
+      </details>
+      <details class="inv-sec" open>
+        <summary><span class="inv-sec-t">Fotos</span><span class="inv-sec-n"></span></summary>
+        <div class="inv-sec-cuerpo">
+          <div class="field">
+          <div class="inv-fotos-lista" id="inv-fotos-lista"><div class="inv-foto-vacia">Sin fotos</div></div>
+          <label class="btn btn-outline inv-fotos-btn" for="inv-foto-input">+ Agregar fotos</label>
+          <input type="file" id="inv-foto-input" accept="image/*" multiple onchange="subirFotos(this)" style="display:none;" /><label class="inv-fondo-op"><input type="checkbox" id="inv-quitar-fondo" checked /> Quitar fondo y centrar el reloj</label><button type="button" class="btn btn-outline inv-arreglar-btn" onclick="arreglarFotos()">Arreglar fotos ya subidas</button>
+          <input type="hidden" id="inv-foto" />
+          <input type="hidden" id="inv-foto-carpeta" />
+          <div id="inv-foto-status" style="font-size:11px;color:var(--muted);margin-top:8px;">Puedes elegir varias a la vez (camara o galeria). La primera es la principal; usa las flechas para cambiar el orden. Se suben a la nube, necesitas internet.</div>
+          </div>
+        </div>
+      </details>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-gold" onclick="agregarProducto()" id="inv-submit-btn">Registrar unidad</button>
         <button class="btn btn-outline" onclick="cancelarEdicion()" id="inv-cancel-btn" style="display:none;">Cancelar edicion</button>
