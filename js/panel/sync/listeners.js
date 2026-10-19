@@ -4,6 +4,7 @@ import { renderCatalogoAdmin } from '../catalogo-admin.js';
 import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
 import { cargarCuentasWeb, renderCuentasWeb } from '../clientes/cuentas-web.js';
 import { cargarBoletin } from '../clientes/boletin.js';
+import { cargarSalud } from '../clientes/salud.js';
 import { renderContenido, renderIdeas } from '../contenido.js';
 import { renderAnalisis } from '../finanzas/analisis.js';
 import { renderFinanzas } from '../finanzas/finanzas.js';
@@ -62,6 +63,7 @@ function iniciarListenersFirebase(){
   try{ cargarRespaldosNube(); }catch(e){}
   try{ cargarCuentasWeb(); }catch(e){}
   try{ cargarBoletin(); }catch(e){}
+  try{ cargarSalud(); }catch(e){}
   if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(document.hidden) return; cargarMetricasCloudflare(); try{ cargarCuentasWeb(); }catch(e){} try{ cargarBoletin(); }catch(e){} }, 120000);
 }
 
