@@ -1,0 +1,52 @@
+  /* === MASCOTA: asistente flotante (reemplaza al boton de WhatsApp) === */
+  .mascota{--masc-glaciar:#A7C4D6;position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:145;display:flex;flex-direction:column;align-items:flex-end;pointer-events:none;}
+  .mascota > *{pointer-events:auto;}
+  .masc-boton{position:relative;width:78px;height:108px;padding:0;border:none;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .masc-boton:focus-visible{outline:2px solid var(--black);outline-offset:2px;border-radius:12px;}
+  .masc-flota{position:absolute;left:0;right:0;top:0;bottom:8px;display:block;animation:mascFlota 3.4s ease-in-out infinite;will-change:transform;}
+  .masc-svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 0 1.2px rgba(255,255,255,.95)) drop-shadow(0 5px 7px rgba(9,9,11,.22));}
+  .masc-sombra{position:absolute;left:50%;bottom:0;width:38px;height:7px;margin-left:-19px;border-radius:50%;background:rgba(9,9,11,.16);animation:mascSombra 3.4s ease-in-out infinite;}
+  @keyframes mascFlota{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+  @keyframes mascSombra{0%,100%{transform:scaleX(1);opacity:1;}50%{transform:scaleX(.78);opacity:.6;}}
+
+  /* saludo con la mano cada tanto, y parpadeo */
+  .masc-saludo{transform-box:view-box;transform-origin:28px 82px;animation:mascSaluda 7s ease-in-out infinite;}
+  @keyframes mascSaluda{0%,70%,100%{transform:rotate(0);}74%{transform:rotate(14deg);}78%{transform:rotate(-6deg);}82%{transform:rotate(14deg);}86%{transform:rotate(-4deg);}90%{transform:rotate(0);}}
+  .masc-ojos{transform-box:view-box;transform-origin:60px 70px;animation:mascParpadeo 5.5s infinite;}
+  @keyframes mascParpadeo{0%,93%,100%{transform:scaleY(1);}95%{transform:scaleY(.12);}}
+  @media (hover:hover) and (pointer:fine){
+    .masc-boton:hover .masc-flota{animation-play-state:paused;transform:translateY(-4px) rotate(-4deg);transition:transform .25s var(--ease);}
+  }
+  .masc-boton:active .masc-flota{transform:scale(.94);}
+  .mascota.abierta .masc-saludo{animation:none;transform:rotate(14deg);}
+
+  /* globito "¿Te ayudo a elegir?" */
+  .masc-burbuja{position:relative;margin:0 10px 4px 0;padding:9px 13px;background:var(--masc-glaciar);color:var(--black);font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.02em;border-radius:12px 12px 2px 12px;box-shadow:0 6px 18px rgba(9,9,11,.14);white-space:nowrap;opacity:0;transform:translateY(6px) scale(.96);transform-origin:bottom right;transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
+  .masc-burbuja.on{opacity:1;transform:none;}
+
+  /* mini ventana de opciones */
+  .masc-panel{width:min(330px,calc(100vw - 24px));margin-bottom:8px;background:#fff;border:1px solid var(--border2);border-radius:14px;box-shadow:0 18px 44px -10px rgba(9,9,11,.28),0 4px 12px rgba(9,9,11,.08);overflow:hidden;opacity:0;transform:translateY(10px) scale(.97);transform-origin:bottom right;transition:opacity .2s var(--ease),transform .22s var(--ease);}
+  .masc-panel.on{opacity:1;transform:none;}
+  .masc-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 16px 12px 18px;background:var(--masc-glaciar);color:var(--black);}
+  .masc-cab b{display:block;font-family:var(--font-titulo);font-size:16px;font-weight:800;letter-spacing:.01em;text-transform:uppercase;line-height:1.2;}
+  .masc-cab span{display:block;margin-top:3px;font-size:var(--fs-etiqueta);color:#2c3a44;}
+  .masc-x{flex:none;width:30px;height:30px;margin:-4px -6px 0 0;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--black);cursor:pointer;border-radius:50%;}
+  .masc-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;}
+  .masc-x:hover{background:rgba(9,9,11,.08);}
+  .masc-ops{display:flex;flex-direction:column;padding:6px 0;}
+  .masc-op{display:flex;align-items:center;gap:14px;width:100%;padding:13px 16px 13px 18px;border:none;background:none;font-family:inherit;text-align:left;color:var(--black);cursor:pointer;transition:background var(--fast) var(--ease);}
+  .masc-op + .masc-op{border-top:1px solid var(--border);}
+  .masc-op-ico{flex:none;width:38px;height:38px;border-radius:50%;background:var(--masc-glaciar);display:flex;align-items:center;justify-content:center;}
+  .masc-op-ico svg{width:19px;height:19px;fill:none;stroke:var(--black);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+  .masc-op-txt{flex:1;min-width:0;}
+  .masc-op-txt b{display:block;font-size:13px;font-weight:600;letter-spacing:.01em;}
+  .masc-op-txt small{display:block;margin-top:2px;font-size:var(--fs-etiqueta);color:var(--gris-texto);}
+  .masc-op-flecha{flex:none;width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform var(--fast) var(--ease);}
+  @media (hover:hover) and (pointer:fine){ .masc-op:hover{background:#f4f7f9;} .masc-op:hover .masc-op-flecha{transform:translateX(3px);} }
+  .masc-op:focus-visible{outline:2px solid var(--black);outline-offset:-2px;}
+
+  @media (min-width:640px){ .mascota{right:22px;bottom:18px;} .masc-boton{width:94px;height:130px;} }
+  @media (prefers-reduced-motion:reduce){
+    .masc-flota,.masc-sombra,.masc-saludo,.masc-ojos{animation:none;}
+    .masc-panel,.masc-burbuja{transition:none;}
+  }
