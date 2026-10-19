@@ -75,7 +75,8 @@ const SVG = `
   <path d="M45.9 52.7 L49 54.2" stroke="#A7C4D6" stroke-width="1.1" stroke-linecap="round"/>
   <path d="M79.9 51 L76.4 52.7" stroke="#A7C4D6" stroke-width="1.1" stroke-linecap="round"/>
   <circle cx="60" cy="60" r="2.1" fill="#18181b"/><circle cx="60" cy="60" r=".8" fill="#A7C4D6"/>
-  <!-- ojos (parpadean) -->
+  <!-- cara normal: ojos que parpadean y sonrisa -->
+  <g class="masc-cara masc-cara-normal">
   <g class="masc-ojos">
     <ellipse cx="51" cy="71" rx="3.3" ry="4.2" fill="#18181b"/><ellipse cx="69" cy="71" rx="3.3" ry="4.2" fill="#18181b"/>
     <circle cx="52.2" cy="69.4" r="1.2" fill="#fff"/><circle cx="70.2" cy="69.4" r="1.2" fill="#fff"/>
@@ -84,6 +85,28 @@ const SVG = `
   <ellipse cx="45" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".55"/>
   <ellipse cx="75" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".55"/>
   <path d="M54 80 Q60 85.6 66 80" fill="none" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/>
+  </g>
+  <!-- guino: un ojo cerrado y sonrisa de lado -->
+  <g class="masc-cara masc-cara-guino">
+    <ellipse cx="51" cy="71" rx="3.3" ry="4.2" fill="#18181b"/><circle cx="52.2" cy="69.4" r="1.2" fill="#fff"/>
+    <path d="M65.6 71.6 Q69 68.2 72.4 71.6" fill="none" stroke="#18181b" stroke-width="1.9" stroke-linecap="round"/>
+    <ellipse cx="45" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".8"/><ellipse cx="75" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".8"/>
+    <path d="M53.5 80.5 Q61 86.5 67.5 79" fill="none" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/>
+  </g>
+  <!-- feliz: ojos en arco y sonrisa abierta -->
+  <g class="masc-cara masc-cara-feliz">
+    <path d="M47.6 72 Q51 67.6 54.4 72 M65.6 72 Q69 67.6 72.4 72" fill="none" stroke="#18181b" stroke-width="1.9" stroke-linecap="round"/>
+    <ellipse cx="45" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6" opacity=".85"/><ellipse cx="75" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6" opacity=".85"/>
+    <path d="M53.6 79 Q60 80.4 66.4 79 Q65.4 87 60 87 Q54.6 87 53.6 79 Z" fill="#18181b"/>
+    <path d="M56.6 84.6 Q60 82.8 63.4 84.6 Q62.4 86.6 60 86.6 Q57.6 86.6 56.6 84.6 Z" fill="#A7C4D6"/>
+  </g>
+  <!-- sorpresa: ojos grandes y boca en "o" -->
+  <g class="masc-cara masc-cara-sorpresa">
+    <circle cx="51" cy="70.6" r="4.4" fill="#fff" stroke="#18181b" stroke-width="1.5"/><circle cx="69" cy="70.6" r="4.4" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+    <circle cx="51.4" cy="71" r="2.3" fill="#18181b"/><circle cx="69.4" cy="71" r="2.3" fill="#18181b"/>
+    <circle cx="52.2" cy="70.1" r=".7" fill="#fff"/><circle cx="70.2" cy="70.1" r=".7" fill="#fff"/>
+    <ellipse cx="60" cy="82.6" rx="2.6" ry="3.1" fill="#18181b"/>
+  </g>
   <!-- moño -->
   <g class="masc-mono">
     <path d="M60 101 L50.5 96.5 Q48.5 101 50.5 105.5 Z M60 101 L69.5 96.5 Q71.5 101 69.5 105.5 Z" fill="#09090b" stroke="#09090b" stroke-width="1" stroke-linejoin="round"/>
@@ -154,7 +177,7 @@ function crear(){
     '</div>' +
     '<div class="masc-burbuja" aria-hidden="true">¿Te ayudo a elegir?</div>' +
     '<button type="button" class="masc-boton" aria-label="Asistente: ¿en qué te ayudo?" aria-expanded="false" aria-controls="masc-panel">' +
-      '<span class="masc-flota">' + SVG + '</span><span class="masc-sombra"></span></button>';
+      '<span class="masc-flota"><span class="masc-entra">' + SVG + '</span></span><span class="masc-sombra"></span></button>';
   document.body.appendChild(_raiz);
   _panel = _raiz.querySelector('.masc-panel');
   _boton = _raiz.querySelector('.masc-boton');
@@ -180,6 +203,51 @@ function crear(){
   }
 }
 
+// ---------- gestos al cambiar de seccion ----------
+// Cada vez que el cliente pasa a otra seccion (portada, un listado, una marca) o abre un reloj, la
+// mascota vuelve a entrar con un saltito (o un giro al abrir un reloj) y pone una cara por unos segundos.
+let _clave = '', _tCara = 0, _tRev = 0;
+function claveVista(){
+  var b = document.body;
+  if(b.classList.contains('prod-abierto')){ var n = document.getElementById('modal-nombre'); return 'reloj:' + (n ? n.textContent : ''); }
+  if(b.classList.contains('vista-catalogo')){ var t = document.getElementById('cat-titulo'); return 'cat:' + (t ? t.textContent : ''); }
+  return 'inicio';
+}
+function reaccionar(entrada, cara, saluda){
+  if(_abierta) return;
+  var e = _raiz.querySelector('.masc-entra');
+  _raiz.classList.remove('entra-salto', 'entra-giro', 'saluda');
+  void e.offsetWidth;   // reinicia la animacion aunque sea la misma
+  _raiz.classList.add('entra-' + entrada);
+  if(saluda) _raiz.classList.add('saluda');
+  _raiz.dataset.cara = cara;
+  clearTimeout(_tCara); clearTimeout(_tRev);
+  _tCara = setTimeout(function(){ delete _raiz.dataset.cara; }, 2600);
+  _tRev = setTimeout(function(){ _raiz.classList.remove('entra-salto', 'entra-giro', 'saluda'); }, 1400);
+}
+function revisarVista(){
+  var c = claveVista();
+  if(c === _clave) return;
+  var antes = _clave; _clave = c;
+  if(!antes) return;                                        // primera lectura al cargar
+  if(c.indexOf('reloj:') === 0) reaccionar('giro', 'sorpresa', false);
+  else if(antes.indexOf('reloj:') === 0) reaccionar('salto', 'guino', false);   // vuelve de un reloj
+  else if(c === 'inicio') reaccionar('salto', 'feliz', true);
+  else reaccionar('salto', Math.random() < .5 ? 'guino' : 'feliz', Math.random() < .5);
+}
+function vigilarVistas(){
+  var t = 0;
+  var programar = function(){ clearTimeout(t); t = setTimeout(revisarVista, 150); };
+  new MutationObserver(programar).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  var tit = document.getElementById('cat-titulo');
+  if(tit) new MutationObserver(programar).observe(tit, { childList: true, characterData: true, subtree: true });
+  document.addEventListener('reloj-abierto', programar);
+  _clave = claveVista();
+  // al cargar la pagina entra con un saltito y sonriendo
+  setTimeout(function(){ reaccionar('salto', 'feliz', true); }, 500);
+}
+
 crear();
+vigilarVistas();
 
 export { abrir as abrirMascota, cerrarPanel as cerrarMascota };

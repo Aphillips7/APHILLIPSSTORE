@@ -45,8 +45,24 @@
   @media (hover:hover) and (pointer:fine){ .masc-op:hover{background:#f4f7f9;} .masc-op:hover .masc-op-flecha{transform:translateX(3px);} }
   .masc-op:focus-visible{outline:2px solid var(--black);outline-offset:-2px;}
 
+  /* caras: la normal por defecto; data-cara en .mascota muestra otra por unos segundos */
+  .masc-cara{display:none;}
+  .mascota:not([data-cara]) .masc-cara-normal,
+  .mascota[data-cara="guino"] .masc-cara-guino,
+  .mascota[data-cara="feliz"] .masc-cara-feliz,
+  .mascota[data-cara="sorpresa"] .masc-cara-sorpresa{display:inline;}
+
+  /* entrada al cambiar de seccion: saltito con rebote, o un giro al abrir un reloj */
+  .masc-entra{display:block;width:100%;height:100%;transform-origin:50% 90%;}
+  .mascota.entra-salto .masc-entra{animation:mascEntraSalto .8s cubic-bezier(.3,1.4,.5,1) both;}
+  .mascota.entra-giro .masc-entra{animation:mascEntraGiro .9s var(--ease) both;}
+  @keyframes mascEntraSalto{0%{transform:translateY(46px) scale(.45) rotate(-16deg);opacity:0;}55%{transform:translateY(-12px) scale(1.06) rotate(6deg);opacity:1;}78%{transform:translateY(2px) scale(.97) rotate(-3deg);}100%{transform:none;opacity:1;}}
+  @keyframes mascEntraGiro{0%{transform:translateY(0) rotateY(0);}40%{transform:translateY(-16px) rotateY(180deg);}80%{transform:translateY(-4px) rotateY(360deg);}100%{transform:none;}}
+  .mascota.saluda .masc-saludo{animation:mascSaludaRapido 1.3s ease-in-out;}
+  @keyframes mascSaludaRapido{0%,100%{transform:rotate(0);}15%,45%,75%{transform:rotate(18deg);}30%,60%,90%{transform:rotate(-8deg);}}
+
   @media (min-width:640px){ .mascota{right:22px;bottom:18px;} .masc-boton{width:94px;height:130px;} }
   @media (prefers-reduced-motion:reduce){
-    .masc-flota,.masc-sombra,.masc-saludo,.masc-ojos{animation:none;}
+    .masc-flota,.masc-sombra,.masc-saludo,.masc-ojos,.masc-entra{animation:none !important;}
     .masc-panel,.masc-burbuja{transition:none;}
   }
