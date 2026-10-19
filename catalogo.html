@@ -445,7 +445,10 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
             <a class="prod-guia" id="modal-guia" href="guia-de-tamanos" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="2" y="8" width="20" height="8" rx="1"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/></svg>¿Qué tamaño me queda? Ver guía</a>
             <div class="prod-ref" id="modal-sub"></div>
           </div>
+          <div class="prod-acciones-top">
+          <button type="button" class="prod-compartir" id="modal-compartir" aria-label="Compartir este reloj" title="Compartir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
           <button type="button" class="btn-favorito prod-fav" id="modal-fav" aria-label="Guardar en favoritos"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
         </div>
         <div class="prod-precio" id="modal-precio"></div>
         <a class="btn-wa" id="modal-wa" href="#" target="_blank" rel="noopener" onclick="confirmarWa(this,event)">

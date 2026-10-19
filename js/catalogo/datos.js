@@ -21,7 +21,9 @@ function aplicar(lista){
   if(json === _ultimoJson) return;          // sin cambios: no se vuelve a dibujar
   _ultimoJson = json;
   relojes = lista.slice();
-  relojes.forEach(function(r){ if(/^cuarzo japon[eé]s$/i.test(r.movimiento||'')) r.movimiento = 'Cuarzo'; });
+  // el panel guarda el movimiento sin acentos (valores del selector): aqui se muestra bien escrito
+  var MOVIMIENTOS = { 'cuarzo japones': 'Cuarzo', 'cuarzo japonés': 'Cuarzo', 'automatico': 'Automático', 'cronografo cuarzo': 'Cronógrafo de cuarzo' };
+  relojes.forEach(function(r){ var m = MOVIMIENTOS[String(r.movimiento || '').trim().toLowerCase()]; if(m) r.movimiento = m; });
   relojes.sort(function(a,b){ return (b._ts||0)-(a._ts||0); });
   render();
   if(!_deepLinkHandled){
@@ -30,7 +32,7 @@ function aplicar(lista){
   }
 }
 function errorCarga(){
-  document.getElementById('grid').innerHTML = '<div class="empty" style="grid-column:1/-1;"><span>&#9906;</span>No se pudo cargar el catalogo. Revisa tu conexion.</div>';
+  document.getElementById('grid').innerHTML = '<div class="empty" style="grid-column:1/-1;"><span>&#9906;</span>No se pudo cargar el catálogo. Revisa tu conexión.</div>';
 }
 
 async function pedirCloudflare(){

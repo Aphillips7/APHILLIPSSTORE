@@ -48,7 +48,7 @@ function renderListaFavoritos(){
   var cuenta = document.getElementById('fav-cuenta');
   if(cuenta) cuenta.textContent = items.length ? '('+items.length+' producto'+(items.length===1?'':'s')+')' : '';
   if(!items.length){
-    cont.innerHTML = '<div class="fav-vacio">Aun no has guardado relojes. Toca el corazon en cualquier reloj para guardarlo aqui, y luego consulta por varios de una sola vez.</div>';
+    cont.innerHTML = '<div class="fav-vacio">Aún no has guardado relojes. Toca el corazón en cualquier reloj para guardarlo aquí, y luego consulta por varios de una sola vez.</div>';
     if(btnWa) btnWa.style.display = 'none';
     if(foot) foot.style.display = 'none';
     return;
