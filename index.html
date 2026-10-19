@@ -725,6 +725,14 @@ if(location.hostname==='aphillips7.github.io'){
       <button class="btn btn-outline" style="color:var(--red);border-color:var(--red);" onclick="borrarYRecargarDesdeNube()">Borrar datos locales y recargar desde la nube</button>
     </div>
   </div>
+  <div class="card">
+    <div class="card-title">Exportar a Excel</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Descarga tu inventario o tus movimientos en un archivo CSV que se abre en Excel o Google Sheets (para contabilidad o un conteo del inventario).</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="exportarInventarioCSV()">Inventario (CSV)</button>
+      <button class="btn btn-outline" onclick="exportarMovimientosCSV()">Movimientos (CSV)</button>
+    </div>
+  </div>
 </div>
 
 <!-- CLIENTES -->
