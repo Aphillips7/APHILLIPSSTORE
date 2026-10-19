@@ -56,7 +56,7 @@ const JWKS_URL = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken
 // Unicos campos que pueden salir al publico (igual que camposPublicos() en js/products.js).
 // Todo lo demas (costo, proveedor, margen, serie, tracking...) se descarta aqui aunque llegue.
 const CAMPOS_PUBLICOS = ['id', 'nombre', 'sku', 'coleccion', 'genero', 'mm', 'materialCaja', 'materialCorrea',
-  'colorEsfera', 'movimiento', 'agua', 'cristal', 'color', 'ficha', 'calibre', 'corona', 'materialBisel', 'colorBisel', 'materialEsfera', 'anchoCorrea', 'largoCorrea', 'colorCorrea', 'notas', 'descripcion', 'eta', 'precio', 'foto', 'fotos',
+  'colorEsfera', 'movimiento', 'agua', 'cristal', 'color', 'ficha', 'calibre', 'l2l', 'grosor', 'corona', 'materialBisel', 'colorBisel', 'materialEsfera', 'anchoCorrea', 'largoCorrea', 'colorCorrea', 'notas', 'descripcion', 'eta', 'precio', 'foto', 'fotos',
   'estado', '_ts', 'fotoCompartir'];
 const CLAVE_CATALOGO = 'publico/catalogo.json';
 const URL_CACHE_CATALOGO = 'https://api.aphillipsstore.com/__cache/catalogo';

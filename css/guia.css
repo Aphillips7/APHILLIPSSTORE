@@ -14,6 +14,7 @@
   .gu-control input[type=range]{width:100%;accent-color:var(--black);height:28px;cursor:pointer;}
   .gu-veredicto p{font-size:14px;line-height:1.55;color:#3a3a40;margin-top:8px;}
   .gu-veredicto .gu-rec{padding-top:10px;border-top:1px solid var(--border);}
+  .gu-nota{font-size:13px !important;line-height:1.55 !important;color:var(--gris-texto) !important;margin-top:8px !important;}
   .gu-pill{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;color:#fff;background:#3f3f46;}
   .gu-pill.discreto{background:#475569;} .gu-pill.ideal{background:#067647;} .gu-pill.grande{background:#b98900;} .gu-pill.muy-grande{background:#b42318;}
 

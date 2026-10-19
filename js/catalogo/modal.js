@@ -93,7 +93,7 @@ function iconoGrupo(t){
 // Los campos del panel mandan (si se corrige uno a mano, se ve lo corregido); de la ficha pegada
 // solo se agregan los datos que no tienen campo propio (ej. grosor, tipo de cierre), cada uno en el
 // grupo que le toca. Devuelve { movimiento, caja, esfera, correa, info } con filas HTML.
-var RE_CON_CAMPO = /^(tamano de la caja|diametro|calibre|tipo de corona|corona|material del bisel|color del bisel|material de la esfera|material de la caja|color de la esfera|color de esfera|tipo de cristal|cristal|resistencia al agua|tipo de movimiento|movimiento)$/;
+var RE_CON_CAMPO = /^(tamano de la caja|de asa a asa|grosor de la caja|grosor|diametro|calibre|tipo de corona|corona|material del bisel|color del bisel|material de la esfera|material de la caja|color de la esfera|color de esfera|tipo de cristal|cristal|resistencia al agua|tipo de movimiento|movimiento)$/;
 var RE_CON_CAMPO_CORREA = /^(tamano|ancho|longitud|largo|tono|color|material)$/;
 function extrasFicha(r){
   var ex = { movimiento:'', caja:'', esfera:'', correa:'', info:'' };
@@ -265,7 +265,7 @@ function abrir(id){
   var ex = extrasFicha(r);
   var especificaciones =
     grupo('movimiento', 'Movimiento', spec('Tipo', esc(r.movimiento)) + spec('Calibre', esc(r.calibre)) + ex.movimiento) +
-    grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Corona', esc(r.corona)) + spec('Material del bisel', esc(r.materialBisel)) + spec('Color del bisel', esc(r.colorBisel)) + spec('Resistencia al agua', esc(r.agua)) + ex.caja) +
+    grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('De asa a asa', r.l2l ? esc(r.l2l)+' mm' : '') + spec('Grosor', r.grosor ? esc(r.grosor)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Corona', esc(r.corona)) + spec('Material del bisel', esc(r.materialBisel)) + spec('Color del bisel', esc(r.colorBisel)) + spec('Resistencia al agua', esc(r.agua)) + ex.caja) +
     grupo('esfera', 'Esfera', spec('Color', esc(r.colorEsfera)) + spec('Material', esc(r.materialEsfera)) + ex.esfera) +
     grupo('correa', 'Correa / Brazalete', spec('Material', esc(r.materialCorrea)) + spec('Color', esc(r.colorCorrea)) + spec('Ancho', esc(r.anchoCorrea)) + spec('Largo', esc(r.largoCorrea)) + ex.correa) +
     grupo('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero) + spec('Color', esc(r.color)) + ex.info);
@@ -292,7 +292,7 @@ function abrir(id){
   document.getElementById('modal-wa').href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent(msg);
   // guia de tamanos con el tamano de este reloj ya puesto
   var guia = document.getElementById('modal-guia');
-  if(guia){ guia.hidden = !r.mm; guia.href = 'guia-de-tamanos' + (parseFloat(r.mm) ? '?mm=' + encodeURIComponent(parseFloat(r.mm)) : ''); }
+  if(guia){ guia.hidden = !r.mm; guia.href = 'guia-de-tamanos' + (parseFloat(r.mm) ? '?mm=' + encodeURIComponent(parseFloat(r.mm)) + '&id=' + encodeURIComponent(r.id) : ''); }
   pintarParecidos(r);
   // cuenta.js pinta el boton "Avisame" de este reloj
   document.dispatchEvent(new CustomEvent('reloj-abierto', { detail: r }));

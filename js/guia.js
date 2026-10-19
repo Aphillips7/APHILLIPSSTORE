@@ -237,13 +237,18 @@
   })();
 
   // ---------- probador: muneca + reloj a escala ----------
-  var _catalogo = [];
+  var _catalogo = [], _base = null;   // _base: el reloj de la tienda desde el que se llego (?id=)
   function recomendado(cm){ return cm < 15 ? [34, 38] : cm < 16.5 ? [36, 40] : cm < 18 ? [39, 42] : cm < 19.5 ? [41, 44] : [43, 46]; }
+  function fmt(v){ return String(Math.round(v * 10) / 10).replace('.', ','); }
   function pintarProbador(){
     var cm = parseFloat($('gu-muneca').value), mm = parseFloat($('gu-reloj').value);
     $('gu-v-muneca').textContent = String(cm).replace('.', ',') + ' cm';
     $('gu-v-reloj').textContent = mm + ' mm';
-    var S = 4.2, ancho = cm * 10 * 0.3 * S, l2l = mm * 1.2 * S, d = mm * S, cy = 175, cx = 300, c = '';
+    // medida real de asa a asa si el control esta en el tamano del reloj desde el que se llego
+    var base = _base && Math.round(parseFloat(_base.mm)) === mm ? _base : null;
+    var l2lReal = base ? parseFloat(String(base.l2l || '').replace(',', '.')) : 0;
+    var l2lMm = l2lReal > 0 ? l2lReal : mm * 1.2;
+    var S = 4.2, ancho = cm * 10 * 0.3 * S, l2l = l2lMm * S, d = mm * S, cy = 175, cx = 300, c = '';
     var piel = '#ececee', borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
     // antebrazo (mas ancho hacia la izquierda), muneca y mano
     c += '<path d="M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' 470 '+n(yTop+2)+' C520 '+n(yTop-6)+' 560 '+n(cy-ancho*0.7)+' 610 '+n(cy-ancho*0.66)+' C650 '+n(cy-ancho*0.62)+' 660 '+n(cy+ancho*0.62)+' 610 '+n(cy+ancho*0.68)+' C560 '+n(cy+ancho*0.72)+' 520 '+n(yBot+6)+' 470 '+n(yBot-2)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="'+piel+'" stroke="'+borde+'" stroke-width="1.5"/>';
@@ -258,15 +263,18 @@
     var xa = 120;
     c += cota(xa, yTop, xa, yBot) + texto(xa - 10, cy + 4, 'Muñeca ' + Math.round(cm * 3) + ' mm', { ancla: 'end', tam: 12, peso: 600, color: ORO });
     var xr = cx + d/2 + 40;
-    c += cota(xr, cy - l2l/2, xr, cy + l2l/2) + texto(xr + 8, cy + 4, 'Reloj ' + Math.round(mm * 1.2) + ' mm', { ancla: 'start', tam: 12, peso: 600, color: ORO });
+    c += cota(xr, cy - l2l/2, xr, cy + l2l/2) + texto(xr + 8, cy + 4, 'Reloj ' + fmt(l2lMm) + ' mm' + (l2lReal > 0 ? '' : ' aprox.'), { ancla: 'start', tam: 12, peso: 600, color: ORO });
     $('gu-sim').innerHTML = svg('0 0 660 350', c);
 
-    var razon = (mm * 1.2) / (cm * 3), rec = recomendado(cm), v;
+    var razon = l2lMm / (cm * 3), rec = recomendado(cm), v;
     if(razon < 0.82) v = ['discreto', 'Discreto', 'Se ve pequeño y elegante en tu muñeca. Ideal si buscas algo clásico o de vestir.'];
     else if(razon <= 1) v = ['ideal', 'Ideal', 'Las asas quedan dentro de tu muñeca: es un tamaño proporcionado para ti.'];
     else if(razon <= 1.1) v = ['grande', 'Grande', 'Se va a notar. Queda bien si te gustan los relojes con presencia, pero las asas llegan al borde de tu muñeca.'];
     else v = ['muy-grande', 'Muy grande', 'Las asas sobresalen de tu muñeca (línea roja). Te recomendamos un tamaño menor.'];
-    $('gu-veredicto').innerHTML = '<span class="gu-pill '+v[0]+'">'+v[1]+'</span><p>'+v[2]+'</p><p class="gu-rec">Para tu muñeca de '+String(cm).replace('.', ',')+' cm te recomendamos relojes de <b>'+rec[0]+' a '+rec[1]+' mm</b>.</p>';
+    $('gu-veredicto').innerHTML = '<span class="gu-pill '+v[0]+'">'+v[1]+'</span><p>'+v[2]+'</p><p class="gu-rec">Para tu muñeca de '+String(cm).replace('.', ',')+' cm te recomendamos relojes de <b>'+rec[0]+' a '+rec[1]+' mm</b>.</p>' +
+      (base && l2lReal > 0 ? '<p class="gu-nota">Con las medidas reales del <b>'+esc(base.nombre)+'</b>: de asa a asa '+fmt(l2lReal)+' mm'+(parseFloat(base.grosor) ? ', grosor '+fmt(parseFloat(String(base.grosor).replace(',', '.')))+' mm' : '')+'.</p>'
+       : base ? '<p class="gu-nota">Del <b>'+esc(base.nombre)+'</b> aún no tenemos la medida de asa a asa: usamos el promedio de la industria (1,2 veces el diámetro).</p>'
+       : '<p class="gu-nota">De asa a asa aproximado (1,2 veces el diámetro, promedio de la industria).</p>');
     pintarSugeridos();
     try{ localStorage.setItem('aphillips_muneca', String(cm)); }catch(e){}
   }
@@ -320,12 +328,15 @@
 
   fetch(API).then(function(r){ return r.json(); }).then(function(d){
     _catalogo = (d.relojes || []).filter(function(r){ return parseFloat(r.mm) > 0; }).sort(function(a, b){ return parseFloat(a.mm) - parseFloat(b.mm); });
+    var idBase = q.get('id');
+    _base = idBase ? _catalogo.filter(function(r){ return r.id === idBase; })[0] || null : null;
     pintarTienda(); pintarProbador();
   }).catch(function(){ $('gu-tienda').innerHTML = '<p class="gu-tip">No se pudieron cargar los relojes. <a href="/">Ver la tienda</a></p>'; });
 
   // mensaje listo para WhatsApp con la medida elegida
   $('gu-wa').addEventListener('click', function(){
-    var cm = $('gu-muneca').value;
-    this.href = 'https://wa.me/50762615442?text=' + encodeURIComponent('¡Hola! Mi muñeca mide ' + String(cm).replace('.', ',') + ' cm. ¿Qué tamaño de reloj me recomiendan?');
+    var cm = $('gu-muneca').value, mm = $('gu-reloj').value;
+    var sobre = _base ? ' Estoy viendo el ' + _base.nombre + (_base.sku ? ' (Ref. ' + _base.sku + ')' : '') + ' de ' + parseFloat(_base.mm) + ' mm. ¿Me quedaría bien?' : ' Estoy viendo relojes de ' + mm + ' mm. ¿Qué tamaño me recomiendan?';
+    this.href = 'https://wa.me/50762615442?text=' + encodeURIComponent('¡Hola! Mi muñeca mide ' + String(cm).replace('.', ',') + ' cm.' + sobre);
   });
 })();
