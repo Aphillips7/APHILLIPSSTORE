@@ -44,8 +44,6 @@
 
   /* --- mas presencia (segunda ronda) --- */
 
-  /* encabezado: linea glaciar fina debajo */
-  html.glaciar #site-header:not(.on-hero){box-shadow:inset 0 -1px 0 var(--glaciar);}
 
   /* portada: la etiqueta pequena sobre el titulo en glaciar y el boton se llena de glaciar al pasar */
   html.glaciar .hero-eyebrow{color:var(--glaciar);}

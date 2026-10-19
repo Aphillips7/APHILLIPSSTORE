@@ -1,7 +1,7 @@
   /* === LISTADO DE RELOJES (estilo TAG Heuer: "Men's watches") === */
   body.vista-catalogo{background:#fff;}
   body.vista-catalogo .wrap{max-width:1560px;padding-left:clamp(16px,1.6vw,24px);padding-right:clamp(16px,1.6vw,24px);}
-  .cat-head{display:block;margin-bottom:0;}
+  .cat-head{display:block;margin-bottom:0;padding-top:30px;}  /* espacio que antes ocupaba el boton "Inicio" (si no, el titulo queda bajo el encabezado fijo) */
   .cat-eyebrow{display:block;font-size:var(--fs-etiqueta);font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--black);line-height:14px;}
   .cat-titulo{font-family:var(--font-titulo);font-weight:800;font-size:var(--fs-titulo);letter-spacing:.01em;line-height:24px;text-transform:uppercase;color:var(--black);margin-top:2px;}
   .cat-desc{display:flex;align-items:flex-end;gap:14px;max-width:560px;margin-top:12px;}
