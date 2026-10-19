@@ -21,7 +21,7 @@
   @media (max-width:1180px){ .grid{grid-template-columns:repeat(3,1fr);} }
   .grid .card{background:transparent;border:none;border-radius:0;box-shadow:none;overflow:visible;}
   .grid .card:not(.skeleton-card):hover,.grid .card:not(.skeleton-card):active{box-shadow:none;transform:none;}
-  .grid .card-foto{background:#f5f6f8;}
+  .grid .card-foto{background:#f4f4f5;}
   .grid .card-foto img{object-fit:contain;padding:9%;box-sizing:border-box;mix-blend-mode:multiply;}
   .grid .card:hover .card-foto img{transform:none;}
   .grid .card-info.ci-tag{display:grid;grid-template-columns:1fr auto;grid-template-areas:"txt fav";align-items:start;column-gap:10px;padding:14px 0 0;}

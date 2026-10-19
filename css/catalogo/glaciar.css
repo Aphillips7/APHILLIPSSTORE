@@ -66,18 +66,12 @@
   /* titulos de seccion: la etiqueta pequena encima en glaciar oscuro */
   html.glaciar .cat-eyebrow{color:var(--glaciar-oscuro);}
 
-  /* pestanas, puntos de los carruseles y regla de puntos */
+  /* pestanas y puntos de los carruseles (la regla de puntos queda negra) */
   html.glaciar .dest-tab.on{border-bottom:2px solid var(--glaciar-oscuro);}
   html.glaciar .dest-punto.on,html.glaciar .pf-punto.on{background:var(--glaciar-oscuro);}
-  html.glaciar .regla-seccion{background-image:radial-gradient(circle,var(--glaciar-oscuro) 1px,transparent 1.4px);}
-  html.glaciar .regla-seccion::before,html.glaciar .regla-seccion::after{background-image:linear-gradient(var(--glaciar-oscuro),var(--glaciar-oscuro));border-color:var(--glaciar-oscuro);}
 
-  /* marcas: franja glaciar entre la foto y el logo */
-  html.glaciar .marca-txt{border-top:3px solid var(--glaciar);}
 
   /* ficha del reloj: iconos de especificaciones y el + de los desplegables */
-  html.glaciar .prod-regla{background-image:radial-gradient(circle,var(--glaciar-oscuro) 1px,transparent 1.4px);}
-  html.glaciar .prod-regla::before,html.glaciar .prod-regla::after{background-image:linear-gradient(var(--glaciar-oscuro),var(--glaciar-oscuro));border-color:var(--glaciar-oscuro);}
   html.glaciar .esp-ico{color:var(--glaciar-oscuro);}
   html.glaciar .det-mas::before,html.glaciar .det-mas::after{background:var(--glaciar-oscuro);}
   html.glaciar .det[open] .det-titulo{color:var(--glaciar-oscuro);}
