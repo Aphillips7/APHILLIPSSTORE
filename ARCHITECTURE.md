@@ -33,7 +33,8 @@ index.html            estructura del panel (sin CSS ni JS en linea)
 catalogo.html         estructura del catalogo
 legal.html            terminos, apartados, envios, garantia, devoluciones, privacidad y cookies (en /legal)
 preguntas.html        preguntas frecuentes con datos FAQPage para Google (en /preguntas); ambas usan css/legal.css
-guia-de-tamanos.html  guia de tamanos con SVG y probador a escala (en /guia-de-tamanos, acepta ?mm=); js/guia.js + css/guia.css
+guia-de-tamanos.html  guia de tamanos con SVG y probador a escala (en /guia-de-tamanos, acepta ?mm= y ?id= para usar las medidas reales del reloj); js/guia.js + css/guia.css
+404.html              pagina de "no encontrada" (rutas absolutas; wrangler.jsonc not_found_handling "404-page")
 manifest.json         PWA del panel
 sw.js                 service worker (cache del "cascaron")
 firestore.rules       reglas del archivo historico de Firestore: solo lectura del admin (se publican a mano)
@@ -45,6 +46,7 @@ css/panel/            base, componentes, finanzas, auth, modales, movil (en ese 
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
                       destacados, listado, filtros, marcas, pie, hora (en ese orden)
 js/firebase.js        configuracion de Firebase (solo Auth); exporta firebase
+js/errores.js         registro anonimo de errores de JavaScript (POST /errores); se importa primero en catalogo y panel
 js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 ```
 
@@ -77,6 +79,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/transacciones.js` | `cambiarEstadoSeguro()`: transaccion anti venta doble |
 | `clientes/clientes.js` | Alta/edicion/lista de clientes, `poblarSelectClientes` |
 | `clientes/cliente-detalle.js` | Ficha del cliente, historial, "contactado hoy" |
+| `clientes/salud.js` | Tarjeta "Salud de la tienda": errores de la semana (`/admin/errores`), vista previa del informe semanal y de los avisos por correo |
 | `clientes/cuentas-web.js` | Cuentas de clientes del catalogo: avisos pendientes (un toque abre WhatsApp con el mensaje y lo marca enviado) y vincular cada cuenta con un cliente del panel |
 | `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), `cambiarEstadoNube` |
 | `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare |
@@ -109,7 +112,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `header.js` | Encabezado transparente sobre el hero y efecto de la portada al bajar |
 | `menu.js` | Menu del celular (boton hamburguesa) |
 | `reloj-vivo.js` | Reloj Invicta Pro Diver dibujado en SVG que marca la hora de Panama (UTC-5) en la seccion `#hora`; solo se anima cuando esta en pantalla |
-| `ui.js` | `toast`, `vibrar`, escape de HTML |
+| `ui.js` | `toast`, `vibrar`, escape de HTML, `miniatura(url)` (foto de 480 px en `miniaturas/` de R2) y `fotoRespaldo(img)` (usa la foto completa si no hay miniatura) |
 
 ## Datos (Cloudflare D1, tabla `docs`; ver `cloudflare/README.md`)
 
@@ -209,9 +212,22 @@ Catalogo: `aphillips_favoritos`, `aphillips_catalogo` (ultima lista de relojes),
 - **Al publicar cambios: sube `CACHE_NAME`** (`aphillips-v2` → `aphillips-v3`…) y, si agregas o
   renombras archivos en `/css` o `/js`, actualiza `SHELL_FILES`.
 
+## Automatizaciones (API, cron diario 3:00 a. m. de Panama)
+
+- Respaldo diario y limpieza de fotos huerfanas (y de sus miniaturas).
+- **Informe semanal** a info@ los lunes (`INFORME_SEMANAL = "1"` en `cloudflare/fotos-worker/wrangler.jsonc`; vista previa en `/admin/informe`).
+- **Avisos por correo** a clientes cuando llega o baja de precio el reloj que pidieron o hay nuevos de su marca (`AVISOS_CORREO = "1"`; vista previa en `/admin/avisos/correo`). Marca el aviso como enviado, igual que el WhatsApp del panel.
+- Errores de JavaScript (tabla `errores`, 30 dias) en el informe y en `/admin/errores`.
+
+## SEO
+
+- Cada reloj (`/?id=`) lleva datos `Product` (precio, disponibilidad, marca) y la portada datos `Store`/`WebSite`.
+- Secciones con direccion propia: `/relojes`, `/relojes-hombre`, `/relojes-mujer`, `/invicta`, `/bulova`, `/technomarine` (el Worker de la tienda pone titulo, descripcion y canonica; al abrirse pasan al hash de siempre). Estan en el sitemap y en los enlaces internos.
+- Prueba de color secundario azul glaciar `#A7C4D6`: `css/catalogo/glaciar.css`, solo con `?colores=glaciar` (`?colores=antes` la quita).
+
 ## Seguridad
 
 El Worker de la API (`cloudflare/fotos-worker`) protege todo: las rutas de admin exigen el ID token
-de Firebase del UID del dueno (`OWNER_UID`). Visitantes: solo `GET /catalogo` y `POST /metricas`
+de Firebase del UID del dueno (`OWNER_UID`). Visitantes: solo `GET /catalogo`, `POST /metricas`, `POST /errores` y el boletin
 (solo ids del catalogo). El catalogo publico pasa por `CAMPOS_PUBLICOS` en el Worker.
 `firestore.rules` (publicar a mano): Firestore es solo lectura para el admin y nadie escribe.
