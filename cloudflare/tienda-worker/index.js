@@ -125,8 +125,11 @@ async function vistaPreviaReloj(pagina, id, url, env) {
     'og:description': descripcion, 'twitter:description': descripcion, description: descripcion
   };
   if (imagen) { meta['og:image'] = imagen; meta['twitter:image'] = imagen; }
+  const datosGoogle = productoJsonLd(r, enlace);
   return new HTMLRewriter()
     .on('title', { element(e) { e.setInnerContent(titulo); } })
+    // datos estructurados del producto: Google puede mostrar precio y disponibilidad en los resultados
+    .on('head', { element(e) { e.append('<script type="application/ld+json">' + datosGoogle + '</script>', { html: true }); } })
     // para Google cada reloj es su propia pagina (no una copia del catalogo)
     .on('link[rel="canonical"]', { element(e) { e.setAttribute('href', enlace); } })
     .on('meta', { element(e) {
@@ -135,6 +138,29 @@ async function vistaPreviaReloj(pagina, id, url, env) {
       if (clave === 'og:type') e.after('<meta property="og:url" content="' + enlace + '">', { html: true });
     } })
     .transform(pagina);
+}
+
+// schema.org/Product de un reloj (JSON para <script type="application/ld+json">). Sin precio
+// (bajo pedido) no se pone oferta: Google la exige con precio.
+const DISPONIBILIDAD = { disponible: 'InStock', transito: 'PreOrder', vendido: 'SoldOut' };
+const MARCAS_TIENDA = ['Invicta', 'Bulova', 'TechnoMarine'];
+function productoJsonLd(r, enlace) {
+  const texto = (r.nombre || '') + ' ' + (r.coleccion || '');
+  const marca = MARCAS_TIENDA.find((m) => texto.toLowerCase().includes(m.toLowerCase()));
+  const fotos = (Array.isArray(r.fotos) && r.fotos.length ? r.fotos : [r.foto]).filter((f) => typeof f === 'string' && f.startsWith('https://')).slice(0, 6);
+  const descripcion = String(r.descripcion || r.notas || [r.nombre, r.movimiento, r.mm ? r.mm + ' mm' : '', r.materialCaja].filter(Boolean).join(', ')).slice(0, 500);
+  const p = { '@context': 'https://schema.org', '@type': 'Product', name: r.nombre || 'Reloj', url: enlace, description: descripcion };
+  if (fotos.length) p.image = fotos;
+  if (r.sku) p.sku = String(r.sku);
+  if (marca) p.brand = { '@type': 'Brand', name: marca };
+  if (r.coleccion) p.model = String(r.coleccion);
+  if (Number(r.precio) > 0 && DISPONIBILIDAD[r.estado]) {
+    p.offers = { '@type': 'Offer', url: enlace, priceCurrency: 'USD', price: Number(r.precio).toFixed(2),
+      availability: 'https://schema.org/' + DISPONIBILIDAD[r.estado], itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@type': 'Organization', name: 'Aphillips Store' } };
+  }
+  // "<" escapado para que el texto nunca pueda cerrar la etiqueta <script>
+  return JSON.stringify(p).replace(/</g, '\\u003c');
 }
 
 // Pide un archivo concreto al almacen de archivos manteniendo metodo y cabeceras
@@ -174,6 +200,9 @@ function conCabeceras(res, esPanel) {
   const h = new Headers(res.headers);
   h.set('X-Content-Type-Options', 'nosniff');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // siempre HTTPS (6 meses) y sin acceso a camara, microfono, ubicacion ni pagos desde la pagina
+  h.set('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  h.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
   h.set('Cache-Control', 'no-cache');
   // Ambas CSP se probaron en produccion en modo solo-reporte (login del panel con correo y
   // "Mi cuenta" del catalogo con Google) sin avisos. Si se agrega un servicio externo nuevo,
