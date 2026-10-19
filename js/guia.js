@@ -4,7 +4,7 @@
 // por tamaño. Script normal (no modulo): la pagina no depende del resto del catalogo.
 (function(){
   var API = 'https://api.aphillipsstore.com/catalogo';
-  var ORO = '#9a7b4f';        // color de las lineas de medida
+  var ORO = '#18181b';        // color de las lineas de medida (negro de la tienda)
   var $ = function(id){ return document.getElementById(id); };
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
   function n(v){ return Math.round(v * 10) / 10; }
@@ -32,7 +32,7 @@
         function tramo(y, alto){
           var t = '<rect x="'+n(x)+'" y="'+n(y)+'" width="'+n(ancho)+'" height="'+n(alto)+'" rx="'+n(correa*0.06)+'" fill="url(#gu-cuero)"/>';
           if(det) [x + m, x + ancho - m].forEach(function(xs){
-            t += '<line x1="'+n(xs)+'" y1="'+n(y)+'" x2="'+n(xs)+'" y2="'+n(y+alto)+'" stroke="#d9b48a" stroke-width="'+sw(.006)+'" stroke-dasharray="'+n(d*.018)+' '+n(d*.012)+'" opacity=".8"/>';
+            t += '<line x1="'+n(xs)+'" y1="'+n(y)+'" x2="'+n(xs)+'" y2="'+n(y+alto)+'" stroke="#a1a1aa" stroke-width="'+sw(.006)+'" stroke-dasharray="'+n(d*.018)+' '+n(d*.012)+'" opacity=".8"/>';
           });
           return t;
         }
@@ -45,8 +45,8 @@
         if(det){
           if(lado > 0 && opc.correaLargo > d * 0.5){
             // pasador y agujeros en la parte de abajo
-            s += '<rect x="'+n(x-correa*0.03)+'" y="'+n(y+ext+d*0.12)+'" width="'+n(ancho+correa*0.06)+'" height="'+n(d*0.05)+'" rx="'+n(d*0.012)+'" fill="#3a2a1f" stroke="#1f1610" stroke-width="'+sw(.004)+'"/>';
-            for(i = 0; i < 4; i++){ var yy = y + ext + d*0.3 + i * d*0.085; if(yy < y + alto - d*0.05) s += '<ellipse cx="'+n(cx)+'" cy="'+n(yy)+'" rx="'+n(d*0.016)+'" ry="'+n(d*0.022)+'" fill="#1f1610"/>'; }
+            s += '<rect x="'+n(x-correa*0.03)+'" y="'+n(y+ext+d*0.12)+'" width="'+n(ancho+correa*0.06)+'" height="'+n(d*0.05)+'" rx="'+n(d*0.012)+'" fill="#27272a" stroke="#0b0b0c" stroke-width="'+sw(.004)+'"/>';
+            for(i = 0; i < 4; i++){ var yy = y + ext + d*0.3 + i * d*0.085; if(yy < y + alto - d*0.05) s += '<ellipse cx="'+n(cx)+'" cy="'+n(yy)+'" rx="'+n(d*0.016)+'" ry="'+n(d*0.022)+'" fill="#0b0b0c"/>'; }
           }
         }
         s += '</g>';
@@ -152,7 +152,7 @@
     '<linearGradient id="gu-acero" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8b8be"/><stop offset=".45" stop-color="#f4f4f5"/><stop offset="1" stop-color="#a1a1aa"/></linearGradient>' +
     '<radialGradient id="gu-acero-r" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#fafafa"/><stop offset=".6" stop-color="#d4d4d8"/><stop offset="1" stop-color="#9a9aa1"/></radialGradient>' +
     '<radialGradient id="gu-esfera" cx=".45" cy=".4" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e9ec"/></radialGradient>' +
-    '<linearGradient id="gu-cuero" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2b1d14"/><stop offset=".18" stop-color="#5a3b27"/><stop offset=".5" stop-color="#6b4630"/><stop offset=".82" stop-color="#5a3b27"/><stop offset="1" stop-color="#2b1d14"/></linearGradient>' +
+    '<linearGradient id="gu-cuero" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#09090b"/><stop offset=".18" stop-color="#27272a"/><stop offset=".5" stop-color="#3f3f46"/><stop offset=".82" stop-color="#27272a"/><stop offset="1" stop-color="#09090b"/></linearGradient>' +
     '<linearGradient id="gu-desv-g-arr" x1="0" y1="1" x2="0" y2="0"><stop offset=".35" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>' +
     '<linearGradient id="gu-desv-g-aba" x1="0" y1="0" x2="0" y2="1"><stop offset=".35" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>' +
     '<mask id="gu-desv-arr" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#gu-desv-g-arr)"/></mask>' +
@@ -224,10 +224,10 @@
 
   // ---------- pasos para medir la muneca ----------
   (function(){
-    var piel = '#e9c9b0', borde = '#c9a083';
+    var piel = '#ececee', borde = '#b4b4ba';
     var brazo = '<path d="M10 70 C60 62 120 60 170 66 L178 72 C200 60 224 62 232 80 C238 96 224 112 200 108 L178 104 C120 112 60 112 10 104 Z" fill="'+piel+'" stroke="'+borde+'" stroke-width="1.5"/>';
     var p1 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><path d="M144 66 L176 40" stroke="#71717a" stroke-width="10" stroke-linecap="round" opacity=".25"/><path d="M144 66 L176 40" stroke="#fff" stroke-width="8" stroke-linecap="round"/>' + texto(120, 140, 'Tira alrededor de la muñeca', { tam: 12, color: '#52525b' });
-    var p2 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><line x1="128" y1="86" x2="144" y2="86" stroke="'+ORO+'" stroke-width="2.5"/><path d="M150 84 L196 38 L204 46 L158 92 Z" fill="#f2c94c" stroke="#a1a1aa"/><path d="M150 84 L146 96 L158 92" fill="#3f3f46"/>' + texto(120, 140, 'Marca donde se junta', { tam: 12, color: '#52525b' });
+    var p2 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><line x1="128" y1="86" x2="144" y2="86" stroke="'+ORO+'" stroke-width="2.5"/><path d="M150 84 L196 38 L204 46 L158 92 Z" fill="#d4d4d8" stroke="#a1a1aa"/><path d="M150 84 L146 96 L158 92" fill="#3f3f46"/>' + texto(120, 140, 'Marca donde se junta', { tam: 12, color: '#52525b' });
     var regla = '<rect x="14" y="70" width="212" height="34" rx="3" fill="#f4f4f5" stroke="#a1a1aa"/>';
     for(var i = 0; i <= 20; i++){ var xx = 22 + i * 10; regla += '<line x1="'+xx+'" y1="70" x2="'+xx+'" y2="'+(i % 5 === 0 ? 84 : 78)+'" stroke="#52525b"/>' + (i % 5 === 0 ? texto(xx, 98, String(i), { tam: 9, color: '#52525b' }) : ''); }
     var p3 = regla + '<rect x="22" y="52" width="170" height="12" rx="2" fill="#fff" stroke="#71717a"/><line x1="192" y1="46" x2="192" y2="104" stroke="'+ORO+'" stroke-width="2.5"/>' + cota(22, 40, 192, 40) + texto(107, 32, '17 cm', { tam: 13, peso: 700, color: ORO }) + texto(120, 140, 'Mide hasta la marca', { tam: 12, color: '#52525b' });
@@ -244,7 +244,7 @@
     $('gu-v-muneca').textContent = String(cm).replace('.', ',') + ' cm';
     $('gu-v-reloj').textContent = mm + ' mm';
     var S = 4.2, ancho = cm * 10 * 0.3 * S, l2l = mm * 1.2 * S, d = mm * S, cy = 175, cx = 300, c = '';
-    var piel = '#e9c9b0', borde = '#c9a083', yTop = cy - ancho/2, yBot = cy + ancho/2;
+    var piel = '#ececee', borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
     // antebrazo (mas ancho hacia la izquierda), muneca y mano
     c += '<path d="M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' 470 '+n(yTop+2)+' C520 '+n(yTop-6)+' 560 '+n(cy-ancho*0.7)+' 610 '+n(cy-ancho*0.66)+' C650 '+n(cy-ancho*0.62)+' 660 '+n(cy+ancho*0.62)+' 610 '+n(cy+ancho*0.68)+' C560 '+n(cy+ancho*0.72)+' 520 '+n(yBot+6)+' 470 '+n(yBot-2)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="'+piel+'" stroke="'+borde+'" stroke-width="1.5"/>';
     // borde de la muneca donde va el reloj (lineas punteadas)
@@ -275,16 +275,27 @@
     var precio = r.estado === 'bajopedido' ? 'Bajo cotización' : r.precio ? '$' + Number(r.precio).toLocaleString() : '';
     return '<a class="gu-reloj" href="/?id='+encodeURIComponent(r.id)+'"><span class="gu-reloj-foto">'+foto+'<span class="gu-mm">'+esc(parseFloat(r.mm))+' mm</span></span><span class="gu-reloj-nombre">'+esc(r.nombre)+'</span>'+(precio ? '<span class="gu-reloj-precio">'+esc(precio)+'</span>' : '')+'</a>';
   }
+  // una fila de relojes: se ven solo los que caben (4 en PC, 2 en celular) y un boton para ver el resto
+  function fila(lista, titulo){
+    var pocosPc = lista.length <= 4 ? ' pocos-pc' : '';
+    return '<div class="gu-grupo">' + titulo + '<div class="gu-fila">' + lista.map(tarjeta).join('') + '</div>' +
+      (lista.length > 2 ? '<button type="button" class="gu-ver-todos' + pocosPc + '" data-t="Ver todos ('+lista.length+')">Ver todos ('+lista.length+')</button>' : '') + '</div>';
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.gu-ver-todos') : null; if(!b) return;
+    var abierto = b.parentElement.classList.toggle('todos');
+    b.textContent = abierto ? 'Ver menos' : b.dataset.t;
+  });
   function pintarSugeridos(rec){
     var cont = $('gu-sugeridos'); if(!_catalogo.length){ cont.innerHTML = ''; return; }
     var lista = _catalogo.filter(function(r){ var mm = parseFloat(r.mm); return mm >= rec[0] && mm <= rec[1] && r.estado !== 'vendido'; });
-    cont.innerHTML = lista.length ? '<h3>Relojes de la tienda en tu tamaño</h3><div class="gu-fila">' + lista.slice(0, 8).map(tarjeta).join('') + '</div>' : '';
+    cont.innerHTML = lista.length ? fila(lista, '<h3>Relojes de la tienda en tu tamaño</h3>') : '';
   }
   function pintarTienda(){
     var grupos = [['Hasta 38 mm', 0, 38.9], ['39 a 42 mm', 39, 42.9], ['43 a 45 mm', 43, 45.9], ['46 mm o más', 46, 99]];
     var h = grupos.map(function(g){
       var l = _catalogo.filter(function(r){ var mm = parseFloat(r.mm); return mm >= g[1] && mm <= g[2]; });
-      return l.length ? '<h3>'+g[0]+' <span>('+l.length+')</span></h3><div class="gu-fila">' + l.map(tarjeta).join('') + '</div>' : '';
+      return l.length ? fila(l, '<h3>'+g[0]+' <span>('+l.length+')</span></h3>') : '';
     }).join('');
     $('gu-tienda').innerHTML = h || '<p class="gu-tip">Pronto agregaremos más relojes.</p>';
   }

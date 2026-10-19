@@ -21,7 +21,7 @@
   .gu-medidas{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:center;margin-top:16px;}
   .gu-leyenda{list-style:none;padding:0 !important;margin-top:18px !important;display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;}
   .gu-leyenda li{display:flex;gap:12px;align-items:flex-start;margin:0 !important;}
-  .gu-letra{flex:none;width:24px;height:24px;border-radius:50%;background:#9a7b4f;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px;}
+  .gu-letra{flex:none;width:24px;height:24px;border-radius:50%;background:var(--black);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px;}
 
   .gu-rangos,.gu-trucos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
   .gu-rangos div,.gu-trucos div{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--border);}
@@ -44,10 +44,16 @@
   /* relojes de la tienda */
   .gu-sugeridos h3,.gu-tienda h3{font-size:15px;font-weight:600;color:var(--black);margin:22px 0 10px;}
   .gu-tienda h3 span{color:var(--gris-texto);font-weight:400;}
-  .gu-fila{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 3 * 12px) / 4);gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;}
+  .gu-fila{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  /* solo una fila a la vista (4 en PC, 2 en celular); "Ver todos" muestra el resto */
+  .gu-grupo:not(.todos) .gu-reloj:nth-child(n+5){display:none;}
+  .gu-ver-todos{display:block;margin:14px auto 0;background:none;border:1px solid var(--black);color:var(--black);font-family:inherit;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:11px 22px;cursor:pointer;transition:background-color .2s var(--ease),color .2s var(--ease),transform .12s var(--ease);}
+  .gu-ver-todos:active{transform:scale(.97);}
+  @media (hover:hover) and (pointer:fine){ .gu-ver-todos:hover{background:var(--black);color:#fff;} }
+  .gu-ver-todos.pocos-pc{display:none;}
   .gu-reloj{scroll-snap-align:start;display:flex;flex-direction:column;gap:3px;text-align:center;color:var(--black);text-decoration:none !important;}
-  .gu-reloj-foto{position:relative;display:block;aspect-ratio:1/1;background:linear-gradient(180deg,#d6d6d8,#fafafa);overflow:hidden;margin-bottom:8px;}
-  .gu-reloj-foto img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s var(--ease);}
+  .gu-reloj-foto{position:relative;display:block;aspect-ratio:1/1;background:#f5f6f8;overflow:hidden;margin-bottom:8px;}
+  .gu-reloj-foto img{width:100%;height:100%;object-fit:contain;padding:8%;box-sizing:border-box;mix-blend-mode:multiply;display:block;transition:transform .45s var(--ease);}
   @media (hover:hover) and (pointer:fine){ .gu-reloj:hover .gu-reloj-foto img{transform:scale(1.04);} }
   .gu-mm{position:absolute;top:8px;left:8px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.92);}
   .gu-reloj-nombre{font-size:12px;font-weight:600;text-transform:uppercase;line-height:1.3;}
@@ -62,7 +68,9 @@
     .gu-medidas{grid-template-columns:1fr;}
     .gu-leyenda{grid-template-columns:1fr;}
     .gu-rangos,.gu-trucos{grid-template-columns:1fr 1fr;}
-    .gu-fila{grid-auto-columns:42%;}
+    .gu-fila{grid-template-columns:repeat(2,1fr);}
+    .gu-grupo:not(.todos) .gu-reloj:nth-child(n+3){display:none;}
+    .gu-ver-todos.pocos-pc{display:block;}
   }
   @media (max-width:560px){
     .gu-rangos,.gu-trucos,.gu-pasos{grid-template-columns:1fr;}
