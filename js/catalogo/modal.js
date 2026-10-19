@@ -90,18 +90,24 @@ function iconoGrupo(t){
   if(/caja|case|agua|water|cristal/.test(s)) return 'caja';
   return 'info';
 }
-function fichaPegada(r){
-  if(!Array.isArray(r.ficha) || !r.ficha.length) return '';
-  var tieneMov = false;
-  var html = r.ficha.map(function(g){
-    if(!g || !Array.isArray(g.f)) return '';
-    var ico = iconoGrupo(g.t), filas = g.f.map(function(x){ return spec(x[0], esc(x[1])); }).join('');
-    if(ico === 'movimiento'){ tieneMov = true; if(r.movimiento) filas = spec('Tipo', esc(r.movimiento)) + filas; }
-    return grupo(ico, esc(g.t), filas);
-  }).join('');
-  if(!tieneMov && r.movimiento) html = grupo('movimiento', 'Movimiento', spec('Tipo', esc(r.movimiento))) + html;
-  var genero = r.genero==='hombre'?'Hombre':r.genero==='mujer'?'Mujer':r.genero==='unisex'?'Unisex':'';
-  return html + grupo('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero));
+// Los campos del panel mandan (si se corrige uno a mano, se ve lo corregido); de la ficha pegada
+// solo se agregan los datos que no tienen campo propio (ej. grosor, tipo de cierre), cada uno en el
+// grupo que le toca. Devuelve { movimiento, caja, esfera, correa, info } con filas HTML.
+var RE_CON_CAMPO = /^(tamano de la caja|diametro|calibre|tipo de corona|corona|material del bisel|color del bisel|material de la esfera|material de la caja|color de la esfera|color de esfera|tipo de cristal|cristal|resistencia al agua|tipo de movimiento|movimiento)$/;
+var RE_CON_CAMPO_CORREA = /^(tamano|ancho|longitud|largo|tono|color|material)$/;
+function extrasFicha(r){
+  var ex = { movimiento:'', caja:'', esfera:'', correa:'', info:'' };
+  if(!Array.isArray(r.ficha)) return ex;
+  r.ficha.forEach(function(g){
+    if(!g || !Array.isArray(g.f)) return;
+    var ico = iconoGrupo(g.t);
+    g.f.forEach(function(x){
+      var k = min(x[0]).normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+      if(RE_CON_CAMPO.test(k) || (ico === 'correa' && RE_CON_CAMPO_CORREA.test(k))) return;
+      ex[ico] += spec(x[0], esc(x[1]));
+    });
+  });
+  return ex;
 }
 
 // Una barra desplegable (details/summary: se abre y cierra sin JS)
@@ -256,12 +262,13 @@ function abrir(id){
   // Dos barras desplegables: Descripcion y Especificaciones tecnicas (todas juntas, cada grupo con su icono)
   var desc = r.descripcion || r.notas;
   var genero = r.genero==='hombre'?'Hombre':r.genero==='mujer'?'Mujer':r.genero==='unisex'?'Unisex':'';
-  var especificaciones = fichaPegada(r) ||
-    grupo('movimiento', 'Movimiento', spec('Movimiento', esc(r.movimiento)) + spec('Calibre', esc(r.calibre))) +
-    grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Corona', esc(r.corona)) + spec('Material del bisel', esc(r.materialBisel)) + spec('Color del bisel', esc(r.colorBisel)) + spec('Resistencia al agua', esc(r.agua))) +
-    grupo('esfera', 'Esfera', spec('Color de esfera', esc(r.colorEsfera)) + spec('Material', esc(r.materialEsfera))) +
-    grupo('correa', 'Correa / Brazalete', spec('Material', esc(r.materialCorrea)) + spec('Color', esc(r.colorCorrea)) + spec('Ancho', esc(r.anchoCorrea)) + spec('Largo', esc(r.largoCorrea))) +
-    grupo('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero) + spec('Color', esc(r.color)));
+  var ex = extrasFicha(r);
+  var especificaciones =
+    grupo('movimiento', 'Movimiento', spec('Tipo', esc(r.movimiento)) + spec('Calibre', esc(r.calibre)) + ex.movimiento) +
+    grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Corona', esc(r.corona)) + spec('Material del bisel', esc(r.materialBisel)) + spec('Color del bisel', esc(r.colorBisel)) + spec('Resistencia al agua', esc(r.agua)) + ex.caja) +
+    grupo('esfera', 'Esfera', spec('Color', esc(r.colorEsfera)) + spec('Material', esc(r.materialEsfera)) + ex.esfera) +
+    grupo('correa', 'Correa / Brazalete', spec('Material', esc(r.materialCorrea)) + spec('Color', esc(r.colorCorrea)) + spec('Ancho', esc(r.anchoCorrea)) + spec('Largo', esc(r.largoCorrea)) + ex.correa) +
+    grupo('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero) + spec('Color', esc(r.color)) + ex.info);
   document.getElementById('modal-specs').innerHTML =
     barra('Descripción', '<p class="det-texto">'+(desc ? esc(desc) : descripcionAuto(r))+'</p>') +
     barra('Especificaciones técnicas', especificaciones);
