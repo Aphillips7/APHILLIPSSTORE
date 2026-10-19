@@ -257,10 +257,10 @@ function abrir(id){
   var desc = r.descripcion || r.notas;
   var genero = r.genero==='hombre'?'Hombre':r.genero==='mujer'?'Mujer':r.genero==='unisex'?'Unisex':'';
   var especificaciones = fichaPegada(r) ||
-    grupo('movimiento', 'Movimiento', spec('Movimiento', esc(r.movimiento))) +
-    grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Resistencia al agua', esc(r.agua))) +
-    grupo('esfera', 'Esfera', spec('Color de esfera', esc(r.colorEsfera))) +
-    grupo('correa', 'Correa / Brazalete', spec('Material', esc(r.materialCorrea))) +
+    grupo('movimiento', 'Movimiento', spec('Movimiento', esc(r.movimiento)) + spec('Calibre', esc(r.calibre))) +
+    grupo('caja', 'Caja', spec('Tamaño', r.mm ? esc(r.mm)+' mm' : '') + spec('Material', esc(r.materialCaja)) + spec('Cristal', esc(r.cristal)) + spec('Corona', esc(r.corona)) + spec('Material del bisel', esc(r.materialBisel)) + spec('Color del bisel', esc(r.colorBisel)) + spec('Resistencia al agua', esc(r.agua))) +
+    grupo('esfera', 'Esfera', spec('Color de esfera', esc(r.colorEsfera)) + spec('Material', esc(r.materialEsfera))) +
+    grupo('correa', 'Correa / Brazalete', spec('Material', esc(r.materialCorrea)) + spec('Color', esc(r.colorCorrea)) + spec('Ancho', esc(r.anchoCorrea)) + spec('Largo', esc(r.largoCorrea))) +
     grupo('info', 'Información', spec('Referencia', esc(r.sku)) + spec('Colección', esc(r.coleccion)) + spec('Género', genero) + spec('Color', esc(r.color)));
   document.getElementById('modal-specs').innerHTML =
     barra('Descripción', '<p class="det-texto">'+(desc ? esc(desc) : descripcionAuto(r))+'</p>') +

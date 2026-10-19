@@ -10,11 +10,20 @@ var MAX_GRUPOS = 12, MAX_FILAS = 40;
 function sinAcentos(t){ return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
 function limpiar(t){ return String(t||'').replace(/^[\s•·\-*–—▪●○]+/, '').replace(/\s+/g, ' ').trim(); }
 
+// Tipos de cristal: se dejan con el nombre que usa la marca (ej. Invicta: "Flame Fusion")
+var CRISTALES = [[/fusion de llamas?|flame fusion/, 'Flame Fusion'], [/zafiro|sapphire/, 'Zafiro'], [/mineral/, 'Mineral'], [/acrilico|acrylic/, 'Acrílico']];
+function nombreCristal(v){
+  var s = sinAcentos(v);
+  for(var i = 0; i < CRISTALES.length; i++) if(CRISTALES[i][0].test(s)) return CRISTALES[i][1];
+  return v;
+}
+
 function parsearFicha(texto){
   var grupos = [], actual = null;
   function grupo(titulo){ actual = { t: titulo, f: [] }; grupos.push(actual); }
   function fila(k, v){
     if(!actual) grupo('Especificaciones');
+    if(/cristal|crystal/.test(sinAcentos(k))) v = nombreCristal(v);
     if(actual.f.length < MAX_FILAS) actual.f.push([k.slice(0, 60), v.slice(0, 160)]);
   }
   String(texto||'').split(/\r?\n/).forEach(function(linea){
@@ -53,21 +62,32 @@ function opcionMovimiento(v){
 
 // Rellena los campos de siempre con lo que se reconozca de la ficha (devuelve cuantos lleno)
 function rellenarCampos(ficha){
-  var n = 0;
+  var n = 0, tonoBanda = '', colorEsfera = '';
   function poner(id, v){ var el = document.getElementById(id); if(el && v){ el.value = v; n++; } }
   ficha.forEach(function(g){
     var tg = sinAcentos(g.t), esBanda = /banda|correa|brazalete|pulsera|band|strap|bracelet/.test(tg);
     g.f.forEach(function(r){
       var k = sinAcentos(r[0]), v = r[1];
       if(/tamano de la caja|diametro|case size|case diameter/.test(k)){ var mm = parseFloat(String(v).replace(',', '.')); if(mm) poner('inv-mm', String(mm)); }
+      else if(/calibre|caliber/.test(k)) poner('inv-calibre', v);
+      else if(/corona|crown/.test(k)) poner('inv-corona', v);
+      else if(/material del bisel|bezel material/.test(k)) poner('inv-material-bisel', v);
+      else if(/color del bisel|bezel color/.test(k)) poner('inv-color-bisel', v);
+      else if(/material de la esfera|dial material/.test(k)) poner('inv-material-esfera', v);
+      else if(esBanda && /^(tamano|ancho|width)/.test(k)) poner('inv-ancho-correa', v);
+      else if(esBanda && /^(longitud|largo|length)/.test(k)) poner('inv-largo-correa', v);
+      else if(esBanda && /^(tono|color)/.test(k)){ poner('inv-color-correa', v); tonoBanda = v; }
       else if(/material de la caja|case material/.test(k)) poner('inv-material-caja', v);
-      else if(/color de la esfera|color de esfera|dial color/.test(k)) poner('inv-color-esfera', v);
+      else if(/color de la esfera|color de esfera|dial color/.test(k)) { poner('inv-color-esfera', v); colorEsfera = v; }
       else if(/cristal|crystal/.test(k)) poner('inv-cristal', v);
       else if(/resistencia al agua|water resist/.test(k)) poner('inv-agua', v);
       else if(esBanda && /^material/.test(k)) poner('inv-material-correa', v);
       else if(/movimiento|movement/.test(k)) poner('inv-movimiento', opcionMovimiento(v));
     });
   });
+  // Color / variante: si esta vacio se arma con el tono de la correa y el color de la esfera (ej. "Dorado / Negro")
+  var col = document.getElementById('inv-color');
+  if(col && !col.value.trim() && (tonoBanda || colorEsfera)) poner('inv-color', [tonoBanda, colorEsfera].filter(Boolean).join(' / '));
   return n;
 }
 
