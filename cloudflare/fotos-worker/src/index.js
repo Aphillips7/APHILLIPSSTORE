@@ -11,6 +11,7 @@
 //   GET    /catalogo           -> { relojes:[...], _ts }  (copia publica, en cache 30 s)
 //   POST   /metricas           cuerpo (texto JSON) [[id, "vistas"|"aperturas"|"clics"], ...]
 //   GET    /salud              -> { ok: true }
+//   POST   /errores            cuerpo (texto JSON) { m, f, l, p, n }: error de JavaScript de la tienda o el panel (limite por IP)
 // Rutas de admin:
 //   PUT    /catalogo           cuerpo { relojes:[...] } -> publica la copia (se quitan campos no publicos)
 //   GET    /metricas           -> { metricas: { id: {vistas, aperturas, clics, _ultima} }, importado }
@@ -38,6 +39,7 @@
 //   POST   /boletin            { email, nombre? } -> guarda el suscriptor y le manda un correo de bienvenida (siempre { ok })
 //   GET    /boletin/baja?t=    da de baja al suscriptor del enlace del correo (pagina simple)
 //   GET    /admin/boletin      -> { suscriptores: [{ email, nombre, activo, creado, baja }] }   (solo admin)
+//   GET    /admin/errores?dias=7 -> errores de JavaScript agrupados (solo admin)
 //   GET    /admin/avisos/correo -> avisos de clientes que se enviarian por correo; POST los envia (solo admin)
 //   GET    /admin/informe      -> informe semanal en HTML; POST /admin/informe/enviar lo manda a info@ (solo admin)
 // Rutas de admin para cuentas:
@@ -79,15 +81,16 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const ruta = url.pathname, metodo = request.method;
-    const publica = (ruta === '/catalogo' && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST' || ruta === '/boletin';
+    const publica = (ruta === '/catalogo' && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST' || ruta === '/boletin' || ruta === '/errores';
     const cors = encabezadosCors(request, env, publica);
 
-    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/metricas' || ruta === '/boletin') });
+    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/metricas' || ruta === '/boletin' || ruta === '/errores') });
     if (ruta === '/salud') return json({ ok: true }, 200, cors);
 
     // ---------- publicas ----------
     if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
+    if (ruta === '/errores' && metodo === 'POST') return registrarError(request, env, cors);
 
     // ---------- boletin (publicas, con limites) ----------
     if (ruta === '/boletin' && metodo === 'POST') return suscribirBoletin(request, env, cors);
@@ -117,7 +120,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -144,6 +147,7 @@ export default {
     if (ruta === '/admin/cuentas') return adminCuentas(env, cors);
     if (ruta === '/admin/boletin') return adminBoletin(env, cors);
     if (ruta === '/admin/informe') return new Response(htmlInforme(await datosInforme(env)), { headers: { ...cors, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+    if (ruta === '/admin/errores') return json({ errores: await resumenErrores(env, Math.min(30, Math.max(1, Number(url.searchParams.get('dias')) || 7))) }, 200, cors);
     if (ruta === '/admin/avisos/correo') return json(await avisosPorCorreo(env, metodo === 'POST'), 200, cors);
     if (ruta === '/admin/informe/enviar') { try { return json(await enviarInforme(env), 200, cors); } catch (e) { return json({ error: e.message }, 502, cors); } }
     if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
@@ -767,6 +771,32 @@ async function adminBoletin(env, cors) {
   return json({ suscriptores: r }, 200, cors);
 }
 
+// ---------- errores de JavaScript (tienda y panel) ----------
+// js/errores.js manda { m: mensaje, f: archivo, l: linea, p: pagina, n: navegador } como texto plano.
+// Publica, con limite por IP (30 por hora). Solo se guardan textos cortos; nada personal.
+async function registrarError(request, env, cors) {
+  let b; try { b = JSON.parse(await request.text()); } catch (e) { return json({ ok: false }, 400, cors); }
+  const corto = (t, n) => String(t == null ? '' : t).replace(/[\u0000-\u001f]/g, ' ').slice(0, n);
+  const mensaje = corto(b && b.m, 300);
+  if (!mensaje) return json({ ok: false }, 400, cors);
+  const ip = await sha256(request.headers.get('CF-Connecting-IP') || 'sin-ip');
+  if (!(await dentroDelLimite(env, 'err:' + ip, 30, 60 * MINUTO))) return json({ ok: true }, 200, cors);
+  try {
+    await env.DB.prepare('INSERT INTO errores (ts, mensaje, fuente, linea, pagina, navegador) VALUES (?1, ?2, ?3, ?4, ?5, ?6)')
+      .bind(Date.now(), mensaje, corto(b.f, 200), Math.max(0, Math.min(1e7, Number(b.l) || 0)), corto(b.p, 200), corto(b.n, 40)).run();
+  } catch (e) { /* tabla aun no creada */ }
+  return json({ ok: true }, 200, cors);
+}
+// Errores de los ultimos dias agrupados por mensaje (los mas repetidos primero)
+async function resumenErrores(env, dias) {
+  try {
+    const { results } = await env.DB.prepare('SELECT mensaje, fuente, linea, count(*) AS veces, max(ts) AS ultimo, ' +
+      'group_concat(DISTINCT navegador) AS navegadores, group_concat(DISTINCT pagina) AS paginas FROM errores WHERE ts >= ?1 ' +
+      'GROUP BY mensaje, fuente, linea ORDER BY veces DESC LIMIT 50').bind(Date.now() - dias * DIA_MS).all();
+    return results;
+  } catch (e) { return []; }
+}
+
 // ---------- avisos por correo a los clientes ----------
 // Mismo criterio que "Avisos para enviar" del panel (clientes/cuentas-web.js): un reloj pedido que ya
 // esta disponible (o bajo de precio) y marcas con relojes nuevos desde el ultimo aviso. Se manda un
@@ -877,6 +907,7 @@ async function datosInforme(env) {
   r.boletinNuevos = await contar('SELECT count(*) AS n FROM boletin WHERE activo = 1 AND creado >= ?1', desde);
   r.boletinTotal = await contar('SELECT count(*) AS n FROM boletin WHERE activo = 1');
   r.avisosActivos = await contar('SELECT count(*) AS n FROM avisos');
+  r.errores = await resumenErrores(env, 7);
   try {
     const top = (await env.DB.prepare('SELECT id, vistas, aperturas, clics FROM metricas ORDER BY vistas DESC LIMIT 5').all()).results;
     r.masVistos = top.filter((m) => nombres[m.id]).map((m) => ({ nombre: nombres[m.id], vistas: m.vistas, aperturas: m.aperturas, clics: m.clics }));
@@ -908,6 +939,7 @@ function htmlInforme(r) {
   c += titulo('Tienda en línea') + tabla([
     fila('Cuentas nuevas de clientes', r.cuentasNuevas), fila('Nuevos suscriptores del boletín', r.boletinNuevos + ' (total ' + r.boletinTotal + ')'),
     fila('Avisos pedidos por clientes', r.avisosActivos)]);
+  c += titulo('Errores en la página') + (r.errores && r.errores.length ? tabla(r.errores.slice(0, 5).map((x) => fila(e(x.mensaje).slice(0, 90) + '<br><span style="font-size:11px;color:#71717a;">' + e(x.paginas || '').slice(0, 60) + ' · ' + e(x.navegadores || '') + '</span>', x.veces + ' vez' + (x.veces !== 1 ? 'es' : '')))) : vacio('Ningún error registrado esta semana.'));
   if (r.masVistos.length) c += titulo('Relojes más vistos (desde el inicio)') + tabla(r.masVistos.map((m) => fila(e(m.nombre), m.vistas + ' vistas · ' + m.clics + ' a WhatsApp')));
   return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<meta name="color-scheme" content="light only"><title>Informe semanal — Aphillips Store</title></head>' +
@@ -941,6 +973,7 @@ async function mantenimiento(env, tipo) {
   try { informe.respaldosBorrados = await borrarRespaldosViejos(env); } catch (e) { informe.respaldosBorrados = { error: e.message }; }
   try { informe.fotos = await limpiarFotos(env); } catch (e) { informe.fotos = { error: e.message }; }
   try { await env.DB.prepare('DELETE FROM envios WHERE ts < ?1').bind(Date.now() - 2 * DIA_MS).run(); } catch (e) { /* tabla aun no creada */ }
+  try { await env.DB.prepare('DELETE FROM errores WHERE ts < ?1').bind(Date.now() - 30 * DIA_MS).run(); } catch (e) { /* tabla aun no creada */ }
   console.log('mantenimiento', JSON.stringify(informe));
   return informe;
 }

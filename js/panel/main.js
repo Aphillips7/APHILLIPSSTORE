@@ -1,4 +1,5 @@
 // Punto de entrada del panel: carga todas las pantallas y arranca la app.
+import '../errores.js';   // primero: atrapa los errores de todo lo que sigue
 import { cerrarReglasModal, renderInicio } from './inicio.js';
 import { cerrarModal } from './inventario/detalle.js';
 import { cerrarAbonoModal, cerrarReservaModal } from './inventario/reservas.js';
