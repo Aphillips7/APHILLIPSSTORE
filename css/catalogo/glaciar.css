@@ -38,8 +38,7 @@
   html.glaciar .lg-indice a:active{background:var(--glaciar);}
   @media (hover:hover) and (pointer:fine){ html.glaciar .lg-indice a:hover{border-color:var(--glaciar);background:var(--glaciar);} }
 
-  /* ficha del reloj: la linea de puntos y los iconos de garantias con un toque glaciar */
-  html.glaciar .prod-gar svg{color:var(--glaciar);}
+  /* iconos de garantias: lineas negras (en glaciar finito no se ven) */
 
   /* "Avísame" activo y estado "Disponible" se quedan como estan (verde = disponible es una convencion) */
 
@@ -68,7 +67,9 @@
 
 
   /* ficha del reloj: iconos de especificaciones y el + de los desplegables */
-  html.glaciar .esp-ico{color:var(--glaciar);}
+  /* iconos de especificaciones: dibujo negro sobre un circulo glaciar (las lineas finas en glaciar no se veian) */
+  html.glaciar .esp-ico{color:var(--black);background:var(--glaciar);border-radius:50%;padding:9px;box-sizing:border-box;}
+  @media (max-width:820px){ html.glaciar .esp-ico{padding:7px;} }
   html.glaciar .det-mas::before,html.glaciar .det-mas::after{background:var(--glaciar);}
 
 
@@ -105,5 +106,5 @@
   }
 
   /* otros azules que habia en la tienda pasan al mismo glaciar (o a negro si son numeros/texto) */
-  html.glaciar .flt-sec>button .mas{color:var(--glaciar);}
+  html.glaciar .flt-sec>button .mas{color:var(--black);}
   html.glaciar .fav-count,html.glaciar body.prod-abierto header .fav-count{color:var(--black) !important;}
