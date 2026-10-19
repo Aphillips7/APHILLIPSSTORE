@@ -6,6 +6,22 @@ import { cargarFicha, fichaFormulario } from './ficha.js';
 import { renderInventario } from './lista.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 
+// Cada seccion del formulario muestra cuantos de sus datos estan llenos (ej. "3/7")
+function contarSecciones(){
+  document.querySelectorAll('#inv-form-wrapper .inv-sec').forEach(function(sec){
+    var campos = Array.prototype.filter.call(sec.querySelectorAll('input,select,textarea'), function(el){
+      return el.type !== 'hidden' && el.type !== 'file' && el.type !== 'checkbox';
+    });
+    var llenos = campos.filter(function(el){ return String(el.value || '').trim() !== ''; }).length;
+    var n = sec.querySelector('.inv-sec-n'); if(!n) return;
+    n.textContent = !campos.length ? '' : campos.length === 1 ? (llenos ? 'Listo' : '') : llenos + '/' + campos.length;
+    n.classList.toggle('completa', campos.length > 0 && llenos === campos.length);
+  });
+}
+(function(){
+  var w = document.getElementById('inv-form-wrapper');
+  if(w){ w.addEventListener('input', contarSecciones); w.addEventListener('change', contarSecciones); }
+})();
 function toggleFormulario(forceOpen){
   var wrapper=document.getElementById('inv-form-wrapper');
   var btn=document.getElementById('btn-registrar');
@@ -14,7 +30,7 @@ function toggleFormulario(forceOpen){
   var open=forceOpen!==undefined?forceOpen:isHidden;
   wrapper.style.display=open?'block':'none';
   if(btn)btn.textContent=open?'Cerrar formulario':'+ Registrar unidad';
-  if(open)setTimeout(()=>wrapper.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  if(open){ contarSecciones(); setTimeout(()=>wrapper.scrollIntoView({behavior:'smooth',block:'start'}),80); }
 }
 function calcularMargenPreview(){
   var costo=parseFloat(document.getElementById('inv-costo').value)||0;
@@ -128,6 +144,7 @@ function resetCamposFormulario(){
   document.getElementById('inv-form-title').textContent='Registrar unidad';
   document.getElementById('inv-submit-btn').textContent='Registrar unidad';
   var cb=document.getElementById('inv-cancel-btn');if(cb)cb.style.display='none';
+  contarSecciones();
 }
 function abrirFormularioNuevo(){
   var wrapper=document.getElementById('inv-form-wrapper');
@@ -193,6 +210,6 @@ function duplicarProducto(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-export { abrirFormularioNuevo, agregarProducto, calcularMargenPreview, cancelarEdicion, duplicarProducto, editarProducto, limpiarFormulario, resetCamposFormulario, toggleFormulario };
+export { abrirFormularioNuevo, contarSecciones, agregarProducto, calcularMargenPreview, cancelarEdicion, duplicarProducto, editarProducto, limpiarFormulario, resetCamposFormulario, toggleFormulario };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { abrirFormularioNuevo, agregarProducto, calcularMargenPreview, cancelarEdicion, duplicarProducto, editarProducto });

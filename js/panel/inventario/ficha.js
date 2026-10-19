@@ -180,6 +180,7 @@ function ordenarFicha(){
   });
   if(cab.genero){ var g = document.getElementById('inv-genero'); if(g){ g.value = cab.genero; n++; } }
   ta.value = fichaATexto(ficha);
+  var w = document.getElementById('inv-form-wrapper'); if(w) w.dispatchEvent(new Event('input'));   // recuenta las secciones
   pintarVista(ficha, 'Listo: ' + ficha.reduce(function(s, g){ return s + g.f.length; }, 0) + ' datos en ' + ficha.length + ' grupos' + (n ? ', ' + n + ' campos rellenados.' : '.'));
 }
 
