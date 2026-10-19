@@ -26,6 +26,8 @@
   "vars": {
     "FIREBASE_PROJECT_ID": "aphillips-store-733df",
     "FOTOS_URL_BASE": "https://fotos.aphillipsstore.com",
+    // Informe semanal por correo a info@ los lunes: "1" = activado, "0" = apagado
+    "INFORME_SEMANAL": "0",
     "ORIGENES_PERMITIDOS": "https://aphillipsstore.com,https://www.aphillipsstore.com,https://aphillips7.github.io,http://localhost:8765"
   },
   "observability": { "enabled": true }

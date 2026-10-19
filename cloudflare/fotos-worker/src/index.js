@@ -38,6 +38,7 @@
 //   POST   /boletin            { email, nombre? } -> guarda el suscriptor y le manda un correo de bienvenida (siempre { ok })
 //   GET    /boletin/baja?t=    da de baja al suscriptor del enlace del correo (pagina simple)
 //   GET    /admin/boletin      -> { suscriptores: [{ email, nombre, activo, creado, baja }] }   (solo admin)
+//   GET    /admin/informe      -> informe semanal en HTML; POST /admin/informe/enviar lo manda a info@ (solo admin)
 // Rutas de admin para cuentas:
 //   GET    /admin/cuentas      -> todas las cuentas con sus avisos y cuantos favoritos tienen
 //   POST   /admin/cuentas/vincular  { uid, clienteId|null }
@@ -66,6 +67,10 @@ const MAX_ENVIOS_METRICAS = 200;   // por IP cada 10 minutos (ver sumarMetricas)
 export default {
   async scheduled(evento, env, ctx) {
     ctx.waitUntil(mantenimiento(env, 'automatico'));
+    // informe semanal: solo los lunes y solo si esta activado (INFORME_SEMANAL = "1")
+    if (env.INFORME_SEMANAL === '1' && new Date(evento.scheduledTime || Date.now()).getUTCDay() === 1) {
+      ctx.waitUntil(enviarInforme(env).catch((e) => console.log('informe semanal', e.message)));
+    }
   },
 
   async fetch(request, env) {
@@ -109,7 +114,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin') && metodo === 'GET') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -135,6 +140,8 @@ export default {
     if (ruta === '/respaldos/archivo') return descargarRespaldo(url, env, cors);
     if (ruta === '/admin/cuentas') return adminCuentas(env, cors);
     if (ruta === '/admin/boletin') return adminBoletin(env, cors);
+    if (ruta === '/admin/informe') return new Response(htmlInforme(await datosInforme(env)), { headers: { ...cors, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+    if (ruta === '/admin/informe/enviar') { try { return json(await enviarInforme(env), 200, cors); } catch (e) { return json({ error: e.message }, 502, cors); } }
     if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
     if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
 
@@ -754,6 +761,109 @@ async function bajaBoletin(url, env) {
 async function adminBoletin(env, cors) {
   const r = (await env.DB.prepare('SELECT email, nombre, activo, creado, baja FROM boletin ORDER BY creado DESC').all()).results;
   return json({ suscriptores: r }, 200, cors);
+}
+
+// ---------- informe semanal para el dueno ----------
+// Cada lunes a las 3:00 a. m. (el mismo cron diario) manda a info@ un resumen de la semana: ventas,
+// abonos y ganancia, relojes estancados, en transito hace mucho, apartados con saldo, cuentas y
+// suscriptores nuevos y los relojes mas vistos. Se activa con la variable INFORME_SEMANAL = "1".
+//   GET  /admin/informe          -> el informe en HTML (para verlo sin enviarlo)
+//   POST /admin/informe/enviar   -> lo envia ahora (prueba)
+const PARA_INFORME = 'info@aphillipsstore.com';
+function fechaDMA(t) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(t || ''));
+  return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : null;
+}
+async function datosInforme(env) {
+  const ahora = Date.now(), desde = ahora - 7 * DIA_MS;
+  const filas = (await env.DB.prepare("SELECT col, id, datos FROM docs WHERE borrado = 0 AND col IN ('inventario', 'movimientos')").all()).results;
+  const inv = [], movs = [];
+  for (const f of filas) {
+    let d; try { d = JSON.parse(f.datos); } catch (e) { continue; }
+    d.id = f.id;
+    (f.col === 'inventario' ? inv : movs).push(d);
+  }
+  const num = (v) => Number(v) || 0;
+  const suma = (l, f) => l.reduce((a, m) => a + (f ? f(m) : num(m.monto)), 0);
+  const semana = movs.filter((m) => (m._ts || fechaDMA(m.fecha) || 0) >= desde);
+  const ingresos = semana.filter((m) => m.tipo === 'venta' || m.tipo === 'abono');
+  const r = {
+    desde, hasta: ahora,
+    numVentas: semana.filter((m) => m.tipo === 'venta' && !m._soloRegistro).length,
+    numAbonos: semana.filter((m) => m.tipo === 'abono').length,
+    ingresos: suma(ingresos), ganancia: suma(ingresos, (m) => num(m.monto) - num(m.costo)),
+    compras: suma(semana.filter((m) => m.tipo === 'compra')), gastos: suma(semana.filter((m) => m.tipo === 'gasto')),
+    estados: {}, estancados: [], transitoLargo: [], apartados: [], masVistos: []
+  };
+  const nombres = {};
+  for (const p of inv) {
+    nombres[p.id] = p.nombre;
+    r.estados[p.estado] = (r.estados[p.estado] || 0) + 1;
+    const alta = fechaDMA(p.fecha), dias = alta ? Math.floor((ahora - alta) / DIA_MS) : null;
+    if (p.estado === 'disponible' && dias !== null && dias > 45) r.estancados.push({ nombre: p.nombre, dias, precio: num(p.precio) });
+    if (p.estado === 'transito' && dias !== null && dias > 20) r.transitoLargo.push({ nombre: p.nombre, dias, paqueteria: p.paqueteria || '' });
+    if (p.estado === 'reservado' && p.reserva) {
+      const abonado = (p.reserva.abonos || []).reduce((a, x) => a + num(x.monto), 0);
+      const saldo = Math.max(0, num(p.reserva.precioAcordado) - abonado);
+      if (saldo > 0) r.apartados.push({ nombre: p.nombre, cliente: p.reserva.clienteNombre || '', saldo });
+    }
+  }
+  r.estancados.sort((a, b) => b.dias - a.dias);
+  const contar = async (sql, ...args) => { try { return (await env.DB.prepare(sql).bind(...args).first()).n || 0; } catch (e) { return 0; } };
+  r.cuentasNuevas = await contar('SELECT count(*) AS n FROM cuentas WHERE creado >= ?1', desde);
+  r.boletinNuevos = await contar('SELECT count(*) AS n FROM boletin WHERE activo = 1 AND creado >= ?1', desde);
+  r.boletinTotal = await contar('SELECT count(*) AS n FROM boletin WHERE activo = 1');
+  r.avisosActivos = await contar('SELECT count(*) AS n FROM avisos');
+  try {
+    const top = (await env.DB.prepare('SELECT id, vistas, aperturas, clics FROM metricas ORDER BY vistas DESC LIMIT 5').all()).results;
+    r.masVistos = top.filter((m) => nombres[m.id]).map((m) => ({ nombre: nombres[m.id], vistas: m.vistas, aperturas: m.aperturas, clics: m.clics }));
+  } catch (e) { /* sin metricas */ }
+  return r;
+}
+function htmlInforme(r) {
+  const e = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const dinero = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString('en-US');
+  const dia = (t) => new Date(t).toLocaleDateString('es-PA', { day: 'numeric', month: 'long', timeZone: 'America/Panama' });
+  const NEGRO = 'background-color:#000000;background-image:linear-gradient(#000000,#000000);';
+  const titulo = (t) => '<p style="margin:28px 0 10px;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#09090b;">' + t + '</p>';
+  const fila = (a, b) => '<tr><td style="padding:8px 0;border-bottom:1px solid #ececef;font-size:14px;color:#3f3f46;">' + a + '</td><td style="padding:8px 0;border-bottom:1px solid #ececef;font-size:14px;text-align:right;font-weight:bold;color:#09090b;">' + b + '</td></tr>';
+  const tabla = (filas) => '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + filas.join('') + '</table>';
+  const vacio = (t) => '<p style="margin:0;font-size:13px;color:#71717a;">' + t + '</p>';
+  const nEst = { disponible: 'Disponibles', transito: 'En tránsito', bajopedido: 'Bajo pedido', reservado: 'Apartados', vendido: 'Vendidos' };
+  let c = '';
+  c += titulo('La semana en números') + tabla([
+    fila('Ventas', r.numVentas + (r.numAbonos ? ' · ' + r.numAbonos + ' abono' + (r.numAbonos !== 1 ? 's' : '') : '')),
+    fila('Ingresos (ventas y abonos)', dinero(r.ingresos)), fila('Ganancia', dinero(r.ganancia)),
+    fila('Compras de relojes', dinero(r.compras)), fila('Gastos', dinero(r.gastos))]);
+  c += titulo('Inventario') + tabla(Object.keys(nEst).filter((k) => r.estados[k]).map((k) => fila(nEst[k], r.estados[k])));
+  c += titulo('Para revisar');
+  const pend = [];
+  r.apartados.forEach((a) => pend.push(fila('Saldo por cobrar · ' + e(a.nombre) + (a.cliente ? ' (' + e(a.cliente) + ')' : ''), dinero(a.saldo))));
+  r.transitoLargo.forEach((a) => pend.push(fila('En tránsito hace ' + a.dias + ' días · ' + e(a.nombre) + (a.paqueteria ? ' · ' + e(a.paqueteria) : ''), 'Revisar envío')));
+  r.estancados.slice(0, 8).forEach((a) => pend.push(fila(e(a.nombre) + ' · ' + a.dias + ' días sin venderse', 'Rebajar' + (a.precio ? ' (' + dinero(a.precio) + ')' : ''))));
+  c += pend.length ? tabla(pend) : vacio('Todo al día: no hay apartados con saldo, envíos atrasados ni relojes estancados.');
+  c += titulo('Tienda en línea') + tabla([
+    fila('Cuentas nuevas de clientes', r.cuentasNuevas), fila('Nuevos suscriptores del boletín', r.boletinNuevos + ' (total ' + r.boletinTotal + ')'),
+    fila('Avisos pedidos por clientes', r.avisosActivos)]);
+  if (r.masVistos.length) c += titulo('Relojes más vistos (desde el inicio)') + tabla(r.masVistos.map((m) => fila(e(m.nombre), m.vistas + ' vistas · ' + m.clics + ' a WhatsApp')));
+  return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<meta name="color-scheme" content="light only"><title>Informe semanal — Aphillips Store</title></head>' +
+    '<body style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#09090b;">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 12px;"><tr><td align="center">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;">' +
+    '<tr><td bgcolor="#000000" style="' + NEGRO + 'padding:22px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo.png" width="200" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;width:200px;max-width:100%;height:auto;color:#ffffff;font-family:Georgia,serif;font-size:22px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
+    '<tr><td style="padding:28px 32px 32px;">' +
+    '<p style="margin:0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6a6a6a;">Informe semanal</p>' +
+    '<p style="margin:6px 0 0;font-size:20px;font-weight:bold;">Del ' + dia(r.desde) + ' al ' + dia(r.hasta) + '</p>' + c +
+    '<p style="margin:30px 0 0;font-size:12px;color:#71717a;">Los detalles están en tu panel: <a href="' + TIENDA + 'admin" style="color:#09090b;">aphillipsstore.com/admin</a></p>' +
+    '</td></tr></table></td></tr></table></body></html>';
+}
+async function enviarInforme(env) {
+  if (!env.EMAIL) throw new Error('falta el envio de correo');
+  const r = await datosInforme(env);
+  await env.EMAIL.send({ from: REMITENTE, to: PARA_INFORME, subject: 'Informe semanal de Aphillips Store', html: htmlInforme(r),
+    text: 'Informe semanal: ' + r.numVentas + ' ventas, ingresos $' + r.ingresos + ', ganancia $' + r.ganancia + '. Detalles en aphillipsstore.com/admin' });
+  return { ok: true, ventas: r.numVentas, ingresos: r.ingresos };
 }
 
 // ---------- respaldos automaticos y limpieza de fotos ----------
