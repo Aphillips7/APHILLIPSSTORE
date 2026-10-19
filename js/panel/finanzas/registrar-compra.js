@@ -74,8 +74,8 @@ function existeCompraDe(producto){
     return m.desc===desc;
   });
 }
-function autoRegistrarCompraInv(producto) {
-  if (!producto || producto.estado !== 'disponible') return;
+function autoRegistrarCompraInv(producto, aunqueNoEsteDisponible) {
+  if (!producto || (producto.estado !== 'disponible' && !aunqueNoEsteDisponible)) return;
   var costo = producto.costoTotal || 0;
   if (!costo || costo <= 0) return;
   if (existeCompraDe(producto)) return;
@@ -84,6 +84,10 @@ function autoRegistrarCompraInv(producto) {
   save('movimientos');
 }
 
-export { _compraPicIdx, autoRegistrarCompraInv, existeCompraDe, filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, renderPickerCompra, seleccionarCompra };
+// Al vender un reloj que nunca paso por "disponible" (se vendio en transito o bajo pedido), su compra
+// no se habia registrado y el balance quedaba inflado: se registra al vender si falta.
+function registrarCompraSiFalta(producto){ autoRegistrarCompraInv(producto, true); }
+
+export { _compraPicIdx, autoRegistrarCompraInv, registrarCompraSiFalta, existeCompraDe, filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, renderPickerCompra, seleccionarCompra };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, seleccionarCompra });
