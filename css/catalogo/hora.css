@@ -32,3 +32,12 @@
   .hora-logo{display:block;height:44px;width:auto;}
   .hora-nw{white-space:nowrap;}
   .hora-frase{max-width:26ch;font-size:12px;font-style:italic;font-weight:300;line-height:1.4;color:#fff;}
+  /* PC: un poco mas grande que el bloque de TAG (punto medio entre el tamano anterior y el compacto) */
+  @media (min-width:821px){
+    .hora{--paso:14px;--esq:11px;padding:40px 16px;}
+    .hora-marco{max-width:620px;padding:22px 16px;}
+    .hora-reloj{width:78%;}
+    .hora-txt{gap:12px;}
+    .hora-logo{height:64px;}
+    .hora-frase{font-size:15px;}
+  }
