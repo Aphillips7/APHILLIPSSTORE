@@ -9,8 +9,12 @@ function renderInicio() {
   var mesAntDate = new Date(hoy.getFullYear(), hoy.getMonth()-1, 1);
   var mesAnteriorKey = mesAntDate.getFullYear() + '-' + String(mesAntDate.getMonth()+1).padStart(2,'0');
 
-  const ventas = state.movimientos.filter(m => m.tipo === 'venta' && finMesKey(m.fecha) === mesActualKey);
-  const ventasMesAnt = state.movimientos.filter(m => m.tipo === 'venta' && finMesKey(m.fecha) === mesAnteriorKey);
+  // Ingresos del mes = ventas + abonos de apartados (el abono es dinero que ya entro; al completar el
+  // apartado solo se registra el saldo como venta, con el costo completo). Asi coincide con Finanzas.
+  const esIngreso = m => m.tipo === 'venta' || m.tipo === 'abono';
+  const ventas = state.movimientos.filter(m => esIngreso(m) && finMesKey(m.fecha) === mesActualKey);
+  const ventasMesAnt = state.movimientos.filter(m => esIngreso(m) && finMesKey(m.fecha) === mesAnteriorKey);
+  const numVentas = ventas.filter(m => m.tipo === 'venta' && !m._soloRegistro).length;
   const totalVentas = ventas.reduce((a, b) => a + b.monto, 0);
   const totalVentasAnt = ventasMesAnt.reduce((a, b) => a + b.monto, 0);
   const totalGanancia = ventas.reduce((a, b) => a + (b.monto - (b.costo || 0)), 0);
@@ -20,7 +24,8 @@ function renderInicio() {
   document.getElementById('stat-ventas-mes').textContent = '$' + totalVentas.toLocaleString();
   document.getElementById('stat-ganancia').textContent = '$' + totalGanancia.toLocaleString();
   document.getElementById('stat-stock').textContent = stock;
-  document.getElementById('stat-hint-ventas').textContent = ventas.length + ' venta' + (ventas.length !== 1 ? 's' : '');
+  const numAbonos = ventas.filter(m => m.tipo === 'abono').length;
+  document.getElementById('stat-hint-ventas').textContent = numVentas + ' venta' + (numVentas !== 1 ? 's' : '') + (numAbonos ? ' · ' + numAbonos + ' abono' + (numAbonos !== 1 ? 's' : '') : '');
   setTrendInicio('trend-ventas', totalVentas, totalVentasAnt);
   setTrendInicio('trend-ganancia', totalGanancia, totalGananciaAnt);
 

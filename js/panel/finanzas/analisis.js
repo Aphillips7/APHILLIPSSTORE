@@ -22,9 +22,11 @@ function renderAnalisis(){
     if(!entradas.length){catCont.innerHTML='<div class="empty"><span></span>Sin gastos registrados aun</div>';}
     else{var maxCat=Math.max(...entradas.map(e=>e[1]));catCont.innerHTML=entradas.map(([k,v])=>{var p3=Math.round((v/maxCat)*100);return'<div class="fin-bar-row"><span class="fin-bar-label">'+k+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+p3+'%;background:var(--red);"></div></div><span class="fin-bar-val" style="color:var(--red);">$'+v.toLocaleString()+'</span></div>';}).join('');}
   }
-  var tG=ventas.reduce((a,b)=>a+(b.monto-(b.costo||0)),0);
-  finSetEl('an-margen-prom',(sumV>0?Math.round((tG/sumV)*100):0)+'%');
-  finSetEl('an-ticket','$'+(ventas.length?Math.round(sumV/ventas.length):0).toLocaleString());
+  // los abonos de apartados son ingreso sin costo (el costo completo va en la venta del saldo)
+  var tG=ventas.reduce((a,b)=>a+(b.monto-(b.costo||0)),0)+sumA;
+  finSetEl('an-margen-prom',((sumV+sumA)>0?Math.round((tG/(sumV+sumA))*100):0)+'%');
+  var nVent=ventas.filter(m=>!m._soloRegistro).length;
+  finSetEl('an-ticket','$'+(nVent?Math.round((sumV+sumA)/nVent):0).toLocaleString());
 }
 function setAnMes(key,btn){_anMesKey=key;document.querySelectorAll('#an-meses-btns .fin-mes-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderAnalisis();}
 

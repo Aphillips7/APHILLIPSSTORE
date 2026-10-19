@@ -10,14 +10,18 @@ function renderResumen(){
   var btns=document.getElementById('res-meses-btns');
   if(btns){btns.innerHTML='<button class="fin-mes-btn'+(!_resMesKey?' active':'')+'" data-key="">Todo</button>'+allMeses.slice().reverse().map(k=>'<button class="fin-mes-btn'+(k===_resMesKey?' active':'')+'" data-key="'+k+'">'+finMesLabel(k)+'</button>').join('');btns.querySelectorAll('.fin-mes-btn').forEach(b=>b.addEventListener('click',function(){setResMes(this.dataset.key,this);}));}
   var movs=_resMesKey?state.movimientos.filter(m=>finMesKey(m.fecha)===_resMesKey):state.movimientos;
-  var ventas=movs.filter(m=>m.tipo==='venta'),gastos=movs.filter(m=>m.tipo==='gasto');
-  var totalV=ventas.reduce((a,b)=>a+b.monto,0),totalG=ventas.reduce((a,b)=>a+(b.monto-(b.costo||0)),0);
+  // ingresos = ventas + abonos de apartados (igual que Finanzas e Inicio)
+  var ventas=movs.filter(m=>m.tipo==='venta'),gastos=movs.filter(m=>m.tipo==='gasto'),ingresos=movs.filter(m=>m.tipo==='venta'||m.tipo==='abono');
+  var totalV=ingresos.reduce((a,b)=>a+b.monto,0),totalG=ingresos.reduce((a,b)=>a+(b.monto-(b.costo||0)),0);
   var totalGastos=gastos.reduce((a,b)=>a+b.monto,0);
-  var ent=movs.filter(m=>m.tipo==='venta'||m.tipo==='compra').reduce((a,b)=>a+b.monto,0);
-  var sal=movs.filter(m=>m.tipo==='gasto'||m.tipo==='retiro').reduce((a,b)=>a+b.monto,0);
+  // Balance: entradas (ventas y abonos) menos salidas (compras, gastos y retiros). Antes las compras
+  // se sumaban como entrada por error.
+  var ent=totalV;
+  var sal=movs.filter(m=>m.tipo==='compra'||m.tipo==='gasto'||m.tipo==='retiro').reduce((a,b)=>a+b.monto,0);
   var mp=totalV>0?Math.round((totalG/totalV)*100):0;
   finSetEl('res-ventas','$'+totalV.toLocaleString());finSetEl('res-ganancia','$'+totalG.toLocaleString());finSetEl('res-balance','$'+(ent-sal).toLocaleString());
-  finSetEl('res-num-ventas',ventas.length+' venta'+(ventas.length!==1?'s':''));finSetEl('res-margen-prom','Margen: '+mp+'%');
+  var nV=ventas.filter(m=>!m._soloRegistro).length,nA=ingresos.length-ventas.length;
+  finSetEl('res-num-ventas',nV+' venta'+(nV!==1?'s':'')+(nA?' · '+nA+' abono'+(nA!==1?'s':''):''));finSetEl('res-margen-prom','Margen: '+mp+'%');
   finSetEl('res-reinversion','$'+Math.round(totalG*0.4).toLocaleString());finSetEl('res-personal','$'+Math.round(totalG*0.3).toLocaleString());finSetEl('res-fondo','$'+Math.round(totalG*0.3).toLocaleString());
   var meta=state.meta||0,pct=meta>0?Math.min(Math.round((totalV/meta)*100),100):0;
   finSetEl('gauge-pct',pct+'%');finSetEl('gauge-texto',meta>0?'$'+totalV.toLocaleString()+' de $'+meta.toLocaleString():'Sin meta definida');
