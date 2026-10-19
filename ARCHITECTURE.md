@@ -70,6 +70,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/formulario.js` | Registrar/editar/duplicar unidad, vista previa de margen |
 | `inventario/ficha.js` | "Pegar especificaciones": ordena la tabla de la marca en grupos (`p.ficha`), rellena los campos de siempre; el catalogo la muestra agrupada |
 | `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal. De cada una sube ademas una copia JPEG (1200 px, < 600 KB) para la vista previa en WhatsApp (`fotosJpg`, y la de la principal en `fotoCompartir`) |
+| `inventario/fondo.js` | Quita el fondo liso (relleno desde los bordes), recorta y centra el reloj en un cuadrado de 1400 px al 86 %, para que todas las fotos se vean del mismo tamano. "Arreglar fotos ya subidas" lo aplica a las existentes (el bucket de fotos tiene CORS GET para el dominio) |
 | `inventario/detalle.js` | Modal de detalle de una unidad |
 | `inventario/venta-modal.js` | Modal "vender" desde el inventario |
 | `inventario/reservas.js` | Reservar, abonos, completar y cancelar reserva |

@@ -11,12 +11,16 @@
    - Fotos antiguas guardadas como texto (base64) se siguen viendo
      hasta que se reemplacen.
    - Subir fotos requiere internet.
+   - Con "Quitar fondo y centrar" (marcado por defecto) se borra el
+     fondo liso y el reloj queda centrado y del mismo tamano en todas
+     (ver fondo.js). "Arreglar fotos" hace lo mismo con las ya subidas.
    - De cada foto se sube tambien una copia JPEG (1200 px) para la
      vista previa al compartir el link por WhatsApp (WhatsApp no
      garantiza WebP). La de la foto principal queda en fotoCompartir.
    ============================================================ */
 import { firebase } from '../../firebase.js';
 import { save, state } from '../state.js';
+import { prepararFoto } from './fondo.js';
 
 const API_FOTOS = 'https://api.aphillipsstore.com/fotos';
 const MAX_DIM = 1600;
@@ -106,19 +110,19 @@ async function _comprimir(file){
   var img=await _leerImagen(file);
   return _comprimirImg(img);
 }
-async function _comprimirImg(img){
-  var w=img.naturalWidth, h=img.naturalHeight;
+async function _comprimirImg(img, transparente){
+  var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
   if(w>MAX_DIM||h>MAX_DIM){ if(w>h){ h=Math.round(h*MAX_DIM/w); w=MAX_DIM; } else { w=Math.round(w*MAX_DIM/h); h=MAX_DIM; } }
   var c=document.createElement('canvas'); c.width=w; c.height=h;
   var ctx=c.getContext('2d'); ctx.imageSmoothingQuality='high'; ctx.drawImage(img,0,0,w,h);
   var blob=await _aBlob(c,'image/webp',0.86);
-  if(!blob || blob.type!=='image/webp') blob=await _aBlob(c,'image/jpeg',0.86);   // Safari antiguo
+  if(!blob || blob.type!=='image/webp') blob=await _aBlob(c, transparente?'image/png':'image/jpeg', 0.86);   // Safari antiguo (PNG si lleva transparencia)
   if(!blob) throw new Error('No se pudo convertir la imagen');
   return blob;
 }
 // copia JPEG chica (max 1200 px, fondo blanco por si la foto es PNG con transparencia)
 async function _jpegCompartir(img){
-  var lado=1200, w=img.naturalWidth, h=img.naturalHeight;
+  var lado=1200, w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
   if(w>lado||h>lado){ if(w>h){ h=Math.round(h*lado/w); w=lado; } else { w=Math.round(w*lado/h); h=lado; } }
   var c=document.createElement('canvas'); c.width=w; c.height=h;
   var ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
@@ -159,7 +163,9 @@ async function subirFotos(input){
     _estado('Subiendo foto '+(k+1)+' de '+archivos.length+'...');
     try{
       var img=await _leerImagen(archivos[k]);
-      var blob=await _comprimirImg(img);
+      var prep=_quitarFondo()?prepararFoto(img):null;
+      if(prep) img=prep.canvas;
+      var blob=await _comprimirImg(img, prep&&prep.sinFondo);
       var url=await _subir(blob);
       _fotos.push(url); ok++;
       renderFotos();
@@ -171,6 +177,41 @@ async function subirFotos(input){
   _bloquearGuardar(false);
   if(!fallos) _estado(ok===1?'Foto subida.':ok+' fotos subidas.','var(--green)');
   else if(ok) _estado(ok+' subidas, '+fallos+' con error. Intenta de nuevo con las que faltan.','var(--accent)');
+}
+function _quitarFondo(){ var c=document.getElementById('inv-quitar-fondo'); return !c || c.checked; }
+
+// "Arreglar fotos": quita el fondo y centra las fotos que ya estaban subidas (se suben como fotos nuevas
+// y reemplazan a las anteriores en la lista; hay que tocar "Guardar cambios" para que quede)
+function _leerUrl(url){
+  return new Promise(function(resolve, reject){
+    var img=new Image(); img.crossOrigin='anonymous';
+    img.onload=function(){ resolve(img); };
+    img.onerror=function(){ reject(new Error('No se pudo leer la foto')); };
+    img.src=url+(url.indexOf('?')<0?'?':'&')+'cors=1';
+  });
+}
+async function arreglarFotos(){
+  var lista=_fotos.filter(function(u){ return /^https:\/\//.test(u); });
+  if(!lista.length){ _estado('No hay fotos subidas para arreglar.','var(--muted)'); return; }
+  if(!navigator.onLine){ _estado('Necesitas internet para arreglar las fotos.','var(--red)'); return; }
+  var ok=0, sinCambio=0, fallos=0;
+  _subiendo++; _bloquearGuardar(true);
+  for(var k=0;k<lista.length;k++){
+    var vieja=lista[k];
+    _estado('Arreglando foto '+(k+1)+' de '+lista.length+'...');
+    try{
+      var prep=prepararFoto(await _leerUrl(vieja));
+      if(!prep.sinFondo){ sinCambio++; continue; }        // fondo no liso: se deja como estaba
+      var url=await _subir(await _comprimirImg(prep.canvas, true));
+      var i=_fotos.indexOf(vieja); if(i>=0) _fotos[i]=url;
+      delete _jpg[vieja];
+      try{ var jpg=await _jpegCompartir(prep.canvas); if(jpg) _jpg[url]=await _subir(jpg); }catch(e){ console.warn('Copia JPEG no subida:', e); }
+      ok++; renderFotos();
+    }catch(err){ fallos++; console.warn('Foto no arreglada:', err); }
+  }
+  _subiendo--; _bloquearGuardar(false);
+  var msg=(ok?ok+(ok===1?' foto arreglada':' fotos arregladas'):'Ninguna foto cambio')+(sinCambio?', '+sinCambio+' sin fondo liso (se dejaron igual)':'')+(fallos?', '+fallos+' con error':'')+'.';
+  _estado(msg+(ok?' Toca "Guardar cambios" para que quede.':''), fallos?'var(--accent)':ok?'var(--green)':'var(--muted)');
 }
 function _bloquearGuardar(si){
   var b=document.getElementById('inv-submit-btn');
@@ -228,6 +269,6 @@ async function migrarFotosAntiguas(){
 // Compatibilidad con el nombre anterior (onchange del HTML viejo)
 function subirFotoLocal(input){ return subirFotos(input); }
 
-export { fotoCompartirFormulario, fotosFormulario, fotosSubiendo, jpgsFormulario, migrarFotosAntiguas, moverFoto, previewFoto, quitarFoto, renderFotos, renderFotosAntiguas, setFotosFormulario, subirFotoLocal, subirFotos };
+export { arreglarFotos, fotoCompartirFormulario, fotosFormulario, fotosSubiendo, jpgsFormulario, migrarFotosAntiguas, moverFoto, previewFoto, quitarFoto, renderFotos, renderFotosAntiguas, setFotosFormulario, subirFotoLocal, subirFotos };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { migrarFotosAntiguas, moverFoto, quitarFoto, subirFotoLocal, subirFotos });
+Object.assign(window, { arreglarFotos, migrarFotosAntiguas, moverFoto, quitarFoto, subirFotoLocal, subirFotos });
