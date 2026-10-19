@@ -198,8 +198,14 @@ function productoJsonLd(r, enlace) {
       availability: 'https://schema.org/' + DISPONIBILIDAD[r.estado], itemCondition: 'https://schema.org/NewCondition',
       seller: { '@type': 'Organization', name: 'Aphillips Store' } };
   }
+  // migas de pan: Inicio > marca (o Relojes) > reloj; Google las muestra en vez de la direccion
+  const seccionMarca = marca ? '/' + marca.toLowerCase() : '/relojes';
+  const migas = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://' + DOMINIO + '/' },
+    { '@type': 'ListItem', position: 2, name: marca ? 'Relojes ' + marca : 'Relojes', item: 'https://' + DOMINIO + seccionMarca },
+    { '@type': 'ListItem', position: 3, name: r.nombre || 'Reloj', item: enlace }] };
   // "<" escapado para que el texto nunca pueda cerrar la etiqueta <script>
-  return JSON.stringify(p).replace(/</g, '\\u003c');
+  return JSON.stringify([p, migas]).replace(/</g, '\\u003c');
 }
 
 // Pide un archivo concreto al almacen de archivos manteniendo metodo y cabeceras
