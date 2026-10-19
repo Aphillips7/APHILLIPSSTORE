@@ -1,4 +1,5 @@
 import { poblarSelectClientes } from '../clientes/clientes.js';
+import { registrarCompraSiFalta } from '../finanzas/registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { cerrarModal } from './detalle.js';
 import { renderInventario } from './lista.js';
@@ -112,6 +113,7 @@ async function completarVentaReserva(id){
     item.estado='vendido';item.precioVenta=p.reserva.precioAcordado;item.fechaVenta=hoy;
     delete item.reserva;
     save('inventario');
+    registrarCompraSiFalta(item);
   }
   cerrarModal();renderInventario();renderInicio();
 }

@@ -1,5 +1,6 @@
 // =================== VENTA MODAL ===================
 import { poblarSelectClientes } from '../clientes/clientes.js';
+import { registrarCompraSiFalta } from '../finanzas/registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { renderInventario } from './lista.js';
 import { avisarError, cambiarEstadoSeguro } from './transacciones.js';
@@ -53,6 +54,7 @@ async function confirmarVentaModal(){
   save('inventario');
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,metodoPago:metodoPago,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:clienteId||null,clienteNombre:cliente?cliente.nombre:'',fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
+  registrarCompraSiFalta(state.inventario[i]);
   cerrarVentaModal();renderInicio();
 }
 
