@@ -1,7 +1,7 @@
 import { relojes } from './datos.js';
 import { _favoritos } from './favoritos.js';
 import { incMetrica } from './metricas.js';
-import { _destEsc as esc, toast } from './ui.js';
+import { _destEsc as esc, miniatura, toast } from './ui.js';
 import { saludo } from './sesion.js';
 import { WHATSAPP_NUM } from './whatsapp.js';
 import { textoETA } from '../products.js';
@@ -202,7 +202,7 @@ function pintarParecidos(r){
   if(!lista.length){ sec.hidden = true; return; }
   sec.hidden = false;
   sec.querySelector('.par-fila').innerHTML = lista.map(function(x){
-    var foto = typeof x.foto === 'string' && x.foto ? '<img src="'+esc(x.foto)+'" alt="" loading="lazy" decoding="async">' : '<span class="sinfoto">Sin foto</span>';
+    var foto = typeof x.foto === 'string' && x.foto ? '<img src="'+esc(miniatura(x.foto))+'" data-completa="'+esc(x.foto)+'" alt="" loading="lazy" decoding="async" onerror="fotoRespaldo(this)">' : '<span class="sinfoto">Sin foto</span>';
     var precio = x.estado === 'bajopedido' ? 'Bajo cotización' : x.precio ? '$'+Number(x.precio).toLocaleString() : '';
     return '<button type="button" class="par-card" onclick="abrirParecido(\''+esc(x.id)+'\')" aria-label="'+esc(x.nombre||'Reloj')+'">'+
       '<span class="par-foto">'+foto+'</span>'+

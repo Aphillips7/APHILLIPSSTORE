@@ -17,6 +17,7 @@
 //   GET    /metricas           -> { metricas: { id: {vistas, aperturas, clics, _ultima} }, importado }
 //   POST   /metricas/importar  cuerpo { metricas: {...} } suma las metricas antiguas de Firestore (solo una vez)
 //   POST   /fotos?reloj=<id>   cuerpo = la imagen (WebP/JPEG/PNG, max 4 MB) -> { url, clave }
+//   POST   /fotos?reloj=<id>&mini=<clave>  guarda la miniatura de esa foto en miniaturas/<clave> (tarjetas del catalogo)
 //   DELETE /fotos?clave=<clave>  borra una foto (solo claves "relojes/...")
 //   GET    /datos/resumen      -> { version, hashes: { col: { id: hash } } }   (datos del panel, etapa 3)
 //   GET    /datos?desde=<n>    -> { version, docs: [{col, id, datos, borrado, version}] }  (cambios desde n)
@@ -55,6 +56,7 @@
 
 const TIPOS = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
 const MAX_BYTES = 4 * 1024 * 1024;
+const RE_CLAVE_FOTO = /^relojes\/[A-Za-z0-9_-]+\/[A-Za-z0-9._-]+$/;
 const JWKS_URL = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 
 // Unicos campos que pueden salir al publico (igual que camposPublicos() en js/products.js).
@@ -166,6 +168,13 @@ export default {
       if (!datos.byteLength) return json({ error: 'La foto esta vacia' }, 400, cors);
       if (datos.byteLength > MAX_BYTES) return json({ error: 'La foto pesa mas de 4 MB' }, 413, cors);
 
+      // ?mini=<clave de una foto>: es su miniatura (para las tarjetas del catalogo); va en miniaturas/<clave>
+      const mini = url.searchParams.get('mini');
+      if (mini !== null) {
+        if (!RE_CLAVE_FOTO.test(mini) || !mini.startsWith('relojes/' + reloj + '/')) return json({ error: 'Clave invalida' }, 400, cors);
+        await env.FOTOS.put('miniaturas/' + mini, datos, { httpMetadata: { contentType: tipo, cacheControl: 'public, max-age=31536000, immutable' } });
+        return json({ url: env.FOTOS_URL_BASE + '/miniaturas/' + mini }, 201, cors);
+      }
       const clave = 'relojes/' + reloj + '/' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + '.' + ext;
       await env.FOTOS.put(clave, datos, {
         httpMetadata: { contentType: tipo, cacheControl: 'public, max-age=31536000, immutable' }
@@ -1046,7 +1055,12 @@ async function limpiarFotos(env) {
   const objetos = await listarTodo(env.FOTOS, 'relojes/');
   const borrar = objetos.filter((o) => !usadas.has(o.key) && o.uploaded.getTime() < limite).map((o) => o.key).slice(0, MAX_BORRAR_FOTOS);
   if (borrar.length) await env.FOTOS.delete(borrar);
-  return { revisadas: objetos.length, usadas: usadas.size, borradas: borrar.length };
+  // miniaturas cuya foto original ya no existe
+  const existentes = new Set(objetos.map((o) => o.key).filter((k) => !borrar.includes(k)));
+  const minis = await listarTodo(env.FOTOS, 'miniaturas/');
+  const borrarMinis = minis.filter((o) => !existentes.has(o.key.slice('miniaturas/'.length))).map((o) => o.key).slice(0, MAX_BORRAR_FOTOS);
+  if (borrarMinis.length) await env.FOTOS.delete(borrarMinis);
+  return { revisadas: objetos.length, usadas: usadas.size, borradas: borrar.length, miniaturasBorradas: borrarMinis.length };
 }
 
 async function listarRespaldos(env, cors) {
