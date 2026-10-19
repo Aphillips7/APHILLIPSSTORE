@@ -26,7 +26,7 @@ function verDetalle(id){
   var specsHtml=(p.mm||p.materialCaja||p.materialCorrea||p.colorEsfera||p.movimiento||p.agua||p.cristal||p.color||p.serie)?
     '<div style="padding:0 20px 4px;"><div style="font-size:10px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px;">Especificaciones</div>'+
       spec('Diametro',p.mm?p.mm+' mm':'')+spec('Material caja',p.materialCaja)+spec('Correa / brazalete',p.materialCorrea)+
-      spec('Color esfera',p.colorEsfera)+spec('Movimiento',p.movimiento)+spec('Resistencia agua',p.agua)+
+      spec('Color esfera',p.colorEsfera)+spec('Movimiento',String(p.movimiento||'').replace(/^cuarzo japon[eé]s$/i,'Cuarzo'))+spec('Resistencia agua',p.agua)+
       spec('Cristal',p.cristal)+spec('Color / variante',p.color)+spec('Numero de serie',p.serie)+
     '</div>':'';
   var notasHtml=p.notas?'<div style="margin:0 20px 16px;background:var(--bg2);border-radius:8px;padding:12px;font-size:13px;color:var(--muted);line-height:1.6;">'+p.notas+'</div>':'';

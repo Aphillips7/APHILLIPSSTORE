@@ -27,7 +27,7 @@ function camposPublicos(p){
   return {
     nombre:p.nombre||'', sku:p.sku||'', coleccion:p.coleccion||'', genero:p.genero||'',
     mm:p.mm||'', materialCaja:p.materialCaja||'', materialCorrea:p.materialCorrea||'',
-    colorEsfera:p.colorEsfera||'', movimiento:p.movimiento||'', agua:p.agua||'',
+    colorEsfera:p.colorEsfera||'', movimiento:String(p.movimiento||'').replace(/^cuarzo japon[eé]s$/i,'Cuarzo'), agua:p.agua||'',
     cristal:p.cristal||'', color:p.color||'', ficha:fichaPublica(p.ficha),
     calibre:p.calibre||'', corona:p.corona||'', materialBisel:p.materialBisel||'', colorBisel:p.colorBisel||'', materialEsfera:p.materialEsfera||'', anchoCorrea:p.anchoCorrea||'', largoCorrea:p.largoCorrea||'', colorCorrea:p.colorCorrea||'', notas:p.notas||'', descripcion:p.descripcion||'', eta:p.eta||'',
     precio:p.precio||0, foto:p.foto||'', fotos:Array.isArray(p.fotos)?p.fotos.slice(0,12):[], fotoCompartir:p.fotoCompartir||'',
