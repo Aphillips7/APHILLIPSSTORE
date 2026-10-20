@@ -245,28 +245,35 @@ function vigilarVistas(){
   document.addEventListener('reloj-abierto', programar);
   _clave = claveVista();
   // al cargar la pagina entra con un saltito y sonriendo
-  setTimeout(function(){ reaccionar('salto', 'feliz', true); }, 500);
+  setTimeout(function(){ reaccionar('salto', 'feliz', true); }, 150);
 }
 
 // ---------- no tapar los botones de compra ----------
 // Cuando "Comprar por WhatsApp" (o "Avisame") pasa por la esquina de abajo donde esta la mascota,
-// ella se aparta (se achica y desaparece) para no tapar el boton; vuelve al pasar.
+// ella sube y se queda justo encima del boton (siempre visible, sin taparlo).
 function esquivarBotones(){
-  if(!('IntersectionObserver' in window)) return;
-  var visibles = new Set(), io = null;
-  var armar = function(){
-    if(io) io.disconnect();
-    visibles.clear(); _raiz.classList.remove('esquiva');
-    var alto = _boton.getBoundingClientRect().height + 24;
-    io = new IntersectionObserver(function(entradas){
-      entradas.forEach(function(en){ if(en.isIntersecting) visibles.add(en.target); else visibles.delete(en.target); });
-      _raiz.classList.toggle('esquiva', visibles.size > 0 && !_abierta);
-    }, { rootMargin: '-' + Math.max(0, window.innerHeight - alto) + 'px 0px 0px 0px' });
-    document.querySelectorAll('#modal-wa, #modal-aviso, #btn-wa-favoritos').forEach(function(b){ io.observe(b); });
+  var pendiente = false;
+  var medir = function(){
+    pendiente = false;
+    var sube = 0;
+    if(!_abierta){
+      _raiz.style.setProperty('--masc-sube', '0px');           // se mide en su lugar normal
+      var m = _boton.getBoundingClientRect();
+      document.querySelectorAll('#modal-wa, #modal-aviso, #btn-wa-favoritos').forEach(function(b){
+        if(!b.offsetParent) return;
+        var r = b.getBoundingClientRect();
+        if(r.top < m.bottom && r.bottom > m.top && r.right > m.left) sube = Math.max(sube, m.bottom - r.top + 10);
+      });
+    }
+    _raiz.style.setProperty('--masc-sube', sube ? '-' + Math.round(sube) + 'px' : '0px');
   };
-  armar();
-  var t = 0;
-  window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(armar, 200); });
+  var programar = function(){ if(!pendiente){ pendiente = true; requestAnimationFrame(medir); } };
+  window.addEventListener('scroll', programar, { passive: true });
+  window.addEventListener('resize', programar);
+  var modal = document.getElementById('modal');
+  if(modal) modal.addEventListener('scroll', programar, { passive: true });
+  document.addEventListener('reloj-abierto', function(){ setTimeout(programar, 60); setTimeout(programar, 500); });
+  new MutationObserver(programar).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 }
 
 crear();
