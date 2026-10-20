@@ -47,10 +47,6 @@
   .masc-op:focus-visible{outline:2px solid var(--black);outline-offset:-2px;}
   .masc-op{-webkit-tap-highlight-color:transparent;}
 
-  /* sube por encima de un boton de compra que pase por su esquina (--masc-sube lo calcula mascota.js) */
-  .masc-boton{transform:translateY(var(--masc-sube,0px));}
-  .masc-burbuja{translate:0 var(--masc-sube,0px);}
-
   /* caras: la normal por defecto; data-cara en .mascota muestra otra por unos segundos */
   .masc-cara{display:none;}
   .mascota:not([data-cara]) .masc-cara-normal,
@@ -61,6 +57,9 @@
   /* entrada al cambiar de seccion: saltito con rebote, o un giro al abrir un reloj */
   .masc-entra{display:block;width:100%;height:100%;transform-origin:50% 90%;}
   .mascota.entra-salto .masc-entra{animation:mascEntraSalto .8s cubic-bezier(.3,1.4,.5,1) both;}
+  .mascota.entra-inicial .masc-entra{animation:mascEntraSalto .9s cubic-bezier(.3,1.4,.5,1) .35s both;}
+  .mascota.entra-inicial .masc-sombra{animation:mascSombraEntra .9s ease .35s both;}
+  @keyframes mascSombraEntra{0%{opacity:0;transform:scaleX(.3);}100%{opacity:1;transform:scaleX(1);}}
   .mascota.entra-giro .masc-entra{animation:mascEntraGiro .9s var(--ease) both;}
   @keyframes mascEntraSalto{0%{transform:translateY(46px) scale(.45) rotate(-16deg);opacity:0;}55%{transform:translateY(-12px) scale(1.06) rotate(6deg);opacity:1;}78%{transform:translateY(2px) scale(.97) rotate(-3deg);}100%{transform:none;opacity:1;}}
   @keyframes mascEntraGiro{0%{transform:translateY(0) rotateY(0);}40%{transform:translateY(-16px) rotateY(180deg);}80%{transform:translateY(-4px) rotateY(360deg);}100%{transform:none;}}

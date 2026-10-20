@@ -179,6 +179,11 @@ function crear(){
     '<div class="masc-burbuja" aria-hidden="true">¿Te ayudo a elegir?</div>' +
     '<button type="button" class="masc-boton" aria-label="Asistente: ¿en qué te ayudo?" aria-expanded="false" aria-controls="masc-panel">' +
       '<span class="masc-flota"><span class="masc-entra">' + SVG + '</span></span><span class="masc-sombra"></span></button>';
+  // entrada al abrir la pagina: empieza oculta y aparece con un saltito, saludando y sonriendo
+  _raiz.classList.add('entra-inicial', 'saluda');
+  _raiz.dataset.cara = 'feliz';
+  setTimeout(function(){ _raiz.classList.remove('entra-inicial', 'saluda'); }, 2000);
+  setTimeout(function(){ if(_raiz.dataset.cara === 'feliz') delete _raiz.dataset.cara; }, 3400);
   document.body.appendChild(_raiz);
   _panel = _raiz.querySelector('.masc-panel');
   _boton = _raiz.querySelector('.masc-boton');
@@ -244,40 +249,10 @@ function vigilarVistas(){
   if(tit) new MutationObserver(programar).observe(tit, { childList: true, characterData: true, subtree: true });
   document.addEventListener('reloj-abierto', programar);
   _clave = claveVista();
-  // al cargar la pagina entra con un saltito y sonriendo
-  setTimeout(function(){ reaccionar('salto', 'feliz', true); }, 150);
-}
 
-// ---------- no tapar los botones de compra ----------
-// Cuando "Comprar por WhatsApp" (o "Avisame") pasa por la esquina de abajo donde esta la mascota,
-// ella sube y se queda justo encima del boton (siempre visible, sin taparlo).
-function esquivarBotones(){
-  var pendiente = false;
-  var medir = function(){
-    pendiente = false;
-    var sube = 0;
-    if(!_abierta){
-      _raiz.style.setProperty('--masc-sube', '0px');           // se mide en su lugar normal
-      var m = _boton.getBoundingClientRect();
-      document.querySelectorAll('#modal-wa, #modal-aviso, #btn-wa-favoritos').forEach(function(b){
-        if(!b.offsetParent) return;
-        var r = b.getBoundingClientRect();
-        if(r.top < m.bottom && r.bottom > m.top && r.right > m.left) sube = Math.max(sube, m.bottom - r.top + 10);
-      });
-    }
-    _raiz.style.setProperty('--masc-sube', sube ? '-' + Math.round(sube) + 'px' : '0px');
-  };
-  var programar = function(){ if(!pendiente){ pendiente = true; requestAnimationFrame(medir); } };
-  window.addEventListener('scroll', programar, { passive: true });
-  window.addEventListener('resize', programar);
-  var modal = document.getElementById('modal');
-  if(modal) modal.addEventListener('scroll', programar, { passive: true });
-  document.addEventListener('reloj-abierto', function(){ setTimeout(programar, 60); setTimeout(programar, 500); });
-  new MutationObserver(programar).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 }
 
 crear();
 vigilarVistas();
-esquivarBotones();
 
 export { abrir as abrirMascota, cerrarPanel as cerrarMascota };
