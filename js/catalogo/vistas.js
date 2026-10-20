@@ -134,9 +134,14 @@ function aplicarVistaDesdeHash(){
   if(_esHashCatalogo(h)){
     var yaEn = document.body.classList.contains('vista-catalogo');
     document.body.classList.add('vista-catalogo');
-    var m = _marcaDeHash(h);
-    if(m) setMarca(m); else setGenero(_HASH_GEN[h]);
-    _tituloVista(_HASH_GEN[h], m);
+    var m = _marcaDeHash(h), g = _HASH_GEN[h] || '';
+    // al volver de la ficha de un reloj la vista es la misma: no se vuelve a pintar la lista
+    // (si no, las tarjetas aparecen de nuevo como si cargaran y se pierde el lugar)
+    var mismaVista = yaEn && (m ? _filtroMarca === m : (!_filtroMarca && _filtroGenero === g));
+    if(!mismaVista){
+      if(m) setMarca(m); else setGenero(_HASH_GEN[h]);
+      _tituloVista(_HASH_GEN[h], m);
+    }
     if(!yaEn){ window.scrollTo(0,0); }
     _refrescarHeader();
   } else if(document.body.classList.contains('vista-catalogo')){

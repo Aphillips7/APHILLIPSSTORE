@@ -141,7 +141,7 @@ function guia(){
   location.href = enReloj ? g.getAttribute('href') : 'guia-de-tamanos';
 }
 
-function abrir(){
+function abrir(porTeclado){
   if(_abierta) return;
   _abierta = true;
   ocultarBurbuja();
@@ -149,8 +149,9 @@ function abrir(){
   _boton.setAttribute('aria-expanded', 'true');
   _panel.hidden = false;
   requestAnimationFrame(function(){ _panel.classList.add('on'); });
+  // solo con teclado se lleva el foco a la primera opcion (con el dedo se veia un recuadro en "Asesoria")
   var primera = _panel.querySelector('.masc-op');
-  if(primera) setTimeout(function(){ primera.focus({ preventScroll: true }); }, 60);
+  if(porTeclado && primera) setTimeout(function(){ primera.focus({ preventScroll: true }); }, 60);
 }
 function cerrarPanel(){
   if(!_abierta) return;
@@ -183,7 +184,7 @@ function crear(){
   _boton = _raiz.querySelector('.masc-boton');
   _burbuja = _raiz.querySelector('.masc-burbuja');
 
-  _boton.addEventListener('click', function(){ vibrar(10); _abierta ? cerrarPanel() : abrir(); });
+  _boton.addEventListener('click', function(e){ vibrar(10); _abierta ? cerrarPanel() : abrir(e.detail === 0); });
   _raiz.querySelector('.masc-x').addEventListener('click', cerrarPanel);
   _panel.addEventListener('click', function(e){
     var b = e.target.closest('.masc-op'); if(!b) return;

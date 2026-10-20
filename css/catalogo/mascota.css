@@ -43,7 +43,9 @@
   .masc-op-txt small{display:block;margin-top:2px;font-size:var(--fs-etiqueta);color:var(--gris-texto);}
   .masc-op-flecha{flex:none;width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform var(--fast) var(--ease);}
   @media (hover:hover) and (pointer:fine){ .masc-op:hover{background:#f4f7f9;} .masc-op:hover .masc-op-flecha{transform:translateX(3px);} }
+  .masc-op:focus{outline:none;}
   .masc-op:focus-visible{outline:2px solid var(--black);outline-offset:-2px;}
+  .masc-op{-webkit-tap-highlight-color:transparent;}
 
   /* caras: la normal por defecto; data-cara en .mascota muestra otra por unos segundos */
   .masc-cara{display:none;}
