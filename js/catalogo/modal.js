@@ -338,7 +338,8 @@ function cerrarModalUI(){
   document.body.classList.remove('prod-abierto');
   document.body.style.overflow = '';
   _idAbierto = null;
-  if(estabaAbierta) window.scrollTo(0, _scrollAntes);
+  // se espera un cuadro: el pie de pagina vuelve a su lugar despues (si no, la pagina aun es mas corta)
+  if(estabaAbierta){ var y = _scrollAntes; requestAnimationFrame(function(){ window.scrollTo(0, y); }); }
 }
 function cerrar(){
   if(history.state && history.state.modal){ history.back(); } else { cerrarModalUI(); }
