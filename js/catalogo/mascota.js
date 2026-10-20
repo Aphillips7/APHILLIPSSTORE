@@ -179,6 +179,11 @@ function crear(){
     '<div class="masc-burbuja" aria-hidden="true">¿Te ayudo a elegir?</div>' +
     '<button type="button" class="masc-boton" aria-label="Asistente: ¿en qué te ayudo?" aria-expanded="false" aria-controls="masc-panel">' +
       '<span class="masc-flota"><span class="masc-entra">' + SVG + '</span></span><span class="masc-sombra"></span></button>';
+  // entrada al abrir la pagina: empieza oculta y aparece con un saltito, saludando y sonriendo
+  _raiz.classList.add('entra-inicial', 'saluda');
+  _raiz.dataset.cara = 'feliz';
+  setTimeout(function(){ _raiz.classList.remove('entra-inicial', 'saluda'); }, 2000);
+  setTimeout(function(){ if(_raiz.dataset.cara === 'feliz') delete _raiz.dataset.cara; }, 3400);
   document.body.appendChild(_raiz);
   _panel = _raiz.querySelector('.masc-panel');
   _boton = _raiz.querySelector('.masc-boton');
@@ -244,33 +249,10 @@ function vigilarVistas(){
   if(tit) new MutationObserver(programar).observe(tit, { childList: true, characterData: true, subtree: true });
   document.addEventListener('reloj-abierto', programar);
   _clave = claveVista();
-  // al cargar la pagina entra con un saltito y sonriendo
-  setTimeout(function(){ reaccionar('salto', 'feliz', true); }, 500);
-}
 
-// ---------- no tapar los botones de compra ----------
-// Cuando "Comprar por WhatsApp" (o "Avisame") pasa por la esquina de abajo donde esta la mascota,
-// ella se aparta (se achica y desaparece) para no tapar el boton; vuelve al pasar.
-function esquivarBotones(){
-  if(!('IntersectionObserver' in window)) return;
-  var visibles = new Set(), io = null;
-  var armar = function(){
-    if(io) io.disconnect();
-    visibles.clear(); _raiz.classList.remove('esquiva');
-    var alto = _boton.getBoundingClientRect().height + 24;
-    io = new IntersectionObserver(function(entradas){
-      entradas.forEach(function(en){ if(en.isIntersecting) visibles.add(en.target); else visibles.delete(en.target); });
-      _raiz.classList.toggle('esquiva', visibles.size > 0 && !_abierta);
-    }, { rootMargin: '-' + Math.max(0, window.innerHeight - alto) + 'px 0px 0px 0px' });
-    document.querySelectorAll('#modal-wa, #modal-aviso, #btn-wa-favoritos').forEach(function(b){ io.observe(b); });
-  };
-  armar();
-  var t = 0;
-  window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(armar, 200); });
 }
 
 crear();
 vigilarVistas();
-esquivarBotones();
 
 export { abrir as abrirMascota, cerrarPanel as cerrarMascota };
