@@ -47,6 +47,10 @@
   .masc-op:focus-visible{outline:2px solid var(--black);outline-offset:-2px;}
   .masc-op{-webkit-tap-highlight-color:transparent;}
 
+  /* se aparta mientras un boton de compra pasa por su esquina */
+  .masc-boton,.masc-burbuja{transition:opacity .25s var(--ease),transform .25s var(--ease);}
+  .mascota.esquiva .masc-boton,.mascota.esquiva .masc-burbuja{opacity:0;transform:translateY(24px) scale(.6);pointer-events:none;}
+
   /* caras: la normal por defecto; data-cara en .mascota muestra otra por unos segundos */
   .masc-cara{display:none;}
   .mascota:not([data-cara]) .masc-cara-normal,

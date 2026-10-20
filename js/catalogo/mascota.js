@@ -248,7 +248,29 @@ function vigilarVistas(){
   setTimeout(function(){ reaccionar('salto', 'feliz', true); }, 500);
 }
 
+// ---------- no tapar los botones de compra ----------
+// Cuando "Comprar por WhatsApp" (o "Avisame") pasa por la esquina de abajo donde esta la mascota,
+// ella se aparta (se achica y desaparece) para no tapar el boton; vuelve al pasar.
+function esquivarBotones(){
+  if(!('IntersectionObserver' in window)) return;
+  var visibles = new Set(), io = null;
+  var armar = function(){
+    if(io) io.disconnect();
+    visibles.clear(); _raiz.classList.remove('esquiva');
+    var alto = _boton.getBoundingClientRect().height + 24;
+    io = new IntersectionObserver(function(entradas){
+      entradas.forEach(function(en){ if(en.isIntersecting) visibles.add(en.target); else visibles.delete(en.target); });
+      _raiz.classList.toggle('esquiva', visibles.size > 0 && !_abierta);
+    }, { rootMargin: '-' + Math.max(0, window.innerHeight - alto) + 'px 0px 0px 0px' });
+    document.querySelectorAll('#modal-wa, #modal-aviso, #btn-wa-favoritos').forEach(function(b){ io.observe(b); });
+  };
+  armar();
+  var t = 0;
+  window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(armar, 200); });
+}
+
 crear();
 vigilarVistas();
+esquivarBotones();
 
 export { abrir as abrirMascota, cerrarPanel as cerrarMascota };
