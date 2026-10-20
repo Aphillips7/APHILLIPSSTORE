@@ -317,6 +317,7 @@ function abrir(id){
   var hd = document.getElementById('site-header');
   if(hd) document.documentElement.style.setProperty('--header-h', hd.offsetHeight + 'px');
   var m = document.getElementById('modal');
+  if(!m.classList.contains('open')) _scrollAntes = window.scrollY;
   m.classList.add('open');
   m.setAttribute('aria-hidden', 'false');
   m.scrollTop = 0;
@@ -326,13 +327,18 @@ function abrir(id){
   if(!(history.state && history.state.modal===id)) history.pushState({modal:id}, '', '?id='+encodeURIComponent(id));
   incMetrica(id, 'aperturas');
 }
+// lugar de la pagina donde estaba el cliente al abrir el reloj: al cerrarlo vuelve exactamente ahi
+var _scrollAntes = 0;
+if('scrollRestoration' in history) history.scrollRestoration = 'manual';
 function cerrarModalUI(){
   var m = document.getElementById('modal');
+  var estabaAbierta = m.classList.contains('open');
   m.classList.remove('open');
   m.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('prod-abierto');
   document.body.style.overflow = '';
   _idAbierto = null;
+  if(estabaAbierta) window.scrollTo(0, _scrollAntes);
 }
 function cerrar(){
   if(history.state && history.state.modal){ history.back(); } else { cerrarModalUI(); }
