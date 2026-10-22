@@ -57,7 +57,7 @@ function renderListaFavoritos(){
     var precio = r.estado==='bajopedido' ? 'Bajo pedido' : '$'+(r.precio||0).toLocaleString();
     var badge = r.estado==='transito' ? 'EN TRÁNSITO' : (r.estado==='bajopedido' ? 'BAJO PEDIDO' : (r.estado==='vendido' ? 'AGOTADO' : 'DISPONIBLE'));
     var sub = (r.coleccion||'') + (r.sku ? (r.coleccion?' · ':'')+'Ref. '+r.sku : '');
-    var foto = r.foto ? '<img class="fav-fila-foto" src="'+esc(miniatura(r.foto))+'" data-completa="'+esc(r.foto)+'" alt="" onclick="verDesdeFavoritos(\''+r.id+'\')" onerror="if(!fotoRespaldo(this))this.style.display=\'none\'" />' : '<div class="fav-fila-foto" onclick="verDesdeFavoritos(\''+r.id+'\')"></div>';
+    var foto = r.foto ? '<span class="fav-fila-marco"><img class="fav-fila-foto" src="'+esc(miniatura(r.foto))+'" data-completa="'+esc(r.foto)+'" alt="" onclick="verDesdeFavoritos(\''+r.id+'\')" onerror="if(!fotoRespaldo(this))this.style.display=\'none\'" /></span>' : '<div class="fav-fila-foto" onclick="verDesdeFavoritos(\''+r.id+'\')"></div>';
     return '<div class="fav-fila">'+foto+
       '<div class="fav-fila-info" onclick="verDesdeFavoritos(\''+r.id+'\')">'+
         '<span class="fav-badge">'+badge+'</span>'+

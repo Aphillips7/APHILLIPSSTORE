@@ -27,8 +27,14 @@
 //   POST   /mantenimiento      hace ahora el respaldo y la limpieza de fotos (lo mismo que el cron diario)
 //
 // Rutas de clientes (cualquier cuenta con sesion de Firebase; cada uno SOLO ve y cambia lo suyo):
-//   GET    /cuenta             -> { perfil, favoritos, avisos, vinculado, esAdmin }  (crea la cuenta la 1.a vez)
-//   PUT    /cuenta/perfil      { nombre, telefono }
+//   GET    /cuenta             -> { perfil, favoritos, avisos, vinculado, esAdmin }  (crea la cuenta la 1.a vez;
+//                              perfil.completo = false hasta tener nombre, apellido, WhatsApp, terminos y mayor de edad)
+//   PUT    /cuenta/perfil      { nombre, apellido, telefono, cedula?, nacimiento?, muneca?, contacto?, novedades?,
+//                                direccion?: { provincia, ciudad, linea, referencia }, terminos?, mayorEdad? }
+//   POST   /cuenta/registro    lo mismo que /cuenta/perfil, pero se acepta antes de verificar el correo (al crear la cuenta)
+//   GET    /cuenta/pedidos     -> { pedidos }   sus pedidos hechos por WhatsApp, con el estado y el historial
+//   POST   /cuenta/pedidos     { numero, relojId } -> crea el pedido (o devuelve el que ya tiene abierto de ese reloj)
+//   POST   /cuenta/pedidos/cancelar { numero }  solo mientras esta "solicitado"
 //   PUT    /cuenta/favoritos   { ids: [...] }  (reemplaza la lista, max 100)
 //   POST   /cuenta/avisos      { tipo: 'reloj'|'marca', valor }   DELETE /cuenta/avisos?tipo=&valor=
 //   GET    /cuenta/compras     -> compras y apartados (solo si el admin vinculo la cuenta a un cliente)
@@ -48,6 +54,8 @@
 //   GET    /admin/cuentas      -> todas las cuentas con sus avisos y cuantos favoritos tienen
 //   POST   /admin/cuentas/vincular  { uid, clienteId|null }
 //   POST   /admin/avisos/avisado    { uid, tipo, valor, estado, precio }  (marca el WhatsApp como enviado)
+//   GET    /admin/pedidos      -> pedidos con los datos de la cuenta (codigo, nombre, WhatsApp)
+//   POST   /admin/pedidos/estado    { numero, estado, entrega?, tracking?, nota? }  (solo pasos permitidos)
 //
 // Tarea diaria (cron, 3:00 a. m. de Panama): respaldo de los datos en el bucket PRIVADO
 // aphillips-respaldos (se guardan RETENCION_DIAS dias) y borrado de fotos que ningun reloj usa
@@ -111,6 +119,8 @@ export default {
       if (!proveedor || proveedor === 'anonymous' || proveedor === 'custom') return json({ error: 'Inicia sesion con tu cuenta' }, 403, cors);
       // el correo de verificacion se pide justamente antes de estar verificado
       if (ruta === '/cuenta/verificacion' && metodo === 'POST') return correoVerificacion(request, env, cors, sesion);
+      // los datos del registro (WhatsApp, terminos...) se guardan justo al crear la cuenta, antes de verificar
+      if (ruta === '/cuenta/registro' && metodo === 'POST') return rutaCuenta(ruta, metodo, request, url, env, cors, sesion);
       // cuentas con correo y contrasena: deben verificar el correo (el dueno queda exento)
       if (proveedor === 'password' && !sesion.email_verified && !esDueno(sesion.sub, env)) {
         return json({ error: 'Verifica tu correo para usar tu cuenta.', falta: 'verificacion' }, 403, cors);
@@ -123,7 +133,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado') && metodo === 'POST');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado' || ruta === '/admin/pedidos/estado') && metodo === 'POST') || (ruta === '/admin/pedidos' && metodo === 'GET');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -156,6 +166,8 @@ export default {
     if (ruta === '/admin/informe/enviar') { try { return json(await enviarInforme(env), 200, cors); } catch (e) { return json({ error: e.message }, 502, cors); } }
     if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
     if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
+    if (ruta === '/admin/pedidos') return adminPedidos(env, cors);
+    if (ruta === '/admin/pedidos/estado') return adminEstadoPedido(request, env, cors);
 
     if (metodo === 'POST') {
       const reloj = (url.searchParams.get('reloj') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
@@ -462,16 +474,19 @@ async function rutaCuenta(ruta, metodo, request, url, env, cors, sesion) {
   const uid = sesion.sub;
   const ahora = Date.now();
   // la cuenta se crea la primera vez que el cliente entra
-  await env.DB.prepare('INSERT INTO cuentas (uid, email, nombre, telefono, creado, actualizado) VALUES (?1, ?2, ?3, \'\', ?4, ?4) ' +
-    'ON CONFLICT(uid) DO UPDATE SET email = excluded.email')
-    .bind(uid, limpiarTexto(sesion.email, 120), limpiarTexto(sesion.name, 60), ahora).run();
+  // y recibe su codigo de cliente (AP-00012) a partir del rowid: unico y nunca se repite
+  await env.DB.batch([
+    env.DB.prepare('INSERT INTO cuentas (uid, email, nombre, telefono, creado, actualizado) VALUES (?1, ?2, ?3, \'\', ?4, ?4) ' +
+      'ON CONFLICT(uid) DO UPDATE SET email = excluded.email').bind(uid, limpiarTexto(sesion.email, 120), limpiarTexto(sesion.name, 60), ahora),
+    env.DB.prepare("UPDATE cuentas SET codigo = 'AP-' || printf('%05d', rowid) WHERE uid = ?1 AND codigo IS NULL").bind(uid)
+  ]);
 
   if (ruta === '/cuenta' && metodo === 'GET') {
-    const c = await env.DB.prepare('SELECT email, nombre, telefono, cliente_id FROM cuentas WHERE uid = ?1').bind(uid).first();
+    const c = await env.DB.prepare('SELECT * FROM cuentas WHERE uid = ?1').bind(uid).first();
     const fav = await env.DB.prepare('SELECT reloj_id FROM favoritos WHERE uid = ?1 ORDER BY creado').bind(uid).all();
     const av = await env.DB.prepare('SELECT tipo, valor, creado FROM avisos WHERE uid = ?1 ORDER BY creado DESC').bind(uid).all();
     return json({
-      perfil: { nombre: c.nombre, telefono: c.telefono, email: c.email },
+      perfil: perfilDe(c),
       favoritos: fav.results.map((r) => r.reloj_id),
       avisos: av.results,
       vinculado: !!c.cliente_id,
@@ -482,19 +497,12 @@ async function rutaCuenta(ruta, metodo, request, url, env, cors, sesion) {
     await env.DB.batch([
       env.DB.prepare('DELETE FROM favoritos WHERE uid = ?1').bind(uid),
       env.DB.prepare('DELETE FROM avisos WHERE uid = ?1').bind(uid),
+      env.DB.prepare("DELETE FROM pedidos WHERE uid = ?1 AND estado IN ('solicitado', 'cancelado')").bind(uid),
       env.DB.prepare('DELETE FROM cuentas WHERE uid = ?1').bind(uid)
     ]);
     return json({ ok: true }, 200, cors);
   }
-  if (ruta === '/cuenta/perfil' && metodo === 'PUT') {
-    const b = await leerJson(request);
-    if (!b) return json({ error: 'Datos invalidos' }, 400, cors);
-    const nombre = limpiarTexto(b.nombre, 60);
-    const telefono = limpiarTelefono(b.telefono);
-    if (telefono === null) return json({ error: 'Revisa tu numero de WhatsApp (solo numeros, con codigo de pais si no es de Panama).' }, 400, cors);
-    await env.DB.prepare('UPDATE cuentas SET nombre = ?2, telefono = ?3, actualizado = ?4 WHERE uid = ?1').bind(uid, nombre, telefono, ahora).run();
-    return json({ ok: true, perfil: { nombre, telefono } }, 200, cors);
-  }
+  if ((ruta === '/cuenta/perfil' && metodo === 'PUT') || (ruta === '/cuenta/registro' && metodo === 'POST')) return guardarPerfilCuenta(uid, request, env, cors);
   if (ruta === '/cuenta/favoritos' && metodo === 'PUT') {
     const b = await leerJson(request);
     if (!b || !Array.isArray(b.ids)) return json({ error: 'Faltan los favoritos' }, 400, cors);
@@ -526,8 +534,174 @@ async function rutaCuenta(ruta, metodo, request, url, env, cors, sesion) {
     return json({ ok: true }, 200, cors);
   }
   if (ruta === '/cuenta/compras' && metodo === 'GET') return comprasCliente(uid, env, cors);
+  if (ruta === '/cuenta/pedidos' && metodo === 'GET') return pedidosCliente(uid, env, cors);
+  if (ruta === '/cuenta/pedidos' && metodo === 'POST') return crearPedido(uid, request, env, cors);
+  if (ruta === '/cuenta/pedidos/cancelar' && metodo === 'POST') return cancelarPedidoCliente(uid, request, env, cors);
   return json({ error: 'No encontrado' }, 404, cors);
 }
+
+// ---------- perfil completo, codigo de cliente y pedidos ----------
+// WhatsApp normalizado: solo digitos. 7 u 8 digitos = Panama (se le pone 507). Otros paises: con su
+// codigo (8 a 15 digitos). Devuelve { norm, bonito } o null si no es un numero valido.
+function normalizarTelefono(t) {
+  let d = String(t == null ? '' : t).replace(/[^0-9]/g, '');
+  if (!d) return { norm: '', bonito: '' };
+  if (d.length === 7 || d.length === 8) d = '507' + d;
+  if (d.length < 10 || d.length > 15) return null;
+  if (d.startsWith('507') && (d.length === 10 || d.length === 11)) {
+    const n = d.slice(3);
+    return { norm: d, bonito: '+507 ' + (n.length === 8 ? n.slice(0, 4) + '-' + n.slice(4) : n.slice(0, 3) + '-' + n.slice(3)) };
+  }
+  return { norm: d, bonito: '+' + d };
+}
+const PROVINCIAS = ['Bocas del Toro', 'Chiriqui', 'Cocle', 'Colon', 'Darien', 'Herrera', 'Los Santos', 'Panama', 'Panama Oeste', 'Veraguas',
+  'Comarca Guna Yala', 'Comarca Embera-Wounaan', 'Comarca Ngabe-Bugle'];
+const CONTACTOS = ['whatsapp', 'llamada', 'correo'];
+function leerDireccion(txt) { try { const d = JSON.parse(txt || '{}'); return d && typeof d === 'object' ? d : {}; } catch (e) { return {}; } }
+function perfilDe(c) {
+  return {
+    codigo: c.codigo || '', email: c.email || '', nombre: c.nombre || '', apellido: c.apellido || '',
+    telefono: c.telefono || '', cedula: c.cedula || '', nacimiento: c.nacimiento || '', muneca: c.muneca || '',
+    contacto: c.contacto || 'whatsapp', novedades: !!c.novedades, direccion: leerDireccion(c.direccion),
+    terminos: !!c.terminos, mayorEdad: !!c.mayor_edad,
+    completo: !!(c.nombre && c.apellido && c.tel_norm && c.terminos && c.mayor_edad)
+  };
+}
+function edadDe(fecha) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha || '');
+  if (!m) return -1;
+  const n = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])), hoy = new Date();
+  if (isNaN(n) || +m[1] < 1900) return -1;
+  let e = hoy.getUTCFullYear() - n.getUTCFullYear();
+  if (hoy.getUTCMonth() < n.getUTCMonth() || (hoy.getUTCMonth() === n.getUTCMonth() && hoy.getUTCDate() < n.getUTCDate())) e--;
+  return e;
+}
+// Guarda el perfil. Poka-yoke en el servidor: aunque alguien salte las validaciones del navegador,
+// aqui no entra un WhatsApp invalido o repetido, ni una cuenta sin aceptar terminos y ser mayor de edad.
+async function guardarPerfilCuenta(uid, request, env, cors) {
+  const b = await leerJson(request);
+  if (!b) return json({ error: 'Datos invalidos' }, 400, cors);
+  const c = await env.DB.prepare('SELECT * FROM cuentas WHERE uid = ?1').bind(uid).first();
+  const nombre = limpiarTexto(b.nombre, 60), apellido = limpiarTexto(b.apellido, 60);
+  if (!nombre) return json({ error: 'Escribe tu nombre.', campo: 'nombre' }, 400, cors);
+  if (!apellido) return json({ error: 'Escribe tu apellido.', campo: 'apellido' }, 400, cors);
+  const tel = normalizarTelefono(b.telefono);
+  if (!tel || !tel.norm) return json({ error: 'Revisa tu WhatsApp: 8 digitos si es de Panama, o con el codigo de tu pais.', campo: 'telefono' }, 400, cors);
+  const otro = await env.DB.prepare('SELECT codigo FROM cuentas WHERE tel_norm = ?1 AND uid <> ?2').bind(tel.norm, uid).first();
+  if (otro) return json({ error: 'Ese WhatsApp ya esta registrado en otra cuenta. Si es tuyo, inicia sesion con esa cuenta o escribenos.', campo: 'telefono' }, 409, cors);
+  const terminos = c.terminos || (b.terminos === true ? Date.now() : 0);
+  const mayor = c.mayor_edad || (b.mayorEdad === true ? Date.now() : 0);
+  if (!terminos) return json({ error: 'Para crear tu cuenta debes aceptar los terminos y la politica de privacidad.', campo: 'terminos' }, 400, cors);
+  if (!mayor) return json({ error: 'Debes confirmar que eres mayor de 18 anos.', campo: 'mayorEdad' }, 400, cors);
+  const nacimiento = limpiarTexto(b.nacimiento, 10);
+  if (nacimiento) {
+    const e = edadDe(nacimiento);
+    if (e < 0 || e > 110) return json({ error: 'Revisa tu fecha de nacimiento.', campo: 'nacimiento' }, 400, cors);
+    if (e < 18) return json({ error: 'Debes ser mayor de 18 anos.', campo: 'nacimiento' }, 400, cors);
+  }
+  let muneca = String(b.muneca == null ? '' : b.muneca).replace(',', '.').trim();
+  if (muneca) {
+    const n = Number(muneca);
+    if (!(n >= 12 && n <= 25)) return json({ error: 'La medida de tu muneca va en centimetros (entre 12 y 25).', campo: 'muneca' }, 400, cors);
+    muneca = String(Math.round(n * 10) / 10);
+  }
+  const contacto = CONTACTOS.includes(b.contacto) ? b.contacto : (c.contacto || 'whatsapp');
+  const novedades = b.novedades === undefined ? (c.novedades ? 1 : 0) : (b.novedades === true ? 1 : 0);
+  let direccion = leerDireccion(c.direccion);
+  if (b.direccion && typeof b.direccion === 'object') {
+    const d = b.direccion;
+    direccion = {
+      provincia: PROVINCIAS.includes(d.provincia) ? d.provincia : '',
+      ciudad: limpiarTexto(d.ciudad, 80), linea: limpiarTexto(d.linea, 160), referencia: limpiarTexto(d.referencia, 160)
+    };
+    if ((direccion.linea || direccion.ciudad) && !direccion.provincia) return json({ error: 'Elige la provincia de tu direccion.', campo: 'provincia' }, 400, cors);
+  }
+  try {
+    await env.DB.prepare('UPDATE cuentas SET nombre = ?2, apellido = ?3, telefono = ?4, tel_norm = ?5, terminos = ?6, mayor_edad = ?7, novedades = ?8, ' +
+      'cedula = ?9, nacimiento = ?10, muneca = ?11, contacto = ?12, direccion = ?13, actualizado = ?14 WHERE uid = ?1')
+      .bind(uid, nombre, apellido, tel.bonito, tel.norm, terminos, mayor, novedades, limpiarTexto(b.cedula, 20).toUpperCase(),
+        nacimiento, muneca, contacto, JSON.stringify(direccion), Date.now()).run();
+  } catch (e) {
+    if (/UNIQUE/i.test(String(e && e.message))) return json({ error: 'Ese WhatsApp ya esta registrado en otra cuenta.', campo: 'telefono' }, 409, cors);
+    throw e;
+  }
+  const nueva = await env.DB.prepare('SELECT * FROM cuentas WHERE uid = ?1').bind(uid).first();
+  return json({ ok: true, perfil: perfilDe(nueva) }, 200, cors);
+}
+
+const RE_PEDIDO = /^P-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{5}$/;
+const PASOS_PEDIDO = { solicitado: ['confirmado', 'cancelado'], confirmado: ['pagado', 'cancelado'], pagado: ['enviado', 'entregado'], enviado: ['entregado'], entregado: [], cancelado: [] };
+const MAX_PEDIDOS_ABIERTOS = 10;
+function pedidoDe(f) {
+  let h = []; try { h = JSON.parse(f.historial || '[]'); } catch (e) {}
+  return { numero: f.numero, relojId: f.reloj_id, reloj: f.reloj, sku: f.sku, foto: f.foto, precio: f.precio, estado: f.estado,
+    entrega: f.entrega, direccion: leerDireccion(f.direccion), tracking: f.tracking, nota: f.nota, historial: h, creado: f.creado, actualizado: f.actualizado };
+}
+async function pedidosCliente(uid, env, cors) {
+  const r = await env.DB.prepare('SELECT * FROM pedidos WHERE uid = ?1 ORDER BY creado DESC LIMIT 100').bind(uid).all();
+  return json({ pedidos: r.results.map(pedidoDe) }, 200, cors);
+}
+async function crearPedido(uid, request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || !RE_PEDIDO.test(b.numero || '') || typeof b.relojId !== 'string') return json({ error: 'Pedido invalido' }, 400, cors);
+  const c = await env.DB.prepare('SELECT * FROM cuentas WHERE uid = ?1').bind(uid).first();
+  if (!perfilDe(c).completo) return json({ error: 'Completa tus datos en Mi cuenta para hacer pedidos.', falta: 'perfil' }, 400, cors);
+  // si ya tiene un pedido abierto de ese reloj, se usa ese (no se duplica con cada toque)
+  const abierto = await env.DB.prepare("SELECT * FROM pedidos WHERE uid = ?1 AND reloj_id = ?2 AND estado IN ('solicitado', 'confirmado') ORDER BY creado DESC").bind(uid, b.relojId).first();
+  if (abierto) return json({ ok: true, existente: true, pedido: pedidoDe(abierto) }, 200, cors);
+  const n = await env.DB.prepare("SELECT count(*) AS n FROM pedidos WHERE uid = ?1 AND estado IN ('solicitado', 'confirmado')").bind(uid).first();
+  if (n.n >= MAX_PEDIDOS_ABIERTOS) return json({ error: 'Tienes muchos pedidos abiertos. Escribenos por WhatsApp para continuarlos.' }, 429, cors);
+  const r = await relojPublico(b.relojId, env);
+  if (!r) return json({ error: 'Ese reloj ya no esta en el catalogo.' }, 404, cors);
+  if (!['disponible', 'transito', 'bajopedido'].includes(r.estado)) return json({ error: 'Ese reloj ya no esta disponible.' }, 409, cors);
+  const ahora = Date.now();
+  const foto = typeof r.foto === 'string' && r.foto.startsWith('https://') ? r.foto : '';
+  const historial = JSON.stringify([{ estado: 'solicitado', fecha: ahora }]);
+  try {
+    await env.DB.prepare('INSERT INTO pedidos (numero, uid, reloj_id, reloj, sku, foto, precio, estado, direccion, historial, creado, actualizado) ' +
+      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'solicitado', ?8, ?9, ?10, ?10)")
+      .bind(b.numero, uid, r.id, limpiarTexto(r.nombre, 120), limpiarTexto(r.sku, 40), foto, Number(r.precio) || 0, c.direccion || '{}', historial, ahora).run();
+  } catch (e) {
+    if (/UNIQUE|PRIMARY/i.test(String(e && e.message))) return json({ error: 'Numero de pedido repetido', repetido: true }, 409, cors);
+    throw e;
+  }
+  const f = await env.DB.prepare('SELECT * FROM pedidos WHERE numero = ?1').bind(b.numero).first();
+  return json({ ok: true, pedido: pedidoDe(f) }, 200, cors);
+}
+async function cancelarPedidoCliente(uid, request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || !RE_PEDIDO.test(b.numero || '')) return json({ error: 'Pedido invalido' }, 400, cors);
+  const f = await env.DB.prepare('SELECT * FROM pedidos WHERE numero = ?1 AND uid = ?2').bind(b.numero, uid).first();
+  if (!f) return json({ error: 'No encontrado' }, 404, cors);
+  if (f.estado !== 'solicitado') return json({ error: 'Este pedido ya fue confirmado; para cambiarlo escribenos por WhatsApp.' }, 409, cors);
+  const h = pedidoDe(f).historial; h.push({ estado: 'cancelado', fecha: Date.now(), nota: 'Cancelado por el cliente' });
+  await env.DB.prepare("UPDATE pedidos SET estado = 'cancelado', historial = ?2, actualizado = ?3 WHERE numero = ?1").bind(b.numero, JSON.stringify(h), Date.now()).run();
+  return json({ ok: true }, 200, cors);
+}
+async function adminPedidos(env, cors) {
+  const r = await env.DB.prepare('SELECT p.*, c.codigo, c.nombre AS c_nombre, c.apellido AS c_apellido, c.telefono AS c_tel, c.email AS c_email, c.cliente_id AS c_cliente ' +
+    'FROM pedidos p LEFT JOIN cuentas c ON c.uid = p.uid ORDER BY p.creado DESC LIMIT 300').all();
+  return json({ pedidos: r.results.map((f) => Object.assign(pedidoDe(f), {
+    uid: f.uid, cuenta: f.codigo ? { codigo: f.codigo, nombre: f.c_nombre, apellido: f.c_apellido, telefono: f.c_tel, email: f.c_email, clienteId: f.c_cliente || '' } : null
+  })) }, 200, cors);
+}
+async function adminEstadoPedido(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || !RE_PEDIDO.test(b.numero || '')) return json({ error: 'Pedido invalido' }, 400, cors);
+  const f = await env.DB.prepare('SELECT * FROM pedidos WHERE numero = ?1').bind(b.numero).first();
+  if (!f) return json({ error: 'No encontrado' }, 404, cors);
+  // poka-yoke: solo se avanza por los pasos permitidos (no se puede, por ejemplo, entregar algo cancelado)
+  if (!(PASOS_PEDIDO[f.estado] || []).includes(b.estado)) return json({ error: 'No se puede pasar de "' + f.estado + '" a "' + b.estado + '".' }, 409, cors);
+  const entrega = b.entrega === 'envio' || b.entrega === 'retiro' ? b.entrega : f.entrega;
+  const tracking = b.tracking !== undefined ? limpiarTexto(b.tracking, 80) : f.tracking;
+  const nota = b.nota !== undefined ? limpiarTexto(b.nota, 300) : f.nota;
+  const h = pedidoDe(f).historial; h.push({ estado: b.estado, fecha: Date.now(), nota: limpiarTexto(b.nota, 300) || undefined });
+  await env.DB.prepare('UPDATE pedidos SET estado = ?2, entrega = ?3, tracking = ?4, nota = ?5, historial = ?6, actualizado = ?7 WHERE numero = ?1')
+    .bind(b.numero, b.estado, entrega, tracking, nota, JSON.stringify(h), Date.now()).run();
+  const n = await env.DB.prepare('SELECT * FROM pedidos WHERE numero = ?1').bind(b.numero).first();
+  return json({ ok: true, pedido: pedidoDe(n) }, 200, cors);
+}
+
 
 async function relojPublico(id, env) {
   if (!RE_ID.test(id)) return null;
@@ -563,7 +737,7 @@ async function comprasCliente(uid, env, cors) {
 }
 
 async function adminCuentas(env, cors) {
-  const cuentas = (await env.DB.prepare('SELECT uid, email, nombre, telefono, cliente_id, creado FROM cuentas ORDER BY creado DESC').all()).results;
+  const cuentas = (await env.DB.prepare('SELECT uid, codigo, email, nombre, apellido, telefono, novedades, cliente_id, creado FROM cuentas ORDER BY creado DESC').all()).results;
   const favs = (await env.DB.prepare('SELECT uid, count(*) AS n FROM favoritos GROUP BY uid').all()).results;
   const avisos = (await env.DB.prepare('SELECT uid, tipo, valor, estado_base, precio_base, creado, avisado FROM avisos').all()).results;
   const nFav = Object.fromEntries(favs.map((r) => [r.uid, r.n]));

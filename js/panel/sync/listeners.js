@@ -3,6 +3,7 @@ import { renderConfigPage } from '../auth/auth-overlay.js';
 import { renderCatalogoAdmin } from '../catalogo-admin.js';
 import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
 import { cargarCuentasWeb, renderCuentasWeb } from '../clientes/cuentas-web.js';
+import { cargarPedidosWeb, renderPedidosWeb } from '../clientes/pedidos-web.js';
 import { cargarBoletin } from '../clientes/boletin.js';
 import { cargarSalud } from '../clientes/salud.js';
 import { renderContenido, renderIdeas } from '../contenido.js';
@@ -34,6 +35,7 @@ function refrescarVista(key){
     try{ syncCatalogoPublico(); }catch(e){}
     try{ renderFotosAntiguas(); }catch(e){}
     try{ renderCuentasWeb(); }catch(e){}
+    try{ renderPedidosWeb(); }catch(e){}
   }else if(key==='movimientos'){
     try{ renderHistorial(); }catch(e){}
     try{ renderResumen(); }catch(e){}
@@ -43,6 +45,7 @@ function refrescarVista(key){
   }else if(key==='clientes'){
     try{ renderClientes(); }catch(e){}
     try{ renderCuentasWeb(); }catch(e){}
+    try{ renderPedidosWeb(); }catch(e){}
     try{ poblarSelectClientes('fin-cliente'); }catch(e){}
     try{ poblarSelectClientes('reserva-cliente'); }catch(e){}
   }else if(key==='config'){
@@ -62,9 +65,10 @@ function iniciarListenersFirebase(){
   cargarMetricasCloudflare();
   try{ cargarRespaldosNube(); }catch(e){}
   try{ cargarCuentasWeb(); }catch(e){}
+  try{ cargarPedidosWeb(); }catch(e){}
   try{ cargarBoletin(); }catch(e){}
   try{ cargarSalud(); }catch(e){}
-  if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(document.hidden) return; cargarMetricasCloudflare(); try{ cargarCuentasWeb(); }catch(e){} try{ cargarBoletin(); }catch(e){} }, 120000);
+  if(!_timerMetricas) _timerMetricas=setInterval(function(){ if(document.hidden) return; cargarMetricasCloudflare(); try{ cargarCuentasWeb(); }catch(e){} try{ cargarPedidosWeb(); }catch(e){} try{ cargarBoletin(); }catch(e){} }, 120000);
 }
 
 // Metricas del catalogo (vistas, aperturas, clics), guardadas en Cloudflare (D1).
