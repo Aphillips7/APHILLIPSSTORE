@@ -7,7 +7,10 @@ import { avisarError, cambiarEstadoSeguro } from './transacciones.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 
 var _ventaModalIdx=null;
-function abrirVentaModal(id){
+var _alVender=null;   // opcional: se llama despues de registrar la venta (p. ej. marcar un pedido web como pagado)
+// opc (opcional): { clienteId, precio, alVender } para vender desde un pedido web con todo ya elegido
+function abrirVentaModal(id, opc){
+  opc=opc||{};
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); return; }
   var p0=state.inventario[i];
@@ -15,16 +18,17 @@ function abrirVentaModal(id){
   if(p0.estado==='vendido'){ alert('Este reloj ya esta vendido.'); renderInventario(); return; }
   if(p0.estado==='reservado'){ alert('Este reloj esta apartado por '+(p0.reserva?p0.reserva.clienteNombre:'un cliente')+'. Usa "Completar venta" en su ficha para que cuenten los abonos.'); renderInventario(); return; }
   _ventaModalIdx=id;var p=p0;
-  poblarSelectClientes('venta-modal-cliente');
+  _alVender=typeof opc.alVender==='function'?opc.alVender:null;
+  poblarSelectClientes('venta-modal-cliente', opc.clienteId||'');
   document.getElementById('venta-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('venta-modal-costo').textContent='$'+(p.costoTotal||0).toLocaleString();
   var precioEl=document.getElementById('venta-modal-precio');
-  precioEl.value=p.precio||'';
+  precioEl.value=opc.precio||p.precio||'';
   document.getElementById('venta-modal-preview').style.display='none';
   document.getElementById('venta-overlay').classList.add('open');
   setTimeout(()=>precioEl.focus(),100);
   precioEl.oninput=()=>actualizarVentaModalPreview(p.costoTotal||0);
-  if(p.precio)actualizarVentaModalPreview(p.costoTotal||0);
+  if(precioEl.value)actualizarVentaModalPreview(p.costoTotal||0);
 }
 function actualizarVentaModalPreview(costo){
   var precio=parseFloat(document.getElementById('venta-modal-precio').value)||0;
@@ -36,7 +40,7 @@ function actualizarVentaModalPreview(costo){
     document.getElementById('vm-ganancia').style.color=ganancia>=0?'var(--green)':'var(--red)';
   } else {prev.style.display='none';}
 }
-function cerrarVentaModal(){document.getElementById('venta-overlay').classList.remove('open');_ventaModalIdx=null;renderInventario();}
+function cerrarVentaModal(){document.getElementById('venta-overlay').classList.remove('open');_ventaModalIdx=null;_alVender=null;renderInventario();}
 var _vendiendo=false;   // evita registrar la misma venta dos veces con un doble toque
 async function confirmarVentaModal(){
   if(_ventaModalIdx===null||_vendiendo)return;
@@ -67,7 +71,9 @@ async function confirmarVentaModal(){
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,metodoPago:metodoPago,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:clienteId||null,clienteNombre:cliente?cliente.nombre:'',fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   registrarCompraSiFalta(state.inventario[i]);
+  var despues=_alVender;
   cerrarVentaModal();renderInicio();
+  if(despues) despues();
 }
 
 export { _ventaModalIdx, abrirVentaModal, actualizarVentaModalPreview, cerrarVentaModal, confirmarVentaModal };

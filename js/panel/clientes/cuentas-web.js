@@ -11,7 +11,8 @@ import { state } from '../state.js';
 const API = 'https://api.aphillipsstore.com';
 const TIENDA = 'https://aphillipsstore.com/';
 const MARCAS = { invicta: 'Invicta', bulova: 'Bulova', technomarine: 'TechnoMarine' };
-let _cuentas = null, _error = '';
+let _cuentas = null, _error = '', _buscar = '';
+function buscarCuentaWeb(v){ _buscar = String(v || '').toLowerCase().trim(); renderCuentasWeb(); var b = document.getElementById('cw-buscar'); if(b){ b.focus(); b.setSelectionRange(b.value.length, b.value.length); } }
 
 function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function normalizar(t){ return String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,''); }
@@ -92,8 +93,11 @@ function renderCuentasWeb(){
   }).join('') + '<div style="height:14px;"></div>';
   var opcionesCli = '<option value="">— Sin vincular —</option>' + state.clientes.map(function(cl){ return '<option value="' + esc(cl.id) + '">' + esc(cl.nombre || cl.id) + '</option>'; }).join('');
   h += '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin:4px 0 8px;">Cuentas registradas (' + _cuentas.length + ')</div>';
+  h += '<input type="search" id="cw-buscar" placeholder="Buscar por código AP-…, nombre, WhatsApp o correo" value="' + esc(_buscar) + '" oninput="buscarCuentaWeb(this.value)" style="width:100%;margin-bottom:6px;">';
+  var cuentas = _cuentas.filter(function(c){ return !_buscar || [c.codigo, c.nombre, c.apellido, c.telefono, String(c.telefono||'').replace(/[^0-9]/g,''), c.email].join(' ').toLowerCase().indexOf(_buscar) !== -1; });
   if(!_cuentas.length) h += '<div style="font-size:12px;color:var(--muted);">Todavía nadie creó su cuenta en el catálogo.</div>';
-  else h += _cuentas.map(function(c){
+  else if(!cuentas.length) h += '<div style="font-size:12px;color:var(--muted);">Ninguna cuenta coincide.</div>';
+  else h += cuentas.map(function(c){
     var sel = opcionesCli.replace('value="' + esc(c.cliente_id || '') + '"', 'value="' + esc(c.cliente_id || '') + '" selected');
     var avisos = (c.avisos || []).map(function(a){
       if(a.tipo === 'marca') return 'Marca ' + (MARCAS[a.valor] || a.valor);
@@ -101,7 +105,7 @@ function renderCuentasWeb(){
       return p ? p.nombre : 'reloj borrado';
     }).join(', ');
     return '<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
-      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><b>' + esc(c.nombre || '(sin nombre)') + '</b><span style="font-size:12px;color:var(--muted);">' + esc(c.email) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><b>' + (c.codigo ? '<span style="color:var(--accent,#3C6E8F);">' + esc(c.codigo) + '</span> · ' : '') + esc(((c.nombre || '') + ' ' + (c.apellido || '')).trim() || '(sin nombre)') + '</b><span style="font-size:12px;color:var(--muted);">' + esc(c.email) + '</span></div>' +
       '<div style="font-size:12px;color:var(--muted);margin:3px 0 6px;">' + (c.telefono ? 'WhatsApp ' + esc(c.telefono) : 'Sin WhatsApp') + ' · ' + c.favoritos + ' favoritos' + (avisos ? ' · Avisos: ' + esc(avisos) : '') + '</div>' +
       '<label style="font-size:12px;color:var(--muted);">Cliente del panel (para que vea sus compras): <select style="width:auto;display:inline-block;padding:4px 6px;font-size:12px;" onchange="vincularCuentaWeb(\'' + esc(c.uid) + '\', this.value)">' + sel + '</select></label>' +
     '</div>';
@@ -128,4 +132,4 @@ async function vincularCuentaWeb(uid, clienteId){
 
 export { avisosPendientes, cargarCuentasWeb, renderCuentasWeb };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { enviarAvisoWeb, vincularCuentaWeb });
+Object.assign(window, { buscarCuentaWeb, enviarAvisoWeb, vincularCuentaWeb });

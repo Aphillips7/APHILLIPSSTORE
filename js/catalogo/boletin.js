@@ -1,6 +1,8 @@
 // =================== BOLETIN ===================
 // "Suscribete al boletin" (pie de pagina): ventana con el correo -> POST /boletin de la API, que lo guarda
 // en D1 y manda un correo de bienvenida con enlace para darse de baja. La lista se ve en el panel.
+import { sugerirCorreo } from './ui.js';
+
 var API = 'https://api.aphillipsstore.com';
 var _ventana = null, _ultimoFoco = null;
 
@@ -42,19 +44,6 @@ function pintar(html){
   if(ok){ ok.addEventListener('click', cerrarBoletin); ok.focus(); }
 }
 
-// poka-yoke: errores de dedo comunes en el dominio ("gmial.com", "hotmail.con") se ofrecen corregidos
-var DOMINIOS = { gmail: 'gmail.com', hotmail: 'hotmail.com', outlook: 'outlook.com', yahoo: 'yahoo.com', icloud: 'icloud.com', live: 'live.com' };
-var TYPOS = { gmial: 'gmail', gmal: 'gmail', gamil: 'gmail', gnail: 'gmail', gmali: 'gmail', gmaill: 'gmail', hotmial: 'hotmail', hotmal: 'hotmail', homail: 'hotmail', hotmil: 'hotmail', outlok: 'outlook', outloo: 'outlook', yaho: 'yahoo', yahooo: 'yahoo', iclod: 'icloud', icloud: 'icloud' };
-function sugerirCorreo(email){
-  var m = email.toLowerCase().match(/^([^@\s]+)@([a-z0-9-]+)\.([a-z.]+)$/);
-  if(!m) return '';
-  var base = TYPOS[m[2]] || m[2];
-  if(DOMINIOS[base]){
-    var bien = DOMINIOS[base];
-    if((m[2] + '.' + m[3]) !== bien && /^(com?|con|cm|om|comm|cpm|vom|xom)$/.test(m[3])) return m[1] + '@' + bien;
-  } else if(/^(con|cpm|vom|xom|comm|cm|om)$/.test(m[3])) return m[1] + '@' + m[2] + '.com';
-  return '';
-}
 async function enviar(ev){
   ev.preventDefault();
   var campo = document.getElementById('bol-email');

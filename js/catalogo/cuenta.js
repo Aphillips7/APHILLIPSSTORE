@@ -13,6 +13,7 @@ import { relojes } from './datos.js';
 import { _favoritos, abrirFavoritos, alCambiarFavoritos, cerrarFavoritos, reemplazarFavoritos } from './favoritos.js';
 import { sesion, tieneAviso } from './sesion.js';
 import { _destEsc as esc, toast } from './ui.js';
+import { datosForm, formListo, htmlCompletar, htmlMiCuenta, htmlRegistro, iniciarMiCuenta, prepararFormularios, reiniciarMiCuenta } from './mi-cuenta.js';
 
 const API = 'https://api.aphillipsstore.com';
 const SDK = ['https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js',
@@ -25,7 +26,6 @@ let _fb = null;              // promesa con window.firebase ya iniciado
 let _cargando = false;       // esperando la respuesta de /cuenta
 let _mensaje = '';           // aviso arriba del panel (p. ej. "Inicia sesión para recibir avisos")
 let _pendiente = null;       // aviso que el cliente pidio antes de entrar o de poner su WhatsApp
-let _compras = null;         // respuesta de /cuenta/compras
 let _admin = null;           // datos de la seccion del administrador
 let _modo = 'entrar';        // formulario de correo: 'entrar' | 'crear' | 'recuperar'
 let _porVerificar = '';      // correo de una cuenta nueva que aun no se verifico
@@ -77,7 +77,7 @@ async function alCambiarSesion(user){
       // la cuenta del dueno no suma visitas en las metricas (se puede cambiar en opciones de desarrollador)
       if(sesion.esAdmin){ try{ if(localStorage.getItem(CLAVE_NO_CONTAR) === null) localStorage.setItem(CLAVE_NO_CONTAR, '1'); }catch(e){} }
       await unirFavoritos(d.favoritos || []);
-      if(_pendiente && sesion.perfil.telefono){ var p = _pendiente; _pendiente = null; await activarAviso(p.tipo, p.valor); }
+      if(_pendiente && sesion.perfil.completo){ var p = _pendiente; _pendiente = null; await activarAviso(p.tipo, p.valor); }
     }catch(e){
       if(e.datos && e.datos.falta === 'verificacion'){ _porVerificar = user.email || 'tu correo'; _mensaje = ''; }
       else _mensaje = 'No se pudo cargar tu cuenta: ' + e.message;
@@ -85,7 +85,7 @@ async function alCambiarSesion(user){
     _cargando = false;
   }else{
     sesion.activa = false; sesion.perfil = null; sesion.avisos = []; sesion.esAdmin = false; sesion.vinculado = false;
-    _compras = null; _admin = null; _porVerificar = '';
+    reiniciarMiCuenta(); _admin = null; _porVerificar = '';
     try{ localStorage.removeItem(CLAVE_SESION); }catch(e){}
   }
   marcarBotonCuenta();
@@ -161,19 +161,23 @@ function entrarConCorreo(ev){
   });
   return false;
 }
+// Crear cuenta: el formulario (mi-cuenta.js) ya valido todo mientras se escribia; aqui se vuelve a revisar,
+// se crea el usuario en Firebase y se guardan sus datos (WhatsApp, terminos...) antes de verificar el correo.
 function crearCuenta(ev){
   if(ev && ev.preventDefault) ev.preventDefault();
-  var nombre = valor('cta-nuevo-nombre'), correo = valor('cta-email'), clave = document.getElementById('cta-pass').value;
-  if(!nombre || !correo){ _mensaje = 'Escribe tu nombre y tu correo.'; render(); return false; }
-  // misma regla que la politica de contrasenas de Firebase: 8+ caracteres, una mayuscula y una minuscula
-  if(clave.length < 8 || !/[A-Z]/.test(clave) || !/[a-z]/.test(clave)){ _mensaje = 'La contraseña debe tener al menos 8 caracteres, con una mayúscula y una minúscula.'; render(); return false; }
+  var f = ev.target;
+  if(!formListo(f)) return false;
+  var d = datosForm(f);
   conBoton('cta-crear', 'Creando cuenta...', async function(){
     var fb = await cargarFirebase();
     _mensaje = '';
-    var cred = await fb.auth().createUserWithEmailAndPassword(correo, clave);
-    await cred.user.updateProfile({ displayName: nombre.slice(0, 60) });
-    try{ await enviarVerificacion(cred.user, nombre); }catch(e){ /* la cuenta ya existe: puede pedir otro correo desde la vista de verificar */ }
-    _porVerificar = correo;
+    var cred = await fb.auth().createUserWithEmailAndPassword(d.email, d.clave);
+    await cred.user.updateProfile({ displayName: (d.nombre + ' ' + d.apellido).slice(0, 60) });
+    try{
+      await pedir('/cuenta/registro', { method: 'POST', body: { nombre: d.nombre, apellido: d.apellido, telefono: d.telefono, terminos: !!d.terminos, mayorEdad: !!d.terminos, novedades: !!d.novedades } });
+    }catch(e){ _mensaje = 'Tu cuenta se creó, pero hay que revisar un dato: ' + e.message + ' Podrás corregirlo al entrar.'; }
+    try{ await enviarVerificacion(cred.user, d.nombre); }catch(e){ /* puede pedir otro correo desde la vista de verificar */ }
+    _porVerificar = d.email;
     render();
   });
   return false;
@@ -303,25 +307,6 @@ alCambiarFavoritos(function(){
   _timerFav = setTimeout(subirFavoritos, 800);
 });
 
-// ---------- perfil ----------
-async function guardarPerfil(ev){
-  if(ev && ev.preventDefault) ev.preventDefault();
-  var nombre = document.getElementById('cta-nombre').value;
-  var telefono = document.getElementById('cta-tel').value;
-  var btn = document.getElementById('cta-guardar');
-  if(btn){ btn.disabled = true; btn.textContent = 'Guardando...'; }
-  try{
-    var d = await pedir('/cuenta/perfil', { method: 'PUT', body: { nombre: nombre, telefono: telefono } });
-    sesion.perfil.nombre = d.perfil.nombre; sesion.perfil.telefono = d.perfil.telefono;
-    _mensaje = '';
-    toast('Datos guardados');
-    avisarCambio();
-    if(_pendiente && sesion.perfil.telefono){ var p = _pendiente; _pendiente = null; await activarAviso(p.tipo, p.valor); }
-  }catch(e){ _mensaje = e.message; }
-  render();
-  return false;
-}
-
 // ---------- avisos ("Avisame cuando llegue") ----------
 async function toggleAviso(tipo, valor){
   if(!sesion.activa){
@@ -349,9 +334,8 @@ async function activarAviso(tipo, valor){
   }catch(e){
     if(e.datos && e.datos.falta === 'telefono'){
       _pendiente = { tipo: tipo, valor: valor };
-      _mensaje = 'Agrega tu WhatsApp para poder avisarte.';
+      _mensaje = 'Completa tus datos para poder avisarte.';
       abrirCuenta();
-      setTimeout(function(){ var t = document.getElementById('cta-tel'); if(t) t.focus(); }, 450);
     }else toast(e.message);
   }
   avisarCambio(); render();
@@ -391,29 +375,6 @@ function pintarAvisoMarca(){
 }
 document.addEventListener('marca-cambiada', function(e){ _marcaActual = e.detail || ''; pintarAvisoMarca(); });
 document.addEventListener('sesion-cambiada', function(){ pintarAvisoReloj(); pintarAvisoMarca(); });
-
-// ---------- compras y apartados ----------
-async function cargarCompras(){
-  try{ _compras = await pedir('/cuenta/compras'); }catch(e){ _compras = { error: e.message }; }
-  render();
-}
-function htmlCompras(){
-  if(!_compras) return '<p class="cta-texto">Cargando...</p>';
-  if(_compras.error) return '<p class="cta-texto">No se pudo cargar: ' + esc(_compras.error) + '</p>';
-  if(!_compras.vinculado || (!_compras.compras.length && !_compras.apartados.length)){
-    return '<p class="cta-texto">Cuando compres o apartes un reloj con nosotros, aquí verás tu historial y cuánto te falta pagar.</p>';
-  }
-  var h = '';
-  _compras.apartados.forEach(function(a){
-    h += '<div class="cta-item">' + (a.foto ? '<img src="' + esc(a.foto) + '" alt="" onerror="this.remove()">' : '') +
-      '<div><b>Apartado: ' + esc(a.reloj) + '</b><span>Abonado $' + a.abonado.toLocaleString() + ' de $' + a.precioAcordado.toLocaleString() +
-      ' · <strong>Te falta $' + a.saldo.toLocaleString() + '</strong></span></div></div>';
-  });
-  _compras.compras.forEach(function(c){
-    h += '<div class="cta-item"><div><b>' + (c.tipo === 'abono' ? 'Abono' : 'Compra') + ' · $' + c.monto.toLocaleString() + '</b><span>' + esc(c.descripcion) + (c.fecha ? ' · ' + esc(c.fecha) : '') + '</span></div></div>';
-  });
-  return h;
-}
 
 // ---------- administrador ----------
 async function cargarAdmin(){
@@ -498,7 +459,28 @@ async function forzarActualizacion(){
 }
 
 // ---------- panel ----------
+// poka-yoke: el panel se vuelve a dibujar cuando cambia la sesion (p. ej. cuando termina de cargar Firebase);
+// lo que el cliente ya habia escrito en un formulario vacio se conserva en vez de borrarse.
 function render(){
+  var cont = document.getElementById('cuenta-contenido');
+  if(!cont) return;
+  var antes = {};
+  cont.querySelectorAll('input,select,textarea').forEach(function(el){
+    var k = el.name || el.id; if(!k || el.disabled) return;
+    if(el.type === 'checkbox'){ if(el.checked) antes[k + '#'] = true; }
+    else if(el.value) antes[k] = el.value;
+  });
+  pintar();
+  var hubo = false;
+  cont.querySelectorAll('input,select,textarea').forEach(function(el){
+    var k = el.name || el.id; if(!k || el.disabled) return;
+    var f = el.closest('form');
+    if(el.type === 'checkbox'){ if(antes[k + '#'] && !el.checked && !(f && f.dataset.conOriginal)){ el.checked = true; hubo = true; } }
+    else if(antes[k] !== undefined && !el.value){ el.value = antes[k]; el.dataset.tocado = "1"; hubo = true; }
+  });
+  if(hubo) prepararFormularios(cont);
+}
+function pintar(){
   var cont = document.getElementById('cuenta-contenido');
   if(!cont) return;
   var aviso = _mensaje ? '<p class="cta-mensaje">' + esc(_mensaje) + '</p>' : '';
@@ -526,42 +508,42 @@ function render(){
   if(!sesion.activa){
     cont.innerHTML = aviso +
       '<section class="cta-seccion"><h2 class="cta-titulo">Mi cuenta</h2>' +
-      '<p class="cta-texto">Crea tu cuenta para guardar tus relojes favoritos en cualquier celular, recibir un aviso por WhatsApp cuando llegue el reloj que quieres y ver tus compras y apartados.</p>' +
+      '<p class="cta-texto">Crea tu cuenta para seguir tus pedidos, guardar tus relojes favoritos en cualquier celular y recibir un aviso por WhatsApp cuando llegue el reloj que quieres.</p>' +
       '<button type="button" class="cta-btn primario cta-google" onclick="entrarConGoogle()">' +
         '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>' +
         '<span>Continuar con Google</span></button>' +
       '<div class="cta-o"><span>o con tu correo</span></div>' + htmlFormCorreo() +
-      '<p class="cta-legal">Solo guardamos tu nombre, tu correo y el WhatsApp que tú agregues, para atenderte. No publicamos tus datos ni los compartimos.</p></section>';
+      '<p class="cta-legal">Solo guardamos los datos que nos das para atenderte y enviarte tus pedidos. No publicamos tus datos ni los compartimos.</p></section>';
+    prepararFormularios(cont);
     return;
   }
-  var p = sesion.perfil || {};
   var h = aviso;
   if(sesion.esAdmin){ h += htmlAdmin(); if(!_admin) setTimeout(cargarAdmin, 0); }
-  h += '<section class="cta-seccion"><h2 class="cta-titulo">Hola' + (p.nombre ? ', ' + esc(p.nombre.split(' ')[0]) : '') + '</h2>' +
-    '<p class="cta-texto" style="margin-bottom:22px;">' + esc(p.email || '') + '</p>' +
-    '<form onsubmit="return guardarPerfil(event)" novalidate>' +
-      '<div class="cta-campo"><input type="text" id="cta-nombre" placeholder=" " maxlength="60" autocomplete="name" value="' + esc(p.nombre || '') + '"><label for="cta-nombre">Nombre</label></div>' +
-      '<div class="cta-campo"><input type="tel" id="cta-tel" placeholder=" " maxlength="20" autocomplete="tel" inputmode="tel" value="' + esc(p.telefono || '') + '"><label for="cta-tel">WhatsApp (para avisarte)</label></div>' +
-      '<button type="submit" class="cta-btn primario" id="cta-guardar">Guardar</button>' +
-    '</form></section><hr class="cta-sep">';
-  // avisos
-  h += '<section class="cta-seccion"><h2 class="cta-titulo">Mis avisos</h2>';
-  if(!sesion.avisos.length) h += '<p class="cta-texto">Toca “Avísame” en un reloj o en la página de una marca y te escribiremos por WhatsApp cuando llegue o baje de precio.</p>';
-  else h += sesion.avisos.map(function(a){
+  // poka-yoke: sin WhatsApp, apellido, terminos o mayoria de edad no se usa la cuenta (Google o cuentas viejas)
+  if(!sesion.perfil || !sesion.perfil.completo){ cont.innerHTML = h + htmlCompletar(); prepararFormularios(cont); return; }
+  // avisos y sesion van al final de "Mi cuenta"
+  var av = '<section class="cta-seccion"><h3 class="mc-sub">Mis avisos</h3>';
+  if(!sesion.avisos.length) av += '<p class="cta-texto">Toca “Avísame” en un reloj o en la página de una marca y te escribiremos por WhatsApp cuando llegue o baje de precio.</p>';
+  else av += sesion.avisos.map(function(a){
     return '<div class="cta-item"><div><b>' + esc(textoAviso(a)) + '</b><span>' + (a.tipo === 'marca' ? 'Te avisamos cuando lleguen modelos nuevos' : 'Te avisamos cuando llegue o baje de precio') + '</span></div>' +
       '<button type="button" class="cta-link" onclick="toggleAviso(\'' + esc(a.tipo) + '\',\'' + esc(a.valor) + '\')">Quitar</button></div>';
   }).join('');
-  h += '</section><hr class="cta-sep">';
-  // compras
-  h += '<section class="cta-seccion"><h2 class="cta-titulo">Mis compras y apartados</h2>' + htmlCompras() + '</section><hr class="cta-sep">';
-  if(_compras === null) setTimeout(cargarCompras, 0);
-  // favoritos y salida
-  h += '<section class="cta-seccion"><h2 class="cta-titulo">Mis favoritos</h2>' +
-    '<p class="cta-texto">Tienes ' + _favoritos.size + ' reloj' + (_favoritos.size === 1 ? '' : 'es') + ' guardado' + (_favoritos.size === 1 ? '' : 's') + '. Se guardan en tu cuenta y los ves en cualquier celular.</p>' +
-    '<button type="button" class="cta-btn secundario" onclick="cerrarCuenta();abrirFavoritos()">Ver favoritos</button></section><hr class="cta-sep">' +
+  av += '</section><hr class="cta-sep">' +
     '<div class="cta-fila"><button type="button" class="cta-link" onclick="cerrarSesionCliente()">Cerrar sesión</button>' +
+    (sesion.perfil && sesion.perfil.email ? '<button type="button" class="cta-link" onclick="cambiarContrasenaCuenta()">Cambiar contraseña</button>' : '') +
     '<button type="button" class="cta-link cta-peligro" onclick="eliminarCuenta()">Eliminar mi cuenta</button></div>';
-  cont.innerHTML = h;
+  cont.innerHTML = h + htmlMiCuenta(av);
+  prepararFormularios(cont);
+}
+// envia el enlace para crear una contrasena nueva al correo de la cuenta
+async function cambiarContrasenaCuenta(){
+  var correo = sesion.perfil && sesion.perfil.email; if(!correo) return;
+  if(!confirm('Te enviaremos a ' + correo + ' un enlace para crear una contraseña nueva. ¿Continuar?')) return;
+  try{
+    var r = await fetch(API + '/correo/recuperar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: correo }) });
+    if(!r.ok){ var fb = await cargarFirebase(); await fb.auth().sendPasswordResetEmail(correo, VOLVER); }
+    toast('Te enviamos el enlace a tu correo');
+  }catch(e){ toast('No se pudo enviar. Intenta de nuevo.'); }
 }
 
 function htmlFormCorreo(){
@@ -571,13 +553,7 @@ function htmlFormCorreo(){
       '<div class="cta-fila"><button type="submit" class="cta-btn primario" id="cta-recuperar">Enviar enlace</button>' +
       '<button type="button" class="cta-link" onclick="cambiarModo(\'entrar\')">Volver</button></div></form>';
   }
-  if(_modo === 'crear'){
-    return '<form onsubmit="return crearCuenta(event)" novalidate>' +
-      '<div class="cta-campo"><input type="text" id="cta-nuevo-nombre" placeholder=" " autocomplete="name" maxlength="60"><label for="cta-nuevo-nombre">Nombre <b>*</b></label></div>' + campoCorreo +
-      '<div class="cta-campo"><input type="password" id="cta-pass" placeholder=" " autocomplete="new-password" minlength="8" maxlength="100"><label for="cta-pass">Contraseña (8+ caracteres, mayúscula y minúscula) <b>*</b></label></div>' +
-      '<div class="cta-fila"><button type="submit" class="cta-btn primario" id="cta-crear">Crear cuenta</button>' +
-      '<button type="button" class="cta-link" onclick="cambiarModo(\'entrar\')">Ya tengo una cuenta</button></div></form>';
-  }
+  if(_modo === 'crear') return htmlRegistro();
   return '<form onsubmit="return entrarConCorreo(event)" novalidate>' + campoCorreo +
     '<div class="cta-campo"><input type="password" id="cta-pass" placeholder=" " autocomplete="current-password" maxlength="100"><label for="cta-pass">Contraseña <b>*</b></label></div>' +
     '<div class="cta-fila"><button type="submit" class="cta-btn primario" id="cta-entrar">Iniciar sesión</button>' +
@@ -637,7 +613,9 @@ if(new URLSearchParams(location.search).get('cuenta') === '1'){
 // Si ya habia iniciado sesion en este navegador, se recupera la sesion sin esperar a que abra el panel
 try{ if(localStorage.getItem(CLAVE_SESION) === '1') setTimeout(function(){ cargarFirebase().catch(function(){}); }, 600); }catch(e){}
 
+iniciarMiCuenta(pedir, render);
+
 export { abrirCuenta, cerrarCuenta, toggleAviso };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { abrirCuenta, abrirFavoritos, cambiarModo, cambiarNoContar, cargarAdmin, cerrarCuenta, cerrarSesionCliente, crearCuenta, eliminarCuenta,
-  entrarConCorreo, entrarConGoogle, forzarActualizacion, guardarContrasenaNueva, guardarPerfil, hacerRespaldoCuenta, recuperarContrasena, reenviarVerificacion, toggleAviso, yaVerifique });
+Object.assign(window, { abrirCuenta, abrirFavoritos, cambiarContrasenaCuenta, cambiarModo, cambiarNoContar, cargarAdmin, cerrarCuenta, cerrarSesionCliente, crearCuenta, eliminarCuenta,
+  entrarConCorreo, entrarConGoogle, forzarActualizacion, guardarContrasenaNueva, hacerRespaldoCuenta, recuperarContrasena, reenviarVerificacion, toggleAviso, yaVerifique });

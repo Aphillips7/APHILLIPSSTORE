@@ -30,6 +30,20 @@ function fotoRespaldo(img){
   return true;
 }
 
-export { _destEsc, fotoRespaldo, miniatura, normalizar, toast, vibrar };
+// poka-yoke: errores de dedo comunes en el dominio ("gmial.com", "hotmail.con") se ofrecen corregidos
+var DOMINIOS = { gmail: 'gmail.com', hotmail: 'hotmail.com', outlook: 'outlook.com', yahoo: 'yahoo.com', icloud: 'icloud.com', live: 'live.com' };
+var TYPOS = { gmial: 'gmail', gmal: 'gmail', gamil: 'gmail', gnail: 'gmail', gmali: 'gmail', gmaill: 'gmail', hotmial: 'hotmail', hotmal: 'hotmail', homail: 'hotmail', hotmil: 'hotmail', outlok: 'outlook', outloo: 'outlook', yaho: 'yahoo', yahooo: 'yahoo', iclod: 'icloud', icloud: 'icloud' };
+function sugerirCorreo(email){
+  var m = email.toLowerCase().match(/^([^@\s]+)@([a-z0-9-]+)\.([a-z.]+)$/);
+  if(!m) return '';
+  var base = TYPOS[m[2]] || m[2];
+  if(DOMINIOS[base]){
+    var bien = DOMINIOS[base];
+    if((m[2] + '.' + m[3]) !== bien && /^(com?|con|cm|om|comm|cpm|vom|xom)$/.test(m[3])) return m[1] + '@' + bien;
+  } else if(/^(con|cpm|vom|xom|comm|cm|om)$/.test(m[3])) return m[1] + '@' + m[2] + '.com';
+  return '';
+}
+
+export { _destEsc, fotoRespaldo, miniatura, normalizar, sugerirCorreo, toast, vibrar };
 // usada desde el onerror de las <img> de las tarjetas
 window.fotoRespaldo = fotoRespaldo;

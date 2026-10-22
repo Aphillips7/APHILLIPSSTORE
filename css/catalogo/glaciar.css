@@ -111,3 +111,6 @@
 
   /* campanita de avisos de marca ya activada: glaciar con la campana negra */
   html.glaciar .btn-aviso-marca.activo{background:var(--glaciar);border-color:var(--glaciar);color:var(--black);}
+
+  /* botones desactivados (formularios de la cuenta): grises, para que se note que falta algo */
+  html.glaciar .cta-btn:disabled,html.glaciar .cta-btn:disabled:hover{background:var(--border2);border-color:var(--border2);color:var(--muted) !important;cursor:not-allowed;}
