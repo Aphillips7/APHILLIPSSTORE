@@ -16,5 +16,5 @@
 9. Poka-yoke (a prueba de errores) en todo: al cambiar la tienda o el panel, bloquea el error en vez de
    solo avisarlo (validar al escribir, botones desactivados hasta que el dato sea valido, confirmacion en
    lo que no se deshace, formatos que se corrigen solos).
-10. Publica la tienda SOLO con `node scripts/publicar.mjs`: corre `scripts/verificar.mjs` (sintaxis,
+10. Publica SOLO con `node scripts/publicar.mjs` (tienda) y `node scripts/publicar-api.mjs` (API): corren `scripts/verificar.mjs` (sintaxis,
     SHELL_FILES, CACHE_NAME, campos privados, funciones de onclick en window) y no publica si algo falla.

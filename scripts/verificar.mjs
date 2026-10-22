@@ -63,7 +63,7 @@ for(const f of publicables.sort()) h.update(f + '\0' + leer(join(RAIZ, f)).repla
 const huella = h.digest('hex');
 let ultimo = null;
 try{ ultimo = JSON.parse(leer(ESTADO)); }catch(e){}
-if(ultimo && ultimo.huella !== huella && ultimo.cache === cache)
+if(!process.env.SOLO_API && ultimo && ultimo.huella !== huella && ultimo.cache === cache)
   errores.push('Cambiaste archivos de la tienda pero CACHE_NAME sigue en "' + cache + '". Subelo (ej. ' + cache.replace(/\d+$/, n => +n + 1) + ').');
 if(!ultimo) avisos.push('Primera verificacion: desde ahora se recuerda que se publico para vigilar CACHE_NAME.');
 
