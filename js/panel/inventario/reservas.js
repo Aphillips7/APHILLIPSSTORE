@@ -19,8 +19,9 @@ function abrirReservaModal(id){
   document.getElementById('reserva-overlay').classList.add('open');
 }
 function cerrarReservaModal(){document.getElementById('reserva-overlay').classList.remove('open');_reservaModalIdx=null;renderInventario();}
+var _ocupado=false;   // evita registrar dos veces lo mismo con un doble toque
 async function confirmarReserva(){
-  if(_reservaModalIdx===null)return;
+  if(_reservaModalIdx===null||_ocupado)return;
   var id=_reservaModalIdx;
   var clienteId=document.getElementById('reserva-cliente').value;
   if(!clienteId){alert('Selecciona el cliente que reserva este reloj.');return;}
@@ -36,9 +37,12 @@ async function confirmarReserva(){
   var hoy=new Date().toLocaleDateString('es-MX');
   // estadoAnterior: si se cancela el apartado, el reloj vuelve a ese estado (un reloj en transito no debe
   // volver como "disponible")
+  if((p.costoTotal||0)>0&&precioAcordado<p.costoTotal&&!confirm('El precio acordado ($'+precioAcordado.toLocaleString()+') es MENOR que el costo ($'+p.costoTotal.toLocaleString()+'). ¿Apartarlo de todas formas?')) return;
   var reserva={clienteId:clienteId,clienteNombre:cliente.nombre,precioAcordado:precioAcordado,fechaInicio:hoy,estadoAnterior:p.estado,abonos: abono>0?[{monto:abono,fecha:hoy,metodoPago:metodoPago}]:[]};
+  _ocupado=true;
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:'reservado', reserva:reserva}); }
-  catch(e){ avisarError(e); cerrarReservaModal(); return; }
+  catch(e){ _ocupado=false; avisarError(e); cerrarReservaModal(); return; }
+  _ocupado=false;
   i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarReservaModal(); return; }
   p=state.inventario[i];
@@ -63,7 +67,7 @@ function abrirAbonoModal(id){
 }
 function cerrarAbonoModal(){document.getElementById('abono-overlay').classList.remove('open');_abonoModalIdx=null;}
 function confirmarAbono(){
-  if(_abonoModalIdx===null)return;
+  if(_abonoModalIdx===null||_ocupado)return;
   var i=idxInv(_abonoModalIdx);
   if(i===-1){ invNoExiste(); cerrarAbonoModal(); return; }
   var p=state.inventario[i];
@@ -72,6 +76,7 @@ function confirmarAbono(){
   if(!monto||monto<=0){alert('Ingresa el monto del abono.');return;}
   if(monto>saldo){alert('Ese monto es mayor al saldo pendiente ($'+saldo.toLocaleString()+'). Si quiere completar la venta, usa "Completar venta".');return;}
   var metodoPago=document.getElementById('abono-metodo').value;
+  if(!confirm('Registrar abono de $'+monto.toLocaleString()+' ('+metodoPago+') de '+p.reserva.clienteNombre+'.\nSaldo despues del abono: $'+(saldo-monto).toLocaleString()+'.')) return;
   var hoy=new Date().toLocaleDateString('es-MX');
   p.reserva.abonos.push({monto:monto,fecha:hoy,metodoPago:metodoPago});
   save('inventario');
@@ -82,7 +87,23 @@ function confirmarAbono(){
   renderInventario();renderInicio();
 }
 
+// forma de pago escrita a mano: se acepta el numero o la palabra, y si no se entiende se vuelve a preguntar
+// (antes cualquier error de dedo quedaba como "otro" y descuadraba "Saldo por metodo")
+function pedirMetodoPago(texto){
+  var LISTA=['efectivo','yappy','transferencia','tarjeta','otro'];
+  var aviso='';
+  for(;;){
+    var r=prompt(aviso+texto+'\n\n1 efectivo · 2 yappy · 3 transferencia · 4 tarjeta · 5 otro\n(escribe el numero o la palabra)','2');
+    if(r===null) return null;
+    r=String(r).trim().toLowerCase();
+    if(/^[1-5]$/.test(r)) return LISTA[+r-1];
+    var m=LISTA.filter(function(x){ return x.indexOf(r)===0&&r.length>=2; });
+    if(m.length===1) return m[0];
+    aviso='No entendi "'+r+'". ';
+  }
+}
 async function completarVentaReserva(id){
+  if(_ocupado) return;
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarModal(); return; }
   var p=state.inventario[i];
@@ -93,13 +114,13 @@ async function completarVentaReserva(id){
   // forma de pago del saldo, para que cuente en "Saldo por metodo" de Finanzas
   var metodoSaldo='';
   if(saldo>0){
-    var METODOS={efectivo:'efectivo',yappy:'yappy',transferencia:'transferencia',tarjeta:'tarjeta',otro:'otro'};
-    var resp=prompt('¿Cómo pagó el saldo de $'+saldo.toLocaleString()+'? Escribe: efectivo, yappy, transferencia, tarjeta u otro','yappy');
-    if(resp===null) return;
-    metodoSaldo=METODOS[String(resp).trim().toLowerCase()]||'otro';
+    metodoSaldo=pedirMetodoPago('¿Cómo pagó el saldo de $'+saldo.toLocaleString()+'?');
+    if(metodoSaldo===null) return;
   }
+  _ocupado=true;
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:'vendido', precioVenta:p.reserva.precioAcordado, fechaVenta:hoy}, ['reserva']); }
-  catch(e){ avisarError(e); cerrarModal(); renderInventario(); return; }
+  catch(e){ _ocupado=false; avisarError(e); cerrarModal(); renderInventario(); return; }
+  _ocupado=false;
   // "p" conserva los datos de la reserva leidos antes de confirmar con la nube
   if(saldo>0){
     state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Saldo final de '+p.reserva.clienteNombre,monto:saldo,canal:'directo',metodoPago:metodoSaldo,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
@@ -119,6 +140,7 @@ async function completarVentaReserva(id){
 }
 
 async function cancelarReserva(id){
+  if(_ocupado) return;
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarModal(); return; }
   var p=state.inventario[i];
@@ -129,9 +151,13 @@ async function cancelarReserva(id){
   var totalAbonado=totalAbonadoReserva(p);
   var clienteIdRes=p.reserva.clienteId,clienteNombreRes=p.reserva.clienteNombre;
   var seDevolvio=false;
-  var devolver=totalAbonado>0 && confirm('Se recibieron $'+totalAbonado.toLocaleString()+' en abono de '+p.reserva.clienteNombre+'.\n\nPulsa Aceptar para DEVOLVER ese dinero al cliente (se registra como gasto).\nPulsa Cancelar para QUEDARTE con el abono (no se devuelve, el dinero ya registrado se queda).');
+  var devolver=totalAbonado>0 && confirm('Se recibieron $'+totalAbonado.toLocaleString()+' en abono de '+p.reserva.clienteNombre+'.\n\n¿Le DEVUELVES ese dinero?\nAceptar = SI, se lo devuelvo (se registra como gasto)\nCancelar = NO, me quedo con el abono');
+  // poka-yoke: el boton Cancelar aqui significa "me quedo con el dinero", asi que se confirma el resumen final
+  if(totalAbonado>0&&!confirm('Resumen:\n- El reloj vuelve a estar '+nombresEstado[volverA]+'.\n- Abono de $'+totalAbonado.toLocaleString()+': '+(devolver?'SE DEVUELVE al cliente (gasto).':'TE LO QUEDAS (no se devuelve).')+'\n\n¿Es correcto?')) return;
+  _ocupado=true;
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:volverA}, ['reserva']); }
-  catch(e){ avisarError(e); cerrarModal(); renderInventario(); return; }
+  catch(e){ _ocupado=false; avisarError(e); cerrarModal(); renderInventario(); return; }
+  _ocupado=false;
   // "p" conserva los datos de la reserva leidos antes de confirmar con la nube
   if(totalAbonado>0){
     if(devolver){

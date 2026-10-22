@@ -420,7 +420,7 @@ if(location.hostname==='aphillips7.github.io'){
         <summary><span class="inv-sec-t">Caja</span><span class="inv-sec-ayuda">tamano, material, cristal, bisel, agua</span><span class="inv-sec-n"></span></summary>
         <div class="inv-sec-cuerpo">
           <div class="grid-2">
-            <div class="field"><label>Diametro (mm)</label><input type="number" id="inv-mm" placeholder="Ej: 48" /></div>
+            <div class="field"><label>Diametro (mm)</label><input type="number" min="10" max="70" step="0.5" inputmode="decimal" id="inv-mm" placeholder="Ej: 48" /></div>
             <div class="field"><label>Material de caja</label><input type="text" id="inv-material-caja" placeholder="Ej: Acero inoxidable 316L" /></div>
             <div class="field"><label>Cristal</label><input type="text" id="inv-cristal" placeholder="Ej: Mineral, Zafiro..." /></div>
             <div class="field"><label>Tipo de corona</label><input type="text" id="inv-corona" placeholder="Ej: Pulsador, rosca..." /></div>
@@ -489,8 +489,8 @@ if(location.hostname==='aphillips7.github.io'){
         <summary><span class="inv-sec-t">Costos, precio y estado</span><span class="inv-sec-n"></span></summary>
         <div class="inv-sec-cuerpo">
           <div class="grid-2">
-            <div class="field"><label>Costo unitario ($)</label><div class="currency-wrap"><input type="number" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
-            <div class="field"><label>Gastos de importacion ($) <span style="font-weight:300;text-transform:none;letter-spacing:0;">— 0 si esta en transito</span></label><div class="currency-wrap"><input type="number" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label>Costo unitario ($)</label><div class="currency-wrap"><input type="number" min="0" step="0.01" inputmode="decimal" id="inv-costo" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label>Gastos de importacion ($) <span style="font-weight:300;text-transform:none;letter-spacing:0;">— 0 si esta en transito</span></label><div class="currency-wrap"><input type="number" min="0" step="0.01" inputmode="decimal" id="inv-importacion" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
           </div>
           <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
           <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Costo total</div><div id="inv-preview-costo" style="font-family:'DM Mono',monospace;font-size:18px;">$0.00</div></div>
@@ -498,8 +498,8 @@ if(location.hostname==='aphillips7.github.io'){
           <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:110px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;">Ganancia estimada</div><div id="inv-preview-ganancia" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--muted);">--</div></div>
           </div>
           <div class="grid-2">
-            <div class="field"><label>Precio de venta objetivo ($)</label><div class="currency-wrap"><input type="number" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
-            <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label>Precio de venta objetivo ($)</label><div class="currency-wrap"><input type="number" min="0" step="0.01" inputmode="decimal" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" min="0" step="0.01" inputmode="decimal" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
             <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="bajopedido">Bajo pedido</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
           </div>
         </div>

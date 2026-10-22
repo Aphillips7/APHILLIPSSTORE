@@ -42,11 +42,35 @@ function pintar(html){
   if(ok){ ok.addEventListener('click', cerrarBoletin); ok.focus(); }
 }
 
+// poka-yoke: errores de dedo comunes en el dominio ("gmial.com", "hotmail.con") se ofrecen corregidos
+var DOMINIOS = { gmail: 'gmail.com', hotmail: 'hotmail.com', outlook: 'outlook.com', yahoo: 'yahoo.com', icloud: 'icloud.com', live: 'live.com' };
+var TYPOS = { gmial: 'gmail', gmal: 'gmail', gamil: 'gmail', gnail: 'gmail', gmali: 'gmail', gmaill: 'gmail', hotmial: 'hotmail', hotmal: 'hotmail', homail: 'hotmail', hotmil: 'hotmail', outlok: 'outlook', outloo: 'outlook', yaho: 'yahoo', yahooo: 'yahoo', iclod: 'icloud', icloud: 'icloud' };
+function sugerirCorreo(email){
+  var m = email.toLowerCase().match(/^([^@\s]+)@([a-z0-9-]+)\.([a-z.]+)$/);
+  if(!m) return '';
+  var base = TYPOS[m[2]] || m[2];
+  if(DOMINIOS[base]){
+    var bien = DOMINIOS[base];
+    if((m[2] + '.' + m[3]) !== bien && /^(com?|con|cm|om|comm|cpm|vom|xom)$/.test(m[3])) return m[1] + '@' + bien;
+  } else if(/^(con|cpm|vom|xom|comm|cm|om)$/.test(m[3])) return m[1] + '@' + m[2] + '.com';
+  return '';
+}
 async function enviar(ev){
   ev.preventDefault();
   var campo = document.getElementById('bol-email');
   var email = campo.value.trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ pintar(formulario('Escribe un correo válido.')); document.getElementById('bol-email').value = email; document.getElementById('bol-email').focus(); return; }
+  var sug = sugerirCorreo(email);
+  if(sug && campo.dataset.revisado !== email){
+    pintar(formulario('¿Quisiste decir ' + sug + '? Toca el botón para corregirlo, o vuelve a tocar "Suscribirme" si tu correo está bien.'));
+    var c2 = document.getElementById('bol-email'); c2.value = email; c2.dataset.revisado = email;
+    var err = _ventana.querySelector('.bol-error');
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'cta-btn secundario'; b.textContent = 'Usar ' + sug;
+    b.style.marginTop = '8px';
+    b.addEventListener('click', function(){ c2.value = sug; c2.dataset.revisado = sug; b.remove(); if(err) err.remove(); c2.focus(); });
+    if(err) err.after(b);
+    return;
+  }
   var btn = _ventana.querySelector('.bol-enviar');
   btn.disabled = true; btn.textContent = 'Enviando...';
   try{

@@ -10,7 +10,11 @@ var _ventaModalIdx=null;
 function abrirVentaModal(id){
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); return; }
-  _ventaModalIdx=id;var p=state.inventario[i];
+  var p0=state.inventario[i];
+  // poka-yoke: no se vende dos veces, y un apartado se completa desde su ficha (respeta los abonos)
+  if(p0.estado==='vendido'){ alert('Este reloj ya esta vendido.'); renderInventario(); return; }
+  if(p0.estado==='reservado'){ alert('Este reloj esta apartado por '+(p0.reserva?p0.reserva.clienteNombre:'un cliente')+'. Usa "Completar venta" en su ficha para que cuenten los abonos.'); renderInventario(); return; }
+  _ventaModalIdx=id;var p=p0;
   poblarSelectClientes('venta-modal-cliente');
   document.getElementById('venta-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('venta-modal-costo').textContent='$'+(p.costoTotal||0).toLocaleString();
@@ -33,8 +37,9 @@ function actualizarVentaModalPreview(costo){
   } else {prev.style.display='none';}
 }
 function cerrarVentaModal(){document.getElementById('venta-overlay').classList.remove('open');_ventaModalIdx=null;renderInventario();}
+var _vendiendo=false;   // evita registrar la misma venta dos veces con un doble toque
 async function confirmarVentaModal(){
-  if(_ventaModalIdx===null)return;
+  if(_ventaModalIdx===null||_vendiendo)return;
   var id=_ventaModalIdx;
   var precio=parseFloat(document.getElementById('venta-modal-precio').value);
   if(!precio||precio<=0){document.getElementById('venta-modal-precio').style.borderColor='var(--red)';document.getElementById('venta-modal-precio').focus();return;}
@@ -45,9 +50,16 @@ async function confirmarVentaModal(){
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarVentaModal(); return; }
   var p=state.inventario[i];
+  var costo=p.costoTotal||0;
+  var resumen='Confirmar venta:\n\n'+p.nombre+(p.sku?' · Ref. '+p.sku:'')+'\nPrecio: $'+precio.toLocaleString()+'\nCanal: '+canal+(metodoPago?' · Pago: '+metodoPago:'')+(cliente?'\nCliente: '+cliente.nombre:'');
+  if(costo>0&&precio<costo) resumen+='\n\nOJO: vendes por DEBAJO del costo ($'+costo.toLocaleString()+'): pierdes $'+(costo-precio).toLocaleString()+'.';
+  else if(p.precioMin>0&&precio<p.precioMin) resumen+='\n\nOJO: es menos que tu precio minimo ($'+p.precioMin.toLocaleString()+').';
+  if(!confirm(resumen)) return;
   var fechaVenta=new Date().toLocaleDateString('es-MX');
+  _vendiendo=true;
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:'vendido', precioVenta:precio, fechaVenta:fechaVenta}); }
-  catch(e){ avisarError(e); cerrarVentaModal(); return; }
+  catch(e){ _vendiendo=false; avisarError(e); cerrarVentaModal(); return; }
+  _vendiendo=false;
   i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarVentaModal(); return; }
   state.inventario[i].estado='vendido';state.inventario[i].precioVenta=precio;state.inventario[i].fechaVenta=fechaVenta;

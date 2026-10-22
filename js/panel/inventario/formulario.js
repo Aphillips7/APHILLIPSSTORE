@@ -51,10 +51,70 @@ function calcularMargenPreview(){
   var minField=document.getElementById('inv-precio-min');
   if(minField){var pm=parseFloat(minField.value)||0;minField.style.borderColor=(pm>0&&total>0&&pm<total)?'var(--red)':'';}
 }
+// ---------- poka-yoke: lo que no se puede guardar y lo que pide confirmacion ----------
+// Marca el campo en rojo, lo abre y lo enfoca, para que se vea exactamente que corregir.
+function marcarCampo(id, msg){
+  var el=document.getElementById(id);
+  if(el){
+    var sec=el.closest('details'); if(sec) sec.open=true;
+    el.style.borderColor='var(--red)';
+    el.addEventListener('input', function q(){ el.style.borderColor=''; el.removeEventListener('input', q); });
+    setTimeout(function(){ el.focus(); el.scrollIntoView({behavior:'smooth',block:'center'}); }, 30);
+  }
+  alert(msg);
+  return false;
+}
+var PUBLICOS=['disponible','transito','bajopedido'];
+function validarUnidad(item, esEdicion, estadoAntes){
+  // 1) errores: no se guarda
+  if(!item.nombre) return marcarCampo('inv-nombre','Escribe el modelo del reloj.');
+  var nums=[['inv-costo',item.costo,'El costo'],['inv-importacion',item.importacion,'La importacion'],['inv-precio',item.precio,'El precio'],['inv-precio-min',item.precioMin,'El precio minimo']];
+  for(var i=0;i<nums.length;i++) if(nums[i][1]<0) return marcarCampo(nums[i][0], nums[i][2]+' no puede ser negativo.');
+  if((item.estado==='disponible'||item.estado==='transito')&&!(item.precio>0))
+    return marcarCampo('inv-precio','Pon el precio de venta: un reloj "'+(item.estado==='disponible'?'Disponible':'En transito')+'" sin precio saldria a $0 en la tienda.');
+  if(item.precioMin>0&&item.precio>0&&item.precioMin>item.precio)
+    return marcarCampo('inv-precio-min','El precio minimo ($'+item.precioMin+') no puede ser mayor que el precio ($'+item.precio+').');
+  if((item.estado==='vendido'||item.estado==='reservado')&&estadoAntes!==item.estado)
+    return marcarCampo('inv-estado','Para marcarlo como "'+(item.estado==='vendido'?'Vendido':'Reservado')+'" usa el boton '+(item.estado==='vendido'?'"Vender"':'"Apartar"')+' en la ficha del reloj: asi se registra el dinero en Finanzas.');
+  // 2) avisos: se guarda solo si confirmas
+  var avisos=[];
+  var publico=PUBLICOS.indexOf(item.estado)!==-1&&!item.ocultoCatalogo;
+  if(item.precio>0&&item.costoTotal>0&&item.precio<item.costoTotal) avisos.push('El precio ($'+item.precio+') es MENOR que el costo total ($'+item.costoTotal.toFixed(2)+'): perderias dinero.');
+  if(item.precioMin>0&&item.costoTotal>0&&item.precioMin<item.costoTotal) avisos.push('El precio minimo ($'+item.precioMin+') es menor que el costo total ($'+item.costoTotal.toFixed(2)+').');
+  if(publico&&!item.foto) avisos.push('No tiene fotos: se vera en la tienda sin foto.');
+  if(publico&&!item.mm) avisos.push('No tiene el tamaño de la caja (mm): no saldra en la guia de tamaños ni en los filtros por tamaño.');
+  if(item.estado==='transito'&&item.eta&&new Date(item.eta+'T23:59:59')<new Date()) avisos.push('La fecha estimada de llegada ('+item.eta+') ya paso.');
+  if(item.sku){
+    var mismo=state.inventario.filter(function(p){ return p.id!==item.id&&p.estado!=='vendido'&&String(p.sku||'').trim().toLowerCase()===item.sku.toLowerCase(); });
+    if(mismo.length) avisos.push('Ya tienes '+mismo.length+' unidad'+(mismo.length===1?'':'es')+' sin vender con la referencia '+item.sku+'. Si es otra unidad del mismo modelo esta bien; si no, seria un duplicado.');
+  }
+  if(avisos.length&&!confirm('Revisa antes de guardar:\n\n- '+avisos.join('\n- ')+'\n\n¿Guardar de todas formas?')) return false;
+  return true;
+}
+// Vendido y Reservado solo se eligen desde "Vender" / "Apartar" (registran el dinero); en el formulario
+// se pueden ver si el reloj ya esta asi, pero no elegir.
+function bloquearEstadosConDinero(estadoActual){
+  var sel=document.getElementById('inv-estado'); if(!sel) return;
+  Array.prototype.forEach.call(sel.options, function(o){
+    if(o.value==='vendido'||o.value==='reservado') o.disabled=(o.value!==estadoActual);
+  });
+}
+// formatos que se corrigen solos al salir del campo
+(function(){
+  var limpiar=function(id, fn){ var el=document.getElementById(id); if(el) el.addEventListener('blur', function(){ var v=fn(el.value); if(v!==el.value){ el.value=v; contarSecciones(); } }); };
+  var espacios=function(v){ return v.replace(/\s+/g,' ').trim(); };
+  limpiar('inv-nombre', espacios);
+  limpiar('inv-sku', function(v){ return espacios(v).toUpperCase(); });
+  limpiar('inv-coleccion', espacios);
+  ['inv-ancho-correa','inv-largo-correa'].forEach(function(id){ limpiar(id, function(v){ var n=String(v).replace(',', '.').match(/\d+(\.\d+)?/); return v.trim()===''?'':(n?n[0]+' mm':espacios(v)); }); });
+  limpiar('inv-agua', function(v){ var t=espacios(v).toUpperCase().replace(/\s*(M|ATM|BAR)$/,'$1'); return t; });
+  bloquearEstadosConDinero('disponible');
+})();
+
 function agregarProducto(){
   var editIdx=document.getElementById('inv-edit-index').value;
-  var nombre=document.getElementById('inv-nombre').value.trim();
-  if(!nombre){alert('Escribe el modelo del producto.');return;}
+  var nombre=document.getElementById('inv-nombre').value.replace(/\s+/g,' ').trim();
+  if(!nombre){ marcarCampo('inv-nombre','Escribe el modelo del reloj.'); return; }
   if(fotosSubiendo()){alert('Espera a que terminen de subir las fotos.');return;}
   var listaFotos=fotosFormulario();
   var costo=parseFloat(document.getElementById('inv-costo').value)||0;
@@ -108,6 +168,8 @@ function agregarProducto(){
   var idxActual=esEdicion?idxInv(editIdx):-1;
   if(esEdicion&&idxActual===-1){ invNoExiste(); return; }
   var estadoAntes=esEdicion?state.inventario[idxActual].estado:null;
+  if(esEdicion) item.id=state.inventario[idxActual].id;
+  if(!validarUnidad(item, esEdicion, estadoAntes)) return;
   if(esEdicion){
     var existente=state.inventario[idxActual];
     item.id=existente.id; item._ts=existente._ts;
@@ -139,6 +201,7 @@ function resetCamposFormulario(){
   document.getElementById('inv-genero').value='hombre';
   document.getElementById('inv-movimiento').value='';
   document.getElementById('inv-estado').value='disponible';
+  bloquearEstadosConDinero('disponible');
   document.getElementById('inv-edit-index').value='';
   setFotosFormulario([]);
   ['inv-preview-margen','inv-preview-ganancia'].forEach(id=>{var el=document.getElementById(id);if(el){el.textContent='--';el.style.color='var(--muted)';}});
@@ -166,6 +229,7 @@ function editarProducto(id){
   document.getElementById('inv-genero').value=p.genero||'hombre';
   document.getElementById('inv-movimiento').value=String(p.movimiento||'').replace(/^cuarzo japon[eé]s$/i,'Cuarzo');
   document.getElementById('inv-estado').value=p.estado||'disponible';
+  bloquearEstadosConDinero(p.estado||'disponible');
   document.getElementById('inv-edit-index').value=p.id;
   document.getElementById('inv-form-title').textContent='Editar unidad';
   document.getElementById('inv-submit-btn').textContent='Guardar cambios';
@@ -199,6 +263,7 @@ function duplicarProducto(id){
   cargarFicha(p.ficha);
   // Lo que SI es propio de cada unidad queda en blanco: costo, serie, tracking
   document.getElementById('inv-estado').value='transito';
+  bloquearEstadosConDinero('transito');
   document.getElementById('inv-edit-index').value='';
   document.getElementById('inv-form-title').textContent='Nueva unidad de '+(p.nombre||'este modelo');
   document.getElementById('inv-submit-btn').textContent='Registrar unidad';

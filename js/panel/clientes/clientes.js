@@ -10,10 +10,26 @@ function whatsappLink(tel){
   if(!limpio)return'';
   return'https://wa.me/'+limpio;
 }
+// Telefono de Panama: se escribe como sea y queda "+507 6123-4567". Si no tiene 7 u 8 digitos, se avisa.
+function telefonoPanama(t){
+  var d=String(t||'').replace(/[^0-9]/g,'');
+  if(!d) return '';
+  if(d.length===11&&d.indexOf('507')===0) d=d.slice(3);
+  if(d.length===8) return '+507 '+d.slice(0,4)+'-'+d.slice(4);
+  if(d.length===7) return '+507 '+d.slice(0,3)+'-'+d.slice(3);
+  return String(t).trim();
+}
+(function(){
+  var el=document.getElementById('cli-tel');
+  if(el) el.addEventListener('blur', function(){ el.value=telefonoPanama(el.value); });
+})();
 function registrarCliente(){
-  var nombre=document.getElementById('cli-nombre').value.trim();
+  var nombre=document.getElementById('cli-nombre').value.replace(/\s+/g,' ').trim();
   if(!nombre){alert('Escribe el nombre del cliente.');return;}
-  var tel=document.getElementById('cli-tel').value.trim();
+  var tel=telefonoPanama(document.getElementById('cli-tel').value);
+  document.getElementById('cli-tel').value=tel;
+  var dig=tel.replace(/[^0-9]/g,'');
+  if(dig&&!/^507\d{7,8}$/.test(dig)&&!confirm('El telefono "'+tel+'" no parece de Panama (7 u 8 digitos). Si es de otro pais, escribelo con su codigo (ej. +1...). ¿Guardarlo asi?'))return;
   var editId=document.getElementById('cli-edit-id').value;
   if(editId){
     var i=idxCliente(editId);
@@ -115,8 +131,15 @@ function totalCompradoCliente(clienteId){
 }
 
 function eliminarCliente(id){
-  if(!confirm('Eliminar este cliente?'))return;
   var i=idxCliente(id);
+  if(i===-1){renderClientes();return;}
+  var c=state.clientes[i];
+  // poka-yoke: un cliente con un reloj apartado tiene dinero pendiente; primero se cancela o completa el apartado
+  var apartados=state.inventario.filter(function(p){ return p.estado==='reservado'&&p.reserva&&p.reserva.clienteId===id; });
+  if(apartados.length){ alert(c.nombre+' tiene '+apartados.length+' reloj'+(apartados.length===1?'':'es')+' apartado'+(apartados.length===1?'':'s')+' ('+apartados.map(function(p){return p.nombre;}).join(', ')+'). Completa o cancela el apartado antes de eliminarlo.'); return; }
+  var compras=totalCompradoCliente(id);
+  if(!confirm('¿Eliminar a '+c.nombre+'?'+(compras>0?'\n\nHa comprado $'+compras.toLocaleString()+': sus ventas se quedan en Finanzas pero ya no apareceran en su ficha.':'')+'\n\nNo se puede deshacer.'))return;
+  i=idxCliente(id);
   if(i===-1){renderClientes();return;}
   state.clientes.splice(i,1);save('clientes');renderClientes();
 }
