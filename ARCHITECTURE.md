@@ -84,6 +84,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `clientes/cliente-detalle.js` | Ficha del cliente, historial, "contactado hoy" |
 | `clientes/salud.js` | Tarjeta "Salud de la tienda": errores de la semana (`/admin/errores`), vista previa del informe semanal y de los avisos por correo |
 | `clientes/cuentas-web.js` | Cuentas de clientes del catalogo: avisos pendientes (un toque abre WhatsApp con el mensaje y lo marca enviado) y vincular cada cuenta con un cliente del panel |
+| `clientes/pedidos-web.js` | Pedidos web: lista con buscador; solo muestra el boton del siguiente paso (confirmar envio/retiro, registrar venta, enviado con guia, entregado, cancelar). "Registrar venta" busca o crea el cliente del panel por su WhatsApp, lo vincula a la cuenta, abre la venta con todo puesto y al confirmarla marca el pedido como pagado |
 | `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), `cambiarEstadoNube` |
 | `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare |
 | `sync/listeners.js` | Arranque de los datos al iniciar sesion, metricas (y su importacion unica desde Firestore); refresca pantallas |
@@ -112,6 +113,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `boletin.js` | "Suscribete al boletin" del pie: ventana con el correo -> POST /boletin (D1, correo de bienvenida con baja) |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |
 | `cuenta.js` | "Mi cuenta": login con Google o con correo y contrasena (con verificacion de correo obligatoria; los correos de verificacion y de contrasena salen de noreply@aphillipsstore.com via el Worker y sus enlaces se abren en la tienda con ?modo=; Firebase Auth, el SDK se descarga solo al abrir el panel o si ya habia sesion), perfil y WhatsApp, avisos ("Avisame" en un reloj o una marca), compras y apartados, favoritos en la nube. Con la cuenta del dueno: ir al panel, metricas y opciones de desarrollador (estado del sistema, no contar mis visitas, forzar actualizacion, respaldo) |
+| `mi-cuenta.js` | Zona del cliente con sesion: registro (nombre, apellido, correo, WhatsApp, contrasena x2, mayor de edad + terminos obligatorios, novedades opcional) con validacion en vivo y boton desactivado hasta que todo sea valido; "Completa tu registro" para cuentas de Google o viejas; tres pestanas Mi cuenta (datos, direccion de envio, cedula, nacimiento, muneca, preferencias, avisos), Mis pedidos (pedidos web con su avance + compras/apartados en tienda) y Mis favoritos. Crea el pedido web (P-XXXXX) al tocar "Comprar por WhatsApp" (sesion.pedidoPara) |
 | `sesion.js` | Estado de la sesion del cliente (`sesion`, `saludo()` para los mensajes de WhatsApp, `tieneAviso`) sin dependencias |
 | `header.js` | Encabezado transparente sobre el hero y efecto de la portada al bajar |
 | `menu.js` | Menu del celular (boton hamburguesa) |
