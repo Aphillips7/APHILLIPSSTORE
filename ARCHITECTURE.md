@@ -7,7 +7,7 @@ quedo como archivo historico de solo lectura (ya no se escribe). Dominio: `aphil
 
 - `index.html` — **panel interno** (PWA instalable): inventario, finanzas, clientes, contenido.
 - `catalogo.html` — **catalogo publico**: los clientes ven relojes y escriben por WhatsApp.
-  No hay carrito ni pedidos en linea: **todas las ventas se cierran por WhatsApp**.
+  No hay carrito ni pago en linea: **todas las ventas se cierran por WhatsApp**. Los clientes con cuenta generan un pedido web (P-XXXXX, tabla `pedidos` en D1) al tocar "Comprar por WhatsApp", y el dueno lo avanza desde el panel.
 
 ## Reglas tecnicas
 
@@ -134,7 +134,7 @@ Ademas: catalogo publico en R2 (`publico/catalogo.json`, todos leen, admin publi
 D1 (tabla `metricas`: visitantes suman, admin lee). Firestore guarda la copia antigua de todo esto
 (`catalogo_publico`, `metricas_catalogo`...) solo como archivo.
 
-No hay coleccion de pedidos.
+Los pedidos web viven en D1 (tabla `pedidos`, migracion 0008) junto con las cuentas (`cuentas`: codigo AP-00000 unico, `tel_norm` unico, terminos y mayor_edad con fecha).
 
 ### `inventario/{id}`
 `nombre, sku, coleccion, genero (hombre|mujer|unisex), mm, materialCaja, materialCorrea,
