@@ -2,3 +2,6 @@
 node_modules/
 .wrangler/
 .dev.vars
+
+# estado local de la ultima publicacion (scripts/publicar.mjs)
+scripts/.ultimo-publicado.json
