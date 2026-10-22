@@ -40,6 +40,9 @@ sw.js                 service worker (cache del "cascaron")
 firestore.rules       reglas del archivo historico de Firestore: solo lectura del admin (se publican a mano)
 docs/PUBLICAR-REGLAS.md   pasos para publicar reglas y crear el admin
 scripts/auditar-catalogo-publico.js   (historico) auditoria de catalogo_publico en Firestore
+scripts/verificar.mjs                  chequeo poka-yoke antes de publicar (sintaxis, SHELL_FILES, CACHE_NAME, campos privados, onclick)
+scripts/publicar.mjs                   publica la tienda solo si pasa el chequeo y confirma el CACHE_NAME en vivo
+scripts/publicar-api.mjs               igual para la API (cloudflare/fotos-worker)
 cloudflare/fotos-worker/   Worker que sube/borra fotos en R2 (api.aphillipsstore.com); fotos en fotos.aphillipsstore.com
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
 css/panel/            base, componentes, finanzas, auth, modales, movil (en ese orden)

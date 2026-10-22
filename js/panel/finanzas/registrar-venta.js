@@ -1,6 +1,6 @@
 // =================== FINANZAS TIPO CHIPS ===================
 import { poblarSelectClientes } from '../clientes/clientes.js';
-import { renderPickerCompra } from './registrar-compra.js';
+import { registrarCompraSiFalta, renderPickerCompra } from './registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { avisarError, cambiarEstadoSeguro } from '../inventario/transacciones.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
@@ -117,7 +117,9 @@ function actualizarPreview() {
 }
 
 // =================== REGISTRAR VENTA ===================
+var _registrando = false;   // evita registrar la misma venta dos veces con un doble toque
 async function registrarMovimiento() {
+  if (_registrando) return;
   var invIdx = document.getElementById('fin-inv-index').value;
   if (invIdx === '') { alert('Selecciona un reloj del inventario primero.'); return; }
   var i = idxInv(invIdx);
@@ -129,9 +131,18 @@ async function registrarMovimiento() {
   var clienteId = document.getElementById('fin-cliente') ? document.getElementById('fin-cliente').value : '';
   var cliente = clienteId ? state.clientes.find(c=>c.id===clienteId) : null;
   if (!monto || monto <= 0) { alert('Ingresa el precio de venta.'); return; }
+  // poka-yoke: no se vende dos veces, y un apartado se completa desde su ficha (respeta los abonos)
+  if (p.estado === 'vendido') { alert('Este reloj ya esta vendido.'); limpiarSeleccion(); return; }
+  if (p.estado === 'reservado') { alert('Este reloj esta apartado por ' + (p.reserva ? p.reserva.clienteNombre : 'un cliente') + '. Usa "Completar venta" en su ficha para que cuenten los abonos.'); return; }
+  var costoP = p.costoTotal || 0;
+  var resumen = 'Confirmar venta:\n\n' + p.nombre + (p.sku ? ' · Ref. ' + p.sku : '') + '\nPrecio: $' + monto.toLocaleString() + '\nCanal: ' + canal + (metodoPago ? ' · Pago: ' + metodoPago : '') + (cliente ? '\nCliente: ' + cliente.nombre : '');
+  if (costoP > 0 && monto < costoP) resumen += '\n\nOJO: vendes por DEBAJO del costo ($' + costoP.toLocaleString() + '): pierdes $' + (costoP - monto).toLocaleString() + '.';
+  if (!confirm(resumen)) return;
   var fechaVenta = new Date().toLocaleDateString('es-MX');
+  _registrando = true;
   try { await cambiarEstadoSeguro(p.id, p.estado, { estado:'vendido', precioVenta:monto, fechaVenta:fechaVenta }); }
-  catch (e) { avisarError(e); limpiarSeleccion(); return; }
+  catch (e) { _registrando = false; avisarError(e); limpiarSeleccion(); return; }
+  _registrando = false;
   i = idxInv(invIdx);
   if (i === -1) { invNoExiste(); limpiarSeleccion(); return; }
   state.movimientos.unshift({ id:idAleatorio('mov'), _ts:Date.now(), tipo:'venta', desc: p.nombre + (p.sku ? ' · Ref. '+p.sku : ''), monto: monto, canal: canal, metodoPago: metodoPago, costo: p.costoTotal || 0, precioObjetivo: p.precio||0, clienteId: clienteId||null, clienteNombre: cliente?cliente.nombre:'', fecha: new Date().toLocaleDateString('es-MX') });
@@ -140,6 +151,7 @@ async function registrarMovimiento() {
   state.inventario[i].precioVenta = monto;
   state.inventario[i].fechaVenta = fechaVenta;
   save('inventario');
+  registrarCompraSiFalta(state.inventario[i]);   // un reloj en transito o bajo pedido tambien tuvo un costo
   limpiarSeleccion();
   renderInicio();
   var btn = document.getElementById('btn-registrar-mov');

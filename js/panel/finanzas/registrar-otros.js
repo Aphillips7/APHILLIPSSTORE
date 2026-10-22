@@ -9,6 +9,8 @@ function registrarOtro() {
   var metodoPago=document.getElementById('fin-metodo-otro')?document.getElementById('fin-metodo-otro').value:'';
   var categoria=(tipo==='gasto'&&document.getElementById('fin-categoria'))?document.getElementById('fin-categoria').value:'';
   if(!desc||!monto||monto<=0){alert('Completa descripcion y monto.');return;}
+  var nombres={gasto:'Gasto',retiro:'Retiro',inversion:'Inversion',ingreso:'Ingreso'};
+  if(!confirm('Registrar '+(nombres[tipo]||tipo)+' de $'+monto.toLocaleString()+(metodoPago?' ('+metodoPago+')':'')+(categoria?' · '+categoria:'')+':\n"'+desc+'"\n\n¿Es correcto?'))return;
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo,desc,monto,canal:tipo,metodoPago:metodoPago,categoria:categoria,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   document.getElementById('fin-desc-otro').value='';
@@ -25,6 +27,7 @@ function registrarTraspaso(){
   if(!monto||monto<=0){alert('Ingresa el monto a traspasar.');return;}
   if(origen===destino){alert('El origen y el destino deben ser diferentes.');return;}
   var metodos={efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',tarjeta:'Tarjeta',otro:'Otro'};
+  if(!confirm('Traspasar $'+monto.toLocaleString()+' de '+metodos[origen]+' a '+metodos[destino]+'?'))return;
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'traspaso',desc:'Traspaso: '+metodos[origen]+' \u2192 '+metodos[destino],monto:monto,canal:'traspaso',metodoOrigen:origen,metodoDestino:destino,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   document.getElementById('traspaso-monto').value='';

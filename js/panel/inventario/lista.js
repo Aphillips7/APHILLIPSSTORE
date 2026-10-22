@@ -18,8 +18,13 @@ function toggleVista(v){
 }
 
 function eliminarProducto(id){
-  if(!confirm('Eliminar esta unidad?'))return;
   var i=idxInv(id);
+  if(i===-1){ renderInventario(); return; }
+  var p=state.inventario[i];
+  // poka-yoke: un reloj apartado tiene dinero de un cliente; primero se decide que pasa con el abono
+  if(p.estado==='reservado'){ alert('Este reloj esta apartado por '+(p.reserva?p.reserva.clienteNombre:'un cliente')+'. Primero usa "Cancelar reserva" en su ficha para decidir que pasa con el abono.'); return; }
+  if(!confirm('¿Eliminar "'+(p.nombre||'esta unidad')+(p.sku?' · Ref. '+p.sku:'')+'" del inventario?'+(p.estado==='vendido'?'\n\nLa venta ya registrada en Finanzas NO se borra.':'')+'\n\nNo se puede deshacer.'))return;
+  i=idxInv(id);
   if(i===-1){ renderInventario(); return; }
   state.inventario.splice(i,1);save('inventario');renderInventario();
 }
@@ -33,9 +38,15 @@ function cambiarEstado(id,val){
     abrirReservaModal(id); return;
   }
   var antes=state.inventario[i].estado;
+  // poka-yoke: quitar un apartado desde aqui borraria la reserva sin decidir que pasa con el abono
   if(antes==='reservado'&&val!=='reservado'){
-    if(!confirm('Este reloj tiene una reserva activa con '+(state.inventario[i].reserva?state.inventario[i].reserva.clienteNombre:'un cliente')+'. ¿Deseas quitar la reserva? Usa "Cancelar reserva" desde el detalle si quieres decidir que pasa con el abono.')) { renderInventario(); return; }
-    delete state.inventario[i].reserva;
+    alert('Este reloj esta apartado por '+(state.inventario[i].reserva?state.inventario[i].reserva.clienteNombre:'un cliente')+'. Para quitar el apartado usa "Cancelar reserva" en su ficha (ahi decides si se devuelve el abono).');
+    renderInventario(); return;
+  }
+  // un reloj vendido que vuelve a la venta: la venta ya registrada sigue sumando en Finanzas
+  if(antes==='vendido'&&val!=='vendido'){
+    if(!confirm('Este reloj figura como VENDIDO y su venta esta registrada en Finanzas.\n\nSi lo cambias a "'+val+'", la venta NO se borra de Finanzas (tendrias que borrarla tu en Historial).\n\n¿Cambiarlo de todas formas?')){ renderInventario(); return; }
+    delete state.inventario[i].precioVenta; delete state.inventario[i].fechaVenta;
   }
   state.inventario[i].estado=val;
   save('inventario');
