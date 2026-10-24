@@ -5,7 +5,7 @@ compilacion. **Cloudflare** (ver `cloudflare/README.md`) guarda los datos del pa
 (R2), el catalogo publico y las metricas. **Firebase Auth** es solo el login del panel. **Firestore**
 quedo como archivo historico de solo lectura (ya no se escribe). Dominio: `aphillipsstore.com`.
 
-- `index.html` — **panel interno** (PWA instalable): inventario, finanzas, clientes, contenido.
+- `index.html` — **panel interno** (PWA instalable): secciones Dashboard (`page-inicio`), Ventas (`page-ventas` con los pedidos web + registrar venta), Inventario (`page-inventario` y `page-catalogo`), Clientes (`page-clientes`), Finanzas (`page-finanzas`) y Ajustes (`page-ajustes` con salud de la tienda y tema, `page-contenido`, `page-config` protegido con el codigo).
 - `catalogo.html` — **catalogo publico**: los clientes ven relojes y escriben por WhatsApp.
   No hay carrito ni pago en linea: **todas las ventas se cierran por WhatsApp**. Los clientes con cuenta generan un pedido web (P-XXXXX, tabla `pedidos` en D1) al tocar "Comprar por WhatsApp", y el dueno lo avanza desde el panel.
 
@@ -45,7 +45,7 @@ scripts/publicar.mjs                   publica la tienda solo si pasa el chequeo
 scripts/publicar-api.mjs               igual para la API (cloudflare/fotos-worker)
 cloudflare/fotos-worker/   Worker que sube/borra fotos en R2 (api.aphillipsstore.com); fotos en fotos.aphillipsstore.com
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
-css/panel/            base (tokens de color glaciar, claro y oscuro), componentes, finanzas, auth, modales, movil (en ese orden)
+css/panel/            base (tokens de color glaciar, claro y oscuro), componentes, finanzas, auth, modales, navegacion, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
                       destacados, listado, filtros, marcas, pie, hora (en ese orden)
 js/firebase.js        configuracion de Firebase (solo Auth); exporta firebase
@@ -59,7 +59,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 |---|---|
 | `main.js` | Punto de entrada: importa todo, listeners de conexion y modales, arranque |
 | `state.js` | Estado en memoria (`state`), `save()`, `saveMeta()`, `idAleatorio()`, `esPropietario()` |
-| `nav.js` | Cambio de pestanas (`showPage`, `showInner`, `irARegistrar`) |
+| `nav.js` | Navegacion de 6 secciones (Dashboard, Ventas, Inventario, Clientes, Finanzas, Ajustes) con sub-pestanas: barra lateral contraible en PC (`aphillips_barra_mini`), barra inferior + boton "+" y hoja "Mas" en celular, buscador global (relojes, clientes, pedidos web; atajo "/"), contadores que leen los badges existentes, punto ambar si una seccion tiene un formulario a medias (y aviso al cerrar la pagina), recuerda la ultima seccion (`aphillips_vista`). `showPage`/`showInner`/`irARegistrar` quedan como alias de lo viejo; `mostrarVista` cambia de pantalla sin pedir el codigo (lo usa auth-overlay) |
 | `tema.js` | Boton de tema automatico / claro / oscuro (localStorage `aphillips_tema`, atributo `data-theme` en `<html>`; index.html lo aplica antes de pintar) |
 | `componentes.js` | HTML de los componentes comunes: `kpiHTML` (con variacion vs mes anterior), `estadoHTML`, `vacioHTML`, `tablaHTML`, `graficaHTML`, `dinero`, `esc` (estilos en `css/panel/componentes.css`) |
 | `inicio.js` | Pantalla Inicio: resumen del mes, meta, pendientes, mini grafica, checklist |
