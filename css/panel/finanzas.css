@@ -245,3 +245,12 @@
     .cat-stats .stat-label{font-size:10px;}
     .cat-stats .stat-value{font-size:22px;}
   }
+
+  /* AJUSTES (rediseno fase 8) */
+  .ajuste-fila{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .ajuste-texto{font-size:13.5px;color:var(--muted);line-height:1.5;}
+  .reglas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;}
+  .reglas > div{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--border);}
+  .reglas b{font-size:13.5px;color:var(--black);}
+  .reglas span{font-size:13px;color:var(--muted);line-height:1.5;}
+  @media (max-width:700px){ .reglas{grid-template-columns:1fr;} }

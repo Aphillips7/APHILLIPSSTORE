@@ -693,10 +693,6 @@ if(location.hostname==='aphillips7.github.io'){
     <div><div class="card-title" style="margin-bottom:4px;">Sesion activa</div><div id="sesion-usuario-email" style="font-size:13px;color:var(--muted);">—</div></div>
     <button class="btn btn-outline btn-sm" onclick="cerrarSesion()">Cerrar sesion</button>
   </div>
-  <div class="card" id="card-instalar-pwa" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-    <div><div class="card-title" style="margin-bottom:4px;">Instalar como app</div><div style="font-size:13px;color:var(--muted);">La agregas a tu pantalla de inicio, se abre sin barra de navegador.</div></div>
-    <button class="btn btn-gold btn-sm" id="btn-instalar-pwa" onclick="instalarPWA()">Instalar</button>
-  </div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div><div class="card-title" style="margin-bottom:4px;">Estado</div><div id="sync-status" style="font-size:13px;color:var(--muted);">Conectando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -825,11 +821,40 @@ if(location.hostname==='aphillips7.github.io'){
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Errores que tuvieron los clientes en la página (anónimos) y lo que mandan los correos automáticos: el informe semanal para ti y los avisos a clientes cuando llega o baja de precio un reloj que pidieron.</div>
     <div id="salud-tienda"></div>
   </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Apariencia</div>
+      <div class="ajuste-fila">
+        <div class="ajuste-texto">Claro, oscuro o automatico (sigue al telefono o la computadora).</div>
+        <button class="btn btn-outline btn-sm" onclick="cambiarTema()">Cambiar tema</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Exportar a Excel</div>
+      <div class="ajuste-texto" style="margin-bottom:12px;">Para tu contador, un inventario fisico o tu propio analisis.</div>
+      <div class="acciones-fila" style="justify-content:flex-start;">
+        <button class="btn btn-outline btn-sm" onclick="exportarInventarioCSV()">Inventario</button>
+        <button class="btn btn-outline btn-sm" onclick="exportarMovimientosCSV()">Movimientos</button>
+        <button class="btn btn-outline btn-sm" onclick="exportarCierresCSV()">Estado de resultados por mes</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="card-instalar-pwa" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div><div class="card-title" style="margin-bottom:4px;">Instalar como app</div><div style="font-size:13px;color:var(--muted);">La agregas a tu pantalla de inicio, se abre sin barra de navegador.</div></div>
+    <button class="btn btn-gold btn-sm" id="btn-instalar-pwa" onclick="instalarPWA()">Instalar</button>
+  </div>
   <div class="card">
-    <div class="card-title">Apariencia</div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-      <div style="font-size:13px;color:var(--muted);">Claro, oscuro o automatico (sigue al telefono o la computadora).</div>
-      <button class="btn btn-outline btn-sm" onclick="cambiarTema()">Cambiar tema</button>
+    <div class="card-title">Reglas del negocio</div>
+    <div class="ajuste-texto" style="margin-bottom:10px;">Lo que usa el panel para calcular y avisarte. Asi sabes de donde sale cada numero.</div>
+    <div class="reglas">
+      <div><b>Ganancia neta</b><span>Ventas + abonos − devoluciones − costo de los relojes vendidos − gastos operativos. Las compras de inventario no son gasto: el costo cuenta cuando se vende.</span></div>
+      <div><b>Reparto de la ganancia</b><span>40 % reinversion · 30 % para ti · 30 % fondo operativo.</span></div>
+      <div><b>Margen</b><span>30 % o mas es sano (verde); 15 a 29 % ambar; menos de 15 % rojo.</span></div>
+      <div><b>Gastos</b><span>Aviso si los gastos operativos pasan del 20 % de los ingresos.</span></div>
+      <div><b>Apartados</b><span>Plazo que eliges al apartar (30 dias por defecto); se extiende de 7 en 7 hasta 90 dias.</span></div>
+      <div><b>Rotacion</b><span>Disponible +45 dias: "Rebajar"; +60 dias: capital estancado con precio sugerido; transito +20 dias: revisar envio.</span></div>
+      <div><b>Clientes</b><span>VIP con 2 compras o mas; inactivo a los 90 dias sin comprar; prospecto por contactar a los 30 dias sin contacto.</span></div>
+      <div><b>Cierre de mes</b><span>Solo meses terminados; un mes cerrado no deja borrar sus movimientos hasta reabrirlo.</span></div>
     </div>
   </div>
 </div>
