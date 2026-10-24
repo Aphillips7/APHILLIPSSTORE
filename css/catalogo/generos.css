@@ -11,7 +11,7 @@
   @media (min-width:821px){ .gen-titulo{font-size:clamp(22px,1.9vw,30px);line-height:1.1;margin-bottom:clamp(18px,1.6vw,24px);} }
   .gen-tile:focus-visible{outline:2px solid var(--black);outline-offset:3px;}
   .gen-tile:focus-visible .hero-btn{background:#fff;color:var(--black);}
-  .gen-tile:active .hero-btn{background:#d4d4d8;border-color:#d4d4d8;color:var(--black);}
+  .gen-tile:active .hero-btn{background:#fff;border-color:#fff;color:var(--black);}   /* al tocar: blanco con letras negras (antes gris) */
   @media (hover:hover) and (pointer:fine){
     .gen-tile:hover img{transform:scale(1.04);}
     .gen-tile:hover .hero-btn{background:#fff;color:var(--black);}

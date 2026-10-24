@@ -4,7 +4,7 @@
 // (o tocar la foto) abre la ficha completa del reloj.
 import { relojes } from './datos.js';
 import { abrir } from './modal.js';
-import { _destEsc, miniatura } from './ui.js';
+import { _destEsc, miniatura, srcsetFoto } from './ui.js';
 
 const API_DEST = 'https://api.aphillipsstore.com/destacados';
 var DEST_LOCAL = [];
@@ -51,7 +51,7 @@ var _destN = 0, _destIdx = 0, _destC = 0, _destAnim = false, _destT = 0, _destHt
 function _destMod(i){ return _destN ? ((i % _destN) + _destN) % _destN : 0; }
 function _destPaso(){ var c=document.querySelector('#dest-track .dest-card'); return c ? c.getBoundingClientRect().width : 0; }
 function _destCard(r){
-  var fotos = (r.fotos||[]).map(function(src,i){ return '<img class="g'+(i===0?' on frente':'')+'" src="'+_destEsc(miniatura(src))+'" data-completa="'+_destEsc(src)+'" onerror="if(!fotoRespaldo(this))this.remove()" alt="" draggable="false">'; }).join('');
+  var fotos = (r.fotos||[]).map(function(src,i){ return '<img class="g'+(i===0?' on frente':'')+'" src="'+_destEsc(miniatura(src))+'"'+srcsetFoto(src, '(max-width:600px) 85vw, (max-width:1100px) 45vw, 30vw')+' data-completa="'+_destEsc(src)+'" onerror="if(!fotoRespaldo(this))this.remove()" alt="" draggable="false">'; }).join('');
   if(!fotos) fotos = '<span class="sinfoto">Sin foto</span>';
   var gal = (r.fotos||[]).length>1 ? '<button type="button" class="dest-gal izq" aria-label="Imagen anterior" onclick="destGal(this,-1)">'+_chevI+'</button><button type="button" class="dest-gal der" aria-label="Imagen siguiente" onclick="destGal(this,1)">'+_chevD+'</button>' : '';
   return '<div class="dest-card">'+
