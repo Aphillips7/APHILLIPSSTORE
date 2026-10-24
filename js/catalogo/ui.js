@@ -21,11 +21,20 @@ var BASE_FOTOS = 'https://fotos.aphillipsstore.com/';
 function miniatura(url){
   return typeof url === 'string' && url.indexOf(BASE_FOTOS + 'relojes/') === 0 ? BASE_FOTOS + 'miniaturas/' + url.slice(BASE_FOTOS.length) : url;
 }
+// srcset con la miniatura (480 px) y la foto completa (1600 px): el navegador elige segun el tamano en pantalla y la
+// densidad del celular. Antes siempre iba la miniatura y en pantallas retina (iPhone x3) se veia borrosa.
+// tam = atributo sizes (cuanto ancho ocupa la foto). Si la foto no tiene miniatura en R2, no hace falta srcset.
+function srcsetFoto(url, tam){
+  var mini = miniatura(url);
+  if(!url || mini === url) return '';
+  return ' srcset="' + _destEsc(mini) + ' 480w, ' + _destEsc(url) + ' 1600w" sizes="' + tam + '"';
+}
 // devuelve true si cambio a la foto completa; false si ya era la completa (no hay mas respaldo)
 function fotoRespaldo(img){
   var completa = img && img.getAttribute('data-completa');
   if(!completa || img.src === completa) return false;
   img.removeAttribute('data-completa');
+  img.removeAttribute('srcset');   // si no, el srcset volveria a pedir la miniatura que fallo
   img.src = completa;
   return true;
 }
@@ -44,6 +53,6 @@ function sugerirCorreo(email){
   return '';
 }
 
-export { _destEsc, fotoRespaldo, miniatura, normalizar, sugerirCorreo, toast, vibrar };
+export { _destEsc, fotoRespaldo, miniatura, normalizar, srcsetFoto, sugerirCorreo, toast, vibrar };
 // usada desde el onerror de las <img> de las tarjetas
 window.fotoRespaldo = fotoRespaldo;
