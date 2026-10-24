@@ -110,9 +110,6 @@ function destIr(pag){
   if(Math.abs(d)===1){ destMover(d); }
   else { _destIdx = pag; _destPos(false); destActualizar(); }
 }
-function destTab(btn){ // por ahora solo cambia el subrayado; la funcion se configura despues
-  document.querySelectorAll('#dest-tabs .dest-tab').forEach(function(b){ b.classList.toggle('on', b===btn); });
-}
 function destActualizar(){
   var pg = _destMod(_destIdx);
   document.querySelectorAll('#dest-puntos .dest-punto').forEach(function(d,i){ d.classList.toggle('on', i===pg); });
@@ -155,6 +152,6 @@ function destActualizar(){
   renderDestacados(); ult = _destVis();
 })();
 
-export { _bolsa, _chevD, _chevI, _destAnim, _destC, _destCard, _destFin, _destHtml, _destIdx, _destMod, _destN, _destPaso, _destPos, _destT, _destVis, DEST_LOCAL, destActualizar, destGal, destIr, destMover, destPuntos, destTab, renderDestacados };
+export { _bolsa, _chevD, _chevI, _destAnim, _destC, _destCard, _destFin, _destHtml, _destIdx, _destMod, _destN, _destPaso, _destPos, _destT, _destVis, DEST_LOCAL, destActualizar, destGal, destIr, destMover, destPuntos, renderDestacados };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { destGal, destIr, destMover, destTab });
+Object.assign(window, { destGal, destIr, destMover });
