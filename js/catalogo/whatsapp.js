@@ -26,14 +26,14 @@ function confirmarWa(el, e){
   textoEl.textContent = '✓ Abriendo WhatsApp...';
   vibrar(10);
   var href = el.href;
-  // con sesion: se crea el pedido (o se usa el que ya tiene abierto de este reloj) y su numero y el
-  // codigo de cliente van en el mensaje, para identificarlo al instante
+  // con sesion: se crea el pedido (o se usa el que ya tiene abierto de este reloj) y su numero va en el
+  // mensaje, para identificarlo al instante (el codigo de cliente no se le muestra al cliente)
   if(el.id === 'modal-wa' && _relojAbierto && typeof sesion.pedidoPara === 'function'){
     var numero = sesion.pedidoPara(_relojAbierto);
     if(numero){
       try{
         var u = new URL(href);
-        u.searchParams.set('text', (u.searchParams.get('text') || '') + '\n\nPedido ' + numero + ' · Cliente ' + (sesion.perfil.codigo || ''));
+        u.searchParams.set('text', (u.searchParams.get('text') || '') + '\n\nPedido ' + numero);
         href = u.toString();
       }catch(err){}
     }

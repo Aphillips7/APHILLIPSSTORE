@@ -220,3 +220,12 @@
   .cta-ver-clave{position:absolute;right:6px;top:25px;transform:translateY(-50%);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--gris-texto);cursor:pointer;-webkit-tap-highlight-color:transparent;}
   .cta-ver-clave:hover{color:var(--black);}
   .cta-ver-clave svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* el panel de la cuenta solo se desplaza hacia arriba y abajo (en iPhone el campo de fecha lo ensanchaba) */
+  #panel-cuenta .fav-body{overflow-x:hidden;touch-action:pan-y;}
+  .cta-campo input[type="date"]{display:block;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;text-align:left;}
+  .cta-campo input[type="date"]::-webkit-date-and-time-value{text-align:left;}
+  .cta-campo{min-width:0;}
+  /* boton de WhatsApp de "Mis favoritos": logo y texto en una sola linea */
+  .mc-btn-wa{gap:10px;margin-top:22px;white-space:nowrap;padding-left:16px;padding-right:16px;}
+  .mc-btn-wa svg{width:17px;height:17px;flex:none;}
