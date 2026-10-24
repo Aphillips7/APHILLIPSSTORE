@@ -164,6 +164,19 @@ const SVG = `
     <path d="M9.6 62h4M9.6 65h4" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
     <rect x="9.4" y="67.6" width="10.6" height="3.6" rx="1.6" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
   </g>
+  <!-- gesto: se tapa los ojos con las dos manos (contrasena); al espiar baja la izquierda -->
+  <g class="masc-gesto masc-g-tapa">
+    <g class="masc-tapa-i">
+      <path d="M28 82 Q35 85 43.6 77" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="43.2" y="64" width="15" height="12.6" rx="5.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+      <path d="M47.4 66.6v5M50.8 66v5.6M54.2 66.6v5" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+    </g>
+    <g class="masc-tapa-d">
+      <path d="M92 84 Q85 85 76.4 77" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="61.8" y="64" width="15" height="12.6" rx="5.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+      <path d="M65.8 66.6v5M69.2 66v5.6M72.6 66.6v5" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+    </g>
+  </g>
   <!-- gesto: mano en la barbilla (pensando) -->
   <g class="masc-gesto masc-g-menton">
     <path d="M28 82 Q27 95 35.6 94" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
@@ -310,6 +323,7 @@ function vigilarVistas(){
 let _tGesto = 0, _ultimaFrase = 0, _tFrase = 0;
 function gesto(cara, g, ms){
   if(_abierta || _raiz.dataset.cara === 'dormido' && cara !== 'sorpresa') return;
+  if(_raiz.dataset.gesto === 'tapa' || _raiz.dataset.gesto === 'espia') return;
   _raiz.dataset.cara = cara;
   if(g) _raiz.dataset.gesto = g; else delete _raiz.dataset.gesto;
   clearTimeout(_tCara); clearTimeout(_tGesto);
@@ -395,8 +409,28 @@ function personalidad(){
   despertar();
 }
 
+// ---------- contrasenas: se tapa los ojos (y espia si el cliente la muestra) ----------
+function vigilarClaves(){
+  // con "Mi cuenta" abierta la mascota queda visible encima del panel
+  var pc = document.getElementById('panel-cuenta');
+  if(pc) new MutationObserver(function(){ _raiz.classList.toggle('sobre-cuenta', pc.classList.contains('open')); }).observe(pc, { attributes: true, attributeFilter: ['class'] });
+  var esClave = function(el){ return el && el.dataset && el.dataset.clave === '1'; };
+  var aplicar = function(el){
+    if(esClave(el)){
+      clearTimeout(_tGesto); clearTimeout(_tCara); delete _raiz.dataset.cara; ocultarBurbuja();
+      _raiz.dataset.gesto = el.type === 'text' ? 'espia' : 'tapa';
+    }else if(_raiz.dataset.gesto === 'tapa' || _raiz.dataset.gesto === 'espia'){
+      delete _raiz.dataset.gesto;
+    }
+  };
+  document.addEventListener('focusin', function(e){ aplicar(e.target); });
+  document.addEventListener('focusout', function(){ setTimeout(function(){ aplicar(document.activeElement); }, 60); });
+  document.addEventListener('clave-visible', function(e){ aplicar(e.detail.campo); });
+}
+
 crear();
 vigilarVistas();
 personalidad();
+vigilarClaves();
 
 export { abrir as abrirMascota, cerrarPanel as cerrarMascota };

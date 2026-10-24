@@ -479,6 +479,31 @@ function render(){
     else if(antes[k] !== undefined && !el.value){ el.value = antes[k]; el.dataset.tocado = "1"; hubo = true; }
   });
   if(hubo) prepararFormularios(cont);
+  ponerOjosClave(cont);
+}
+// Boton de ojo para ver u ocultar la contrasena (en entrar, crear cuenta y contrasena nueva).
+// Avisa con el evento "clave-visible" para que la mascota espie o se tape los ojos.
+const OJO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const OJO_NO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 4.2-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function ponerOjosClave(cont){
+  cont.querySelectorAll('input[type="password"]').forEach(function(inp){
+    var caja = inp.closest('.cta-campo'); if(!caja || caja.querySelector('.cta-ver-clave')) return;
+    inp.dataset.clave = '1';
+    caja.classList.add('con-ojo');
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'cta-ver-clave'; b.innerHTML = OJO;
+    b.setAttribute('aria-label', 'Mostrar contraseña');
+    b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // no le quita el foco al campo
+    b.addEventListener('click', function(){
+      var ver = inp.type === 'password';
+      inp.type = ver ? 'text' : 'password';
+      b.innerHTML = ver ? OJO_NO : OJO;
+      b.setAttribute('aria-label', ver ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      inp.focus({ preventScroll: true });
+      document.dispatchEvent(new CustomEvent('clave-visible', { detail: { visible: ver, campo: inp } }));
+    });
+    caja.appendChild(b);   // al final: la etiqueta debe quedar justo despues del campo (asi sube al escribir)
+  });
 }
 function pintar(){
   var cont = document.getElementById('cuenta-contenido');
