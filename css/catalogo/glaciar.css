@@ -51,8 +51,7 @@
   html.glaciar .hero .hero-btn:hover,html.glaciar .hero .hero-btn:focus-visible{background:var(--glaciar);border-color:var(--glaciar);color:var(--black);}
 
   /* fondo de las fotos: solo el carrusel de la portada lleva glaciar; listado y ficha quedan como antes */
-  /* centro blanco detras del reloj (no se tiñe nada del reloj) y el celeste hacia los bordes */
-  html.glaciar #destacados{--dgrad:radial-gradient(ellipse 58% 54% at 50% 50%,#fff 0%,#fff 45%,rgba(255,255,255,0) 100%),linear-gradient(180deg,#c3d6e3 0%,#d3e1eb 25%,#e2ecf2 50%,#eff5f8 75%,#fff 100%);}
+  html.glaciar #destacados{--dgrad:linear-gradient(180deg,#c3d6e3 0%,#d3e1eb 25%,#e2ecf2 50%,#eff5f8 75%,#fff 100%);}
 
   /* etiquetas: "Nuevo" y las de destacados/buscador/favoritos */
   html.glaciar .card-nuevo{background:var(--glaciar);color:var(--black);}

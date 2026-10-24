@@ -60,7 +60,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `main.js` | Punto de entrada: importa todo, listeners de conexion y modales, arranque |
 | `state.js` | Estado en memoria (`state`), `save()`, `saveMeta()`, `idAleatorio()`, `esPropietario()` |
 | `nav.js` | Navegacion de 6 secciones (Dashboard, Ventas, Inventario, Clientes, Finanzas, Ajustes) con sub-pestanas: barra lateral contraible en PC (`aphillips_barra_mini`), barra inferior + boton "+" y hoja "Mas" en celular, buscador global (relojes, clientes, pedidos web; atajo "/"), contadores que leen los badges existentes, punto ambar si una seccion tiene un formulario a medias (y aviso al cerrar la pagina), recuerda la ultima seccion (`aphillips_vista`). `showPage`/`showInner`/`irARegistrar` quedan como alias de lo viejo; `mostrarVista` cambia de pantalla sin pedir el codigo (lo usa auth-overlay) |
-| `tema.js` | Boton de tema automatico / claro / oscuro (localStorage `aphillips_tema`, atributo `data-theme` en `<html>`; index.html lo aplica antes de pintar) |
+| `tema.js` | El panel siempre en modo claro (decision del dueno): fija `data-theme="light"` en <html>, que anula el modo oscuro del sistema. No hay boton de tema |
 | `componentes.js` | HTML de los componentes comunes: `kpiHTML` (con variacion vs mes anterior), `estadoHTML`, `vacioHTML`, `tablaHTML`, `graficaHTML`, `dinero`, `esc` (estilos en `css/panel/componentes.css`) |
 | `inicio.js` | Dashboard: KPIs del mes vs el anterior (ventas, ganancia neta = bruta - gastos, margen bruto, inventario a costo y a precio, pedidos web, por cobrar), "Hoy necesitas" con boton directo (pedidos por confirmar, abonos vencidos segun la fecha limite del apartado, mes sin cerrar, transito > 20 dias, disponible > 45 dias, publicados sin foto o medida, avisos web), meta con proyeccion de cierre (Guardar desactivado hasta que la meta sea valida), grafica de 12 meses, mas vistos vs mas vendidos, actividad reciente y checklist |
 | `graficas.js` | Graficas en SVG propio al ancho real del contenedor (se redibujan al cambiar el tamano): `barrasLinea` (barras + linea + meta punteada), `dona`, `barrasH`, `compacto` ($1.2k) |
@@ -220,7 +220,7 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
 
 ## Almacenamiento local (navegador)
 
-Panel: `tasks`, `meta`, `weekTasks`, `ideas`, `cierres` (copia de `config/main`), `aphillips_vista`, `aphillips_barra_mini`, `aphillips_tema`, `aphillips_vista_inv`, `lastSync`, `syncHistory`,
+Panel: `tasks`, `meta`, `weekTasks`, `ideas`, `cierres` (copia de `config/main`), `aphillips_vista`, `aphillips_barra_mini`, `aphillips_vista_inv`, `lastSync`, `syncHistory`,
 `lastExportISO`, `authTotpPendiente`; IndexedDB `aphillips-panel` (datos + cambios sin enviar).
 Catalogo: `aphillips_favoritos`, `aphillips_catalogo` (ultima lista de relojes), `aphillips_sesion`
 (hay sesion: cargar Firebase Auth al abrir), `aphillips_no_contar`.

@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="Aphillips">
 <link rel="manifest" href="manifest.json">
 <script>
-// tema elegido (claro/oscuro) antes de pintar para que no parpadee; el boton esta en js/panel/tema.js
-try{var t=localStorage.getItem('aphillips_tema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}
+// el panel siempre se ve en modo claro (aunque el telefono este en oscuro); ver js/panel/tema.js
+document.documentElement.setAttribute('data-theme','light');   /* el panel siempre en modo claro */
 </script>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -72,7 +72,6 @@ if(location.hostname==='aphillips7.github.io'){
     <div id="nav-sync-indicator" style="display:none;"></div>
     <span id="nav-sesion-email"></span>
     <div class="bl-pie-btns">
-      <button type="button" id="tema-btn" class="tema-btn" onclick="cambiarTema()" aria-label="Tema"></button>
       <button type="button" class="bl-salir" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
@@ -111,7 +110,6 @@ if(location.hostname==='aphillips7.github.io'){
     <div class="hoja-titulo">Mas</div>
     <div id="hoja-mas-secciones"></div>
     <div class="hoja-pie">
-      <button type="button" class="btn btn-outline btn-sm" onclick="cambiarTema()">Cambiar tema</button>
       <button type="button" class="btn btn-outline btn-sm" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
@@ -842,14 +840,7 @@ if(location.hostname==='aphillips7.github.io'){
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Errores que tuvieron los clientes en la página (anónimos) y lo que mandan los correos automáticos: el informe semanal para ti y los avisos a clientes cuando llega o baja de precio un reloj que pidieron.</div>
     <div id="salud-tienda"></div>
   </div>
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title">Apariencia</div>
-      <div class="ajuste-fila">
-        <div class="ajuste-texto">Claro, oscuro o automatico (sigue al telefono o la computadora).</div>
-        <button class="btn btn-outline btn-sm" onclick="cambiarTema()">Cambiar tema</button>
-      </div>
-    </div>
+  <div>
     <div class="card">
       <div class="card-title">Exportar a Excel</div>
       <div class="ajuste-texto" style="margin-bottom:12px;">Para tu contador, un inventario fisico o tu propio analisis.</div>
