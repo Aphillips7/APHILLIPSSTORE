@@ -211,3 +211,6 @@
   .cta-beneficios{list-style:none;margin:0;padding:16px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;gap:12px;}
   .cta-beneficios li{display:flex;align-items:center;gap:12px;font-size:var(--fs-texto);color:var(--black);}
   .cta-beneficios svg{flex:none;width:30px;height:30px;padding:6px;box-sizing:border-box;border-radius:50%;background:var(--glaciar,#A7C4D6);fill:none;stroke:var(--black);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+  /* panel de la cuenta: el contenido empieza arriba, a la altura del boton de cerrar */
+  .cta-cuerpo{padding-top:24px;}
+  @media (max-width:820px){ .cta-cuerpo{padding-top:18px;} }
