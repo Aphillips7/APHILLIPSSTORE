@@ -5,8 +5,10 @@
 //   Ganancia bruta  = ingresos - costo vendido
 //   Gastos          = gastos operativos (sin los reembolsos)
 //   Ganancia neta   = ganancia bruta - gastos
-//   Flujo de caja   = entradas (ventas + abonos) - salidas (compras + gastos + retiros)
-// Las compras de inventario no son gasto (el costo se reconoce al vender) y los retiros son dinero del dueno.
+//   Flujo de caja   = entradas (ventas + abonos + aportes) - salidas (compras + gastos + retiros)
+// Las compras de inventario no son gasto (el costo se reconoce al vender). Los aportes (dinero que el dueno pone)
+// y los retiros (dinero que saca) mueven la caja pero no son ingreso ni gasto.
+// Relojes vendidos = movimientos de venta, tambien los apartados ya pagados con abonos (venta de $0 "_soloRegistro").
 import { finMesKey, finParseFecha } from './fechas.js';
 import { diasEnInventario } from '../../products.js';
 import { state } from '../state.js';
@@ -19,6 +21,8 @@ const DIAS_PLAZO_ABONO = 30;    // sin fecha limite propia, una reserva vence a 
 const DIAS_ESTANCADO = 60;      // un reloj disponible mas de 60 dias es capital estancado
 
 function num(v){ return Number(v) || 0; }
+// +1 dinero que entra a la caja, -1 dinero que sale (traspaso y apartado cancelado no cambian el total)
+const SIGNO = { venta: 1, abono: 1, aporte: 1, compra: -1, gasto: -1, retiro: -1 };
 function esReembolso(m){ return m.tipo === 'gasto' && m.categoria === 'Reembolso'; }
 function claveMes(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
 function nombreMes(clave, corto){
@@ -30,14 +34,15 @@ function nombreMes(clave, corto){
 // Estado de resultados y flujo de una lista de movimientos
 function estadoResultados(movs){
   var r = { ventas: 0, abonos: 0, devoluciones: 0, ingresos: 0, costoVendido: 0, bruta: 0, gastos: 0, neta: 0,
-    compras: 0, retiros: 0, entradas: 0, salidas: 0, flujo: 0, nVentas: 0, nAbonos: 0, descuentos: 0 };
+    compras: 0, retiros: 0, aportes: 0, entradas: 0, salidas: 0, flujo: 0, nVentas: 0, nAbonos: 0, descuentos: 0 };
   movs.forEach(function(m){
     var monto = num(m.monto);
-    if(m.tipo === 'venta'){ r.ventas += monto; r.costoVendido += num(m.costo); if(!m._soloRegistro) r.nVentas++;
+    if(m.tipo === 'venta'){ r.ventas += monto; r.costoVendido += num(m.costo); r.nVentas++;
       if(m.precioObjetivo && num(m.precioObjetivo) > monto) r.descuentos += num(m.precioObjetivo) - monto; }
     else if(m.tipo === 'abono'){ r.abonos += monto; r.nAbonos++; }
     else if(m.tipo === 'compra') r.compras += monto;
     else if(m.tipo === 'retiro') r.retiros += monto;
+    else if(m.tipo === 'aporte') r.aportes += monto;
     else if(m.tipo === 'gasto'){ if(esReembolso(m)) r.devoluciones += monto; else r.gastos += monto; }
   });
   r.ingresos = r.ventas + r.abonos - r.devoluciones;
@@ -45,10 +50,13 @@ function estadoResultados(movs){
   r.neta = r.bruta - r.gastos;
   r.margenBruto = r.ingresos > 0 ? Math.round(r.bruta / r.ingresos * 100) : 0;
   r.margenNeto = r.ingresos > 0 ? Math.round(r.neta / r.ingresos * 100) : 0;
-  r.entradas = r.ventas + r.abonos;
+  r.vendido = r.ventas + r.abonos;          // lo cobrado por relojes (sin aportes)
+  r.entradas = r.vendido + r.aportes;
   r.salidas = r.compras + r.gastos + r.devoluciones + r.retiros;
   r.flujo = r.entradas - r.salidas;
-  r.ticket = r.nVentas ? Math.round((r.ventas + r.abonos) / r.nVentas) : 0;
+  // ticket: lo cobrado por reloj vendido (los abonos de apartados todavia abiertos no se cuentan)
+  var abonosAbiertos = movs.filter(function(m){ return m.tipo === 'abono' && m.invId && state.inventario.some(function(p){ return p.id === m.invId && p.estado === 'reservado'; }); }).reduce(function(a, m){ return a + num(m.monto); }, 0);
+  r.ticket = r.nVentas ? Math.round((r.ventas + r.abonos - abonosAbiertos) / r.nVentas) : 0;
   return r;
 }
 function movimientosDelMes(clave){ return state.movimientos.filter(function(m){ return finMesKey(m.fecha) === clave; }); }
@@ -96,7 +104,7 @@ function saldosPorMetodo(){
       if(m.metodoDestino in s) s[m.metodoDestino] += monto;
       return;
     }
-    var signo = (m.tipo === 'venta' || m.tipo === 'abono') ? 1 : (m.tipo === 'compra' || m.tipo === 'gasto' || m.tipo === 'retiro') ? -1 : 0;
+    var signo = SIGNO[m.tipo] || 0;
     if(!signo) return;
     if(m.metodoPago in s) s[m.metodoPago] += signo * monto; else sinMetodo += signo * monto;
   });
@@ -150,11 +158,55 @@ function reservasPorCobrar(){
   }).sort(function(a, b){ return (a.dias === null ? 9999 : a.dias) - (b.dias === null ? 9999 : b.dias); });
 }
 
+// ---------- ventas por reloj ----------
+// Cada venta con lo que realmente se cobro por ese reloj: en un apartado la venta solo trae el saldo final
+// (o $0 si se pago todo con abonos) y los abonos van aparte; aqui se suman por invId para ver el reloj entero.
+function cobradoDeVenta(m){
+  var deApartado = m._deApartado || /Saldo final de|Venta completada con/.test(m.desc || '');
+  if(!(m.invId && deApartado)) return num(m.monto);
+  return num(m.monto) + state.movimientos.filter(function(x){ return x.tipo === 'abono' && x.invId === m.invId; }).reduce(function(a, x){ return a + num(x.monto); }, 0);
+}
+function ventasPorReloj(movs){
+  return movs.filter(function(m){ return m.tipo === 'venta'; }).map(function(m){
+    var cobrado = cobradoDeVenta(m);
+    return { m: m, cobrado: cobrado, costo: num(m.costo), ganancia: cobrado - num(m.costo), margen: cobrado > 0 ? Math.round((cobrado - num(m.costo)) / cobrado * 100) : 0 };
+  }).filter(function(x){ return x.cobrado > 0 || x.costo > 0; });
+}
+
+// ---------- revision de datos (auditoria) ----------
+// Datos que hacen que los numeros no cuadren, cada uno con como arreglarlo.
+function revisionDatos(){
+  var out = [];
+  var sinMetodo = state.movimientos.filter(function(m){ return SIGNO[m.tipo] && !(m.metodoPago in METODOS) && num(m.monto) > 0; });
+  if(sinMetodo.length) out.push({ id: 'sinMetodo', tipo: 'pendiente', n: sinMetodo.length, monto: sinMetodo.reduce(function(a, m){ return a + SIGNO[m.tipo] * num(m.monto); }, 0),
+    texto: sinMetodo.length + ' movimiento' + (sinMetodo.length !== 1 ? 's' : '') + ' sin metodo de pago: el dinero por metodo (Yappy, efectivo...) no cuadra.', boton: 'Asignar metodo', accion: "irSeccion('finanzas','movimientos');filtrarMovimientos('sinmetodo')" });
+  var vendSinCosto = state.movimientos.filter(function(m){ return m.tipo === 'venta' && !num(m.costo) && (num(m.monto) > 0); });
+  if(vendSinCosto.length) out.push({ id: 'ventaSinCosto', tipo: 'vencido', n: vendSinCosto.length,
+    texto: vendSinCosto.length + ' venta' + (vendSinCosto.length !== 1 ? 's' : '') + ' sin costo del reloj: la ganancia sale inflada (cuenta como si el reloj fuera gratis).', boton: 'Ver', accion: "irSeccion('finanzas','movimientos');filtrarMovimientos('venta')" });
+  var sinCompra = state.inventario.filter(function(p){
+    if(['disponible', 'reservado', 'vendido'].indexOf(p.estado) === -1 || !(costoDe(p) > 0)) return false;
+    return !state.movimientos.some(function(m){ return m.tipo === 'compra' && (m.invId ? m.invId === p.id : m.desc === p.nombre + (p.sku ? ' · Ref. ' + p.sku : '')); });
+  });
+  if(sinCompra.length) out.push({ id: 'sinCompra', tipo: 'pendiente', n: sinCompra.length, monto: -sinCompra.reduce(function(a, p){ return a + costoDe(p); }, 0),
+    texto: sinCompra.length + ' reloj' + (sinCompra.length !== 1 ? 'es' : '') + ' con costo pero sin su compra registrada: la caja muestra mas dinero del real.', boton: 'Registrar compra', accion: "irARegistrar('compra')" });
+  var difCompra = state.movimientos.filter(function(m){
+    if(m.tipo !== 'compra' || !m.invId) return false;
+    var p = state.inventario.find(function(x){ return x.id === m.invId; });
+    return p && costoDe(p) > 0 && Math.abs(costoDe(p) - num(m.monto)) >= 1 && state.movimientos.filter(function(x){ return x.tipo === 'compra' && x.invId === m.invId; }).length === 1;
+  });
+  if(difCompra.length) out.push({ id: 'difCompra', tipo: 'info', n: difCompra.length,
+    texto: difCompra.length + ' compra' + (difCompra.length !== 1 ? 's' : '') + ' con un monto distinto al costo del reloj (¿cambiaste el costo despues?).', boton: 'Ver', accion: "irSeccion('finanzas','movimientos');filtrarMovimientos('compra')" });
+  var caja = estadoResultados(state.movimientos).flujo;
+  if(caja < 0) out.push({ id: 'cajaNegativa', tipo: 'info', monto: caja,
+    texto: 'La caja da ' + Math.round(caja).toLocaleString('en-US') + ': falta registrar el dinero que pusiste en el negocio (aporte de capital) o alguna venta.', boton: 'Registrar aporte', accion: "irARegistrar('aporte')" });
+  return out;
+}
+
 // ---------- cierres de mes ----------
 function cierres(){ return state.cierres || {}; }
 function mesCerrado(clave){ return !!(clave && cierres()[clave]); }
 function fechaEnMesCerrado(fecha){ return mesCerrado(finMesKey(fecha)); }
 
-export { CANALES, DIAS_ESTANCADO, DIAS_PLAZO_ABONO, METODOS, MESES_C, MESES_L, PERIODOS, claveMes, costoDe, diasParaLimite,
+export { CANALES, DIAS_ESTANCADO, DIAS_PLAZO_ABONO, METODOS, MESES_C, MESES_L, PERIODOS, SIGNO, claveMes, costoDe, diasParaLimite, cobradoDeVenta, revisionDatos, ventasPorReloj,
   estadoResultados, fechaEnMesCerrado, fechaLimiteReserva, inventarioDinero, mesCerrado, movimientosDe, movimientosDelMes,
   nombreMes, periodo, reservasPorCobrar, resultadosMes, saldoTotal, saldosPorMetodo, totalAbonado, ultimosMeses, cierres };

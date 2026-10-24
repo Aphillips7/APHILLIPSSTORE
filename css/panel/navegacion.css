@@ -61,10 +61,10 @@
   #bs-mas{display:inline-flex;}
 
   /* ---------- sub-pestanas de cada seccion ---------- */
-  .subnav{display:flex;gap:4px;padding:14px clamp(24px,3vw,48px) 0;max-width:1600px;margin:0 auto;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+  .subnav{position:relative;display:flex;gap:4px;padding:14px clamp(24px,3vw,48px) 0;max-width:1600px;margin:0 auto;border-bottom:1px solid var(--border);overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .subnav::-webkit-scrollbar{display:none;}
   .subnav[hidden]{display:none;}
-  .subnav-tab{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:14px;font-weight:500;letter-spacing:-0.01em;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;padding:8px 12px 11px;margin-bottom:-1px;cursor:pointer;white-space:nowrap;transition:color var(--fast) var(--ease),border-color var(--fast) var(--ease);}
+  .subnav-tab{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:14px;font-weight:500;letter-spacing:-0.01em;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;padding:8px 12px 10px;margin-bottom:0;cursor:pointer;white-space:nowrap;transition:color var(--fast) var(--ease),border-color var(--fast) var(--ease);}
   .subnav-tab:hover{color:var(--black);}
   .subnav-tab.active{color:var(--black);border-bottom-color:var(--accent);font-weight:600;}
 

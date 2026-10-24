@@ -53,7 +53,7 @@ function registrarOtro() {
   var metodoPago = el('fin-metodo-otro') ? el('fin-metodo-otro').value : '';
   var categoria = (tipo === 'gasto' && el('fin-categoria')) ? el('fin-categoria').value : '';
   if(tipo === 'gasto' && !categoria){ alert('Elige la categoria del gasto.'); return; }
-  var nombres = { gasto: 'Gasto', retiro: 'Retiro' };
+  var nombres = { gasto: 'Gasto', retiro: 'Retiro', aporte: 'Aporte de capital' };
   var hoy = hoyTxt();
   var repetido = state.movimientos.find(function(m){ return m.tipo === tipo && m.fecha === hoy && Math.round((Number(m.monto) || 0) * 100) === Math.round(monto * 100) && (m.categoria || '') === (categoria || ''); });
   if(repetido && !confirm('Hoy ya registraste un ' + (nombres[tipo] || tipo).toLowerCase() + ' de ' + dinero(monto) + ' ("' + repetido.desc + '").\n\n¿Es otro distinto y quieres registrarlo de nuevo?')) return;

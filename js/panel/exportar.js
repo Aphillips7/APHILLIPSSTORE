@@ -36,7 +36,7 @@ function exportarInventarioCSV(){
   descargarCSV('inventario-aphillips', filas);
 }
 
-var TIPOS = { venta: 'Venta', compra: 'Compra', gasto: 'Gasto', retiro: 'Retiro', abono: 'Abono', traspaso: 'Traspaso', reserva_cancelada: 'Apartado cancelado' };
+var TIPOS = { venta: 'Venta', compra: 'Compra', gasto: 'Gasto', retiro: 'Retiro', abono: 'Abono', traspaso: 'Traspaso', aporte: 'Aporte de capital', reserva_cancelada: 'Apartado cancelado' };
 // filtro opcional (m => bool) y nombre de archivo: Finanzas exporta solo el periodo elegido
 function exportarMovimientosCSV(filtro, nombre){
   var filas = [['Fecha', 'Tipo', 'Descripción', 'Monto', 'Costo del reloj', 'Ganancia', 'Forma de pago', 'Canal', 'Cliente', 'Categoría']];

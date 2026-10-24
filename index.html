@@ -216,6 +216,7 @@ if(location.hostname==='aphillips7.github.io'){
         <button type="button" class="fin-tipo-chip" onclick="selTipo('gasto',this)">Gasto</button>
         <button type="button" class="fin-tipo-chip" onclick="selTipo('retiro',this)">Retiro</button>
         <button type="button" class="fin-tipo-chip" onclick="selTipo('traspaso',this)">Traspaso interno</button>
+        <button type="button" class="fin-tipo-chip" onclick="selTipo('aporte',this)">Aporte de capital</button>
       </div>
       <input type="hidden" id="fin-tipo" value="venta" />
     </div>
@@ -278,7 +279,8 @@ if(location.hostname==='aphillips7.github.io'){
 
     <!-- GASTO/RETIRO BLOCK -->
     <div id="bloque-otro" style="display:none;margin-bottom:16px;" class="card">
-      <div class="card-title" style="margin-bottom:14px;" id="bloque-otro-title">Gasto operativo</div>
+      <div class="card-title" style="margin-bottom:4px;" id="bloque-otro-title">Gasto operativo</div>
+      <div class="campo-ayuda" id="otro-explica" style="margin:0 0 14px;">Lo que cuesta operar: publicidad, envios, empaques, comisiones... Resta de la ganancia.</div>
       <div class="field" id="fin-categoria-wrap"><label>Categoria</label>
         <select id="fin-categoria" onchange="validarOtro()"><option value="Marketing">Marketing y publicidad</option><option value="Logistica/Envios">Logistica / Envios</option><option value="Empaque">Empaque</option><option value="Comisiones/Bancos">Comisiones y bancos</option><option value="Servicios">Servicios (internet, apps, dominio)</option><option value="Garantias/Reparaciones">Garantias y reparaciones</option><option value="Herramientas">Herramientas</option><option value="Impuestos/Tramites">Impuestos y tramites</option><option value="Otro">Otro</option></select>
       </div>
@@ -313,9 +315,9 @@ if(location.hostname==='aphillips7.github.io'){
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="flex:1;min-width:160px;">
           <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Saldo en caja / cuenta</div>
-          <div class="currency-wrap"><input type="text" id="fin-saldo" placeholder="0.00" readonly style="border:none;background:transparent;padding:0;font-size:20px;font-family:'DM Mono',monospace;width:100%;outline:none;user-select:none;" /></div>
+          <div id="fin-saldo" class="saldo-total">$0</div>
         </div>
-        <div style="font-size:11px;color:var(--muted);max-width:160px;line-height:1.5;">Calculado automaticamente (Ventas + Abonos - Compras - Gastos - Retiros).</div>
+        <div style="font-size:11px;color:var(--muted);max-width:160px;line-height:1.5;">Calculado solo: ventas + abonos + aportes − compras − gastos − retiros.</div>
       </div>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <div style="font-size:10px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Liquidez por metodo de pago</div>
@@ -331,7 +333,7 @@ if(location.hostname==='aphillips7.github.io'){
         <select id="fil-mes" onchange="renderHistorial()" style="width:auto;"><option value="">Todos los meses</option></select>
         <select id="fil-tipo" onchange="renderHistorial()" style="width:auto;">
           <option value="">Todos</option><option value="venta">Ventas</option><option value="abono">Abonos</option>
-          <option value="compra">Compras</option><option value="gasto">Gastos</option><option value="retiro">Retiros</option><option value="traspaso">Traspasos</option>
+          <option value="compra">Compras</option><option value="gasto">Gastos</option><option value="retiro">Retiros</option><option value="aporte">Aportes</option><option value="traspaso">Traspasos</option><option value="sinmetodo">Sin metodo de pago</option>
         </select>
         <input type="search" id="fil-buscar" placeholder="Buscar movimiento..." oninput="renderHistorial()" style="flex:1;min-width:160px;" />
         <button type="button" class="btn btn-outline btn-sm" onclick="exportarHistorialCSV()">Exportar</button>
@@ -349,6 +351,7 @@ if(location.hostname==='aphillips7.github.io'){
     </div>
     <div id="fin-kpis" class="kpi-grid"></div>
     <div id="fin-alertas" class="fin-avisos"></div>
+    <div id="fin-revision" class="card fin-avisos fin-revision"></div>
     <div class="fin-grid">
       <div class="card"><div class="card-title">Estado de resultados</div><div id="fin-er"></div></div>
       <div class="card"><div class="card-title">Punto de equilibrio y proyeccion del mes</div><div id="fin-equilibrio"></div></div>
@@ -852,6 +855,7 @@ if(location.hostname==='aphillips7.github.io'){
     <div class="ajuste-texto" style="margin-bottom:10px;">Lo que usa el panel para calcular y avisarte. Asi sabes de donde sale cada numero.</div>
     <div class="reglas">
       <div><b>Ganancia neta</b><span>Ventas + abonos − devoluciones − costo de los relojes vendidos − gastos operativos. Las compras de inventario no son gasto: el costo cuenta cuando se vende.</span></div>
+      <div><b>Aporte y retiro</b><span>Aporte = dinero tuyo que pones en el negocio; retiro = dinero que sacas. Mueven la caja pero no son venta, gasto ni ganancia.</span></div>
       <div><b>Reparto de la ganancia</b><span>40 % reinversion · 30 % para ti · 30 % fondo operativo.</span></div>
       <div><b>Margen</b><span>30 % o mas es sano (verde); 15 a 29 % ambar; menos de 15 % rojo.</span></div>
       <div><b>Gastos</b><span>Aviso si los gastos operativos pasan del 20 % de los ingresos.</span></div>

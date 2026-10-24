@@ -58,7 +58,7 @@ async function confirmarReserva(){
   p.reserva=reserva;
   save('inventario');
   if(abono>0){
-    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'abono',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Abono de '+cliente.nombre,monto:abono,canal:'abono',metodoPago:metodoPago,costo:0,clienteId:clienteId,clienteNombre:cliente.nombre,fecha:hoy});
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'abono',invId:p.id,desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Abono de '+cliente.nombre,monto:abono,canal:'abono',metodoPago:metodoPago,costo:0,clienteId:clienteId,clienteNombre:cliente.nombre,fecha:hoy});
     save('movimientos');
   }
   cerrarReservaModal();renderInicio();refrescarVentas();
@@ -88,7 +88,7 @@ function confirmarAbono(){
   var hoy=new Date().toLocaleDateString('es-MX');
   p.reserva.abonos.push({monto:monto,fecha:hoy,metodoPago:metodoPago});
   save('inventario');
-  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'abono',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Abono de '+p.reserva.clienteNombre,monto:monto,canal:'abono',metodoPago:metodoPago,costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'abono',invId:p.id,desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Abono de '+p.reserva.clienteNombre,monto:monto,canal:'abono',metodoPago:metodoPago,costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
   save('movimientos');
   cerrarAbonoModal();
   cerrarModal();
@@ -131,9 +131,9 @@ async function completarVentaReserva(id){
   _ocupado=false;
   // "p" conserva los datos de la reserva leidos antes de confirmar con la nube
   if(saldo>0){
-    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Saldo final de '+p.reserva.clienteNombre,monto:saldo,canal:'directo',metodoPago:metodoSaldo,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',invId:p.id,_deApartado:true,desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Saldo final de '+p.reserva.clienteNombre,monto:saldo,canal:'directo',metodoPago:metodoSaldo,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy});
   } else {
-    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Venta completada con '+p.reserva.clienteNombre,monto:0,canal:'directo',metodoPago:'',costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy,_soloRegistro:true});
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',invId:p.id,_deApartado:true,desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Venta completada con '+p.reserva.clienteNombre,monto:0,canal:'directo',metodoPago:'',costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:hoy,_soloRegistro:true});
   }
   save('movimientos');
   i=idxInv(id);
@@ -170,7 +170,7 @@ async function cancelarReserva(id){
   if(totalAbonado>0){
     if(devolver){
       seDevolvio=true;
-      state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:totalAbonado,canal:'reembolso',categoria:'Reembolso',metodoPago:((p.reserva.abonos||[])[0]||{}).metodoPago||'',costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
+      state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',invId:p.id,desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:totalAbonado,canal:'reembolso',categoria:'Reembolso',metodoPago:((p.reserva.abonos||[])[0]||{}).metodoPago||'',costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
       save('movimientos');
     }
   }

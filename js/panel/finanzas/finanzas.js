@@ -10,12 +10,12 @@ function renderFinanzas() {
   renderHistorial();
   renderPicker();
   renderPickerCompra();
-  // Saldo real: entradas (ventas + abonos) menos salidas (compras, gastos y retiros)
+  // Saldo real: entradas (ventas, abonos y aportes) menos salidas (compras, gastos y retiros)
   var saldoReal = estadoResultados(state.movimientos).flujo;
   var el = document.getElementById('fin-saldo');
   if (el) {
-    el.value = saldoReal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    el.style.color = saldoReal >= 0 ? 'var(--black)' : 'var(--red)';
+    el.textContent = (saldoReal < 0 ? '−$' : '$') + Math.abs(saldoReal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    el.classList.toggle('neg', saldoReal < 0);
   }
   renderSaldoPorMetodo();
   try{ validarOtro(); validarTraspaso(); }catch(e){}

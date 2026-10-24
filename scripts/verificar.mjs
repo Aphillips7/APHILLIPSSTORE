@@ -10,7 +10,8 @@
 //   4. Que ningun campo privado (costo, proveedor, margen, serie, tracking...) este en los campos
 //      publicos del catalogo (js/products.js y el Worker de la API).
 //   5. Que toda funcion usada en un onclick/oninput/onchange... este expuesta en window.
-import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, relative, extname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -40,9 +41,15 @@ function archivos(dir, exts, fuera = []){
 // 1. sintaxis
 const jsTienda = [...archivos(join(RAIZ, 'js'), ['.js']), join(RAIZ, 'sw.js')];
 const jsWorkers = [join(RAIZ, 'cloudflare/tienda-worker/index.js'), ...archivos(join(RAIZ, 'cloudflare/fotos-worker/src'), ['.js'])];
+// OJO: "node --check archivo.js" NO detecta errores en un modulo ES (con import/export) porque Node decide
+// el tipo despues; por eso los modulos se copian a un .mjs temporal y se revisan ahi (asi si fallan).
+const TMP_CHECK = join(tmpdir(), 'aphillips-verificar');
+mkdirSync(TMP_CHECK, { recursive: true });
 for(const f of [...jsTienda, ...jsWorkers]){
   if(!existsSync(f)) continue;
-  try{ execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' }); }
+  let objetivo = f;
+  if(/^\s*(import|export)\b/m.test(readFileSync(f, 'utf8'))){ objetivo = join(TMP_CHECK, 'm.mjs'); copyFileSync(f, objetivo); }
+  try{ execFileSync(process.execPath, ['--check', objetivo], { stdio: 'pipe' }); }
   catch(e){ errores.push('Error de sintaxis en ' + rel(f) + ':\n    ' + String(e.stderr || e.message).trim().split('\n').slice(0, 4).join('\n    ')); }
 }
 

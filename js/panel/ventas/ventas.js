@@ -51,7 +51,7 @@ function renderResumenVentas(){
   var k = document.getElementById('ven-kpis');
   var vs = function(o, campo){ if(c){ o.actual = r[campo]; o.anterior = c[campo]; o.vs = per.vs; } return kpiHTML(o); };
   if(k) k.innerHTML = [
-    vs({ label: 'Vendido', valor: dinero(r.ventas + r.abonos), pie: 'ventas y abonos' }, 'entradas'),
+    vs({ label: 'Vendido', valor: dinero(r.vendido), pie: 'ventas y abonos' }, 'vendido'),
     vs({ label: 'Relojes vendidos', valor: String(r.nVentas) }, 'nVentas'),
     vs({ label: 'Ticket promedio', valor: dinero(r.ticket) }, 'ticket'),
     kpiHTML({ label: 'Conversion web', valor: ped.length ? Math.round(ganados.length / ped.length * 100) + '%' : '—', pie: ganados.length + ' de ' + ped.length + ' pedidos pagados' }),

@@ -1,7 +1,7 @@
 // =================== FINANZAS > RENTABILIDAD (rediseno fase 4) ===================
 // Donde se gana el dinero: ganancia por marca, ventas por canal, relojes mas rentables y el
 // inventario visto como dinero (capital inmovilizado, dias para vender y relojes estancados).
-import { CANALES, DIAS_ESTANCADO, costoDe, estadoResultados, inventarioDinero, movimientosDe, periodo } from './calculos.js';
+import { CANALES, DIAS_ESTANCADO, costoDe, estadoResultados, inventarioDinero, movimientosDe, periodo, ventasPorReloj } from './calculos.js';
 import { chipsPeriodo } from './resumen.js';
 import { dinero, esc, kpiHTML, tablaHTML, vacioHTML } from '../componentes.js';
 import { barrasH, dona } from '../graficas.js';
@@ -25,6 +25,7 @@ function renderAnalisis(){
   var per = periodo(_per);
   var movs = movimientosDe(per.meses);
   var ventas = movs.filter(function(m){ return m.tipo === 'venta' && !m._soloRegistro; });
+  var porReloj = ventasPorReloj(movs);
   var r = estadoResultados(movs);
   var inv = inventarioDinero();
 
@@ -38,7 +39,7 @@ function renderAnalisis(){
 
   // ganancia por marca
   var marcas = {};
-  ventas.forEach(function(m){ var k2 = marcaDe(m), x = marcas[k2] || (marcas[k2] = { v: 0, g: 0, n: 0 }); x.v += Number(m.monto) || 0; x.g += (Number(m.monto) || 0) - (Number(m.costo) || 0); x.n++; });
+  porReloj.forEach(function(y){ var k2 = marcaDe(y.m), x = marcas[k2] || (marcas[k2] = { v: 0, g: 0, n: 0 }); x.v += y.cobrado; x.g += y.ganancia; x.n++; });
   var filas = Object.keys(marcas).map(function(k2){ var x = marcas[k2]; return { label: k2, valor: x.g, extra: (x.v ? Math.round(x.g / x.v * 100) : 0) + '% · ' + x.n }; }).sort(function(a, b){ return b.valor - a.valor; }).slice(0, 8);
   var em = document.getElementById('fin-marcas');
   if(em) em.innerHTML = filas.length ? barrasH(filas) + '<div class="tenue-peq" style="margin-top:8px;">Ganancia · margen · unidades</div>' : vacioHTML({ icono: 'grafica', titulo: 'Sin ventas en este periodo' });
@@ -51,11 +52,11 @@ function renderAnalisis(){
   if(ec){ if(segs.length) dona(ec, segs, { valor: String(ventas.length), texto: 'ventas' }); else ec.innerHTML = vacioHTML({ icono: 'grafica', titulo: 'Sin ventas en este periodo' }); }
 
   // relojes mas rentables
-  var top = ventas.map(function(m){ var g = (Number(m.monto) || 0) - (Number(m.costo) || 0); return { m: m, g: g, mg: m.monto ? Math.round(g / m.monto * 100) : 0 }; })
+  var top = porReloj.map(function(y){ return { m: y.m, g: y.ganancia, mg: y.margen, cobrado: y.cobrado }; })
     .sort(function(a, b){ return b.g - a.g; }).slice(0, 8);
   var et = document.getElementById('fin-top-relojes');
   if(et) et.innerHTML = tablaHTML([{ t: 'Reloj' }, { t: 'Fecha' }, { t: 'Vendido', der: true }, { t: 'Ganancia', der: true }, { t: 'Margen', der: true }],
-    top.map(function(x){ return [esc(x.m.desc), esc(x.m.fecha), dinero(x.m.monto), '<span class="' + (x.g < 0 ? 'neg' : 'pos') + '">' + dinero(x.g) + '</span>', x.mg + '%']; }),
+    top.map(function(x){ return [esc(String(x.m.desc || '').replace(/ · (Saldo final de|Venta completada con) .*/, '')), esc(x.m.fecha), dinero(x.cobrado), '<span class="' + (x.g < 0 ? 'neg' : 'pos') + '">' + dinero(x.g) + '</span>', x.mg + '%']; }),
     { icono: 'grafica', titulo: 'Sin ventas en este periodo' });
 
   // inventario como dinero

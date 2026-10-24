@@ -68,7 +68,7 @@ async function confirmarVentaModal(){
   if(i===-1){ invNoExiste(); cerrarVentaModal(); return; }
   state.inventario[i].estado='vendido';state.inventario[i].precioVenta=precio;state.inventario[i].fechaVenta=fechaVenta;
   save('inventario');
-  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,metodoPago:metodoPago,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:clienteId||null,clienteNombre:cliente?cliente.nombre:'',fecha:new Date().toLocaleDateString('es-MX')});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'venta',invId:p.id,desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:precio,canal,metodoPago:metodoPago,costo:p.costoTotal||0,precioObjetivo:p.precio||0,clienteId:clienteId||null,clienteNombre:cliente?cliente.nombre:'',fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   registrarCompraSiFalta(state.inventario[i]);
   var despues=_alVender;
