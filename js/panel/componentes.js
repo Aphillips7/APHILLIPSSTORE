@@ -77,3 +77,13 @@ export function graficaHTML(o){
     '</div>' + (ley ? '<div class="grafica-ley">' + ley + '</div>' : '') + '</div>' +
     '<div class="grafica-cuerpo">' + (o.svg || '') + '</div></div>';
 }
+
+// Aviso breve abajo (no bloquea): confirma lo que el panel hizo solo, por ejemplo registrar una compra
+export function toastPanel(texto){
+  var t = document.createElement('div');
+  t.className = 'toast-panel'; t.setAttribute('role', 'status'); t.textContent = texto;
+  document.body.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add('visible'); });
+  setTimeout(function(){ t.classList.remove('visible'); setTimeout(function(){ t.remove(); }, 300); }, 4200);
+}
+window.toastPanel = toastPanel;

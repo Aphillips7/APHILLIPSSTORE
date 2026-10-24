@@ -538,6 +538,7 @@ if(location.hostname==='aphillips7.github.io'){
           <div class="grid-2">
             <div class="field"><label>Precio de venta objetivo ($)</label><div class="currency-wrap"><input type="number" min="0" step="0.01" inputmode="decimal" id="inv-precio" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
             <div class="field"><label>Precio minimo aceptable ($)</label><div class="currency-wrap"><input type="number" min="0" step="0.01" inputmode="decimal" id="inv-precio-min" placeholder="0.00" oninput="calcularMargenPreview()" /></div></div>
+            <div class="field"><label for="inv-metodo-compra">¿Con que pagaste el reloj?</label><select id="inv-metodo-compra"><option value="">Elige el metodo</option><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select><div class="campo-ayuda" style="margin:6px 0 0;">En transito, disponible o apartado la compra se registra sola en Movimientos y se descuenta de la caja. Bajo pedido no, porque aun no lo pagas.</div></div>
             <div class="field"><label>Estado</label><select id="inv-estado"><option value="disponible">Disponible</option><option value="transito">En transito</option><option value="bajopedido">Bajo pedido</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
           </div>
         </div>

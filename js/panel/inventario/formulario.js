@@ -1,4 +1,4 @@
-import { autoRegistrarCompraInv } from '../finanzas/registrar-compra.js';
+import { existeCompraDe, sincronizarCompraInv } from '../finanzas/registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { cerrarModal } from './detalle.js';
 import { fotoCompartirFormulario, fotosFormulario, fotosSubiendo, jpgsFormulario, setFotosFormulario } from './fotos.js';
@@ -68,6 +68,9 @@ var PUBLICOS=['disponible','transito','bajopedido'];
 function validarUnidad(item, esEdicion, estadoAntes){
   // 1) errores: no se guarda
   if(!item.nombre) return marcarCampo('inv-nombre','Escribe el modelo del reloj.');
+  // poka-yoke: si se va a registrar la compra (ya se pago), hay que decir con que se pago para que cuadre la caja por metodo
+  if(['transito','disponible','reservado'].indexOf(item.estado)!==-1&&item.costoTotal>0&&!item.metodoCompra&&!(esEdicion&&existeCompraDe(Object.assign({id:item.id},item))))
+    return marcarCampo('inv-metodo-compra','Elige con que pagaste el reloj: la compra se registra sola en Movimientos.');
   var nums=[['inv-costo',item.costo,'El costo'],['inv-importacion',item.importacion,'La importacion'],['inv-precio',item.precio,'El precio'],['inv-precio-min',item.precioMin,'El precio minimo']];
   for(var i=0;i<nums.length;i++) if(nums[i][1]<0) return marcarCampo(nums[i][0], nums[i][2]+' no puede ser negativo.');
   if((item.estado==='disponible'||item.estado==='transito')&&!(item.precio>0))
@@ -162,6 +165,7 @@ function agregarProducto(){
     costo, importacion:imp, costoTotal, precio,
     precioMin:parseFloat(document.getElementById('inv-precio-min').value)||0,
     margen, estado,
+    metodoCompra:(document.getElementById('inv-metodo-compra')||{}).value||'',   // como se pago el reloj (privado)
     foto:listaFotos[0]||'',                                              // principal (URL, o una foto antigua en base64)
     fotos:listaFotos.filter(function(u){ return /^https:\/\//.test(u); }), // todas las fotos en la nube, en orden
     fotosJpg:jpgsFormulario(),                                           // copias JPEG para compartir (privado)
@@ -187,9 +191,9 @@ function agregarProducto(){
     state.inventario.unshift(item);
   }
   save('inventario');
-  if(!esEdicion&&estado==='disponible'){
-    autoRegistrarCompraInv(item);
-  }
+  // la compra se registra (o se actualiza) sola: transito, disponible o apartado ya estan pagados
+  var avisoCompra=sincronizarCompraInv(esEdicion?state.inventario[idxActual]:item);
+  if(avisoCompra) setTimeout(function(){ try{ if(window.toastPanel) window.toastPanel(avisoCompra); else console.log(avisoCompra); }catch(e){} }, 50);
   limpiarFormulario();
   renderInventario();
   renderInicio();
@@ -199,7 +203,7 @@ function limpiarFormulario(){
   toggleFormulario(false);
 }
 function resetCamposFormulario(){
-  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-calibre','inv-l2l','inv-grosor','inv-corona','inv-material-bisel','inv-color-bisel','inv-material-esfera','inv-ancho-correa','inv-largo-correa','inv-color-correa','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto','inv-foto-carpeta','inv-descripcion'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  ['inv-nombre','inv-sku','inv-coleccion','inv-mm','inv-material-caja','inv-material-correa','inv-color-esfera','inv-agua','inv-cristal','inv-color','inv-calibre','inv-l2l','inv-grosor','inv-corona','inv-material-bisel','inv-color-bisel','inv-material-esfera','inv-ancho-correa','inv-largo-correa','inv-color-correa','inv-notas','inv-serie','inv-proveedor','inv-paqueteria','inv-tracking','inv-eta','inv-costo','inv-importacion','inv-precio','inv-precio-min','inv-foto','inv-foto-carpeta','inv-descripcion','inv-metodo-compra'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-oculto-catalogo').checked=false;
   cargarFicha([]);
   document.getElementById('inv-genero').value='hombre';
@@ -226,7 +230,7 @@ function editarProducto(id){
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); return; }
   var p=state.inventario[i];
-  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-calibre':p.calibre,'inv-l2l':p.l2l,'inv-grosor':p.grosor,'inv-corona':p.corona,'inv-material-bisel':p.materialBisel,'inv-color-bisel':p.colorBisel,'inv-material-esfera':p.materialEsfera,'inv-ancho-correa':p.anchoCorrea,'inv-largo-correa':p.largoCorrea,'inv-color-correa':p.colorCorrea,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion};
+  var fields={'inv-nombre':p.nombre,'inv-sku':p.sku,'inv-coleccion':p.coleccion,'inv-mm':p.mm,'inv-material-caja':p.materialCaja,'inv-material-correa':p.materialCorrea,'inv-color-esfera':p.colorEsfera,'inv-agua':p.agua,'inv-cristal':p.cristal,'inv-color':p.color,'inv-calibre':p.calibre,'inv-l2l':p.l2l,'inv-grosor':p.grosor,'inv-corona':p.corona,'inv-material-bisel':p.materialBisel,'inv-color-bisel':p.colorBisel,'inv-material-esfera':p.materialEsfera,'inv-ancho-correa':p.anchoCorrea,'inv-largo-correa':p.largoCorrea,'inv-color-correa':p.colorCorrea,'inv-notas':p.notas,'inv-serie':p.serie,'inv-proveedor':p.proveedor,'inv-paqueteria':p.paqueteria,'inv-tracking':p.tracking,'inv-eta':p.eta,'inv-costo':p.costo,'inv-importacion':p.importacion,'inv-precio':p.precio,'inv-precio-min':p.precioMin||'','inv-descripcion':p.descripcion,'inv-metodo-compra':p.metodoCompra||''};
   Object.entries(fields).forEach(([id,v])=>{var el=document.getElementById(id);if(el)el.value=v||'';});
   document.getElementById('inv-oculto-catalogo').checked=!!p.ocultoCatalogo;
   cargarFicha(p.ficha);

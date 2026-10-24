@@ -1,6 +1,7 @@
 // =================== INVENTORY PICKER (COMPRAS) ===================
 import { renderInicio } from '../inicio.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
+import { fechaEnMesCerrado } from './calculos.js';
 
 var _compraPicIdx = null;
 function renderPickerCompra() {
@@ -84,14 +85,50 @@ function autoRegistrarCompraInv(producto, aunqueNoEsteDisponible) {
   if (!costo || costo <= 0) return;
   if (existeCompraDe(producto)) return;
   var desc = producto.nombre + (producto.sku ? ' · Ref. ' + producto.sku : '');
-  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',invId:producto.id||null,desc:desc,monto:costo,canal:'compra',costo:0,fecha:new Date().toLocaleDateString('es-MX')});
+  state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',invId:producto.id||null,desc:desc,monto:costo,canal:'compra',metodoPago:producto.metodoCompra||'',costo:0,fecha:new Date().toLocaleDateString('es-MX'),_auto:true});
   save('movimientos');
+}
+
+// =================== COMPRA AUTOMATICA AL GUARDAR UN RELOJ ===================
+// Un reloj "En transito", "Disponible" o "Apartado" con costo ya se pago: su compra se registra sola en
+// Movimientos (con el metodo de pago elegido en el formulario) y la caja lo descuenta de inmediato.
+// "Bajo pedido" todavia no se paga, asi que no se registra. Si despues cambia el costo (por ejemplo, llega
+// la importacion), la compra se actualiza; si su mes ya esta cerrado, se registra un ajuste por la diferencia.
+const PAGADOS = ['transito', 'disponible', 'reservado'];
+function comprasDe(p){ return state.movimientos.filter(function(m){ return m.tipo === 'compra' && m.invId === p.id; }); }
+function hoy(){ return new Date().toLocaleDateString('es-MX'); }
+function sincronizarCompraInv(p){
+  if(!p || PAGADOS.indexOf(p.estado) === -1) return '';
+  var costo = Math.round((Number(p.costoTotal) || 0) * 100) / 100;
+  if(!(costo > 0)) return '';
+  var desc = p.nombre + (p.sku ? ' · Ref. ' + p.sku : '');
+  var compras = comprasDe(p);
+  if(!compras.length && existeCompraDe(p)) return '';      // compra vieja sin invId: no se duplica
+  if(!compras.length){
+    state.movimientos.unshift({ id: idAleatorio('mov'), _ts: Date.now(), tipo: 'compra', invId: p.id, desc: desc, monto: costo, canal: 'compra', metodoPago: p.metodoCompra || '', costo: 0, fecha: hoy(), _auto: true });
+    save('movimientos');
+    return 'Se registro la compra de $' + costo.toLocaleString('en-US') + ' en Movimientos.';
+  }
+  var pagado = compras.reduce(function(a, m){ return a + (Number(m.monto) || 0); }, 0);
+  var dif = Math.round((costo - pagado) * 100) / 100;
+  var unica = compras.length === 1 ? compras[0] : null;
+  if(unica && !unica.metodoPago && p.metodoCompra && !fechaEnMesCerrado(unica.fecha)){ unica.metodoPago = p.metodoCompra; }
+  if(Math.abs(dif) < 0.01){ if(unica && unica.metodoPago === p.metodoCompra) save('movimientos'); return ''; }
+  if(unica && !fechaEnMesCerrado(unica.fecha)){
+    unica.monto = costo; unica.desc = desc;
+    save('movimientos');
+    return 'La compra en Movimientos se actualizo a $' + costo.toLocaleString('en-US') + '.';
+  }
+  state.movimientos.unshift({ id: idAleatorio('mov'), _ts: Date.now(), tipo: dif > 0 ? 'compra' : 'gasto', invId: p.id, desc: 'Ajuste de costo · ' + desc,
+    monto: Math.abs(dif), canal: dif > 0 ? 'compra' : 'reembolso', categoria: dif > 0 ? '' : 'Reembolso', metodoPago: p.metodoCompra || '', costo: 0, fecha: hoy(), _auto: true });
+  save('movimientos');
+  return 'Se registro un ajuste de costo de $' + Math.abs(dif).toLocaleString('en-US') + ' (el mes de la compra original esta cerrado).';
 }
 
 // Al vender un reloj que nunca paso por "disponible" (se vendio en transito o bajo pedido), su compra
 // no se habia registrado y el balance quedaba inflado: se registra al vender si falta.
 function registrarCompraSiFalta(producto){ autoRegistrarCompraInv(producto, true); }
 
-export { _compraPicIdx, autoRegistrarCompraInv, registrarCompraSiFalta, existeCompraDe, filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, renderPickerCompra, seleccionarCompra };
+export { _compraPicIdx, autoRegistrarCompraInv, sincronizarCompraInv, registrarCompraSiFalta, existeCompraDe, filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, renderPickerCompra, seleccionarCompra };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, seleccionarCompra });
