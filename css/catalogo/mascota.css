@@ -135,3 +135,6 @@
   @keyframes mascTac{to{transform:rotate(30deg);}}
   @keyframes mascBalanceo{from{transform:rotate(-4deg);}to{transform:rotate(4deg);}}
   @media (prefers-reduced-motion:reduce){ .mascota.tictac .masc-minutero,.mascota.tictac .masc-horario,.mascota.tictac .masc-entra{animation:none;} }
+
+  /* mientras se desliza la pagina la mascota pausa sus animaciones (vuelve sola al detenerse) */
+  .mascota.deslizando,.mascota.deslizando *{animation-play-state:paused !important;}
