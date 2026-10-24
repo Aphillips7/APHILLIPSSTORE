@@ -52,3 +52,6 @@
     .search-suggestions { width: 100%; border-bottom: 1px solid var(--border); padding-bottom: 30px; }
     .bestsellers-grid { grid-template-columns: 1fr; }
   }
+  /* la foto se funde con el gris del marco: el fondo que traiga la imagen (blanco o gris) desaparece */
+  .bs-marco{width:110px;height:110px;flex:none;background:#f4f4f5;display:block;}
+  .bs-marco img{width:100%;height:100%;padding:6px;box-sizing:border-box;background:none;object-fit:contain;mix-blend-mode:multiply;}

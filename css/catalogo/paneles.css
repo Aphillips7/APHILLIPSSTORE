@@ -194,3 +194,7 @@
   .mc-fav-abrir em{display:block;font-style:normal;font-size:var(--fs-etiqueta);color:var(--gris-texto);margin-top:2px;}
   .mc-fav-quitar{flex:none;padding:6px 0;border:none;border-bottom:1px solid var(--border2);background:none;font-family:inherit;font-size:var(--fs-etiqueta);color:var(--black);cursor:pointer;}
   @media (max-width:520px){ .mc-dos{grid-template-columns:1fr;} .mc-tab{padding:14px 6px;letter-spacing:.03em;} }
+  /* iPhone: al abrir el teclado Safari mueve la pantalla y el panel no llegaba hasta el teclado (se veia la pagina
+     de atras). El fondo del panel se extiende hacia abajo para cubrir siempre ese hueco. */
+  .fav-drawer::after{content:"";position:absolute;left:0;right:0;top:100%;height:100vh;background:var(--bg);pointer-events:none;}
+  #modal-favoritos,#panel-cuenta{overscroll-behavior:contain;}

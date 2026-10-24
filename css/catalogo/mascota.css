@@ -105,3 +105,5 @@
     .masc-zzz text{animation:none !important;opacity:1;}
     .masc-panel,.masc-burbuja{transition:none;}
   }
+  /* con el buscador abierto (encabezado en la capa 150) la mascota se queda visible encima */
+  .mascota.sobre-buscador{z-index:155;}

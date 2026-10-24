@@ -351,6 +351,7 @@ function personalidad(){
     var abierto = false;
     new MutationObserver(function(){
       var ahora = hd.classList.contains('search-open');
+      _raiz.classList.toggle('sobre-buscador', ahora);   // el buscador esta en la capa del encabezado (150): la mascota sube encima
       if(ahora && !abierto){ gesto('pensativo', 'menton', 3200); decir('¿Qué estilo buscas?', 3000); }
       abierto = ahora;
     }).observe(hd, { attributes: true, attributeFilter: ['class'] });
