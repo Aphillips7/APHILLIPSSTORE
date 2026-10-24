@@ -967,7 +967,7 @@ async function bajaBoletin(url, env) {
   const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boletín — Aphillips Store</title></head>' +
     '<body style="margin:0;font-family:Arial,sans-serif;background:#f4f4f5;color:#18181b;display:flex;min-height:100vh;align-items:center;justify-content:center;">' +
     '<div style="background:#fff;padding:32px 28px;max-width:420px;margin:16px;text-align:center;border-radius:12px;"><p style="font-size:17px;line-height:1.5;margin:0 0 20px;">' + msg + '</p>' +
-    '<a href="https://aphillipsstore.com/" style="display:inline-block;background:#09090b;color:#fff;text-decoration:none;padding:12px 22px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;">Volver a la tienda</a></div></body></html>';
+    '<a href="https://aphillipsstore.com/" style="display:inline-block;background:#A7C4D6;color:#000;text-decoration:none;padding:12px 22px;font-size:13px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;">Volver a la tienda</a></div></body></html>';
   return new Response(html, { status: ok ? 200 : 400, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 }
 // Envio de un correo a todos los suscriptores activos (lo dispara el dueno desde el panel).
