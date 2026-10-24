@@ -175,3 +175,21 @@ Botones desactivados en gris.
 - Verificacion: verificar.mjs OK; capturas con datos de ejemplo sin errores ni desborde; prueba funcional: cerrar mes
   pasado OK, borrar movimiento de mes cerrado bloqueado, mes actual no se puede cerrar, reabrir OK. Capturas:
   f4-pc-oscuro-resumen, f4-cel-claro-rentabilidad, f4-cel-claro-por-cobrar, f4-cel-claro-cierres, f4-cel-claro-traspaso-bloqueado.
+
+### Fase 5 — Ventas: TERMINADA (2026-10-24, rama `panel-f5-ventas`, CACHE_NAME aphillips-v127)
+- Ventas con 5 pestanas: Resumen, Pedidos web, Apartados, Historial, Registrar venta (nav.js soporta `vista` dentro de page-ventas).
+- Resumen (nuevo `ventas/ventas.js`): periodo con comparacion; KPIs vendido, relojes vendidos, ticket, conversion web
+  (pedidos pagados / recibidos), tiempo pedido -> entrega (del historial del pedido) y % cancelados; embudo de pedidos
+  web; ventas por canal; mejores dias para vender (12 meses) con recomendacion; clientes que mas compran y % de ventas
+  sin cliente asignado.
+- Pedidos web (movido a `ventas/pedidos-web.js`): tablero por estado (4 columnas en PC, 2 en tablet, apiladas en
+  celular), aviso "X h/d sin avanzar" (>24 h ambar, >48 h rojo) en solicitado/confirmado/pagado, lista de cerrados.
+  Poka-yoke: cancelar exige motivo (min. 5 letras, lo ve el cliente) y "enviado" exige guia (min. 4); sin guia ->
+  "Entregado en mano".
+- Apartados: tarjetas con barra de pago, saldo, fecha limite y estado; Registrar abono, Cobrar saldo y entregar,
+  +7 dias (poka-yoke: solo con saldo y sin pasar de 90 dias desde que se aparto) y Cancelar apartado.
+  Al reservar se elige el plazo (7/15/30/45/60 dias) -> reserva.fechaLimite. Dashboard y Por cobrar la usan.
+- Historial de ventas: periodo, buscador, canal, totales con ganancia y descuento, exportar lo filtrado.
+- Verificacion: verificar.mjs OK; datos y pedidos de EJEMPLO en memoria (.claude/prueba/pedidos-prueba.js intercepta
+  fetch: solo responde /admin/pedidos, todo lo demas 401); sin errores ni desborde. Prueba: +7 dias se detiene en 90.
+  Capturas f5-pc-claro-resumen, f5-pc-claro-tablero-pedidos, f5-cel-oscuro-apartados/historial/pedidos.

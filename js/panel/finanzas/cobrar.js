@@ -42,3 +42,4 @@ function renderCobrar(){
 }
 
 export { renderCobrar };
+Object.assign(window, { renderCobrar });

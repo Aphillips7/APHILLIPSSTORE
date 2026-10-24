@@ -3,7 +3,7 @@ import { renderConfigPage } from '../auth/auth-overlay.js';
 import { renderCatalogoAdmin } from '../catalogo-admin.js';
 import { poblarSelectClientes, renderClientes } from '../clientes/clientes.js';
 import { cargarCuentasWeb, renderCuentasWeb } from '../clientes/cuentas-web.js';
-import { cargarPedidosWeb, renderPedidosWeb } from '../clientes/pedidos-web.js';
+import { cargarPedidosWeb, renderPedidosWeb } from '../ventas/pedidos-web.js';
 import { cargarBoletin } from '../clientes/boletin.js';
 import { cargarSalud } from '../clientes/salud.js';
 import { renderContenido, renderIdeas } from '../contenido.js';
