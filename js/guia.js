@@ -192,8 +192,8 @@
 
   // ---------- pasos para medir la muneca ----------
   (function(){
-    var brazo = '<path d="M-4 64 C60 62 120 64 168 67.8 L168 107 C120 110 60 112 -4 110 Z" fill="#E8B48F"/>' + mano(164, 87, 40) +
-      '<path d="M-4 64 C60 62 120 64 168 67.8" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4"/><path d="M168 107 C120 110 60 112 -4 110" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4"/>';
+    var brazo = '<path d="M-4 64 C60 62 120 64 160.8 68.2 L165.6 68.6 L165.6 105.2 L160.8 105.4 C120 110 60 112 -4 110 Z" fill="#E8B48F"/>' + mano(164, 87, 40) +
+      '<path d="M-4 64 C60 62 120 64 160.8 68.2" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/><path d="M160.8 105.4 C120 110 60 112 -4 110" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/>';
     var p1 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><path d="M144 66 L176 40" stroke="#71717a" stroke-width="10" stroke-linecap="round" opacity=".25"/><path d="M144 66 L176 40" stroke="#fff" stroke-width="8" stroke-linecap="round"/>' + texto(120, 140, 'Tira alrededor de la muñeca', { tam: 12, color: '#52525b' });
     var p2 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><line x1="128" y1="86" x2="144" y2="86" stroke="'+ORO+'" stroke-width="2.5"/><path d="M150 84 L196 38 L204 46 L158 92 Z" fill="#d4d4d8" stroke="#a1a1aa"/><path d="M150 84 L146 96 L158 92" fill="#3f3f46"/>' + texto(120, 140, 'Marca donde se junta', { tam: 12, color: '#52525b' });
     var regla = '<rect x="14" y="70" width="212" height="34" rx="3" fill="#f4f4f5" stroke="#a1a1aa"/>';
@@ -219,8 +219,10 @@
     var S = 4.2, ancho = cm * 10 * 0.3 * S, l2l = l2lMm * S, d = mm * S, cy = 175, cx = 300, c = '';
     var borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
     // antebrazo (mas ancho hacia la izquierda) y muneca, color piel; despues la mano con sus dedos
-    var arr = 'M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' 466 '+n(cy-ancho*0.48), aba = 'M466 '+n(cy+ancho*0.5)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68);
-    c += '<path d="'+arr+' L466 '+n(cy+ancho*0.5)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="#E8B48F"/>';
+    var xu = n(462 - ancho*0.08), yu1 = n(cy - ancho*0.47), yu2 = n(cy + ancho*0.46);   // union con el dorso de la mano
+    var arr = 'M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' '+xu+' '+yu1, aba = 'M'+xu+' '+yu2+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68);
+    // el relleno del brazo sigue un poco por debajo del dorso: sin linea en la union
+    c += '<path d="'+arr+' L'+n(462 + ancho*0.04)+' '+yu1+' L'+n(462 + ancho*0.04)+' '+yu2+' L'+xu+' '+yu2+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="#E8B48F"/>';
     c += mano(462, cy, ancho);
     c += '<path d="'+arr+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/><path d="'+aba+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/>';
     // borde de la muneca donde va el reloj (lineas punteadas)
