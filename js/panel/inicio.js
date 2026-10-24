@@ -194,7 +194,7 @@ function renderTop(){
 }
 
 // ---------- actividad reciente ----------
-const TIPOS = { venta: ['ok', 'Venta', 1], abono: ['ok', 'Abono', 1], compra: ['info', 'Compra', -1], gasto: ['vencido', 'Gasto', -1], retiro: ['pendiente', 'Retiro', -1], traspaso: ['cancelado', 'Traspaso', 0], reserva_cancelada: ['cancelado', 'Reserva cancelada', 0] };
+const TIPOS = { venta: ['ok', 'Venta', 1], abono: ['ok', 'Abono', 1], compra: ['info', 'Compra', -1], gasto: ['vencido', 'Gasto', -1], retiro: ['pendiente', 'Retiro', -1], aporte: ['ok', 'Aporte', 1], traspaso: ['cancelado', 'Traspaso', 0], reserva_cancelada: ['cancelado', 'Reserva cancelada', 0] };
 function renderRecientesInicio(){
   var cont = document.getElementById('recientes-container'); if(!cont) return;
   var movs = state.movimientos.filter(function(m){ return !m._soloRegistro && TIPOS[m.tipo]; }).slice().sort(function(a, b){ return (b._ts || 0) - (a._ts || 0); }).slice(0, 6);

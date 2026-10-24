@@ -13,7 +13,7 @@ function mesesConMovimientos(){
   Object.keys(cierres()).forEach(function(k){ m[k] = true; });
   return Object.keys(m).sort().reverse();
 }
-function huella(r){ return [r.ingresos, r.costoVendido, r.gastos, r.compras, r.retiros].map(Math.round).join('|'); }
+function huella(r){ return [r.ingresos, r.costoVendido, r.gastos, r.compras, r.retiros].concat(r.aportes ? [r.aportes] : []).map(Math.round).join('|'); }
 
 function renderCierres(){
   var hoy = claveMes(new Date()), cer = cierres();
@@ -65,10 +65,10 @@ function reabrirMes(m){
 }
 // Estado de resultados mes por mes (para el contador o la declaracion)
 function exportarCierresCSV(){
-  var filas = [['Mes', 'Ventas', 'Abonos', 'Devoluciones', 'Ingresos', 'Costo vendido', 'Ganancia bruta', 'Margen bruto %', 'Gastos', 'Ganancia neta', 'Margen neto %', 'Compras', 'Retiros', 'Flujo de caja', 'Cerrado']];
+  var filas = [['Mes', 'Ventas', 'Abonos', 'Devoluciones', 'Ingresos', 'Costo vendido', 'Ganancia bruta', 'Margen bruto %', 'Gastos', 'Ganancia neta', 'Margen neto %', 'Compras', 'Retiros', 'Aportes', 'Flujo de caja', 'Cerrado']];
   mesesConMovimientos().slice().reverse().forEach(function(m){
     var r = estadoResultados(movimientosDelMes(m)), c = cierres()[m];
-    filas.push([nombreMes(m), r.ventas, r.abonos, r.devoluciones, r.ingresos, r.costoVendido, r.bruta, r.margenBruto, r.gastos, r.neta, r.margenNeto, r.compras, r.retiros, r.flujo, c ? c.cerradoEl : '']);
+    filas.push([nombreMes(m), r.ventas, r.abonos, r.devoluciones, r.ingresos, r.costoVendido, r.bruta, r.margenBruto, r.gastos, r.neta, r.margenNeto, r.compras, r.retiros, r.aportes, r.flujo, c ? c.cerradoEl : '']);
   });
   descargarCSV('estado-de-resultados-aphillips', filas);
 }

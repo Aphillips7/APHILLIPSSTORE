@@ -254,3 +254,13 @@
   .reglas b{font-size:13.5px;color:var(--black);}
   .reglas span{font-size:13px;color:var(--muted);line-height:1.5;}
   @media (max-width:700px){ .reglas{grid-template-columns:1fr;} }
+
+  /* Auditoria de finanzas: revision de datos, metodo asignable en Movimientos */
+  .fin-revision{padding:16px 18px;}
+  .fin-revision .fin-aviso{border-color:var(--border);}
+  .revision-ok{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--muted);}
+  .mov-metodo{width:auto;display:inline-block;font-size:12px;padding:2px 6px;margin-left:2px;border-color:var(--amber);color:var(--amber);background:var(--amber-bg);border-radius:var(--r-sm);}
+  .saldo-total{font-size:26px;font-weight:700;letter-spacing:-0.02em;color:var(--black);font-variant-numeric:tabular-nums;}
+  .saldo-total.neg{color:var(--red);}
+  /* barras que se deslizan de lado (pestanas y chips): solo horizontal, sin saltos arriba/abajo */
+  .fin-periodos,.inv-estados{overflow-y:hidden;overscroll-behavior-x:contain;}

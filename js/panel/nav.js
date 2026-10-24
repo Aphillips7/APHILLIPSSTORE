@@ -110,6 +110,10 @@ function dibujarSubnav(){
       x.t + (x.contador ? '<span class="nav-cont" data-de="' + x.contador + '" hidden></span>' : '') + '</button>';
   }).join('');
   actualizarContadores();
+  // la pestana activa siempre queda a la vista (en celular las ultimas quedaban fuera de la pantalla)
+  var act = cont.querySelector('.subnav-tab.active');
+  if(act){ var izq = act.offsetLeft - 16, der = act.offsetLeft + act.offsetWidth - cont.clientWidth + 16;
+    if(cont.scrollLeft > izq) cont.scrollLeft = Math.max(0, izq); else if(cont.scrollLeft < der) cont.scrollLeft = der; }
 }
 function marcarActivos(){
   document.querySelectorAll('[data-sec]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-sec') === _actual.sec); });

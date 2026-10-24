@@ -1,7 +1,7 @@
 // =================== FINANZAS > RESUMEN (rediseno fase 4) ===================
 // Periodo elegible, KPIs contra el periodo anterior, estado de resultados, punto de equilibrio y
 // proyeccion, flujo de caja de 12 meses, gastos por categoria, dinero por metodo y reparto 40/30/30.
-import { PERIODOS, METODOS, estadoResultados, movimientosDe, nombreMes, periodo, resultadosMes, saldosPorMetodo, ultimosMeses, inventarioDinero, cierres, claveMes } from './calculos.js';
+import { PERIODOS, METODOS, revisionDatos, estadoResultados, movimientosDe, nombreMes, periodo, resultadosMes, saldosPorMetodo, ultimosMeses, inventarioDinero, cierres, claveMes } from './calculos.js';
 import { dinero, esc, estadoHTML, kpiHTML, vacioHTML } from '../componentes.js';
 import { barrasH, barrasLinea, dona, compacto } from '../graficas.js';
 import { exportarMovimientosCSV } from '../exportar.js';
@@ -25,6 +25,7 @@ function renderResumen(){
   var c = per.comp ? estadoResultados(movimientosDe(per.comp)) : null;
   renderKpis(r, c, per);
   renderAlertas(r);
+  renderRevision();
   renderEstado(r);
   renderEquilibrio(r);
   renderFlujo();
@@ -56,7 +57,7 @@ function renderAlertas(r){
   var a = [];
   if(r.ingresos > 0 && r.gastos / r.ingresos * 100 > GASTO_ALTO) a.push(['pendiente', 'Los gastos operativos son el ' + Math.round(r.gastos / r.ingresos * 100) + '% de los ingresos (sano: menos del ' + GASTO_ALTO + '%).']);
   if(r.neta < 0 && r.ingresos > 0) a.push(['vencido', 'En este periodo los gastos superan la ganancia bruta: hay perdida de ' + dinero(-r.neta) + '.']);
-  if(r.flujo < 0) a.push(['info', 'Salio mas dinero del que entro (' + dinero(r.flujo) + '). Normal si compraste inventario; revisa que no sea por gastos.']);
+  if(r.flujo < 0) a.push(['info', 'Salio mas dinero del que entro (' + dinero(r.flujo) + ')' + (r.compras ? ': ' + dinero(r.compras) + ' fueron compras de relojes, que no son perdida (se recuperan al venderlos).' : '. Revisa que no sea por gastos.')]);
   var inv = inventarioDinero();
   if(inv.capital > 0 && inv.capitalEstancado / inv.capital > 0.3) a.push(['pendiente', 'El ' + Math.round(inv.capitalEstancado / inv.capital * 100) + '% de tu capital en relojes lleva mas de 60 dias sin venderse.', "irSeccion('finanzas','analisis')", 'Ver relojes']);
   var sinCerrar = mesesSinCerrar();
@@ -64,6 +65,15 @@ function renderAlertas(r){
   el.innerHTML = a.map(function(x){
     return '<div class="fin-aviso">' + estadoHTML(x[0], x[0] === 'vencido' ? 'Atencion' : x[0] === 'pendiente' ? 'Revisar' : 'Dato') + '<span>' + esc(x[1]) + '</span>' +
       (x[2] ? '<button type="button" class="btn btn-outline btn-sm" onclick="' + x[2] + '">' + esc(x[3]) + '</button>' : '') + '</div>';
+  }).join('');
+}
+// Revision de datos: lo que hace que los numeros no cuadren, con su boton para arreglarlo
+function renderRevision(){
+  var el = document.getElementById('fin-revision'); if(!el) return;
+  var r = revisionDatos();
+  if(!r.length){ el.innerHTML = '<div class="revision-ok">' + estadoHTML('ok', 'Datos al dia') + '<span>Todo cuadra: cada movimiento tiene su metodo, las ventas tienen costo y las compras coinciden con el inventario.</span></div>'; return; }
+  el.innerHTML = '<div class="card-title">Revision de datos <span class="card-nota">para que los numeros cuadren</span></div>' + r.map(function(x){
+    return '<div class="fin-aviso">' + estadoHTML(x.tipo, x.n ? String(x.n) : 'Dato') + '<span>' + esc(x.texto) + '</span><button type="button" class="btn btn-outline btn-sm" onclick="' + x.accion + '">' + esc(x.boton) + '</button></div>';
   }).join('');
 }
 // meses terminados con movimientos que no se han cerrado
@@ -89,7 +99,8 @@ function renderEstado(r){
     fila('Gastos operativos', r.gastos, { signo: '− ' }) +
     fila('Ganancia neta', r.neta, { clase: 'er-total' + (r.neta < 0 ? ' neg' : ''), nota: r.margenNeto + '%' }) +
     '<tr class="er-sep"><td colspan="2">Movimientos de caja que no son resultado</td></tr>' +
-    fila('Compras de inventario', r.compras) + fila('Retiros del dueno', r.retiros) +
+    (r.aportes ? fila('Aportes del dueno', r.aportes, { signo: '+ ' }) : '') +
+    fila('Compras de inventario', r.compras, { signo: '− ' }) + fila('Retiros del dueno', r.retiros, { signo: '− ' }) +
     fila('Flujo de caja del periodo', r.flujo, { clase: 'er-sub' + (r.flujo < 0 ? ' neg' : '') }) +
     '</table>';
 }
@@ -151,7 +162,7 @@ function renderMetodos(){
   var filas = Object.keys(METODOS).filter(function(k){ return s.porMetodo[k]; }).map(function(k){
     return '<div class="metodo-fila"><span>' + METODOS[k] + '</span><b class="' + (s.porMetodo[k] < 0 ? 'neg' : '') + '">' + dinero(s.porMetodo[k]) + '</b></div>';
   });
-  if(s.sinMetodo) filas.push('<div class="metodo-fila tenue"><span>Sin metodo (registros viejos)</span><b>' + dinero(s.sinMetodo) + '</b></div>');
+  if(s.sinMetodo) filas.push('<div class="metodo-fila tenue"><span>Sin metodo asignado</span><b>' + dinero(s.sinMetodo) + '</b></div>');
   el.innerHTML = filas.length ? filas.join('') + '<button type="button" class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="irARegistrar(\'traspaso\')">Mover dinero entre metodos</button>' :
     vacioHTML({ icono: 'caja', titulo: 'Sin dinero registrado por metodo' });
 }

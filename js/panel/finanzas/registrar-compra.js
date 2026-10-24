@@ -56,7 +56,11 @@ function registrarCompra() {
   var monto=parseFloat(document.getElementById('fin-monto-compra').value);
   var metodoPago=document.getElementById('fin-metodo-compra')?document.getElementById('fin-metodo-compra').value:'';
   if(!monto||monto<=0){alert('Ingresa el costo pagado.');return;}
-  state.inventario[i].costoTotal=monto;
+  // el reloj queda con ese costo: costo + importacion = total pagado, y su margen se recalcula
+  var it=state.inventario[i], imp=Number(it.importacion)||0;
+  if(imp>monto) imp=0;
+  it.costo=Math.round((monto-imp)*100)/100; it.importacion=imp; it.costoTotal=monto;
+  if(it.precio>0) it.margen=Math.round((it.precio-monto)/it.precio*100);
   save('inventario');
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',invId:p.id||null,desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:monto,canal:'compra',metodoPago:metodoPago,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');

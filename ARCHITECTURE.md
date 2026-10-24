@@ -73,7 +73,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `finanzas/registrar-venta.js` | Selector de tipo y registrar venta desde el inventario |
 | `finanzas/registrar-compra.js` | Registrar compra; `autoRegistrarCompraInv`, `existeCompraDe` |
 | `finanzas/registrar-otros.js` | Gasto, retiro y traspaso. Poka-yoke: boton activo solo con datos validos, aviso de duplicado del dia, retiro mayor que el saldo pide confirmacion, traspaso que dejaria el origen negativo bloqueado |
-| `finanzas/calculos.js` | **Unica forma de contar el dinero** (Dashboard, Finanzas, Ventas, cierres): `estadoResultados` (ingresos = ventas + abonos - devoluciones; bruta = ingresos - costo vendido; neta = bruta - gastos; flujo = entradas - compras - gastos - retiros), periodos con su comparacion, saldo por metodo, inventario como dinero, reservas por cobrar con fecha limite, meses cerrados |
+| `finanzas/calculos.js` | **Unica forma de contar el dinero** (Dashboard, Finanzas, Ventas, cierres): `estadoResultados` (ingresos = ventas + abonos - devoluciones; bruta = ingresos - costo vendido; neta = bruta - gastos; flujo = entradas (ventas, abonos, aportes) - compras - gastos - retiros), `revisionDatos` (movimientos sin metodo, ventas sin costo, relojes sin compra, compras distintas al costo, caja negativa), periodos con su comparacion, saldo por metodo, inventario como dinero, reservas por cobrar con fecha limite, meses cerrados |
 | `finanzas/resumen.js` | Finanzas > Resumen: periodo, KPIs, avisos, estado de resultados, punto de equilibrio y proyeccion, flujo de 12 meses, gastos por categoria, dinero por metodo, reparto 40/30/30, exportar el periodo |
 | `finanzas/analisis.js` | Finanzas > Rentabilidad: margen, ticket, descuentos, dias para vender, ganancia por marca, ventas por canal, relojes mas rentables, capital estancado con precio sugerido |
 | `finanzas/cobrar.js` | Finanzas > Por cobrar: apartados con saldo, fecha limite, Registrar abono / Entregar y recordatorio por WhatsApp |
@@ -162,7 +162,7 @@ Solo lo que devuelve `camposPublicos()` en `js/products.js`:
 cristal, color, notas, descripcion, eta, precio, foto, fotos, fotoCompartir, estado, _ts`. **Ojo: `notas` y `descripcion` son publicos.**
 
 ### `movimientos/{id}`
-`tipo` = `venta | compra | gasto | retiro | abono | traspaso | reserva_cancelada`, `desc, monto,
+`tipo` = `venta | compra | gasto | retiro | abono | aporte | traspaso | reserva_cancelada` (aporte = dinero que el dueno pone: suma a la caja, no es ingreso; ventas y abonos llevan `invId`; la venta que cierra un apartado lleva `_deApartado`), `desc, monto,
 canal, metodoPago (efectivo|yappy|transferencia|tarjeta|otro), costo, precioObjetivo, categoria,
 clienteId, clienteNombre, invId, metodoOrigen, metodoDestino, fecha (d/m/aaaa), _soloRegistro, _ts`.
 

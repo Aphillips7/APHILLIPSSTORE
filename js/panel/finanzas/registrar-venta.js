@@ -7,7 +7,7 @@ import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 
 function selTipo(tipo, btn) {
   document.getElementById('fin-tipo').value = tipo;
-  var map = { venta:'sel-venta', compra:'sel-compra', gasto:'sel-gasto', retiro:'sel-retiro', traspaso:'sel-retiro' };
+  var map = { venta:'sel-venta', compra:'sel-compra', gasto:'sel-gasto', retiro:'sel-retiro', traspaso:'sel-retiro', aporte:'sel-venta' };
   document.querySelectorAll('.fin-tipo-chip').forEach(b => {
     b.className = 'fin-tipo-chip' + (b === btn ? ' ' + (map[tipo]||'') : '');
   });
@@ -38,9 +38,14 @@ function selTipo(tipo, btn) {
     if (bc) bc.style.display = 'none';
     if (bo) bo.style.display = '';
     if (bp) bp.style.display = 'none';
-    if (bt) bt.textContent = tipo === 'retiro' ? 'Retiro personal' : 'Gasto operativo';
+    if (bt) bt.textContent = tipo === 'retiro' ? 'Retiro personal' : tipo === 'aporte' ? 'Aporte de capital' : 'Gasto operativo';
     var catWrap = document.getElementById('fin-categoria-wrap');
-    if (catWrap) catWrap.style.display = tipo === 'retiro' ? 'none' : '';
+    if (catWrap) catWrap.style.display = tipo === 'gasto' ? '' : 'none';
+    // el aporte es dinero que el dueno pone en el negocio: entra a la caja, pero no es venta ni ganancia
+    var ay = document.getElementById('otro-explica');
+    if (ay) ay.textContent = tipo === 'aporte' ? 'Dinero tuyo que pones en el negocio (por ejemplo, para comprar relojes). Suma a la caja y al metodo de pago, pero no cuenta como venta ni como ganancia.' : tipo === 'retiro' ? 'Dinero que sacas del negocio para ti. Resta de la caja, pero no es un gasto del negocio.' : 'Lo que cuesta operar: publicidad, envios, empaques, comisiones... Resta de la ganancia.';
+    var d = document.getElementById('fin-desc-otro');
+    if (d) d.placeholder = tipo === 'aporte' ? 'Ej: Capital inicial para comprar relojes' : tipo === 'retiro' ? 'Ej: Retiro para gastos personales' : 'Ej: Publicidad en Instagram de la semana';
   }
   // botones de gasto/retiro/traspaso: activos solo con datos validos
   try{ if(window.validarOtro) window.validarOtro(); if(window.validarTraspaso) window.validarTraspaso(); }catch(e){}
@@ -147,7 +152,7 @@ async function registrarMovimiento() {
   _registrando = false;
   i = idxInv(invIdx);
   if (i === -1) { invNoExiste(); limpiarSeleccion(); return; }
-  state.movimientos.unshift({ id:idAleatorio('mov'), _ts:Date.now(), tipo:'venta', desc: p.nombre + (p.sku ? ' · Ref. '+p.sku : ''), monto: monto, canal: canal, metodoPago: metodoPago, costo: p.costoTotal || 0, precioObjetivo: p.precio||0, clienteId: clienteId||null, clienteNombre: cliente?cliente.nombre:'', fecha: new Date().toLocaleDateString('es-MX') });
+  state.movimientos.unshift({ id:idAleatorio('mov'), _ts:Date.now(), tipo:'venta', invId: p.id, desc: p.nombre + (p.sku ? ' · Ref. '+p.sku : ''), monto: monto, canal: canal, metodoPago: metodoPago, costo: p.costoTotal || 0, precioObjetivo: p.precio||0, clienteId: clienteId||null, clienteNombre: cliente?cliente.nombre:'', fecha: new Date().toLocaleDateString('es-MX') });
   save('movimientos');
   state.inventario[i].estado = 'vendido';
   state.inventario[i].precioVenta = monto;
