@@ -87,7 +87,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `clientes/cliente-detalle.js` | Ficha del cliente, historial, "contactado hoy" |
 | `clientes/salud.js` | Tarjeta "Salud de la tienda": errores de la semana (`/admin/errores`), vista previa del informe semanal y de los avisos por correo |
 | `clientes/cuentas-web.js` | Cuentas de clientes del catalogo: avisos pendientes (un toque abre WhatsApp con el mensaje y lo marca enviado) y vincular cada cuenta con un cliente del panel |
-| `clientes/pedidos-web.js` | Pedidos web: lista con buscador; solo muestra el boton del siguiente paso (confirmar envio/retiro, registrar venta, enviado con guia, entregado, cancelar). "Registrar venta" busca o crea el cliente del panel por su WhatsApp, lo vincula a la cuenta, abre la venta con todo puesto y al confirmarla marca el pedido como pagado |
+| `ventas/pedidos-web.js` | Pedidos web: tablero por estado con buscador; solo muestra el boton del siguiente paso (confirmar envio/retiro, registrar venta, enviado con guia, entregado, cancelar). "Registrar venta" busca o crea el cliente del panel por su WhatsApp, lo vincula a la cuenta, abre la venta con todo puesto y al confirmarla marca el pedido como pagado |
 | `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), `cambiarEstadoNube` |
 | `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare |
 | `sync/listeners.js` | Arranque de los datos al iniciar sesion, metricas (y su importacion unica desde Firestore); refresca pantallas |

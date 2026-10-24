@@ -7,6 +7,9 @@ import { avisarError, cambiarEstadoSeguro } from './transacciones.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 import { saldoPendienteReserva, totalAbonadoReserva } from '../../products.js';
 
+// Ventas > Apartados y Finanzas > Por cobrar se redibujan solas despues de abonar, completar o cancelar
+function refrescarVentas(){ try{ if(window.refrescarVentas) window.refrescarVentas(); }catch(e){} }
+
 var _reservaModalIdx=null;
 function abrirReservaModal(id){
   var i=idxInv(id);
@@ -16,6 +19,7 @@ function abrirReservaModal(id){
   document.getElementById('reserva-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('reserva-precio').value=p.precio||'';
   document.getElementById('reserva-abono').value='';
+  var pl=document.getElementById('reserva-plazo'); if(pl) pl.value='30';
   document.getElementById('reserva-overlay').classList.add('open');
 }
 function cerrarReservaModal(){document.getElementById('reserva-overlay').classList.remove('open');_reservaModalIdx=null;renderInventario();}
@@ -38,7 +42,11 @@ async function confirmarReserva(){
   // estadoAnterior: si se cancela el apartado, el reloj vuelve a ese estado (un reloj en transito no debe
   // volver como "disponible")
   if((p.costoTotal||0)>0&&precioAcordado<p.costoTotal&&!confirm('El precio acordado ($'+precioAcordado.toLocaleString()+') es MENOR que el costo ($'+p.costoTotal.toLocaleString()+'). ¿Apartarlo de todas formas?')) return;
-  var reserva={clienteId:clienteId,clienteNombre:cliente.nombre,precioAcordado:precioAcordado,fechaInicio:hoy,estadoAnterior:p.estado,abonos: abono>0?[{monto:abono,fecha:hoy,metodoPago:metodoPago}]:[]};
+  // plazo para completar el pago (fecha limite): se ve en Ventas > Apartados y en Finanzas > Por cobrar
+  var plazo=parseInt((document.getElementById('reserva-plazo')||{}).value,10);
+  if(!(plazo>=1&&plazo<=90)) plazo=30;
+  var lim=new Date(); lim.setDate(lim.getDate()+plazo);
+  var reserva={clienteId:clienteId,clienteNombre:cliente.nombre,precioAcordado:precioAcordado,fechaInicio:hoy,fechaLimite:lim.toLocaleDateString('es-MX'),estadoAnterior:p.estado,abonos: abono>0?[{monto:abono,fecha:hoy,metodoPago:metodoPago}]:[]};
   _ocupado=true;
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:'reservado', reserva:reserva}); }
   catch(e){ _ocupado=false; avisarError(e); cerrarReservaModal(); return; }
@@ -53,7 +61,7 @@ async function confirmarReserva(){
     state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'abono',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+' · Abono de '+cliente.nombre,monto:abono,canal:'abono',metodoPago:metodoPago,costo:0,clienteId:clienteId,clienteNombre:cliente.nombre,fecha:hoy});
     save('movimientos');
   }
-  cerrarReservaModal();renderInicio();
+  cerrarReservaModal();renderInicio();refrescarVentas();
 }
 
 var _abonoModalIdx=null;
@@ -84,7 +92,7 @@ function confirmarAbono(){
   save('movimientos');
   cerrarAbonoModal();
   cerrarModal();
-  renderInventario();renderInicio();
+  renderInventario();renderInicio();refrescarVentas();
 }
 
 // forma de pago escrita a mano: se acepta el numero o la palabra, y si no se entiende se vuelve a preguntar
@@ -136,7 +144,7 @@ async function completarVentaReserva(id){
     save('inventario');
     registrarCompraSiFalta(item);
   }
-  cerrarModal();renderInventario();renderInicio();
+  cerrarModal();renderInventario();renderInicio();refrescarVentas();
 }
 
 async function cancelarReserva(id){
@@ -176,7 +184,7 @@ async function cancelarReserva(id){
     delete state.inventario[i].reserva;
     save('inventario');
   }
-  cerrarModal();renderInventario();renderInicio();
+  cerrarModal();renderInventario();renderInicio();refrescarVentas();
 }
 
 export { _abonoModalIdx, _reservaModalIdx, abrirAbonoModal, abrirReservaModal, cancelarReserva, cerrarAbonoModal, cerrarReservaModal, completarVentaReserva, confirmarAbono, confirmarReserva };

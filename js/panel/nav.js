@@ -16,6 +16,7 @@ import { selTipo } from './finanzas/registrar-venta.js';
 import { renderResumen } from './finanzas/resumen.js';
 import { renderInicio } from './inicio.js';
 import { renderInventario } from './inventario/lista.js';
+import { mostrarVistaVentas } from './ventas/ventas.js';
 import { state } from './state.js';
 
 const ICONOS = {
@@ -36,7 +37,10 @@ function svg(nombre){ return '<svg viewBox="0 0 24 24" fill="none" stroke="curre
 const SECCIONES = [
   { id: 'dashboard', t: 'Dashboard', subs: [{ id: 'resumen', t: 'Resumen', page: 'inicio' }] },
   { id: 'ventas', t: 'Ventas', subs: [
-    { id: 'pedidos', t: 'Pedidos web', page: 'ventas', contador: 'pedidos-web-badge' },
+    { id: 'resumen', t: 'Resumen', page: 'ventas', vista: 'resumen' },
+    { id: 'pedidos', t: 'Pedidos web', page: 'ventas', vista: 'pedidos', contador: 'pedidos-web-badge' },
+    { id: 'apartados', t: 'Apartados', page: 'ventas', vista: 'apartados' },
+    { id: 'historial', t: 'Historial', page: 'ventas', vista: 'historial' },
     { id: 'registrar', t: 'Registrar venta', page: 'finanzas', inner: 'registrar', tipo: 'venta' }] },
   { id: 'inventario', t: 'Inventario', subs: [
     { id: 'relojes', t: 'Relojes', page: 'inventario' },
@@ -135,6 +139,7 @@ function mostrarVista(secId, subId){
   document.querySelectorAll('.page').forEach(function(p){ p.classList.toggle('active', p.id === 'page-' + x.page); });
   try{ renderPagina(x.page); }catch(e){ console.error(e); }
   if(x.inner){ try{ mostrarInner('fin', x.inner); }catch(e){ console.error(e); } }
+  if(x.vista && x.page === 'ventas'){ try{ mostrarVistaVentas(x.vista); }catch(e){ console.error(e); } }
   if(x.tipo){ try{ elegirTipo(x.tipo); }catch(e){ console.error(e); } }
   marcarActivos();
   if(!x.auth) guardar(CLAVE_VISTA, sec.id + '/' + x.id);

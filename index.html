@@ -610,6 +610,8 @@ if(location.hostname==='aphillips7.github.io'){
     <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="reserva-precio" placeholder="0.00" /></div>
     <label>Abono inicial ($)</label>
     <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="reserva-abono" placeholder="0.00" /></div>
+    <label>Plazo para completar el pago</label>
+    <select id="reserva-plazo" style="margin-bottom:12px;"><option value="7">7 dias</option><option value="15">15 dias</option><option value="30" selected>30 dias</option><option value="45">45 dias</option><option value="60">60 dias</option></select>
     <label>Metodo de pago</label>
     <select id="reserva-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
     <div style="display:flex;gap:8px;">
@@ -779,11 +781,49 @@ if(location.hostname==='aphillips7.github.io'){
   <div class="acciones-pagina">
     <button class="btn btn-gold" onclick="irARegistrar('venta')">+ Registrar venta</button>
   </div>
-  <div class="card">
-    <div class="card-title">Pedidos web <span id="pedidos-web-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Pedidos de clientes con cuenta que tocaron "Comprar por WhatsApp" (el mensaje trae el numero P-… y su codigo AP-…). Avanza cada paso aqui y el cliente lo ve en "Mis pedidos". "Registrar venta" registra el dinero y marca el pedido como pagado.</div>
-    <div id="pedidos-web"></div>
-  </div>
+
+  <!-- VENTAS > RESUMEN (fase 5) -->
+  <section data-vista="resumen">
+    <div class="fin-barra"><div class="fin-periodos" id="ven-periodos"></div></div>
+    <div id="ven-kpis" class="kpi-grid"></div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Embudo de pedidos web</div><div id="ven-embudo"></div></div>
+      <div class="card"><div class="card-title">Ventas por canal</div><div id="ven-canales"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Mejores dias para vender <span class="card-nota">ultimos 12 meses</span></div><div id="ven-dias"></div></div>
+      <div class="card"><div class="card-title">Clientes que mas compran</div><div id="ven-clientes-top"></div></div>
+    </div>
+  </section>
+
+  <!-- VENTAS > PEDIDOS WEB -->
+  <section data-vista="pedidos" hidden>
+    <div class="card">
+      <div class="card-title">Pedidos web <span id="pedidos-web-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>
+      <div class="card-intro">Pedidos de clientes con cuenta que tocaron "Comprar por WhatsApp" (el mensaje trae el numero P-… y su codigo AP-…). Avanza cada paso aqui y el cliente lo ve en "Mis pedidos". "Registrar venta" registra el dinero y marca el pedido como pagado.</div>
+      <div id="pedidos-web"></div>
+    </div>
+  </section>
+
+  <!-- VENTAS > APARTADOS -->
+  <section data-vista="apartados" hidden>
+    <div id="ven-kpis-apartados" class="kpi-grid"></div>
+    <div id="ven-apartados"></div>
+  </section>
+
+  <!-- VENTAS > HISTORIAL -->
+  <section data-vista="historial" hidden>
+    <div class="fin-barra">
+      <div class="fin-periodos" id="ven-periodos-hist"></div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="exportarVentasCSV()">Exportar a Excel</button>
+    </div>
+    <div class="card ven-filtros">
+      <input type="search" id="ven-f-buscar" placeholder="Buscar reloj, cliente o fecha..." oninput="renderHistorialVentas()" />
+      <select id="ven-f-canal" onchange="renderHistorialVentas()"><option value="">Todos los canales</option></select>
+      <span id="ven-hist-res" class="fil-balance"></span>
+    </div>
+    <div id="ven-historial"></div>
+  </section>
 </div>
 
 <!-- AJUSTES > GENERAL -->
