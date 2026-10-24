@@ -444,6 +444,7 @@ function personalidad(){
     if(_raiz.dataset.cara === 'dormido'){ _raiz.classList.remove('durmiendo'); delete _raiz.dataset.cara; gesto('sorpresa', '', 1200); }
     tSiesta = setTimeout(function(){
       if(_abierta || document.hidden) return;
+      if(document.body.classList.contains('prod-abierto')){ despertar(); return; }   // mirando un reloj no se duerme (hace tic-tac)
       clearTimeout(_tCara); clearTimeout(_tGesto); delete _raiz.dataset.gesto;
       _raiz.dataset.cara = 'dormido'; _raiz.classList.add('durmiendo'); ocultarBurbuja();
     }, (new Date().getHours() >= 22 || new Date().getHours() < 6) ? 25000 : 45000);
