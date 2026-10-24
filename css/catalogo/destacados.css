@@ -1,11 +1,11 @@
   /* === CARRUSEL DESTACADOS (estilo TAG Heuer): infinito; el fondo/tarjeta queda fijo y solo se desliza el reloj === */
   body.vista-catalogo #destacados{display:none;}
-  #destacados{--dk:var(--black);--vis:3;--peek:6.4cqw;--dg:2px;--cw:calc((100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));--dgrad:linear-gradient(180deg,#c9c9cb 0%,#d6d6d8 22%,#e4e4e6 45%,#f1f1f2 68%,#fafafa 85%,#fff 100%);background:#fff;padding:clamp(22px,2.4vw,38px) 0 clamp(26px,3vw,48px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
+  #destacados{--dk:var(--black);--vis:3;--peek:6.4cqw;--dg:2px;--cw:calc((100cqw - 2 * var(--peek) - (var(--vis) - 1) * var(--dg)) / var(--vis));--dgrad:linear-gradient(180deg,#c9c9cb 0%,#d6d6d8 22%,#e4e4e6 45%,#f1f1f2 68%,#fafafa 85%,#fff 100%);background:#fff;padding:0 0 clamp(26px,3vw,48px);scroll-margin-top:calc(var(--header-h,90px) - 4px);}
   .dest-tabs{display:flex;justify-content:center;gap:clamp(22px,3.2vw,46px);flex-wrap:wrap;padding:0 20px;margin-bottom:clamp(18px,2.2vw,32px);}
   .dest-tab{font-family:inherit;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--gris-texto);background:none;border:none;border-bottom:1px solid transparent;padding:0 0 8px;cursor:pointer;transition:color .2s var(--ease),border-color .2s var(--ease);}
   h2.dest-tab{cursor:default;}
   /* franja de marcas: los logos (blancos con fondo transparente) se ven negros y pasan sin parar; se detiene al pasar el mouse */
-  .logos-marcas{overflow:hidden;margin:0 0 clamp(26px,3vw,44px);padding:clamp(14px,1.6vw,22px) 0;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
+  .logos-marcas{overflow:hidden;margin:0 0 clamp(22px,2.6vw,40px);padding:clamp(16px,1.8vw,26px) 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
   .lm-pista{display:flex;width:max-content;animation:lmGira 32s linear infinite;}
   .logos-marcas:hover .lm-pista{animation-play-state:paused;}
   .lm-grupo{display:flex;align-items:center;flex:none;}
