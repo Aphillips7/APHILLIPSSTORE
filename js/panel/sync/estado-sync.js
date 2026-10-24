@@ -4,7 +4,7 @@ function setSyncStatus(msg,color,tipo){
   var el=document.getElementById('sync-status');if(el){el.textContent=msg;el.style.color=color||'var(--muted)';}
   var nav=document.getElementById('nav-sync-indicator');if(nav){nav.textContent=msg;nav.style.color=color||'rgba(255,255,255,0.55)';nav.style.display='block';}
   var dot=document.getElementById('nav-sync-dot');
-  if(dot){ dot.style.background = tipo==='error'?'var(--red)':tipo==='warn'?'var(--accent)':tipo==='ok'?'var(--green)':'var(--muted)'; }
+  if(dot){ dot.style.background = tipo==='error'?'var(--red)':tipo==='warn'?'var(--amber)':tipo==='ok'?'var(--green)':'var(--muted)'; }
   var btnRetry=document.getElementById('btn-reintentar-sync');
   if(btnRetry) btnRetry.style.display = tipo==='error' ? 'inline-block' : 'none';
   if(tipo==='ok'||tipo==='error'){ registrarEventoSync(msg,tipo); }

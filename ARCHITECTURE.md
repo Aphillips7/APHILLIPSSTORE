@@ -45,7 +45,7 @@ scripts/publicar.mjs                   publica la tienda solo si pasa el chequeo
 scripts/publicar-api.mjs               igual para la API (cloudflare/fotos-worker)
 cloudflare/fotos-worker/   Worker que sube/borra fotos en R2 (api.aphillipsstore.com); fotos en fotos.aphillipsstore.com
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
-css/panel/            base, componentes, finanzas, auth, modales, movil (en ese orden)
+css/panel/            base (tokens de color glaciar, claro y oscuro), componentes, finanzas, auth, modales, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
                       destacados, listado, filtros, marcas, pie, hora (en ese orden)
 js/firebase.js        configuracion de Firebase (solo Auth); exporta firebase
@@ -60,6 +60,8 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `main.js` | Punto de entrada: importa todo, listeners de conexion y modales, arranque |
 | `state.js` | Estado en memoria (`state`), `save()`, `saveMeta()`, `idAleatorio()`, `esPropietario()` |
 | `nav.js` | Cambio de pestanas (`showPage`, `showInner`, `irARegistrar`) |
+| `tema.js` | Boton de tema automatico / claro / oscuro (localStorage `aphillips_tema`, atributo `data-theme` en `<html>`; index.html lo aplica antes de pintar) |
+| `componentes.js` | HTML de los componentes comunes: `kpiHTML` (con variacion vs mes anterior), `estadoHTML`, `vacioHTML`, `tablaHTML`, `graficaHTML`, `dinero`, `esc` (estilos en `css/panel/componentes.css`) |
 | `inicio.js` | Pantalla Inicio: resumen del mes, meta, pendientes, mini grafica, checklist |
 | `catalogo-admin.js` | Pestana Catalogo: visibilidad, metricas, links al catalogo |
 | `contenido.js` | Pestana Contenido: plan semanal e ideas |

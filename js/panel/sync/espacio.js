@@ -31,7 +31,7 @@ function renderEspacioUsado(){
   var pctEl=document.getElementById('espacio-pct');
   if(pctEl)pctEl.textContent=pctMostrar+'%';
   var barra=document.getElementById('espacio-barra');
-  var color=pct<60?'var(--green)':pct<85?'var(--accent)':'var(--red)';
+  var color=pct<60?'var(--green)':pct<85?'var(--amber)':'var(--red)';
   if(barra){barra.style.width=Math.min(100,pct)+'%';barra.style.background=color;}
   var detalle=document.getElementById('espacio-detalle');
   if(detalle){

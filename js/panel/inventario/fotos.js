@@ -203,7 +203,7 @@ async function subirFotos(input){
   }
   _bloquearGuardar(false);
   if(!fallos) _estado(ok===1?'Foto subida.':ok+' fotos subidas.','var(--green)');
-  else if(ok) _estado(ok+' subidas, '+fallos+' con error. Intenta de nuevo con las que faltan.','var(--accent)');
+  else if(ok) _estado(ok+' subidas, '+fallos+' con error. Intenta de nuevo con las que faltan.','var(--amber)');
 }
 function _quitarFondo(){ var c=document.getElementById('inv-quitar-fondo'); return !c || c.checked; }
 
@@ -239,7 +239,7 @@ async function arreglarFotos(){
   }
   _subiendo--; _bloquearGuardar(false);
   var msg=(ok?ok+(ok===1?' foto arreglada':' fotos arregladas'):'Ninguna foto cambio')+(sinCambio?', '+sinCambio+' sin fondo liso (se dejaron igual)':'')+(fallos?', '+fallos+' con error':'')+'.';
-  _estado(msg+(ok?' Toca "Guardar cambios" para que quede.':''), fallos?'var(--accent)':ok?'var(--green)':'var(--muted)');
+  _estado(msg+(ok?' Toca "Guardar cambios" para que quede.':''), fallos?'var(--amber)':ok?'var(--green)':'var(--muted)');
 }
 function _bloquearGuardar(si){
   var b=document.getElementById('inv-submit-btn');

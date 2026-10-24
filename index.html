@@ -9,6 +9,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Aphillips">
 <link rel="manifest" href="manifest.json">
+<script>
+// tema elegido (claro/oscuro) antes de pintar para que no parpadee; el boton esta en js/panel/tema.js
+try{var t=localStorage.getItem('aphillips_tema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}
+</script>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <!-- fuente del panel (Satoshi): se pide desde aqui en vez de @import en base.css, que la retrasaba -->
@@ -68,6 +72,7 @@ if(location.hostname==='aphillips7.github.io'){
     </div>
     <div style="display:flex;align-items:center;gap:10px;border-left:1px solid rgba(255,255,255,0.15);padding-left:16px;">
       <span id="nav-sesion-email" style="font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;"></span>
+      <button type="button" id="tema-btn" class="tema-btn" onclick="cambiarTema()" aria-label="Tema"></button>
       <button onclick="cerrarSesion()" style="background:none;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);font-size:10px;text-transform:uppercase;letter-spacing:0.02em;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'Satoshi',sans-serif;">Salir</button>
     </div>
   </div>
@@ -117,7 +122,7 @@ if(location.hostname==='aphillips7.github.io'){
     <div class="card-title">Meta del mes</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <span id="meta-label" style="font-size:14px;">Sin meta definida</span>
-      <span id="meta-pct" class="money" style="color:var(--accent);">0%</span>
+      <span id="meta-pct" class="money" style="color:var(--accent-strong);">0%</span>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="meta-fill" style="width:0%"></div></div>
     <div class="stat-hint" id="meta-dias-restantes" style="margin-top:8px;"></div>
@@ -197,7 +202,7 @@ if(location.hostname==='aphillips7.github.io'){
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <div class="fin-3030-box" style="background:var(--blue-bg);padding:8px 12px;"><div class="fin-3030-label">Reinversion 40%</div><div class="fin-3030-val" style="color:var(--blue);font-size:15px;" id="prev-reinv">$0</div></div>
           <div class="fin-3030-box" style="background:var(--green-bg);padding:8px 12px;"><div class="fin-3030-label">Tu dinero 30%</div><div class="fin-3030-val" style="color:var(--green);font-size:15px;" id="prev-personal">$0</div></div>
-          <div class="fin-3030-box" style="background:var(--accent-light);padding:8px 12px;"><div class="fin-3030-label">Fondo 30%</div><div class="fin-3030-val" style="color:var(--accent);font-size:15px;" id="prev-fondo">$0</div></div>
+          <div class="fin-3030-box" style="background:var(--accent-light);padding:8px 12px;"><div class="fin-3030-label">Fondo 30%</div><div class="fin-3030-val" style="color:var(--accent-strong);font-size:15px;" id="prev-fondo">$0</div></div>
           <div class="fin-3030-box" style="background:var(--bg2);padding:8px 12px;"><div class="fin-3030-label">Ganancia</div><div class="fin-3030-val" style="font-size:15px;" id="prev-ganancia">$0</div></div>
         </div>
       </div>
@@ -333,7 +338,7 @@ if(location.hostname==='aphillips7.github.io'){
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
         <div class="fin-3030-box" style="background:var(--blue-bg);"><div class="fin-3030-label">Reinversion 40%</div><div class="fin-3030-val" style="color:var(--blue);" id="res-reinversion">$0</div></div>
         <div class="fin-3030-box" style="background:var(--green-bg);"><div class="fin-3030-label">Tu dinero 30%</div><div class="fin-3030-val" style="color:var(--green);" id="res-personal">$0</div></div>
-        <div class="fin-3030-box" style="background:var(--accent-light);"><div class="fin-3030-label">Fondo op. 30%</div><div class="fin-3030-val" style="color:var(--accent);" id="res-fondo">$0</div></div>
+        <div class="fin-3030-box" style="background:var(--accent-light);"><div class="fin-3030-label">Fondo op. 30%</div><div class="fin-3030-val" style="color:var(--accent-strong);" id="res-fondo">$0</div></div>
       </div>
       <div id="fin-bar-403030"></div>
     </div>
@@ -375,7 +380,7 @@ if(location.hostname==='aphillips7.github.io'){
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'disponible')" style="color:var(--green);border-color:var(--green);">Disponible</button>
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'transito')" style="color:var(--blue);border-color:var(--blue);">En transito</button>
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'bajopedido')" style="color:var(--slate);border-color:var(--slate);">Bajo pedido</button>
-      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'reservado')" style="color:var(--accent);border-color:var(--accent);">Reservado</button>
+      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'reservado')" style="color:var(--accent-strong);border-color:var(--accent);">Reservado</button>
       <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'vendido')" style="color:var(--red);border-color:var(--red);">Vendido</button>
     </div>
   </div>
@@ -383,7 +388,7 @@ if(location.hostname==='aphillips7.github.io'){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div class="card-title" style="margin:0;">Unidades registradas</div>
       <div style="display:flex;gap:6px;">
-        <button class="btn btn-outline btn-sm" onclick="toggleVista('lista')" id="vista-lista" style="border-color:var(--accent);color:var(--accent);">Lista</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleVista('lista')" id="vista-lista" style="border-color:var(--accent);color:var(--accent-strong);">Lista</button>
         <button class="btn btn-outline btn-sm" onclick="toggleVista('modelo')" id="vista-modelo">Por modelo</button>
       </div>
     </div>
@@ -548,7 +553,7 @@ if(location.hostname==='aphillips7.github.io'){
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Reinversion</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--blue);" id="vm-reinv">$0</div></div>
         <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Tu dinero</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green);" id="vm-personal">$0</div></div>
-        <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Fondo</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);" id="vm-fondo">$0</div></div>
+        <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Fondo</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent-strong);" id="vm-fondo">$0</div></div>
         <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Ganancia</div><div style="font-family:'DM Mono',monospace;font-size:13px;" id="vm-ganancia">$0</div></div>
       </div>
     </div>
@@ -629,7 +634,7 @@ if(location.hostname==='aphillips7.github.io'){
   <div style="margin-bottom:14px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.02em;color:var(--muted);">Progreso de esta semana</span>
-      <span id="week-progress-label" class="money" style="font-size:12px;color:var(--accent);">0/0</span>
+      <span id="week-progress-label" class="money" style="font-size:12px;color:var(--accent-strong);">0/0</span>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="week-progress-fill" style="width:0%"></div></div>
   </div>

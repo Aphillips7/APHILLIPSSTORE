@@ -1,5 +1,5 @@
   /* AUTENTICACION */
-  .pin-overlay{position:fixed;inset:0;background:rgba(247,247,248,0.92);backdrop-filter:blur(16px);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;animation:fadeIn var(--base) var(--ease);}
+  .pin-overlay{position:fixed;inset:0;background:var(--velo);backdrop-filter:blur(16px);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;animation:fadeIn var(--base) var(--ease);}
   .pin-box{background:var(--white);border:1px solid var(--border);padding:34px 30px;text-align:center;width:100%;max-width:360px;box-shadow:var(--shadow-xl);border-radius:16px;margin:auto;animation:popIn var(--slow) var(--ease);}
   .pin-icon{font-size:26px;margin-bottom:12px;opacity:0.45;}
   .pin-title{font-family:'Satoshi',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px;color:var(--black);letter-spacing:-0.02em;}

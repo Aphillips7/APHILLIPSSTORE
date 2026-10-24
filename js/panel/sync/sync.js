@@ -13,7 +13,7 @@ function detenerSync(){ _syncListo = false; detenerNube(); }
 
 function scheduleSync(key) {
   clearTimeout(_syncTimers[key]);
-  setSyncStatus('Guardando...', 'var(--accent)');
+  setSyncStatus('Guardando...', 'var(--amber)');
   _syncTimers[key] = setTimeout(function () {
     if (key === 'config') { syncConfig(); } else { syncColeccion(key); }
   }, 1200);
