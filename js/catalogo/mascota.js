@@ -78,6 +78,8 @@ const SVG = `
     <path d="M60 43.2v4M86.8 70h-4M33.2 70h4M60 96.8v-4" stroke-width="2"/>
     <path d="M73.4 46.8l-1.5 2.6M83.2 56.6l-2.6 1.5M83.2 83.4l-2.6-1.5M73.4 93.2l-1.5-2.6M46.6 93.2l1.5-2.6M36.8 83.4l2.6-1.5M36.8 56.6l2.6 1.5M46.6 46.8l1.5 2.6" stroke-width="1.1"/>
   </g>
+  <!-- rostro mas pequeno dentro de la esfera (proporcionado al reloj); las agujas quedan de su tamano -->
+  <g class="masc-rostro" transform="translate(60 67) scale(.76) translate(-60 -67)">
   <!-- cejas gruesas (masculinas): suben, bajan y se inclinan segun la cara -->
   <g class="masc-cejas" fill="#18181b">
     <path class="masc-ceja-i" d="M42.2 54.8 Q48.6 50.4 55.2 53.4 L54.6 55.6 Q48.6 53.2 43 56.8 Z"/>
@@ -143,6 +145,7 @@ const SVG = `
   <g class="masc-zzz" font-family="Jost,Arial,sans-serif" font-weight="700" fill="#18181b">
     <text x="82" y="40" font-size="7">z</text><text x="89" y="31" font-size="9">z</text><text x="97" y="20" font-size="11">Z</text>
   </g>
+  </g>
   <!-- agujas desde el centro (la nariz es el eje): minutero hacia las 12 entre los ojos, horario hacia las 4 -->
   <g class="masc-agujas" stroke="#18181b" stroke-linecap="round">
     <path class="masc-minutero" d="M60 70 L60 47.6" stroke-width="1.7"/>
@@ -173,14 +176,14 @@ const SVG = `
   <!-- gesto: se tapa los ojos con las dos manos (contrasena); al espiar baja la izquierda -->
   <g class="masc-gesto masc-g-tapa">
     <g class="masc-tapa-i">
-      <path d="M28 82 Q34 84 42 73" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
-      <rect x="41.2" y="56.4" width="16.2" height="15.6" rx="6" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
-      <path d="M45.4 59.4v6M49.2 58.8v6.6M53 59.4v6" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+      <path d="M28 82 Q36 84 45 73" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="44.6" y="58.6" width="13.4" height="13" rx="5" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
+      <path d="M48.2 61.2v5M51.3 60.6v5.6M54.4 61.2v5" stroke="#18181b" stroke-width=".8" stroke-linecap="round"/>
     </g>
     <g class="masc-tapa-d">
-      <path d="M92 84 Q86 84 78 73" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
-      <rect x="62.6" y="56.4" width="16.2" height="15.6" rx="6" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
-      <path d="M67 59.4v6M70.8 58.8v6.6M74.6 59.4v6" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+      <path d="M92 84 Q84 84 75 73" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="62" y="58.6" width="13.4" height="13" rx="5" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
+      <path d="M65.6 61.2v5M68.7 60.6v5.6M71.8 61.2v5" stroke="#18181b" stroke-width=".8" stroke-linecap="round"/>
     </g>
   </g>
   <!-- gesto: mano en la barbilla (pensando) -->
