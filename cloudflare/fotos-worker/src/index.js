@@ -586,9 +586,9 @@ async function guardarPerfilCuenta(uid, request, env, cors) {
   if (!nombre) return json({ error: 'Escribe tu nombre.', campo: 'nombre' }, 400, cors);
   if (!apellido) return json({ error: 'Escribe tu apellido.', campo: 'apellido' }, 400, cors);
   const tel = normalizarTelefono(b.telefono);
-  if (!tel || !tel.norm) return json({ error: 'Revisa tu WhatsApp: 8 digitos si es de Panama, o con el codigo de tu pais.', campo: 'telefono' }, 400, cors);
+  if (!tel || !tel.norm) return json({ error: 'Revisa tu telefono: 8 digitos si es de Panama, o con el codigo de tu pais.', campo: 'telefono' }, 400, cors);
   const otro = await env.DB.prepare('SELECT codigo FROM cuentas WHERE tel_norm = ?1 AND uid <> ?2').bind(tel.norm, uid).first();
-  if (otro) return json({ error: 'Ese WhatsApp ya esta registrado en otra cuenta. Si es tuyo, inicia sesion con esa cuenta o escribenos.', campo: 'telefono' }, 409, cors);
+  if (otro) return json({ error: 'Ese telefono ya esta registrado en otra cuenta. Si es tuyo, inicia sesion con esa cuenta o escribenos.', campo: 'telefono' }, 409, cors);
   const terminos = c.terminos || (b.terminos === true ? Date.now() : 0);
   const mayor = c.mayor_edad || (b.mayorEdad === true ? Date.now() : 0);
   if (!terminos) return json({ error: 'Para crear tu cuenta debes aceptar los terminos y la politica de privacidad.', campo: 'terminos' }, 400, cors);
@@ -622,7 +622,7 @@ async function guardarPerfilCuenta(uid, request, env, cors) {
       .bind(uid, nombre, apellido, tel.bonito, tel.norm, terminos, mayor, novedades, limpiarTexto(b.cedula, 20).toUpperCase(),
         nacimiento, muneca, contacto, JSON.stringify(direccion), Date.now()).run();
   } catch (e) {
-    if (/UNIQUE/i.test(String(e && e.message))) return json({ error: 'Ese WhatsApp ya esta registrado en otra cuenta.', campo: 'telefono' }, 409, cors);
+    if (/UNIQUE/i.test(String(e && e.message))) return json({ error: 'Ese telefono ya esta registrado en otra cuenta.', campo: 'telefono' }, 409, cors);
     throw e;
   }
   const nueva = await env.DB.prepare('SELECT * FROM cuentas WHERE uid = ?1').bind(uid).first();
