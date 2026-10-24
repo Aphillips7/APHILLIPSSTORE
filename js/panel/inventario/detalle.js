@@ -66,7 +66,8 @@ function verDetalle(id){
       '</div>'+costoSection+
     '</div>'+specsHtml+notasHtml+internoHtml+reservaHtml+
     '<div style="display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);">'+
-      '<button class="btn btn-gold" style="flex:1;" onclick="editarProducto(\''+p.id+'\')">Editar</button>'+
+      (p.estado==='transito'?'<button class="btn btn-gold" style="flex:1;" onclick="yaLlego(\''+p.id+'\')">Ya llego</button>':'')+
+      '<button class="btn '+(p.estado==='transito'?'btn-outline':'btn-gold')+'" style="flex:1;" onclick="editarProducto(\''+p.id+'\')">Editar</button>'+
       '<button class="btn btn-outline" onclick="duplicarProducto(\''+p.id+'\')" title="Registrar otra unidad de este mismo modelo">Otra unidad</button>'+
       '<button class="btn btn-outline" onclick="cerrarModal()">Cerrar</button>'+
       '<button class="btn btn-danger" onclick="eliminarProducto(\''+p.id+'\')">Eliminar</button>'+

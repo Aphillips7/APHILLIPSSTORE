@@ -87,3 +87,23 @@ export function toastPanel(texto){
   setTimeout(function(){ t.classList.remove('visible'); setTimeout(function(){ t.remove(); }, 300); }, 4200);
 }
 window.toastPanel = toastPanel;
+
+// Pregunta con que se pago (botones grandes, se puede cancelar). Devuelve una promesa con el metodo o null.
+var NOMBRES_METODO = { efectivo: 'Efectivo', yappy: 'Yappy', transferencia: 'Transferencia', tarjeta: 'Tarjeta', otro: 'Otro' };
+export function elegirMetodoPago(titulo, detalle){
+  return new Promise(function(resolver){
+    var fondo = document.createElement('div');
+    fondo.className = 'metodo-modal';
+    fondo.innerHTML = '<div class="metodo-caja" role="dialog" aria-modal="true" aria-label="' + esc(titulo) + '"><div class="metodo-titulo">' + esc(titulo) + '</div>' +
+      (detalle ? '<div class="metodo-detalle">' + esc(detalle) + '</div>' : '') +
+      '<div class="metodo-opciones">' + Object.keys(NOMBRES_METODO).map(function(k){ return '<button type="button" class="btn btn-outline" data-m="' + k + '">' + NOMBRES_METODO[k] + '</button>'; }).join('') + '</div>' +
+      '<button type="button" class="metodo-cancelar" data-m="">Ahora no</button></div>';
+    function cerrar(v){ fondo.remove(); document.removeEventListener('keydown', tecla); resolver(v || null); }
+    function tecla(e){ if(e.key === 'Escape') cerrar(null); }
+    fondo.addEventListener('click', function(e){ var b = e.target.closest('[data-m]'); if(b) cerrar(b.getAttribute('data-m')); else if(e.target === fondo) cerrar(null); });
+    document.addEventListener('keydown', tecla);
+    document.body.appendChild(fondo);
+    var primero = fondo.querySelector('[data-m="efectivo"]'); if(primero) primero.focus();
+  });
+}
+window.elegirMetodoPago = elegirMetodoPago;
