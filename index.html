@@ -49,9 +49,13 @@ if(location.hostname==='aphillips7.github.io'){
     <div id="login-loading" style="text-align:center;color:rgba(255,255,255,0.5);font-size:13px;padding:24px 0;">Verificando sesion...</div>
     <div id="login-form-wrap" style="display:none;background:var(--white);border-radius:8px;padding:32px 28px;box-shadow:0 8px 40px rgba(0,0,0,0.3);">
       <div id="login-error" style="display:none;background:var(--red-bg);color:var(--red);font-size:12px;padding:10px 12px;border-radius:8px;margin-bottom:16px;"></div>
-      <div class="field"><label>Correo</label><input type="email" id="login-email" placeholder="tucorreo@ejemplo.com" onkeydown="if(event.key==='Enter'){document.getElementById('login-pass').focus();}" /></div>
-      <div class="field"><label>Contrasena</label><input type="password" id="login-pass" placeholder="********" onkeydown="if(event.key==='Enter')iniciarSesion();" /></div>
-      <button class="btn btn-gold" id="login-btn" style="width:100%;margin-top:6px;" onclick="iniciarSesion()">Iniciar sesion</button>
+      <!-- Un <form> real con name y autocomplete: asi Safari (Llavero de iCloud), Chrome y el gestor de Google
+           ofrecen guardar la contrasena y luego la rellenan solos. El envio lo maneja iniciarSesion (no recarga). -->
+      <form id="login-form" method="post" action="/admin" autocomplete="on" onsubmit="event.preventDefault();iniciarSesion();">
+        <div class="field"><label for="login-email">Correo</label><input type="email" id="login-email" name="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" required placeholder="tucorreo@ejemplo.com" /></div>
+        <div class="field"><label for="login-pass">Contrasena</label><input type="password" id="login-pass" name="password" autocomplete="current-password" required placeholder="********" /></div>
+        <button type="submit" class="btn btn-gold" id="login-btn" style="width:100%;margin-top:6px;">Iniciar sesion</button>
+      </form>
       <button type="button" class="auth-link" style="display:block;text-align:center;margin-top:16px;" onclick="recuperarContrasenaLogin()">Olvide mi contrasena</button>
     </div>
   </div>

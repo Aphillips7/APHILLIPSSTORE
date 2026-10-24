@@ -39,7 +39,9 @@ function vigilarSesion(){
   });
 }
 async function iniciarSesion(){
-  var email=document.getElementById('login-email').value.trim();
+  // el correo se normaliza (sin espacios y en minusculas): el celular suele poner la primera letra en mayuscula
+  var email=document.getElementById('login-email').value.trim().toLowerCase();
+  document.getElementById('login-email').value=email;
   var pass=document.getElementById('login-pass').value;
   var errEl=document.getElementById('login-error');
   errEl.style.display='none';
@@ -48,7 +50,10 @@ async function iniciarSesion(){
   btn.disabled=true; btn.textContent='Entrando...';
   try{
     await firebase.auth().signInWithEmailAndPassword(email,pass);
-    document.getElementById('login-pass').value='';
+    // Chrome y Android: se avisa al navegador que el acceso fue correcto para que ofrezca guardar la contrasena
+    try{ if(window.PasswordCredential&&navigator.credentials&&navigator.credentials.store) await navigator.credentials.store(new window.PasswordCredential({ id: email, password: pass })); }catch(e){}
+    // la contrasena se borra un momento despues, para que Safari alcance a leerla y ofrezca guardarla
+    setTimeout(function(){ var p=document.getElementById('login-pass'); if(p) p.value=''; }, 1500);
   }catch(e){
     var msg='No se pudo iniciar sesion. Verifica tu correo y contrasena.';
     if(e && e.code==='auth/too-many-requests') msg='Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.';
