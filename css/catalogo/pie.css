@@ -33,7 +33,7 @@
     .pie-col.abierta ul{display:flex;}
     .pie-col.abierta .pie-col-btn svg{transform:rotate(180deg);}
     /* abajo solo el espacio justo; a la derecha se deja libre el boton flotante de WhatsApp */
-    .pie-copy{border-top:none;padding:28px 76px calc(28px + env(safe-area-inset-bottom,0px)) 24px;}
+    .pie-copy{border-top:none;padding:28px 24px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;}
   }
   /* === AVISO DE COOKIES (js/catalogo/aviso-cookies.js): pequeno, abajo a la izquierda, solo la primera vez === */
   .aviso-cookies{position:fixed;z-index:160;left:16px;bottom:16px;max-width:380px;display:flex;align-items:center;gap:14px;padding:14px 16px;background:#111;color:#e4e4e7;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.28);

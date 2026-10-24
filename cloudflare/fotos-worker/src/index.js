@@ -8,6 +8,7 @@
 //   - que el usuario (sub) sea OWNER_UID.
 //
 // Rutas publicas (cualquier visitante):
+//   GET    /destacados         -> { ids } relojes a la venta con mas clics (publica, para el carrusel de la portada)
 //   GET    /catalogo           -> { relojes:[...], _ts }  (copia publica, en cache 30 s)
 //   POST   /metricas           cuerpo (texto JSON) [[id, "vistas"|"aperturas"|"clics"], ...]
 //   GET    /salud              -> { ok: true }
@@ -92,14 +93,15 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const ruta = url.pathname, metodo = request.method;
-    const publica = (ruta === '/catalogo' && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST' || ruta === '/boletin' || ruta === '/errores';
+    const publica = ((ruta === '/catalogo' || ruta === '/destacados') && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST' || ruta === '/boletin' || ruta === '/errores';
     const cors = encabezadosCors(request, env, publica);
 
-    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/metricas' || ruta === '/boletin' || ruta === '/errores') });
+    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/destacados' || ruta === '/metricas' || ruta === '/boletin' || ruta === '/errores') });
     if (ruta === '/salud') return json({ ok: true }, 200, cors);
 
     // ---------- publicas ----------
     if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
+    if (ruta === '/destacados' && metodo === 'GET') return destacadosPublicos(env, cors);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
     if (ruta === '/errores' && metodo === 'POST') return registrarError(request, env, cors);
 
@@ -449,6 +451,19 @@ async function loteDatos(request, env, cors) {
   }
   await env.DB.batch(sentencias);   // todo o nada (transaccion)
   return json({ ok: true, version: await versionActual(env), hashes }, 200, cors);
+}
+
+// ---------- destacados (publica) ----------
+// Los relojes con mas clics a WhatsApp (y luego mas aperturas) que siguen a la venta en el catalogo
+// publico. Solo devuelve sus ids en orden: nada privado. Cache de 10 minutos.
+async function destacadosPublicos(env, cors) {
+  const obj = await env.FOTOS.get(CLAVE_CATALOGO);
+  let relojes = [];
+  try { relojes = obj ? (JSON.parse(await obj.text()).relojes || []) : []; } catch (e) {}
+  const aLaVenta = new Set(relojes.filter((r) => ['disponible', 'transito', 'bajopedido'].includes(r.estado)).map((r) => r.id));
+  const { results } = await env.DB.prepare('SELECT id FROM metricas WHERE clics > 0 OR aperturas > 0 ORDER BY clics DESC, aperturas DESC, vistas DESC LIMIT 60').all();
+  const ids = results.map((r) => r.id).filter((id) => aLaVenta.has(id)).slice(0, 8);
+  return new Response(JSON.stringify({ ids }), { headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=600' } });
 }
 
 // ---------- cuentas de clientes ----------
