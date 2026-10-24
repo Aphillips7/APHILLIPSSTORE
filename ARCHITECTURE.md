@@ -45,7 +45,7 @@ scripts/publicar.mjs                   publica la tienda solo si pasa el chequeo
 scripts/publicar-api.mjs               igual para la API (cloudflare/fotos-worker)
 cloudflare/fotos-worker/   Worker que sube/borra fotos en R2 (api.aphillipsstore.com); fotos en fotos.aphillipsstore.com
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
-css/panel/            base (tokens de color glaciar, claro y oscuro), componentes, finanzas, auth, modales, navegacion, movil (en ese orden)
+css/panel/            base (tokens de color glaciar, claro y oscuro), componentes, finanzas, auth, modales, navegacion, dashboard, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
                       destacados, listado, filtros, marcas, pie, hora (en ese orden)
 js/firebase.js        configuracion de Firebase (solo Auth); exporta firebase
@@ -62,7 +62,8 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `nav.js` | Navegacion de 6 secciones (Dashboard, Ventas, Inventario, Clientes, Finanzas, Ajustes) con sub-pestanas: barra lateral contraible en PC (`aphillips_barra_mini`), barra inferior + boton "+" y hoja "Mas" en celular, buscador global (relojes, clientes, pedidos web; atajo "/"), contadores que leen los badges existentes, punto ambar si una seccion tiene un formulario a medias (y aviso al cerrar la pagina), recuerda la ultima seccion (`aphillips_vista`). `showPage`/`showInner`/`irARegistrar` quedan como alias de lo viejo; `mostrarVista` cambia de pantalla sin pedir el codigo (lo usa auth-overlay) |
 | `tema.js` | Boton de tema automatico / claro / oscuro (localStorage `aphillips_tema`, atributo `data-theme` en `<html>`; index.html lo aplica antes de pintar) |
 | `componentes.js` | HTML de los componentes comunes: `kpiHTML` (con variacion vs mes anterior), `estadoHTML`, `vacioHTML`, `tablaHTML`, `graficaHTML`, `dinero`, `esc` (estilos en `css/panel/componentes.css`) |
-| `inicio.js` | Pantalla Inicio: resumen del mes, meta, pendientes, mini grafica, checklist |
+| `inicio.js` | Dashboard: KPIs del mes vs el anterior (ventas, ganancia, margen, inventario a costo y a precio, pedidos web, por cobrar), "Hoy necesitas" con boton directo (pedidos por confirmar, abonos vencidos a los 30 dias, transito > 20 dias, disponible > 45 dias, publicados sin foto o medida, avisos web), meta con proyeccion de cierre (Guardar desactivado hasta que la meta sea valida), grafica de 12 meses, mas vistos vs mas vendidos, actividad reciente y checklist |
+| `graficas.js` | Graficas en SVG propio al ancho real del contenedor (se redibujan al cambiar el tamano): `barrasLinea` (barras + linea + meta punteada), `dona`, `barrasH`, `compacto` ($1.2k) |
 | `catalogo-admin.js` | Pestana Catalogo: visibilidad, metricas, links al catalogo |
 | `contenido.js` | Pestana Contenido: plan semanal e ideas |
 | `sesion.js` | Login con correo/contrasena, recuperar contrasena, cerrar sesion |
@@ -192,8 +193,9 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
 - **Reservas**: saldo = precio acordado − abonos. Completar crea una `venta` por el saldo (o un
   registro de monto 0 si ya estaba pagado). Cancelar permite devolver el abono (gasto "Reembolso")
   o retenerlo; siempre deja un movimiento `reserva_cancelada`.
-- **Alertas en Inicio**: reserva con saldo pendiente; en transito hace mas de 20 dias; disponible
-  hace mas de 45 dias ("Rebajar").
+- **Hoy necesitas (Dashboard)**: pedidos web por confirmar; reserva con saldo (vencida si pasaron 30 dias desde
+  `fechaInicio`); en transito hace mas de 20 dias; disponible hace mas de 45 dias ("Rebajar"); publicado sin foto o
+  sin medida; avisos web por enviar.
 - **Genero**: los relojes `unisex` aparecen en hombre y en mujer.
 - **WhatsApp**: numero en `js/catalogo/whatsapp.js` (`WHATSAPP_NUM`).
 - **Metricas**: una vista por reloj por visita, apertura del detalle y clic a WhatsApp. No cuentan si

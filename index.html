@@ -25,6 +25,7 @@ try{var t=localStorage.getItem('aphillips_tema');if(t==='light'||t==='dark')docu
 <link rel="stylesheet" href="css/panel/auth.css">
 <link rel="stylesheet" href="css/panel/modales.css">
 <link rel="stylesheet" href="css/panel/navegacion.css">
+<link rel="stylesheet" href="css/panel/dashboard.css">
 <link rel="stylesheet" href="css/panel/movil.css">
 </head>
 <body>
@@ -114,61 +115,58 @@ if(location.hostname==='aphillips7.github.io'){
 
 <!-- INICIO -->
 <div id="page-inicio" class="page active">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <div class="dash-cab">
     <div>
-      <div class="section-title">Buenos dias, Alberto</div>
-      <div class="section-sub"><span id="inicio-mes-label">—</span> — mantente enfocado</div>
+      <div class="section-title" id="dash-saludo">Buenos dias, Alberto</div>
+      <div class="section-sub"><span id="inicio-mes-label">—</span></div>
     </div>
-    <button class="btn btn-outline btn-sm" onclick="abrirReglasModal()" style="margin-top:4px;">Ver reglas del negocio</button>
-  </div>
-
-  <div class="grid-2" style="margin-bottom:16px;">
-    <button class="btn btn-gold" onclick="irARegistrar('venta')" style="width:100%;">+ Registrar venta</button>
-    <button class="btn btn-outline" onclick="irARegistrar('compra')" style="width:100%;">+ Registrar compra</button>
-  </div>
-
-  <div class="grid-3">
-    <div class="stat-box">
-      <div class="stat-label">Ventas este mes</div>
-      <div class="stat-value gold money" id="stat-ventas-mes">$0</div>
-      <div class="stat-hint" id="stat-hint-ventas">0 ventas</div>
-      <div class="stat-hint" id="trend-ventas" style="margin-top:2px;"></div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-label">Ganancia neta</div>
-      <div class="stat-value green money" id="stat-ganancia">$0</div>
-      <div class="stat-hint">despues de costos</div>
-      <div class="stat-hint" id="trend-ganancia" style="margin-top:2px;"></div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-label">Productos en stock</div>
-      <div class="stat-value" id="stat-stock">0</div>
-      <div class="stat-hint">unidades disponibles</div>
+    <div class="dash-acciones">
+      <button class="btn btn-gold" onclick="irARegistrar('venta')">+ Registrar venta</button>
+      <button class="btn btn-outline" onclick="irARegistrar('compra')">+ Compra</button>
+      <button class="btn btn-outline" onclick="abrirReglasModal()">Reglas</button>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Pendientes y alertas</div>
-    <div id="pendientes-container"></div>
+  <div id="dash-kpis" class="kpi-grid"></div>
+
+  <div class="dash-grid">
+    <div class="card">
+      <div class="card-title dash-titulo">Hoy necesitas <span id="hoy-cont" class="nav-cont" hidden></span></div>
+      <div id="pendientes-container"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Meta del mes</div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;">
+        <span id="meta-label" style="font-size:14px;">Sin meta definida</span>
+        <span id="meta-pct" class="money" style="color:var(--accent-strong);font-weight:700;">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="meta-fill" style="width:0%"></div></div>
+      <div class="stat-hint" id="meta-dias-restantes" style="margin-top:8px;"></div>
+      <div id="meta-proyeccion" class="meta-proyeccion"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:flex-end;">
+        <div class="field" style="flex:1;margin:0;"><label for="meta-input">Meta de ventas ($)</label><div class="currency-wrap"><input type="number" id="meta-input" min="1" step="1" inputmode="numeric" placeholder="Ej: 5000" oninput="validarMeta()" onkeydown="if(event.key==='Enter')guardarMeta()" /></div></div>
+        <button class="btn btn-gold btn-sm" id="meta-guardar" onclick="guardarMeta()" disabled>Guardar</button>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Meta del mes</div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <span id="meta-label" style="font-size:14px;">Sin meta definida</span>
-      <span id="meta-pct" class="money" style="color:var(--accent-strong);">0%</span>
+  <div class="grafica">
+    <div class="grafica-cab">
+      <div><div class="grafica-titulo">Ventas y ganancia, ultimos 12 meses</div><div class="grafica-sub" id="dash-grafica-sub"></div></div>
+      <div class="grafica-ley"><span><i class="ley-actual"></i>Ventas</span><span><i class="ley-comp"></i>Ganancia</span><span id="dash-ley-meta"><i class="ley-meta"></i>Meta</span></div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="meta-fill" style="width:0%"></div></div>
-    <div class="stat-hint" id="meta-dias-restantes" style="margin-top:8px;"></div>
-    <div style="margin-top:16px;display:flex;gap:8px;align-items:flex-end;">
-      <div class="field" style="flex:1;margin:0;"><label>Meta de ventas ($)</label><div class="currency-wrap"><input type="number" id="meta-input" placeholder="Ej: 5000" /></div></div>
-      <button class="btn btn-gold btn-sm" onclick="guardarMeta()">Guardar</button>
-    </div>
+    <div class="grafica-cuerpo" id="dash-grafica"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Ventas de los ultimos 7 dias</div>
-    <div id="mini-chart-container"></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Mas vistos vs mas vendidos</div>
+      <div id="dash-top"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Actividad reciente</div>
+      <div id="recientes-container"></div>
+    </div>
   </div>
 
   <div class="card">
@@ -180,10 +178,6 @@ if(location.hostname==='aphillips7.github.io'){
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Actividad reciente</div>
-    <div id="recientes-container"></div>
-  </div>
 </div>
 
 <!-- REGLAS DEL NEGOCIO MODAL -->
