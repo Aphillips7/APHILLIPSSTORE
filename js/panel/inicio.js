@@ -125,7 +125,7 @@ function renderPendientesInicio(){
       }
     } else if(p.estado === 'transito'){
       var dT = diasEnInventario(p.fecha);
-      if(dT !== null && dT > DIAS_TRANSITO) items.push(aviso(2, 'pendiente', 'Transito', nombre, 'En camino hace ' + dT + ' dias' + (p.paqueteria ? ' · ' + p.paqueteria : '') + (p.tracking ? ' · guia ' + p.tracking : ''), 'Revisar envio', "verDetalle('" + id + "')"));
+      if(dT !== null && dT > DIAS_TRANSITO) items.push(aviso(2, 'pendiente', 'Transito', nombre, 'En camino hace ' + dT + ' dias' + (p.paqueteria ? ' · ' + p.paqueteria : '') + (p.tracking ? ' · guia ' + p.tracking : ''), 'Ya llego', "yaLlego('" + id + "')"));
     } else if(p.estado === 'disponible'){
       var dD = diasEnInventario(p.fecha);
       if(dD !== null && dD > DIAS_REBAJAR) items.push(aviso(3, 'pendiente', 'Sin rotar', nombre, dD + ' dias disponible sin venderse · ' + dinero(p.precio), 'Rebajar', editar(id)));

@@ -260,3 +260,12 @@
   .toast-panel{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);opacity:0;z-index:9000;max-width:min(92vw,440px);background:#A7C4D6;color:#09090b;font-size:13.5px;font-weight:500;line-height:1.45;padding:11px 16px;border-radius:var(--r-md);box-shadow:var(--shadow-lg);transition:opacity var(--base) var(--ease),transform var(--base) var(--ease);pointer-events:none;}
   .toast-panel.visible{opacity:1;transform:translate(-50%,0);}
   @media (max-width:767px){ .toast-panel{bottom:calc(96px + env(safe-area-inset-bottom,0px));} }
+
+  /* elegir metodo de pago (antes de registrar una compra automatica) */
+  .metodo-modal{position:fixed;inset:0;z-index:9500;background:var(--velo,rgba(9,9,11,.5));display:flex;align-items:center;justify-content:center;padding:20px;}
+  .metodo-caja{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--shadow-xl);padding:22px;width:100%;max-width:380px;}
+  .metodo-titulo{font-size:16px;font-weight:700;color:var(--black);letter-spacing:-0.01em;margin-bottom:4px;}
+  .metodo-detalle{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px;}
+  .metodo-opciones{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .metodo-opciones .btn{justify-content:center;}
+  .metodo-cancelar{display:block;width:100%;margin-top:12px;background:none;border:none;font:inherit;font-size:13px;color:var(--muted);cursor:pointer;padding:6px;}

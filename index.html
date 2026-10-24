@@ -640,25 +640,30 @@ if(location.hostname==='aphillips7.github.io'){
 <!-- CATALOGO -->
 <div id="page-catalogo" class="page">
   <div class="section-title">Catalogo</div>
-  <div class="section-sub">Centro de mando de tu vitrina publica: visibilidad, links directos e interes de los clientes.</div>
-  <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;margin-bottom:16px;margin-top:14px;">
-    <div style="font-size:13px;color:var(--muted);">Se sincroniza solo con lo que esta Disponible, En transito, Bajo pedido, y lo Vendido reciente (hasta 21 dias)</div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-outline btn-sm" onclick="copiarLinkCatalogo()">Copiar link del catalogo</button>
-      <a class="btn btn-outline btn-sm" href="/" target="_blank" style="text-decoration:none;">Ver catalogo</a>
+  <div class="cat-cab">
+    <p class="fin-intro">Como se comporta tu tienda: cuanta gente ve cada reloj, cuantos lo abren y cuantos te escriben por WhatsApp. La tienda muestra lo disponible, en transito, bajo pedido y lo vendido de los ultimos 21 dias.</p>
+    <div class="acciones-fila">
+      <button type="button" class="btn btn-outline btn-sm" onclick="copiarLinkCatalogo()">Copiar link de la tienda</button>
+      <a class="btn btn-gold btn-sm" href="/" target="_blank" rel="noopener">Ver la tienda</a>
     </div>
   </div>
-  <div class="grid-3 cat-stats">
-    <div class="stat-box"><div class="stat-label">Visibles en el catalogo</div><div class="stat-value" id="cat-stat-visibles">0</div></div>
-    <div class="stat-box"><div class="stat-label">Ocultos manualmente</div><div class="stat-value" style="color:var(--muted)" id="cat-stat-ocultos">0</div></div>
-    <div class="stat-box"><div class="stat-label">Clics a WhatsApp (total)</div><div class="stat-value" style="color:var(--green)" id="cat-stat-clics">0</div></div>
+  <div id="cat-kpis" class="kpi-grid"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Embudo de la tienda</div><div id="cat-embudo"></div></div>
+    <div class="card"><div class="card-title">Los que mas interesan <span class="card-nota">mas WhatsApp</span></div><div id="cat-top"></div></div>
   </div>
-  <div class="card" style="margin-top:16px;">
-    <div class="card-title">Interes de los clientes</div>
-    <div id="metricas-catalogo-container"><div class="empty" style="padding:16px 0;"><span></span>Aun no hay datos de vistas o clics.</div></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Los miran y nadie escribe</div><div id="cat-friccion"></div></div>
+    <div class="card"><div class="card-title">Casi nadie los ve</div><div id="cat-invisibles"></div></div>
   </div>
-  <div class="card" style="margin-top:16px;">
-    <div class="card-title">Vitrina — visibilidad y links por reloj</div>
+  <div class="card">
+    <div class="cat-vitrina-cab">
+      <div class="card-title" style="margin:0;">Vitrina</div>
+      <select id="cat-orden" onchange="setOrdenCatalogo(this.value)" aria-label="Ordenar">
+        <option value="clics">Mas WhatsApp</option><option value="vistas">Mas vistas</option><option value="tasa">Mejor tasa de contacto</option><option value="precio">Mayor precio</option>
+      </select>
+    </div>
+    <div class="fin-periodos" id="cat-filtros" style="margin:12px 0;"></div>
     <div id="catalogo-lista"></div>
   </div>
 </div>

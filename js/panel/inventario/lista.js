@@ -1,6 +1,7 @@
 // =================== INVENTARIO ===================
-import { sincronizarCompraInv } from '../finanzas/registrar-compra.js';
+import { registrarCompraConMetodo } from '../finanzas/registrar-compra.js';
 import { verDetalle } from './detalle.js';
+import './llegada.js';   // boton "Ya llego" (yaLlego en window)
 import { editarProducto } from './formulario.js';
 import { abrirReservaModal } from './reservas.js';
 import { abrirVentaModal } from './venta-modal.js';
@@ -117,7 +118,7 @@ function cambiarEstado(id,val){
   state.inventario[i].estado=val;
   save('inventario');
   // al pasar a un estado pagado (por ejemplo de bajo pedido a transito) la compra se registra sola
-  var avisoC=sincronizarCompraInv(state.inventario[i]); if(avisoC&&window.toastPanel) window.toastPanel(avisoC);
+  registrarCompraConMetodo(state.inventario[i]).then(function(avisoC){ if(avisoC&&window.toastPanel) window.toastPanel(avisoC); });
   renderInventario();
 }
 
@@ -166,7 +167,8 @@ function renderInventario(){
       return '<div class="inv-grid-card" onclick="verDetalle(\''+esc(q.id)+'\')">'+
         '<div class="inv-grid-foto">'+foto+'<span class="inv-grid-est est-'+q.estado+'">'+(etiq[q.estado]||q.estado)+'</span>'+chipABC(abc[claveModelo(q.nombre)])+(q.ocultoCatalogo?'<span class="inv-grid-oculto" title="Oculto en la tienda">Oculto</span>':'')+'</div>'+
         '<div class="inv-grid-info"><b>'+esc(q.nombre)+'</b><span>'+esc([q.sku,q.mm?q.mm+' mm':''].filter(Boolean).join(' · '))+'</span>'+
-        '<div class="inv-grid-precio"><b>'+dinero(q.precio)+'</b>'+(mg!==null?'<span class="'+(mg>=30?'pos':mg<15?'neg':'')+'">'+mg+'%</span>':'')+(dias!==null?diasBadge(dias):'')+'</div></div></div>';
+        '<div class="inv-grid-precio"><b>'+dinero(q.precio)+'</b>'+(mg!==null?'<span class="'+(mg>=30?'pos':mg<15?'neg':'')+'">'+mg+'%</span>':'')+(dias!==null?diasBadge(dias):'')+'</div>'+
+        (q.estado==='transito'?'<button type="button" class="btn btn-gold btn-sm inv-grid-llego" onclick="event.stopPropagation();yaLlego(\''+esc(q.id)+'\')">Ya llego</button>':'')+'</div></div>';
     }).join('')+'</div>';
     return;
   }
@@ -217,6 +219,7 @@ function renderInventario(){
           '<div class="list-item-sub">'+subLinea+'</div>'+
         '</div>'+
         '<select class="cambio-estado-select" onclick="event.stopPropagation()" onchange="cambiarEstado(\''+p.id+'\',this.value)">'+opts+'</select>'+
+        (p.estado==='transito'?'<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();yaLlego(\''+p.id+'\')" title="Marcar que llego: pide la importacion y lo pasa a Disponible">Ya llego</button>':'')+
         '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto(\''+p.id+'\')" title="Editar">&#9998;</button>'+
         '<button class="btn btn-danger" onclick="event.stopPropagation();eliminarProducto(\''+p.id+'\')" title="Eliminar">&#128465;</button>'+
       '</div>';

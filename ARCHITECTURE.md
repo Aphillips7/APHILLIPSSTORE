@@ -64,14 +64,14 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `componentes.js` | HTML de los componentes comunes: `kpiHTML` (con variacion vs mes anterior), `estadoHTML`, `vacioHTML`, `tablaHTML`, `graficaHTML`, `dinero`, `esc` (estilos en `css/panel/componentes.css`) |
 | `inicio.js` | Dashboard: KPIs del mes vs el anterior (ventas, ganancia neta = bruta - gastos, margen bruto, inventario a costo y a precio, pedidos web, por cobrar), "Hoy necesitas" con boton directo (pedidos por confirmar, abonos vencidos segun la fecha limite del apartado, mes sin cerrar, transito > 20 dias, disponible > 45 dias, publicados sin foto o medida, avisos web), meta con proyeccion de cierre (Guardar desactivado hasta que la meta sea valida), grafica de 12 meses, mas vistos vs mas vendidos, actividad reciente y checklist |
 | `graficas.js` | Graficas en SVG propio al ancho real del contenedor (se redibujan al cambiar el tamano): `barrasLinea` (barras + linea + meta punteada), `dona`, `barrasH`, `compacto` ($1.2k) |
-| `catalogo-admin.js` | Inventario > Catalogo: visibilidad, metricas (vistas, aperturas, clics y % de vistas que escriben), links al catalogo |
+| `catalogo-admin.js` | Inventario > Catalogo: KPIs y embudo de la tienda (vistas -> lo abren -> escriben -> vendido), los que mas interesan, los que miran y nadie escribe, los que casi nadie ve, y la vitrina con filtro, orden, metricas por reloj, interruptor de visibilidad y link |
 | `contenido.js` | Ajustes > Contenido: plan semanal e ideas |
 | `sesion.js` | Login con correo/contrasena, recuperar contrasena, cerrar sesion |
 | `respaldo.js` | Exportar/importar respaldo JSON; respaldos automaticos de Cloudflare (listar, descargar, hacer uno ahora) |
 | `pwa.js` | Boton "instalar app" y registro del service worker |
 | `finanzas/fechas.js` | Helpers de fechas `d/m/aaaa` y meses |
 | `finanzas/registrar-venta.js` | Selector de tipo y registrar venta desde el inventario |
-| `finanzas/registrar-compra.js` | Registrar compra; `autoRegistrarCompraInv`, `existeCompraDe` |
+| `finanzas/registrar-compra.js` | Registrar compra; `sincronizarCompraInv` (compra automatica al guardar un reloj en transito/disponible/apartado, se actualiza si cambia el costo, ajuste si el mes esta cerrado) y `registrarCompraConMetodo` (pregunta el metodo antes de registrarla) |
 | `finanzas/registrar-otros.js` | Gasto, retiro y traspaso. Poka-yoke: boton activo solo con datos validos, aviso de duplicado del dia, retiro mayor que el saldo pide confirmacion, traspaso que dejaria el origen negativo bloqueado |
 | `finanzas/calculos.js` | **Unica forma de contar el dinero** (Dashboard, Finanzas, Ventas, cierres): `estadoResultados` (ingresos = ventas + abonos - devoluciones; bruta = ingresos - costo vendido; neta = bruta - gastos; flujo = entradas (ventas, abonos, aportes) - compras - gastos - retiros), `revisionDatos` (movimientos sin metodo, ventas sin costo, relojes sin compra, compras distintas al costo, caja negativa), periodos con su comparacion, saldo por metodo, inventario como dinero, reservas por cobrar con fecha limite, meses cerrados |
 | `finanzas/resumen.js` | Finanzas > Resumen: periodo, KPIs, avisos, estado de resultados, punto de equilibrio y proyeccion, flujo de 12 meses, gastos por categoria, dinero por metodo, reparto 40/30/30, exportar el periodo |
@@ -86,6 +86,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal. De cada una sube ademas una copia JPEG (1200 px, < 600 KB) para la vista previa en WhatsApp (`fotosJpg`, y la de la principal en `fotoCompartir`) |
 | `inventario/fondo.js` | Quita el fondo liso (relleno desde los bordes), recorta y centra el reloj en un cuadrado de 1400 px al 86 %, para que todas las fotos se vean del mismo tamano. "Arreglar fotos ya subidas" lo aplica a las existentes (el bucket de fotos tiene CORS GET para el dominio) |
 | `inventario/detalle.js` | Modal de detalle de una unidad |
+| `inventario/llegada.js` | Boton "Ya llego" (lista, fotos, ficha y Dashboard): pide la importacion y su metodo, la suma al costo (margen recalculado), la registra como compra en Movimientos y pasa el reloj a Disponible con `fechaLlegada` |
 | `inventario/venta-modal.js` | Modal "vender" desde el inventario |
 | `inventario/reservas.js` | Reservar, abonos, completar y cancelar reserva |
 | `inventario/transacciones.js` | `cambiarEstadoSeguro()`: transaccion anti venta doble |

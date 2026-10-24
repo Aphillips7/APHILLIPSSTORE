@@ -2,6 +2,7 @@
 import { renderInicio } from '../inicio.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 import { fechaEnMesCerrado } from './calculos.js';
+import { elegirMetodoPago } from '../componentes.js';
 
 var _compraPicIdx = null;
 function renderPickerCompra() {
@@ -125,10 +126,28 @@ function sincronizarCompraInv(p){
   return 'Se registro un ajuste de costo de $' + Math.abs(dif).toLocaleString('en-US') + ' (el mes de la compra original esta cerrado).';
 }
 
+// Antes de registrar una compra automatica se pregunta con que se pago si el reloj no lo tiene guardado.
+// "Ahora no" no registra la compra (queda en Finanzas > Resumen > Revision de datos para hacerlo despues).
+async function registrarCompraConMetodo(p){
+  if(!p || PAGADOS.indexOf(p.estado) === -1 || !((Number(p.costoTotal) || 0) > 0)) return '';
+  if(!comprasDe(p).length && existeCompraDe(p)) return '';
+  if(!p.metodoCompra){
+    var m = await elegirMetodoPago('¿Con que pagaste este reloj?', p.nombre + ' · $' + Number(p.costoTotal).toLocaleString('en-US') + '. La compra se registra en Movimientos y se descuenta de ese metodo.');
+    if(!m) return 'La compra no se registro. Registrala cuando quieras desde Finanzas > Registrar > Compra.';
+    var i = idxInv(p.id); if(i !== -1){ state.inventario[i].metodoCompra = m; save('inventario'); }
+    p.metodoCompra = m;
+  }
+  return sincronizarCompraInv(p);
+}
+
 // Al vender un reloj que nunca paso por "disponible" (se vendio en transito o bajo pedido), su compra
 // no se habia registrado y el balance quedaba inflado: se registra al vender si falta.
-function registrarCompraSiFalta(producto){ autoRegistrarCompraInv(producto, true); }
+function registrarCompraSiFalta(producto){
+  if(!producto || existeCompraDe(producto) || !((Number(producto.costoTotal) || 0) > 0)) return;
+  var copia = Object.assign({}, producto, { estado: 'disponible' });   // ya se vendio: igual hubo que pagarlo
+  registrarCompraConMetodo(copia).then(function(msg){ if(msg && window.toastPanel) window.toastPanel(msg); renderInicio(); });
+}
 
-export { _compraPicIdx, autoRegistrarCompraInv, sincronizarCompraInv, registrarCompraSiFalta, existeCompraDe, filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, renderPickerCompra, seleccionarCompra };
+export { _compraPicIdx, autoRegistrarCompraInv, registrarCompraConMetodo, sincronizarCompraInv, registrarCompraSiFalta, existeCompraDe, filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, renderPickerCompra, seleccionarCompra };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { filtrarPickerCompra, limpiarSeleccionCompra, registrarCompra, seleccionarCompra });
