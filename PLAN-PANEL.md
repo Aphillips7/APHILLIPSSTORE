@@ -193,3 +193,23 @@ Botones desactivados en gris.
 - Verificacion: verificar.mjs OK; datos y pedidos de EJEMPLO en memoria (.claude/prueba/pedidos-prueba.js intercepta
   fetch: solo responde /admin/pedidos, todo lo demas 401); sin errores ni desborde. Prueba: +7 dias se detiene en 90.
   Capturas f5-pc-claro-resumen, f5-pc-claro-tablero-pedidos, f5-cel-oscuro-apartados/historial/pedidos.
+
+### Fase 6 — Clientes: TERMINADA (2026-10-24, rama `panel-f6-clientes`, CACHE_NAME aphillips-v128)
+- Clientes con 3 pestanas: Clientes, Cuentas de la tienda (contador de avisos) y Boletin. nav.js: `vista` generico
+  para cualquier pagina con secciones data-vista.
+- Nuevo `clientes/segmentos.js`: perfil calculado (compras, total con abonos, ticket, ultima compra, saldo, dias desde
+  alta y contacto), segmentos (VIP 2+ compras, compradores, nuevos <30 d, inactivos +90 d, prospectos, por contactar
+  +30 d sin contacto, con saldo), mensaje de WhatsApp sugerido por momento del cliente y deteccion de repetidos
+  (mismo telefono o mismo nombre sin acentos).
+- Lista: 6 KPIs (clientes y nuevos del mes, compradores, % que vuelve a comprar, valor por cliente, inactivos, por
+  cobrar); chips de segmento con conteo; orden por recientes/ultima compra/mas compran/A-Z; boton WhatsApp con el
+  mensaje sugerido (registra el contacto de hoy).
+- Repetidos: aviso y "Unir" (se queda el mas antiguo; pasan ventas, abonos, apartados, notas, telefono y la cuenta de
+  la tienda vinculada; confirmacion con el resumen).
+- Ficha: datos clave, mensaje sugerido, linea de tiempo (alta, compras, abonos, apartados con fecha limite, pedidos web,
+  contacto), maximo 30 eventos.
+- Poka-yoke: formulario se abre con "+ Nuevo cliente"; Guardar activo solo con nombre >= 3 letras y telefono que no
+  sea de otro cliente (bloquea y ofrece abrir su ficha); telefono a formato +507 al salir del campo.
+- Arreglado: el buscador global y "Recordar" de Por cobrar leian `telefono`, pero los clientes guardan `tel`.
+- Verificacion: verificar.mjs OK; sin errores ni desborde; prueba: unir mueve la venta y las notas; telefono repetido
+  bloquea Guardar. Capturas f6-pc-claro-clientes, f6-cel-oscuro-ficha.

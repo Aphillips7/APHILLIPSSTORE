@@ -82,6 +82,7 @@ function renderCuentasWeb(){
   if(!_cuentas){ cont.innerHTML = '<div style="font-size:12px;color:var(--muted);">Cargando...</div>'; return; }
   var pend = avisosPendientes();
   window.__avisosPendientes = pend;
+  window.__cuentasWeb = _cuentas;   // Clientes la usa para mover la cuenta al unir clientes repetidos
   var badge = document.getElementById('cuentas-web-badge');
   if(badge){ badge.textContent = pend.length; badge.style.display = pend.length ? '' : 'none'; }
   var h = '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin:4px 0 8px;">Avisos para enviar (' + pend.length + ')</div>';

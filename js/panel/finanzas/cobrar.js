@@ -7,7 +7,7 @@ import { state } from '../state.js';
 
 function telefonoDe(clienteId){
   var c = clienteId && state.clientes.find(function(x){ return x.id === clienteId; });
-  var t = c ? String(c.telefono || '').replace(/\D/g, '') : '';
+  var t = c ? String(c.tel || c.telefono || '').replace(/\D/g, '') : '';
   if(t.length === 8) t = '507' + t;      // numeros de Panama sin codigo de pais
   return t.length >= 10 ? t : '';
 }

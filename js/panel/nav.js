@@ -45,7 +45,10 @@ const SECCIONES = [
   { id: 'inventario', t: 'Inventario', subs: [
     { id: 'relojes', t: 'Relojes', page: 'inventario' },
     { id: 'catalogo', t: 'Catalogo', page: 'catalogo' }] },
-  { id: 'clientes', t: 'Clientes', subs: [{ id: 'clientes', t: 'Clientes', page: 'clientes', contador: 'cuentas-web-badge' }] },
+  { id: 'clientes', t: 'Clientes', subs: [
+    { id: 'clientes', t: 'Clientes', page: 'clientes', vista: 'clientes' },
+    { id: 'cuentas', t: 'Cuentas de la tienda', page: 'clientes', vista: 'cuentas', contador: 'cuentas-web-badge' },
+    { id: 'boletin', t: 'Boletin', page: 'clientes', vista: 'boletin' }] },
   { id: 'finanzas', t: 'Finanzas', subs: [
     { id: 'resumen', t: 'Resumen', page: 'finanzas', inner: 'resumen' },
     { id: 'analisis', t: 'Rentabilidad', page: 'finanzas', inner: 'analisis' },
@@ -139,7 +142,11 @@ function mostrarVista(secId, subId){
   document.querySelectorAll('.page').forEach(function(p){ p.classList.toggle('active', p.id === 'page-' + x.page); });
   try{ renderPagina(x.page); }catch(e){ console.error(e); }
   if(x.inner){ try{ mostrarInner('fin', x.inner); }catch(e){ console.error(e); } }
-  if(x.vista && x.page === 'ventas'){ try{ mostrarVistaVentas(x.vista); }catch(e){ console.error(e); } }
+  // sub-vistas dentro de una misma pagina (secciones con data-vista)
+  if(x.vista){
+    document.querySelectorAll('#page-' + x.page + ' [data-vista]').forEach(function(el){ el.hidden = el.getAttribute('data-vista') !== x.vista; });
+    if(x.page === 'ventas'){ try{ mostrarVistaVentas(x.vista); }catch(e){ console.error(e); } }
+  }
   if(x.tipo){ try{ elegirTipo(x.tipo); }catch(e){ console.error(e); } }
   marcarActivos();
   if(!x.auth) guardar(CLAVE_VISTA, sec.id + '/' + x.id);
@@ -268,11 +275,11 @@ function buscarGlobal(v){
   var palabras = sinAcentos(v).trim().split(/\s+/).filter(Boolean);
   if(!palabras.length){ res.hidden = true; res.innerHTML = ''; return; }
   var relojes = (state.inventario || []).filter(function(p){ return coincide([p.nombre, p.sku, p.coleccion, p.serie, p.estado, p.colorEsfera], palabras); }).slice(0, 6);
-  var clientes = (state.clientes || []).filter(function(c){ return coincide([c.nombre, c.telefono, c.producto, c.notas], palabras); }).slice(0, 5);
+  var clientes = (state.clientes || []).filter(function(c){ return coincide([c.nombre, c.tel, c.telefono, c.producto, c.notas], palabras); }).slice(0, 5);
   var pedidos = (window.__pedidosWeb || []).filter(function(p){ var c = p.cuenta || {}; return coincide([p.numero, p.reloj, p.sku, c.codigo, c.nombre, c.apellido, c.telefono], palabras); }).slice(0, 5);
   var grupo = function(t, items){ return items.length ? '<div class="br-grupo">' + t + '</div>' + items.join('') : ''; };
   var h = grupo('Relojes', relojes.map(function(p){ return '<button type="button" class="br-item" onclick="abrirResultado(\'reloj\',\'' + esc(p.id) + '\')"><b>' + esc(p.nombre || 'Sin nombre') + '</b><span>' + esc([p.sku, p.estado].filter(Boolean).join(' · ')) + '</span></button>'; })) +
-    grupo('Clientes', clientes.map(function(c){ return '<button type="button" class="br-item" onclick="abrirResultado(\'cliente\',\'' + esc(c.id) + '\')"><b>' + esc(c.nombre || 'Sin nombre') + '</b><span>' + esc(c.telefono || '') + '</span></button>'; })) +
+    grupo('Clientes', clientes.map(function(c){ return '<button type="button" class="br-item" onclick="abrirResultado(\'cliente\',\'' + esc(c.id) + '\')"><b>' + esc(c.nombre || 'Sin nombre') + '</b><span>' + esc(c.tel || c.telefono || '') + '</span></button>'; })) +
     grupo('Pedidos web', pedidos.map(function(p){ return '<button type="button" class="br-item" onclick="abrirResultado(\'pedido\',\'' + esc(p.numero) + '\')"><b>' + esc(p.numero) + ' · ' + esc(p.reloj) + '</b><span>' + esc(p.estado) + '</span></button>'; }));
   res.innerHTML = h || '<div class="br-vacio">Nada coincide con "' + esc(v) + '"</div>';
   res.hidden = false;
