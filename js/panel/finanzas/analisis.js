@@ -1,33 +1,84 @@
-// =================== ANALISIS ===================
-import { finAllMeses, finMesKey, finMesLabel, finSetEl } from './fechas.js';
+// =================== FINANZAS > RENTABILIDAD (rediseno fase 4) ===================
+// Donde se gana el dinero: ganancia por marca, ventas por canal, relojes mas rentables y el
+// inventario visto como dinero (capital inmovilizado, dias para vender y relojes estancados).
+import { CANALES, DIAS_ESTANCADO, costoDe, estadoResultados, inventarioDinero, movimientosDe, periodo } from './calculos.js';
+import { chipsPeriodo } from './resumen.js';
+import { dinero, esc, kpiHTML, tablaHTML, vacioHTML } from '../componentes.js';
+import { barrasH, dona } from '../graficas.js';
 import { state } from '../state.js';
 
-var _anMesKey='';
-function renderAnalisis(){
-  var allMeses=finAllMeses();
-  var btns=document.getElementById('an-meses-btns');
-  if(btns){btns.innerHTML='<button class="fin-mes-btn'+(!_anMesKey?' active':'')+'" data-key="">Todo</button>'+allMeses.slice().reverse().map(k=>'<button class="fin-mes-btn'+(k===_anMesKey?' active':'')+'" data-key="'+k+'">'+finMesLabel(k)+'</button>').join('');btns.querySelectorAll('.fin-mes-btn').forEach(b=>b.addEventListener('click',function(){setAnMes(this.dataset.key,this);}));}
-  var chart=document.getElementById('fin-chart-barras');
-  if(chart&&allMeses.length){var maxV=0;var md=allMeses.map(k=>{var v=state.movimientos.filter(m=>m.tipo==='venta'&&finMesKey(m.fecha)===k).reduce((a,b)=>a+b.monto,0);if(v>maxV)maxV=v;return{k,v};});chart.innerHTML=md.map(d=>{var h=maxV>0?Math.max(4,Math.round((d.v/maxV)*100)):4;var active=!_anMesKey||d.k===_anMesKey;return'<div class="fin-bar-col" data-key="'+d.k+'" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:32px;cursor:pointer;"><span style="font-size:10px;color:var(--muted);font-family:DM Mono,monospace;">$'+(d.v>=1000?Math.round(d.v/1000)+'k':d.v)+'</span><div style="width:100%;max-width:36px;height:'+h+'px;background:'+(active?'var(--accent)':'var(--border)')+';border-radius:8px 2px 0 0;transition:all 0.3s;"></div><span style="font-size:9px;color:var(--muted);">'+finMesLabel(d.k).substring(0,3)+'</span></div>';}).join('');chart.querySelectorAll('.fin-bar-col').forEach(b=>b.addEventListener('click',function(){setAnMes(this.dataset.key,this);}));}
-  var movs=_anMesKey?state.movimientos.filter(m=>finMesKey(m.fecha)===_anMesKey):state.movimientos;
-  var ventas=movs.filter(m=>m.tipo==='venta');
-  var sumV=ventas.reduce((a,b)=>a+b.monto,0),sumC=movs.filter(m=>m.tipo==='compra').reduce((a,b)=>a+b.monto,0),sumG=movs.filter(m=>m.tipo==='gasto').reduce((a,b)=>a+b.monto,0),sumR=movs.filter(m=>m.tipo==='retiro').reduce((a,b)=>a+b.monto,0),sumA=movs.filter(m=>m.tipo==='abono').reduce((a,b)=>a+b.monto,0);
-  var maxIS=Math.max(sumV,sumC,sumG,sumR,sumA,1);
-  var isCont=document.getElementById('fin-ing-sal');
-  if(isCont)isCont.innerHTML=[{label:'Ventas',val:sumV,color:'var(--green)'},{label:'Abonos',val:sumA,color:'var(--accent)'},{label:'Compras inv.',val:sumC,color:'var(--blue)'},{label:'Gastos op.',val:sumG,color:'var(--red)'},{label:'Retiros',val:sumR,color:'var(--muted)'}].map(r=>{var p2=Math.round((r.val/maxIS)*100);return'<div class="fin-bar-row"><span class="fin-bar-label">'+r.label+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+p2+'%;background:'+r.color+';"></div></div><span class="fin-bar-val" style="color:'+r.color+';">$'+r.val.toLocaleString()+'</span></div>';}).join('');
-  var catGastos={};movs.filter(m=>m.tipo==='gasto').forEach(function(m){var c=m.categoria||'Sin categoria';catGastos[c]=(catGastos[c]||0)+m.monto;});
-  var catCont=document.getElementById('fin-gastos-categoria');
-  if(catCont){
-    var entradas=Object.entries(catGastos).sort((a,b)=>b[1]-a[1]);
-    if(!entradas.length){catCont.innerHTML='<div class="empty"><span></span>Sin gastos registrados aun</div>';}
-    else{var maxCat=Math.max(...entradas.map(e=>e[1]));catCont.innerHTML=entradas.map(([k,v])=>{var p3=Math.round((v/maxCat)*100);return'<div class="fin-bar-row"><span class="fin-bar-label">'+k+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+p3+'%;background:var(--red);"></div></div><span class="fin-bar-val" style="color:var(--red);">$'+v.toLocaleString()+'</span></div>';}).join('');}
-  }
-  // los abonos de apartados son ingreso sin costo (el costo completo va en la venta del saldo)
-  var tG=ventas.reduce((a,b)=>a+(b.monto-(b.costo||0)),0)+sumA;
-  finSetEl('an-margen-prom',((sumV+sumA)>0?Math.round((tG/(sumV+sumA))*100):0)+'%');
-  var nVent=ventas.filter(m=>!m._soloRegistro).length;
-  finSetEl('an-ticket','$'+(nVent?Math.round((sumV+sumA)/nVent):0).toLocaleString());
-}
-function setAnMes(key,btn){_anMesKey=key;document.querySelectorAll('#an-meses-btns .fin-mes-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderAnalisis();}
+var _per = 'anio';
+const COLORES_CANAL = ['var(--g-actual)', 'var(--g-comp)', 'var(--g-meta)', 'var(--amber)', 'var(--green)', 'var(--blue)'];
 
-export { _anMesKey, renderAnalisis, setAnMes };
+function relojDe(m){
+  if(m.invId){ var p = state.inventario.find(function(x){ return x.id === m.invId; }); if(p) return p; }
+  return null;
+}
+function marcaDe(m){
+  var p = relojDe(m);
+  if(p && p.coleccion) return p.coleccion;
+  return (String(m.desc || '').split(/\s+/)[0] || 'Otra').replace(/[^\wÀ-ÿ-]/g, '') || 'Otra';
+}
+
+function renderAnalisis(){
+  chipsPeriodo('fin-periodos-an', _per, 'setPeriodoAnalisis');
+  var per = periodo(_per);
+  var movs = movimientosDe(per.meses);
+  var ventas = movs.filter(function(m){ return m.tipo === 'venta' && !m._soloRegistro; });
+  var r = estadoResultados(movs);
+  var inv = inventarioDinero();
+
+  var k = document.getElementById('fin-kpis-an');
+  if(k) k.innerHTML = [
+    kpiHTML({ label: 'Margen bruto', valor: r.margenBruto + '%', tono: !r.ingresos ? '' : r.margenBruto >= 30 ? 'pos' : r.margenBruto < 15 ? 'neg' : '', pie: 'sano: 30 % o mas' }),
+    kpiHTML({ label: 'Ticket promedio', valor: dinero(r.ticket), pie: r.nVentas + ' venta' + (r.nVentas !== 1 ? 's' : '') }),
+    kpiHTML({ label: 'Descuentos dados', valor: dinero(r.descuentos), tono: r.descuentos ? 'neg' : '', pie: 'contra el precio pedido' }),
+    kpiHTML({ label: 'Dias para vender', valor: inv.diasVenta === null ? '—' : inv.diasVenta + ' d', pie: inv.nVendidos ? 'promedio de ' + inv.nVendidos + ' relojes' : 'sin datos aun' })
+  ].join('');
+
+  // ganancia por marca
+  var marcas = {};
+  ventas.forEach(function(m){ var k2 = marcaDe(m), x = marcas[k2] || (marcas[k2] = { v: 0, g: 0, n: 0 }); x.v += Number(m.monto) || 0; x.g += (Number(m.monto) || 0) - (Number(m.costo) || 0); x.n++; });
+  var filas = Object.keys(marcas).map(function(k2){ var x = marcas[k2]; return { label: k2, valor: x.g, extra: (x.v ? Math.round(x.g / x.v * 100) : 0) + '% · ' + x.n }; }).sort(function(a, b){ return b.valor - a.valor; }).slice(0, 8);
+  var em = document.getElementById('fin-marcas');
+  if(em) em.innerHTML = filas.length ? barrasH(filas) + '<div class="tenue-peq" style="margin-top:8px;">Ganancia · margen · unidades</div>' : vacioHTML({ icono: 'grafica', titulo: 'Sin ventas en este periodo' });
+
+  // ventas por canal
+  var can = {};
+  ventas.forEach(function(m){ var c = m.canal || 'otro'; can[c] = (can[c] || 0) + (Number(m.monto) || 0); });
+  var segs = Object.keys(can).sort(function(a, b){ return can[b] - can[a]; }).map(function(c, i){ return { label: CANALES[c] || c, valor: can[c], color: COLORES_CANAL[i % COLORES_CANAL.length] }; });
+  var ec = document.getElementById('fin-canales');
+  if(ec){ if(segs.length) dona(ec, segs, { valor: String(ventas.length), texto: 'ventas' }); else ec.innerHTML = vacioHTML({ icono: 'grafica', titulo: 'Sin ventas en este periodo' }); }
+
+  // relojes mas rentables
+  var top = ventas.map(function(m){ var g = (Number(m.monto) || 0) - (Number(m.costo) || 0); return { m: m, g: g, mg: m.monto ? Math.round(g / m.monto * 100) : 0 }; })
+    .sort(function(a, b){ return b.g - a.g; }).slice(0, 8);
+  var et = document.getElementById('fin-top-relojes');
+  if(et) et.innerHTML = tablaHTML([{ t: 'Reloj' }, { t: 'Fecha' }, { t: 'Vendido', der: true }, { t: 'Ganancia', der: true }, { t: 'Margen', der: true }],
+    top.map(function(x){ return [esc(x.m.desc), esc(x.m.fecha), dinero(x.m.monto), '<span class="' + (x.g < 0 ? 'neg' : 'pos') + '">' + dinero(x.g) + '</span>', x.mg + '%']; }),
+    { icono: 'grafica', titulo: 'Sin ventas en este periodo' });
+
+  // inventario como dinero
+  var ei = document.getElementById('fin-inv-dinero');
+  if(ei){
+    var h = '<div class="inv-dinero">' +
+      '<div><span class="eyebrow">Capital en relojes</span><b>' + dinero(inv.capital) + '</b><small>' + inv.unidades + ' unidades a costo</small></div>' +
+      '<div><span class="eyebrow">Valen a precio de venta</span><b>' + dinero(inv.aPrecio) + '</b><small>ganancia posible ' + dinero(inv.aPrecio - inv.capital) + '</small></div>' +
+      '<div><span class="eyebrow">Estancado (+' + DIAS_ESTANCADO + ' dias)</span><b class="' + (inv.capitalEstancado ? 'neg' : '') + '">' + dinero(inv.capitalEstancado) + '</b><small>' + inv.estancados.length + ' reloj' + (inv.estancados.length !== 1 ? 'es' : '') + '</small></div></div>';
+    h += inv.estancados.length ? tablaHTML([{ t: 'Reloj' }, { t: 'Dias', der: true }, { t: 'Costo', der: true }, { t: 'Precio', der: true }, { t: 'Precio sugerido', der: true }, { t: '' }],
+      inv.estancados.slice(0, 12).map(function(x){
+        var p = x.p, costo = costoDe(p), precio = Number(p.precio) || 0;
+        // sugerencia: bajar 10 % cada 30 dias por encima de 60, sin bajar del costo + 10 %
+        var baja = Math.min(0.3, Math.floor((x.dias - DIAS_ESTANCADO) / 30 + 1) * 0.1);
+        var sug = precio ? Math.max(Math.round(costo * 1.1), Math.round(precio * (1 - baja) / 5) * 5) : 0;
+        return [esc(p.nombre) + (p.sku ? ' <span class="tenue-peq">' + esc(p.sku) + '</span>' : ''), String(x.dias), dinero(costo), dinero(precio),
+          sug && sug < precio ? dinero(sug) + ' <span class="tenue-peq">−' + Math.round((1 - sug / precio) * 100) + '%</span>' : '—',
+          '<button type="button" class="btn btn-outline btn-sm" onclick="irSeccion(\'inventario\',\'relojes\');editarProducto(\'' + esc(p.id) + '\')">Editar</button>'];
+      })) : '<p class="eq-texto">Ningun reloj disponible lleva mas de ' + DIAS_ESTANCADO + ' dias. Buen ritmo de rotacion.</p>';
+    ei.innerHTML = h;
+  }
+}
+function setPeriodoAnalisis(id){ _per = id; renderAnalisis(); }
+
+export { renderAnalisis, setPeriodoAnalisis };
+Object.assign(window, { setPeriodoAnalisis });

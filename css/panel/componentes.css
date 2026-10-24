@@ -183,6 +183,22 @@
   .tabla tbody tr:hover{background:var(--bg2);}
   .tabla .der{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
   .tabla .tenue{color:var(--muted);}
+  /* celular: cada fila es una tarjeta (titulo arriba, datos en dos columnas con su etiqueta) */
+  @media (max-width:600px){
+    .tabla-wrap{overflow:visible;border:none;background:transparent;border-radius:0;}
+    .tabla thead{display:none;}
+    .tabla,.tabla tbody{display:block;}
+    .tabla tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--card);}
+    .tabla tbody tr:hover{background:var(--card);}
+    .tabla td{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0;border:none;min-width:0;text-align:left;}
+    .tabla td.der{text-align:left;}
+    .tabla td::before{content:attr(data-label);font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);}
+    .tabla td:first-child{grid-column:1 / -1;font-size:14.5px;font-weight:600;color:var(--black);}
+    .tabla td:first-child::before,.tabla td[data-label=""]::before{display:none;}
+    .tabla td[data-label=""]{grid-column:1 / -1;}
+    .tabla td[data-label=""]:empty{display:none;}
+    .tabla .acciones-fila{justify-content:flex-start;}
+  }
 
   /* Estado vacio: dice que falta y ofrece la accion para llenarlo */
   .vacio{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:36px 20px;color:var(--muted);}

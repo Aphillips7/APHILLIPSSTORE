@@ -42,6 +42,8 @@ function selTipo(tipo, btn) {
     var catWrap = document.getElementById('fin-categoria-wrap');
     if (catWrap) catWrap.style.display = tipo === 'retiro' ? 'none' : '';
   }
+  // botones de gasto/retiro/traspaso: activos solo con datos validos
+  try{ if(window.validarOtro) window.validarOtro(); if(window.validarTraspaso) window.validarTraspaso(); }catch(e){}
 }
 
 // =================== INVENTORY PICKER (VENTAS) ===================

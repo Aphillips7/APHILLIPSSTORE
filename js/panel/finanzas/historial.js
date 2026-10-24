@@ -2,6 +2,9 @@
 import { finAllMeses, finMesKey, finMesLabel } from './fechas.js';
 import { renderInicio } from '../inicio.js';
 import { save, state } from '../state.js';
+import { fechaEnMesCerrado } from './calculos.js';
+import { esc } from '../componentes.js';
+import { exportarMovimientosCSV } from '../exportar.js';
 
 function renderHistorial() {
   var filMes=document.getElementById('fil-mes');
@@ -12,9 +15,11 @@ function renderHistorial() {
   }
   var mesFil=filMes?filMes.value:'';
   var tipoFil=document.getElementById('fil-tipo')?document.getElementById('fil-tipo').value:'';
-  var movs=state.movimientos.filter(m=>(!mesFil||finMesKey(m.fecha)===mesFil)&&(!tipoFil||m.tipo===tipoFil));
-  var ent=movs.filter(m=>m.tipo==='venta'||m.tipo==='compra'||m.tipo==='abono').reduce((a,b)=>a+b.monto,0);
-  var sal=movs.filter(m=>m.tipo==='gasto'||m.tipo==='retiro').reduce((a,b)=>a+b.monto,0);
+  var q=((document.getElementById('fil-buscar')||{}).value||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+  var movs=filtrados(mesFil,tipoFil,q);
+  // entradas: ventas y abonos · salidas: compras, gastos y retiros (antes las compras se sumaban como entrada)
+  var ent=movs.filter(m=>m.tipo==='venta'||m.tipo==='abono').reduce((a,b)=>a+(Number(b.monto)||0),0);
+  var sal=movs.filter(m=>m.tipo==='compra'||m.tipo==='gasto'||m.tipo==='retiro').reduce((a,b)=>a+(Number(b.monto)||0),0);
   var bal=document.getElementById('fil-balance');
   if(bal) bal.innerHTML='Entradas <span style="color:var(--green)">$'+ent.toLocaleString()+'</span> &nbsp; Salidas <span style="color:var(--red)">$'+sal.toLocaleString()+'</span> &nbsp; Neto <span style="color:'+(ent-sal>=0?'var(--green)':'var(--red)')+'">$'+(ent-sal).toLocaleString()+'</span>';
   var lista=document.getElementById('fin-lista');
@@ -32,11 +37,28 @@ function renderHistorial() {
     }
     var clienteTxt=m.clienteNombre?' · '+m.clienteNombre:'';
     var metodoTxt=m.metodoPago?' · '+({efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',tarjeta:'Tarjeta',otro:'Otro'}[m.metodoPago]||m.metodoPago):'';
-    return '<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+m.desc+'</div><div class="list-item-sub">'+m.fecha+' · '+(m.canal||'')+metodoTxt+clienteTxt+gan+descuento+'</div></div><span class="badge '+t[0]+'">'+t[1]+'</span><span class="money '+mc+'" style="min-width:70px;text-align:right;">$'+m.monto.toLocaleString()+'</span><button class="btn btn-danger" onclick="eliminarMov('+ri+')">&#128465;</button></div>';
+    return '<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+esc(m.desc)+'</div><div class="list-item-sub">'+m.fecha+' · '+esc(m.canal||'')+metodoTxt+esc(clienteTxt)+gan+descuento+'</div></div><span class="badge '+t[0]+'">'+t[1]+'</span><span class="money '+mc+'" style="min-width:70px;text-align:right;">$'+m.monto.toLocaleString()+'</span>'+(fechaEnMesCerrado(m.fecha)?'<span class="mov-candado" title="Mes cerrado">&#128274;</span>':'<button class="btn btn-danger" onclick="eliminarMov('+ri+')" aria-label="Eliminar movimiento">&#128465;</button>')+'</div>';
   }).join('');
 }
-function eliminarMov(i){if(!confirm('Eliminar este movimiento?'))return;state.movimientos.splice(i,1);save('movimientos');renderHistorial();renderInicio();}
+// poka-yoke: un movimiento de un mes cerrado no se puede borrar (hay que reabrir el mes en Finanzas > Cierres)
+function eliminarMov(i){var m=state.movimientos[i];if(!m)return;if(fechaEnMesCerrado(m.fecha)){alert('Ese movimiento es de un mes cerrado. Para corregirlo, reabre el mes en Finanzas > Cierres.');return;}if(!confirm('Eliminar este movimiento?\n\n'+m.desc+' · $'+(Number(m.monto)||0).toLocaleString()+' · '+m.fecha+'\n\nNo se puede deshacer.'))return;state.movimientos.splice(i,1);save('movimientos');renderHistorial();renderInicio();}
+
+function filtrados(mesFil,tipoFil,q){
+  return state.movimientos.filter(function(m){
+    if(mesFil&&finMesKey(m.fecha)!==mesFil)return false;
+    if(tipoFil&&m.tipo!==tipoFil)return false;
+    if(q&&[m.desc,m.clienteNombre,m.categoria,m.canal,m.fecha,String(m.monto)].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').indexOf(q)===-1)return false;
+    return true;
+  });
+}
+// Exporta a Excel exactamente lo que se ve con los filtros
+function exportarHistorialCSV(){
+  var mesFil=(document.getElementById('fil-mes')||{}).value||'',tipoFil=(document.getElementById('fil-tipo')||{}).value||'';
+  var q=((document.getElementById('fil-buscar')||{}).value||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+  var ids=new Set(filtrados(mesFil,tipoFil,q));
+  exportarMovimientosCSV(function(m){return ids.has(m);},'movimientos'+(mesFil?'-'+mesFil:''));
+}
 
 export { eliminarMov, renderHistorial };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { eliminarMov, renderHistorial });
+Object.assign(window, { eliminarMov, exportarHistorialCSV, renderHistorial });

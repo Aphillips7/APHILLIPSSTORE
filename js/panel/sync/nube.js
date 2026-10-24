@@ -40,8 +40,10 @@ function canonico(v){
   return JSON.stringify(v===undefined?null:v);
 }
 function conflicto(msg){ var e = new Error(msg); e.conflicto = true; return e; }
-function configActual(){ return { meta: state.meta, tasks: state.tasks, weekTasks: state.weekTasks, ideas: state.ideas }; }
-function normalizarConfig(d){ d = d || {}; return { meta: d.meta, tasks: d.tasks, weekTasks: d.weekTasks, ideas: d.ideas }; }
+// cierres solo viaja si hay alguno (asi la config de siempre no cambia de huella y no se reenvia)
+function hayCierres(c){ return c && typeof c === 'object' && Object.keys(c).length > 0; }
+function configActual(){ return { meta: state.meta, tasks: state.tasks, weekTasks: state.weekTasks, ideas: state.ideas, cierres: hayCierres(state.cierres) ? state.cierres : undefined }; }
+function normalizarConfig(d){ d = d || {}; return { meta: d.meta, tasks: d.tasks, weekTasks: d.weekTasks, ideas: d.ideas, cierres: hayCierres(d.cierres) ? d.cierres : undefined }; }
 function conId(datos, id){ var o = Object.assign({}, datos); o.id = id; return o; }
 function ordenar(col){ state[col].sort(function(a,b){ return (b._ts||0)-(a._ts||0); }); }
 
@@ -124,6 +126,7 @@ function aplicarDoc(d, cambiadas){
       if(Array.isArray(c.tasks)){ state.tasks = c.tasks; localStorage.setItem('tasks', JSON.stringify(state.tasks)); }
       if(c.weekTasks){ state.weekTasks = c.weekTasks; localStorage.setItem('weekTasks', JSON.stringify(state.weekTasks)); }
       if(Array.isArray(c.ideas)){ state.ideas = c.ideas; localStorage.setItem('ideas', JSON.stringify(state.ideas)); }
+      state.cierres = c.cierres || {}; localStorage.setItem('cierres', JSON.stringify(state.cierres));
       cambiadas.config = true;
     }
     return;
@@ -273,6 +276,7 @@ async function iniciarNube(hooks){
       if(Array.isArray(c.tasks)) state.tasks = c.tasks;
       if(c.weekTasks) state.weekTasks = c.weekTasks;
       if(Array.isArray(c.ideas)) state.ideas = c.ideas;
+      if(hayCierres(c.cierres)) state.cierres = c.cierres;
       try{ _hooks.refrescarVistaCompleta && _hooks.refrescarVistaCompleta(); }catch(e){}
       _resolverListo();
     }
