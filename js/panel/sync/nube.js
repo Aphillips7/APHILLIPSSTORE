@@ -192,7 +192,7 @@ async function enviar(col){
   if(!ops.length){ estadoOk(); return; }
   if(!navigator.onLine){ estadoPendiente(); return; }
   _enviando[col] = true;
-  setSyncStatus('Sincronizando...', 'var(--accent)', 'warn');
+  setSyncStatus('Sincronizando...', 'var(--amber)', 'warn');
   try{
     await enviarOps(ops);
     estadoOk();

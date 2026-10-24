@@ -1,17 +1,30 @@
   /* La fuente Satoshi se carga con <link> en index.html (antes era @import aqui y llegaba tarde). */
+  /* Tema: claro por defecto, oscuro si el sistema lo pide (salvo data-theme="light") o si
+     data-theme="dark". El boton de tema del panel guarda la eleccion (localStorage aphillips_tema).
+     --black = tinta mas fuerte (en oscuro se vuelve clara) y --white = superficie de campos/tarjetas
+     (en oscuro se vuelve oscura): asi lo ya escrito con esas variables se invierte solo. */
   :root {
+    color-scheme:light;
     /* Neutrales */
-    --bg:#f7f7f8;--bg2:#f1f1f3;--card:#ffffff;--card2:#fafafa;--white:#ffffff;
-    --border:#ececef;--border2:#dedee2;
+    --bg:#f4f4f5;--bg2:#ececef;--card:#ffffff;--card2:#fafafa;--white:#ffffff;
+    --border:#e4e4e7;--border2:#d4d4d8;
     --black:#09090b;--dark:#18181b;--text:#18181b;
     --muted:#71717a;--muted2:#a1a1aa;
-    /* Acento de marca (laton refinado) — uso escaso */
-    --accent:#a17c2e;--accent-light:rgba(161,124,46,0.10);--accent-dim:rgba(161,124,46,0.35);
-    /* Semanticos */
+    /* Acento glaciar (mismo de la tienda): relleno de botones y serie principal de graficas.
+       Texto sobre glaciar siempre negro (--accent-ink); texto en glaciar usa --accent-strong. */
+    --accent:#A7C4D6;--accent-hover:#93b6cb;--accent-ink:#09090b;--accent-strong:#3b6a86;
+    --accent-light:rgba(167,196,214,0.15);--accent-bg:rgba(167,196,214,0.15);--accent-dim:rgba(167,196,214,0.6);
+    /* Semanticos (siempre acompanados de texto) */
     --green:#067647;--green-bg:rgba(6,118,71,0.08);
+    --amber:#b54708;--amber-bg:rgba(181,71,8,0.09);
     --red:#b42318;--red-bg:rgba(180,35,24,0.08);
     --blue:#175cd3;--blue-bg:rgba(23,92,211,0.08);
     --slate:#475569;--slate-bg:rgba(71,85,105,0.09);
+    /* Graficas: actual (glaciar), comparacion (tinta), meta (gris punteado) */
+    --g-actual:#A7C4D6;--g-comp:#18181b;--g-meta:#a1a1aa;--g-rejilla:#e4e4e7;
+    /* Otros */
+    --nav-bg:#09090b;--ring:rgba(9,9,11,0.08);--velo:rgba(244,244,245,0.92);
+    --off-bg:#e4e4e7;--off-text:#a1a1aa;
     /* Forma */
     --r-lg:12px;--r-md:8px;--r-sm:6px;--r-pill:999px;
     /* Profundidad */
@@ -23,6 +36,50 @@
     --ease:cubic-bezier(0.32,0.72,0,1);
     --fast:140ms;--base:220ms;--slow:380ms;
   }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#0f1114;--bg2:#1d2025;--card:#17191d;--card2:#1a1c21;--white:#17191d;
+      --border:#26292e;--border2:#34383f;
+      --black:#f4f4f5;--dark:#e4e4e7;--text:#f4f4f5;
+      --muted:#a1a1aa;--muted2:#71717a;
+      --accent-hover:#b9d1e0;--accent-strong:#A7C4D6;
+      --accent-light:rgba(167,196,214,0.12);--accent-bg:rgba(167,196,214,0.12);--accent-dim:rgba(167,196,214,0.45);
+      --green:#47cd89;--green-bg:rgba(71,205,137,0.12);
+      --amber:#fdb022;--amber-bg:rgba(253,176,34,0.12);
+      --red:#f97066;--red-bg:rgba(249,112,102,0.12);
+      --blue:#84adff;--blue-bg:rgba(132,173,255,0.12);
+      --slate:#94a3b8;--slate-bg:rgba(148,163,184,0.12);
+      --g-comp:#f4f4f5;--g-meta:#71717a;--g-rejilla:#26292e;
+      --nav-bg:#0a0b0d;--ring:rgba(167,196,214,0.25);--velo:rgba(15,17,20,0.92);
+      --off-bg:#26292e;--off-text:#71717a;
+      --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
+      --shadow:0 1px 2px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+      --shadow-lg:0 8px 24px -6px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+      --shadow-xl:0 24px 48px -12px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0f1114;--bg2:#1d2025;--card:#17191d;--card2:#1a1c21;--white:#17191d;
+    --border:#26292e;--border2:#34383f;
+    --black:#f4f4f5;--dark:#e4e4e7;--text:#f4f4f5;
+    --muted:#a1a1aa;--muted2:#71717a;
+    --accent-hover:#b9d1e0;--accent-strong:#A7C4D6;
+    --accent-light:rgba(167,196,214,0.12);--accent-bg:rgba(167,196,214,0.12);--accent-dim:rgba(167,196,214,0.45);
+    --green:#47cd89;--green-bg:rgba(71,205,137,0.12);
+    --amber:#fdb022;--amber-bg:rgba(253,176,34,0.12);
+    --red:#f97066;--red-bg:rgba(249,112,102,0.12);
+    --blue:#84adff;--blue-bg:rgba(132,173,255,0.12);
+    --slate:#94a3b8;--slate-bg:rgba(148,163,184,0.12);
+    --g-comp:#f4f4f5;--g-meta:#71717a;--g-rejilla:#26292e;
+    --nav-bg:#0a0b0d;--ring:rgba(167,196,214,0.25);--velo:rgba(15,17,20,0.92);
+    --off-bg:#26292e;--off-text:#71717a;
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-lg:0 8px 24px -6px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+    --shadow-xl:0 24px 48px -12px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.3);
+  }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:'Satoshi',system-ui,-apple-system,sans-serif;font-size:15px;font-weight:400;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;font-feature-settings:'cv11';}
   /* Cifras siempre alineadas en columna */
@@ -33,7 +90,7 @@
   :focus-visible{outline:2px solid var(--black);outline-offset:2px;border-radius:var(--r-sm);}
 
   /* NAV */
-  nav{background:var(--black);padding:10px 28px;padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  nav{background:var(--nav-bg);padding:10px 28px;padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .nav-brand{display:flex;align-items:center;}
   .nav-fallback{display:flex;align-items:center;}
   .brand-logo{height:20px;width:auto;display:block;}

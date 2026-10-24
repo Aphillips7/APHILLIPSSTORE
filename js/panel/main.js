@@ -10,6 +10,7 @@ import { forzarSyncTodo } from './sync/sync.js';
 
 import './state.js';
 import './exportar.js';
+import './tema.js';
 import './nav.js';
 import './inicio.js';
 import './catalogo-admin.js';
@@ -46,7 +47,7 @@ window.addEventListener('offline', function(){
   setSyncStatus('Sin internet en este dispositivo','var(--red)','error');
 });
 window.addEventListener('online', function(){
-  setSyncStatus('Conexion recuperada, sincronizando...','var(--accent)','warn');
+  setSyncStatus('Conexion recuperada, sincronizando...','var(--amber)','warn');
   forzarSyncTodo();
 });
 

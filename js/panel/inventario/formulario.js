@@ -43,7 +43,7 @@ function calcularMargenPreview(){
     var margen=Math.round(((precio-total)/precio)*100);
     var ganancia=precio-total;
     var elM=document.getElementById('inv-preview-margen');var elG=document.getElementById('inv-preview-ganancia');
-    if(elM){elM.textContent=margen+'%';elM.style.color=margen>=30?'var(--green)':margen>=15?'var(--accent)':'var(--red)';}
+    if(elM){elM.textContent=margen+'%';elM.style.color=margen>=30?'var(--green)':margen>=15?'var(--amber)':'var(--red)';}
     if(elG){elG.textContent='$'+ganancia.toFixed(2);elG.style.color=ganancia>0?'var(--green)':'var(--red)';}
   } else {
     ['inv-preview-margen','inv-preview-ganancia'].forEach(id=>{var el=document.getElementById(id);if(el){el.textContent='--';el.style.color='var(--muted)';}});

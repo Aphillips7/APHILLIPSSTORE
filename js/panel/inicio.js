@@ -157,7 +157,7 @@ function renderRecientesInicio() {
 
   var htmlExtra = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">'+
     '<div class="fin-3030-box" style="background:var(--bg2);"><div class="fin-3030-label">Cliente top del mes</div><div class="fin-3030-val" style="font-size:14px;">'+topCliente+'</div></div>'+
-    '<div class="fin-3030-box" style="background:var(--accent-light);"><div class="fin-3030-label">Reservas activas</div><div class="fin-3030-val" style="color:var(--accent);">'+reservasActivas.length+'</div></div>'+
+    '<div class="fin-3030-box" style="background:var(--accent-light);"><div class="fin-3030-label">Reservas activas</div><div class="fin-3030-val" style="color:var(--accent-strong);">'+reservasActivas.length+'</div></div>'+
     '<div class="fin-3030-box" style="background:var(--blue-bg);"><div class="fin-3030-label">Saldo por cobrar</div><div class="fin-3030-val" style="color:var(--blue);">$'+saldoTotal.toLocaleString()+'</div></div>'+
   '</div>';
 

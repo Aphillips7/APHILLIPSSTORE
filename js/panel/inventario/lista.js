@@ -13,7 +13,7 @@ var _vistaActual='lista';
 function setFiltroEstado(btn,estado){_filtroEstado=estado;document.querySelectorAll('.filtro-estado').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderInventario();}
 function toggleVista(v){
   _vistaActual=v;
-  ['lista','modelo'].forEach(id=>{var el=document.getElementById('vista-'+id);if(el){el.style.borderColor=v===id?'var(--accent)':'var(--border2)';el.style.color=v===id?'var(--accent)':'var(--muted)';}});
+  ['lista','modelo'].forEach(id=>{var el=document.getElementById('vista-'+id);if(el){el.style.borderColor=v===id?'var(--accent-strong)':'var(--border2)';el.style.color=v===id?'var(--accent-strong)':'var(--muted)';}});
   renderInventario();
 }
 
@@ -95,7 +95,7 @@ function renderInventario(){
       var fotoSrc='';units.forEach(x=>{if(!fotoSrc&&x.p.foto)fotoSrc=x.p.foto;});
       var unitsHtml=units.map(x=>{
         var imp=x.p.estado==='transito'&&!x.p.importacion;
-        var mc=x.p.margen>=30?'var(--green)':x.p.margen>=15?'var(--accent)':'var(--red)';
+        var mc=x.p.margen>=30?'var(--green)':x.p.margen>=15?'var(--amber)':'var(--red)';
         return'<div style="display:flex;align-items:center;gap:8px;padding:8px 0 8px 66px;border-top:1px solid var(--border);">'+
           '<div style="flex:1;"><div style="font-size:12px;color:var(--black);">'+(imp?'<span style="color:var(--blue)">Importacion pendiente</span>':'Costo: $'+x.p.costoTotal.toFixed(2))+((!imp&&x.p.precio)?' · Margen: <span style="color:'+mc+'">'+x.p.margen+'%</span>':'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);">Venta: $'+(x.p.precio||0).toLocaleString()+' · '+x.p.fecha+'</div></div>'+
@@ -115,7 +115,7 @@ function renderInventario(){
   } else {
     lista.innerHTML=items.map(({p,i})=>{
       var imp=p.estado==='transito'&&!p.importacion;
-      var mc=p.margen>=30?'var(--green)':p.margen>=15?'var(--accent)':'var(--red)';
+      var mc=p.margen>=30?'var(--green)':p.margen>=15?'var(--amber)':'var(--red)';
       var dias=p.estado!=='vendido'?diasEnInventario(p.fecha):null;
       var opts=['disponible','transito','bajopedido','reservado','vendido'].map(e=>'<option value="'+e+'"'+(p.estado===e?' selected':'')+'>'+({disponible:'Disponible',transito:'En transito',bajopedido:'Bajo pedido',reservado:'Reservado',vendido:'Vendido'}[e]||e)+'</option>').join('');
       var subLinea=imp?'<span style="color:var(--blue)">Importacion pendiente</span>':'Costo: $'+(p.costoTotal||0).toFixed(2);

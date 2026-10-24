@@ -26,7 +26,7 @@ function renderResumen(){
   var meta=state.meta||0,pct=meta>0?Math.min(Math.round((totalV/meta)*100),100):0;
   finSetEl('gauge-pct',pct+'%');finSetEl('gauge-texto',meta>0?'$'+totalV.toLocaleString()+' de $'+meta.toLocaleString():'Sin meta definida');
   finSetEl('gauge-sub',meta>0?(pct>=100?'Meta alcanzada':'Faltan $'+(meta-totalV).toLocaleString()):'');
-  var arc=document.getElementById('gauge-arc');if(arc){var d=Math.round((pct/100)*188);arc.setAttribute('stroke-dasharray',d+' '+(188-d));arc.setAttribute('stroke',pct>=100?'var(--green)':pct>=60?'var(--accent)':'var(--red)');}
+  var arc=document.getElementById('gauge-arc');if(arc){var d=Math.round((pct/100)*188);arc.setAttribute('stroke-dasharray',d+' '+(188-d));arc.setAttribute('stroke',pct>=100?'var(--green)':pct>=60?'var(--amber)':'var(--red)');}
   var mi2=document.getElementById('meta-input2');if(mi2&&meta)mi2.value=meta;
   var bc=document.getElementById('fin-bar-403030');
   if(bc)bc.innerHTML=[{label:'Reinversion',val:Math.round(totalG*0.4),color:'var(--blue)',pct:totalG>0?40:0},{label:'Tu dinero',val:Math.round(totalG*0.3),color:'var(--green)',pct:totalG>0?30:0},{label:'Fondo op.',val:Math.round(totalG*0.3),color:'var(--accent)',pct:totalG>0?30:0}].map(b=>'<div class="fin-bar-row"><span class="fin-bar-label">'+b.label+'</span><div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+b.pct+'%;background:'+b.color+';"></div></div><span class="fin-bar-val" style="color:'+b.color+';">$'+b.val.toLocaleString()+'</span></div>').join('');
