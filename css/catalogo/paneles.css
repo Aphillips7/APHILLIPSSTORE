@@ -214,3 +214,9 @@
   /* panel de la cuenta: el contenido empieza arriba, a la altura del boton de cerrar */
   .cta-cuerpo{padding-top:24px;}
   @media (max-width:820px){ .cta-cuerpo{padding-top:18px;} }
+
+  /* boton de ojo para ver la contrasena */
+  .cta-campo.con-ojo input{padding-right:52px;}
+  .cta-ver-clave{position:absolute;right:6px;top:25px;transform:translateY(-50%);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--gris-texto);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .cta-ver-clave:hover{color:var(--black);}
+  .cta-ver-clave svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}

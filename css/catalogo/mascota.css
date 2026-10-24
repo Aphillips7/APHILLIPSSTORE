@@ -107,3 +107,15 @@
   }
   /* con el buscador abierto (encabezado en la capa 150) la mascota se queda visible encima */
   .mascota.sobre-buscador{z-index:155;}
+
+  /* con "Mi cuenta" abierta (capa 149) la mascota queda encima */
+  .mascota.sobre-cuenta{z-index:152;}
+  /* contrasena: se tapa los ojos con las dos manos; al mostrarla, baja la mano izquierda y espia */
+  .mascota[data-gesto="tapa"] .masc-g-tapa,.mascota[data-gesto="espia"] .masc-g-tapa{display:inline;}
+  .mascota[data-gesto="tapa"] .masc-saludo,.mascota[data-gesto="espia"] .masc-saludo,
+  .mascota[data-gesto="tapa"] .masc-der-normal,.mascota[data-gesto="espia"] .masc-der-normal{display:none;}
+  .masc-g-tapa{transform-box:view-box;transform-origin:60px 90px;animation:mascTapa .35s cubic-bezier(.3,1.4,.5,1) both;}
+  @keyframes mascTapa{from{transform:translateY(10px) scale(.9);opacity:.4;}to{transform:none;opacity:1;}}
+  .masc-tapa-i{transform-box:view-box;transition:transform .3s cubic-bezier(.3,1.4,.5,1);}
+  .mascota[data-gesto="espia"] .masc-tapa-i{transform:translate(-2px,10px);}
+  .mascota[data-gesto="tapa"] .masc-ojos,.mascota[data-gesto="espia"] .masc-ojos{animation:none;}
