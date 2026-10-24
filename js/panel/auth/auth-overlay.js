@@ -1,6 +1,6 @@
 // --- Overlay: navegacion entre vistas ---
 import { cargarAuthSettingsNube, contarBackupInfo, generarLoteCodigosRespaldo, generarSecretoTotp, getTotpSecret, guardarAuthSettingsNube, totpVerificar, verificarCodigoRespaldo } from './totp.js';
-import { renderInicio } from '../inicio.js';
+import { mostrarVista } from '../nav.js';
 import { renderResumenRespaldo } from '../respaldo.js';
 import { esPropietario } from '../state.js';
 import { renderEspacioUsado } from '../sync/espacio.js';
@@ -40,11 +40,7 @@ async function showAuth(){
 function hideAuth(){ document.getElementById('auth-overlay').style.display='none'; _authBuffer=''; }
 function authCancel(){
   hideAuth();
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-inicio').classList.add('active');
-  document.querySelector('.nav-tab').classList.add('active');
-  renderInicio();
+  mostrarVista('dashboard');
 }
 function authPress(digit){
   if(_authBuffer.length>=6)return;
@@ -74,9 +70,7 @@ async function checkAuthCode(){
 }
 function onAuthSuccess(){
   hideAuth();
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); if(t.textContent.trim()==='Sync')t.classList.add('active'); });
-  document.getElementById('page-config').classList.add('active');
+  mostrarVista('ajustes','sync');
   var lastSync=localStorage.getItem('lastSync');if(lastSync&&!_syncListo)setSyncStatus('Ultima sync: '+lastSync,'var(--muted)','info');
   renderConfigPage();
 }

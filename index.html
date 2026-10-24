@@ -24,6 +24,7 @@ try{var t=localStorage.getItem('aphillips_tema');if(t==='light'||t==='dark')docu
 <link rel="stylesheet" href="css/panel/finanzas.css">
 <link rel="stylesheet" href="css/panel/auth.css">
 <link rel="stylesheet" href="css/panel/modales.css">
+<link rel="stylesheet" href="css/panel/navegacion.css">
 <link rel="stylesheet" href="css/panel/movil.css">
 </head>
 <body>
@@ -55,28 +56,61 @@ if(location.hostname==='aphillips7.github.io'){
   </div>
 </div>
 
-<nav>
-  <div class="nav-brand">
-    <span class="nav-fallback"><img class="brand-logo" src="img/logo.png" alt="APHILLIPS" /></span>
+<!-- NAVEGACION: barra lateral en PC, barra inferior + "+" en celular (js/panel/nav.js la llena) -->
+<aside id="barra-lateral" class="barra-lateral" aria-label="Secciones del panel">
+  <div class="bl-cab">
+    <img class="brand-logo" src="img/logo.png" alt="APHILLIPS" />
+    <button type="button" id="bl-contraer" class="bl-contraer" onclick="contraerBarra()" aria-label="Contraer o expandir el menu" title="Contraer menu"></button>
   </div>
-  <div id="nav-sync-indicator" style="display:none;"></div>
-  <div style="display:flex;align-items:center;gap:16px;">
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showPage(event,'inicio')">Inicio</button>
-      <button class="nav-tab" onclick="showPage(event,'finanzas')">Finanzas</button>
-      <button class="nav-tab" onclick="showPage(event,'inventario')">Inventario</button>
-      <button class="nav-tab" onclick="showPage(event,'catalogo')">Catalogo</button>
-      <button class="nav-tab" onclick="showPage(event,'contenido')">Contenido</button>
-      <button class="nav-tab" onclick="showPage(event,'clientes')">Clientes</button>
-      <button class="nav-tab" id="nav-tab-sync" onclick="showPage(event,'config')" style="display:none;">Sync <span id="nav-sync-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-left:4px;vertical-align:middle;"></span></button>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;border-left:1px solid rgba(255,255,255,0.15);padding-left:16px;">
-      <span id="nav-sesion-email" style="font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;"></span>
+  <nav class="bl-nav" id="nav-secciones"></nav>
+  <div class="bl-pie">
+    <div id="nav-sync-indicator" style="display:none;"></div>
+    <span id="nav-sesion-email"></span>
+    <div class="bl-pie-btns">
       <button type="button" id="tema-btn" class="tema-btn" onclick="cambiarTema()" aria-label="Tema"></button>
-      <button onclick="cerrarSesion()" style="background:none;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);font-size:10px;text-transform:uppercase;letter-spacing:0.02em;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'Satoshi',sans-serif;">Salir</button>
+      <button type="button" class="bl-salir" onclick="cerrarSesion()">Salir</button>
     </div>
   </div>
-</nav>
+</aside>
+<header id="barra-sup" class="barra-sup">
+  <div class="bs-titulo" id="bs-titulo">Dashboard</div>
+  <div class="bs-buscar">
+    <input type="search" id="buscador-global" placeholder="Buscar relojes, clientes, pedidos..." autocomplete="off" aria-label="Buscar en el panel" oninput="buscarGlobal(this.value)" onkeydown="teclaBuscador(event)" onfocus="buscarGlobal(this.value)" />
+    <kbd class="bs-atajo">/</kbd>
+    <div id="buscador-res" class="bs-res" hidden></div>
+  </div>
+  <span id="nav-sync-dot" class="bs-sync" title="Estado de la sincronizacion"></span>
+  <button type="button" id="bs-lupa" class="bs-icono bs-solo-cel" onclick="abrirBuscador()" aria-label="Buscar"></button>
+  <button type="button" class="bs-icono bs-solo-cel bs-mas-wrap" onclick="abrirHoja('hoja-mas')" aria-label="Mas secciones"><span id="bs-mas"></span><span class="nav-cont" id="bs-mas-cont" hidden></span></button>
+</header>
+<div id="subnav" class="subnav" hidden></div>
+<nav id="barra-inferior" class="barra-inf" aria-label="Secciones"></nav>
+<!-- hoja "+" (celular): registrar lo mas comun en un toque -->
+<div id="hoja-nuevo" class="hoja" hidden>
+  <div class="hoja-fondo" onclick="cerrarHojas()"></div>
+  <div class="hoja-panel" role="dialog" aria-label="Registrar">
+    <div class="hoja-titulo">Registrar</div>
+    <div class="hoja-grid">
+      <button type="button" class="hoja-accion" onclick="nuevo('venta')"><b>Venta</b><span>Reloj vendido</span></button>
+      <button type="button" class="hoja-accion" onclick="nuevo('compra')"><b>Compra</b><span>Reloj comprado</span></button>
+      <button type="button" class="hoja-accion" onclick="nuevo('gasto')"><b>Gasto</b><span>Envio, publicidad...</span></button>
+      <button type="button" class="hoja-accion" onclick="nuevo('reloj')"><b>Reloj</b><span>Alta en inventario</span></button>
+    </div>
+    <button type="button" class="btn btn-outline hoja-cerrar" onclick="cerrarHojas()">Cancelar</button>
+  </div>
+</div>
+<!-- hoja "Mas" (celular): secciones que no caben abajo, tema y salir -->
+<div id="hoja-mas" class="hoja" hidden>
+  <div class="hoja-fondo" onclick="cerrarHojas()"></div>
+  <div class="hoja-panel" role="dialog" aria-label="Mas secciones">
+    <div class="hoja-titulo">Mas</div>
+    <div id="hoja-mas-secciones"></div>
+    <div class="hoja-pie">
+      <button type="button" class="btn btn-outline btn-sm" onclick="cambiarTema()">Cambiar tema</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </div>
+</div>
 
 <!-- INICIO -->
 <div id="page-inicio" class="page active">
@@ -740,15 +774,38 @@ if(location.hostname==='aphillips7.github.io'){
   </div>
 </div>
 
-<!-- CLIENTES -->
-<div id="page-clientes" class="page">
-  <div class="section-title">Clientes</div>
-  <div class="section-sub"></div>
+<!-- VENTAS (fase 2: pedidos web; la fase 5 suma tablero, KPIs y reservas) -->
+<div id="page-ventas" class="page">
+  <div class="acciones-pagina">
+    <button class="btn btn-gold" onclick="irARegistrar('venta')">+ Registrar venta</button>
+  </div>
   <div class="card">
     <div class="card-title">Pedidos web <span id="pedidos-web-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Pedidos de clientes con cuenta que tocaron "Comprar por WhatsApp" (el mensaje trae el numero P-… y su codigo AP-…). Avanza cada paso aqui y el cliente lo ve en "Mis pedidos". "Registrar venta" registra el dinero y marca el pedido como pagado.</div>
     <div id="pedidos-web"></div>
   </div>
+</div>
+
+<!-- AJUSTES > GENERAL -->
+<div id="page-ajustes" class="page">
+  <div class="card">
+    <div class="card-title">Salud de la tienda <span id="salud-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Errores que tuvieron los clientes en la página (anónimos) y lo que mandan los correos automáticos: el informe semanal para ti y los avisos a clientes cuando llega o baja de precio un reloj que pidieron.</div>
+    <div id="salud-tienda"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Apariencia</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="font-size:13px;color:var(--muted);">Claro, oscuro o automatico (sigue al telefono o la computadora).</div>
+      <button class="btn btn-outline btn-sm" onclick="cambiarTema()">Cambiar tema</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENTES -->
+<div id="page-clientes" class="page">
+  <div class="section-title">Clientes</div>
+  <div class="section-sub"></div>
   <div class="card">
     <div class="card-title">Cuentas de la tienda <span id="cuentas-web-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Clientes que crearon su cuenta en la tienda (con correo o Google). Cada uno tiene su codigo AP-… y su WhatsApp no se repite. Aqui ves a quien avisar por WhatsApp y puedes vincular cada cuenta con tu cliente para que vea sus compras y apartados.</div>
@@ -774,11 +831,6 @@ if(location.hostname==='aphillips7.github.io'){
         <div id="bol-envio-estado" style="font-size:12px;color:var(--muted);">La prueba llega a info@aphillipsstore.com. Cada correo lleva el enlace para darse de baja.</div>
       </div>
     </details>
-  </div>
-  <div class="card">
-    <div class="card-title">Salud de la tienda <span id="salud-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Errores que tuvieron los clientes en la página (anónimos) y lo que mandan los correos automáticos: el informe semanal para ti y los avisos a clientes cuando llega o baja de precio un reloj que pidieron.</div>
-    <div id="salud-tienda"></div>
   </div>
   <div class="card">
     <div class="card-title" id="cli-form-title">Registrar cliente</div>

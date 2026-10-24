@@ -86,8 +86,8 @@ Botones desactivados en gris.
 ## Progreso
 (Claude anota aqui lo terminado en cada fase, la rama y lo que falta.)
 
-### Fase 1 — Colores y diseno base: TERMINADA (2026-10-24, rama , CACHE_NAME aphillips-v123)
-- : tokens nuevos con la paleta del plan (glaciar #A7C4D6, fondos #f4f4f5 / #0f1114,
+### Fase 1 — Colores y diseno base: TERMINADA (2026-10-24, rama `panel-f1-colores`, CACHE_NAME aphillips-v123)
+- `css/panel/base.css`: tokens nuevos con la paleta del plan (glaciar #A7C4D6, fondos #f4f4f5 / #0f1114,
   tarjetas, bordes), ambar para "pendiente", tokens de graficas (--g-actual, --g-comp, --g-meta, --g-rejilla),
   modo oscuro automatico (prefers-color-scheme) y forzado (data-theme). --black/--white se invierten en
   oscuro, asi todo lo existente cambia solo.
@@ -95,16 +95,39 @@ Botones desactivados en gris.
   animacion (.btn:disabled); campos con aria-invalid en rojo; etiquetas KPI en mayusculas pequenas.
 - Textos que usaban el dorado pasan a --accent-strong (legible); margen 15-29 %, sync en curso, espacio y
   reservas pasan a ambar. badge-gold = ambar; nuevo badge-glaciar.
-- : tarjeta KPI con variacion vs mes anterior (sube/baja, invertible para gastos),
+- `css/panel/componentes.css`: tarjeta KPI con variacion vs mes anterior (sube/baja, invertible para gastos),
   etiqueta de estado (punto + texto: ok, pendiente, vencido, cancelado, info), tabla, estado vacio con accion,
   contenedor de grafica con leyenda. Celdas de grid con min-width:0 (nada desborda en celular).
-- Nuevo  (constructores de HTML con escape) y  (boton
+- Nuevo `js/panel/componentes.js` (constructores de HTML con escape) y `js/panel/tema.js` (boton
   automatico/claro/oscuro en la barra, junto a Salir). Ambos en SHELL_FILES.
 - Arreglado de paso: los KPI con clase money salian a 15 px (el .money los pisaba); ahora 30 px.
-- Verificacion: Todo en orden: sintaxis, SHELL_FILES, CACHE_NAME (aphillips-v123), campos publicos y funciones de onclick. OK; capturas CDP headless sin errores de consola ni desborde:
+- Verificacion: `node scripts/verificar.mjs` OK; capturas CDP headless sin errores de consola ni desborde:
   reporte-noche/capturas-panel/f1-pc-claro.png, f1-pc-oscuro.png, f1-cel-claro.png, f1-cel-oscuro.png
   (pagina de componentes con datos de ejemplo) y f1-inicio-pc-oscuro.png, f1-inicio-cel-claro.png,
   f1-inventario-pc-claro.png, f1-finanzas-cel-oscuro.png (estructura real de index.html sin sesion).
 - Falta / para despues: los textos de las graficas SVG deben escalar en celular (se resuelve en
-  , fase 3); la barra de arriba se reemplaza en la fase 2.
+  `graficas.js`, fase 3); la barra de arriba se reemplaza en la fase 2.
 
+### Fase 2 — Navegacion nueva: TERMINADA (2026-10-24, rama `panel-f2-navegacion`, CACHE_NAME aphillips-v124)
+- `js/panel/nav.js` reescrito: 6 secciones con sub-pestanas. Ventas = Pedidos web + Registrar venta;
+  Inventario = Relojes + Catalogo; Finanzas = Resumen, Analisis, Movimientos, Registrar; Ajustes = General,
+  Contenido, Sync y respaldo (sigue pidiendo el codigo de 6 digitos).
+- PC: barra lateral negra con iconos de linea, indicador glaciar, contadores (pedidos web nuevos, avisos de
+  cuentas, salud) y boton para contraerla a iconos (se recuerda). Pie: estado de sync, correo, tema y Salir.
+- Celular: barra inferior Dashboard / Ventas / "+" / Inventario / Clientes; "+" abre Registrar venta,
+  compra, gasto o reloj nuevo; arriba titulo, lupa y "Mas" (Finanzas, Ajustes, tema, Salir) con contador.
+- Barra superior con titulo, buscador global (relojes, clientes y pedidos web, sin acentos, atajo "/",
+  Enter abre el primero, Esc cierra) y punto de estado de sync.
+- Poka-yoke: si una seccion tiene un formulario escrito a medias aparece un punto ambar en su icono y el
+  navegador avisa antes de cerrar o recargar (solo cuenta lo que la persona escribio, no lo que llena el codigo).
+- Se recuerda la ultima seccion (localStorage aphillips_vista; nunca la de Sync, que pide codigo).
+- Alias: showPage('catalogo'|'contenido'|'config'|...), showInner('fin',...) e irARegistrar(tipo) siguen
+  funcionando; auth-overlay usa mostrarVista. Pedidos web pasan a page-ventas y Salud de la tienda a
+  page-ajustes (los modulos dibujan por id, no cambio su codigo). Nuevo css/panel/navegacion.css; se quito
+  el CSS de la barra vieja (base.css y movil.css).
+- Verificacion: `node scripts/verificar.mjs` OK; index.html real en Chrome headless (login oculto solo por
+  DOM, sin datos ni cuentas), sin errores de consola ni desborde. Capturas en reporte-noche/capturas-panel/:
+  f2-pc-claro-dashboard, f2-pc-oscuro-finanzas, f2-pc-claro-mini-inventario, f2-pc-claro-buscador,
+  f2-cel-claro-ventas, f2-cel-oscuro-mas, f2-cel-claro-nuevo, f2-cel-oscuro-ajustes, f2-cel-oscuro-buscador.
+- Falta / para despues: la seccion Ventas solo tiene pedidos web y registrar (tablero, KPIs y reservas en la
+  fase 5); Clientes y Ajustes > General se completan en las fases 6 y 8.
