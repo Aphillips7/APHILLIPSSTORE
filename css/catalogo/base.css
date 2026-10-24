@@ -94,3 +94,7 @@
     .dest-track.anim{transition-duration:.01s !important;}
     .search-panel{transform:none !important;}
   }
+
+  /* Rendimiento al deslizar (sobre todo en iPhone): las fotos usan mix-blend-mode para fundirse con el gris;
+     "isolation" hace que esa mezcla se calcule solo dentro de su recuadro y no contra toda la pagina. */
+  .card-foto,.dest-foto,.prod-foto,.par-foto,.bs-card,.bs-marco,.mc-marco,.fav-fila-marco{isolation:isolate;}

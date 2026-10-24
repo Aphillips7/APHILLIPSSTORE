@@ -320,9 +320,8 @@ function abrir(id){
   if(!m.classList.contains('open')) _scrollAntes = window.scrollY;
   m.classList.add('open');
   m.setAttribute('aria-hidden', 'false');
-  m.scrollTop = 0;
   document.body.classList.add('prod-abierto');
-  document.body.style.overflow = 'hidden';
+  window.scrollTo(0, 0);   // la ficha se desplaza con la pagina: empieza arriba
   if(navigator.vibrate){ navigator.vibrate(8); }
   if(!(history.state && history.state.modal===id)) history.pushState({modal:id}, '', '?id='+encodeURIComponent(id));
   incMetrica(id, 'aperturas');
@@ -336,7 +335,6 @@ function cerrarModalUI(){
   m.classList.remove('open');
   m.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('prod-abierto');
-  document.body.style.overflow = '';
   _idAbierto = null;
   // se espera un cuadro: el pie de pagina vuelve a su lugar despues (si no, la pagina aun es mas corta)
   if(estabaAbierta){ var y = _scrollAntes; requestAnimationFrame(function(){ window.scrollTo(0, y); }); }

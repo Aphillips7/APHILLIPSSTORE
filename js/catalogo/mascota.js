@@ -485,3 +485,13 @@ personalidad();
 vigilarClaves();
 
 export { abrir as abrirMascota, cerrarPanel as cerrarMascota };
+
+// Rendimiento: pausa las animaciones de la mascota mientras se desliza la pagina
+(function(){
+  var t = null;
+  window.addEventListener('scroll', function(){
+    var m = document.querySelector('.mascota'); if(!m) return;
+    if(!m.classList.contains('deslizando')) m.classList.add('deslizando');
+    clearTimeout(t); t = setTimeout(function(){ m.classList.remove('deslizando'); }, 180);
+  }, { passive: true });
+})();
