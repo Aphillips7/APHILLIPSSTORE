@@ -168,7 +168,8 @@ function renderInventario(){
         '<div class="inv-grid-foto">'+foto+'<span class="inv-grid-est est-'+q.estado+'">'+(etiq[q.estado]||q.estado)+'</span>'+chipABC(abc[claveModelo(q.nombre)])+(q.ocultoCatalogo?'<span class="inv-grid-oculto" title="Oculto en la tienda">Oculto</span>':'')+'</div>'+
         '<div class="inv-grid-info"><b>'+esc(q.nombre)+'</b><span>'+esc([q.sku,q.mm?q.mm+' mm':''].filter(Boolean).join(' · '))+'</span>'+
         '<div class="inv-grid-precio"><b>'+dinero(q.precio)+'</b>'+(mg!==null?'<span class="'+(mg>=30?'pos':mg<15?'neg':'')+'">'+mg+'%</span>':'')+(dias!==null?diasBadge(dias):'')+'</div>'+
-        (q.estado==='transito'?'<button type="button" class="btn btn-gold btn-sm inv-grid-llego" onclick="event.stopPropagation();yaLlego(\''+esc(q.id)+'\')">Ya llego</button>':'')+'</div></div>';
+        '<div class="inv-grid-acc">'+(q.estado==='transito'?'<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();yaLlego(\''+esc(q.id)+'\')">Ya llego</button>':'')+
+        (['disponible','transito','bajopedido'].indexOf(q.estado)!==-1?'<button type="button" class="btn btn-gold btn-sm" onclick="event.stopPropagation();abrirVentaModal(\''+esc(q.id)+'\')">Vendido</button>':'')+'</div></div></div>';
     }).join('')+'</div>';
     return;
   }
@@ -219,7 +220,8 @@ function renderInventario(){
           '<div class="list-item-sub">'+subLinea+'</div>'+
         '</div>'+
         '<select class="cambio-estado-select" onclick="event.stopPropagation()" onchange="cambiarEstado(\''+p.id+'\',this.value)">'+opts+'</select>'+
-        (p.estado==='transito'?'<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();yaLlego(\''+p.id+'\')" title="Marcar que llego: pide la importacion y lo pasa a Disponible">Ya llego</button>':'')+
+        (p.estado==='transito'?'<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();yaLlego(\''+p.id+'\')" title="Marcar que llego: pide la importacion y lo pasa a Disponible">Ya llego</button>':'')+
+        (['disponible','transito','bajopedido'].indexOf(p.estado)!==-1?'<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();abrirVentaModal(\''+p.id+'\')" title="Registrar la venta de este reloj">Vendido</button>':'')+
         '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editarProducto(\''+p.id+'\')" title="Editar">&#9998;</button>'+
         '<button class="btn btn-danger" onclick="event.stopPropagation();eliminarProducto(\''+p.id+'\')" title="Eliminar">&#128465;</button>'+
       '</div>';
