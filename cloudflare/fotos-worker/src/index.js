@@ -834,6 +834,10 @@ function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota, baja }) {
   // tambien como imagen de fondo (linear-gradient), que Gmail no invierte, y el texto del boton usa el truco
   // "gmail-blend" (u + .body ...: mix-blend-mode screen/difference) para seguir viendose blanco.
   const NEGRO = 'background-color:#000000;background-image:linear-gradient(#000000,#000000);';
+  // colores de la tienda: encabezado y boton en azul glaciar con logo y letras negras (el fondo tambien va
+  // como imagen para que el modo oscuro de Gmail no lo cambie)
+  const GLACIAR = 'background-color:#A7C4D6;background-image:linear-gradient(#A7C4D6,#A7C4D6);';
+  void NEGRO;
   return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only"><title>' + e(titulo) + '</title>' +
     '<style>u + .body .gb-scr{background:#000;mix-blend-mode:screen;} u + .body .gb-dif{background:#000;mix-blend-mode:difference;}</style></head>' +
@@ -841,14 +845,14 @@ function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota, baja }) {
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 12px;"><tr><td align="center">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;">' +
     // logo de la tienda (img/logo-correo.png); si el correo bloquea imagenes se ve el texto APHILLIPS
-    '<tr><td bgcolor="#000000" style="' + NEGRO + 'padding:24px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo.png" width="240" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;outline:none;width:240px;max-width:100%;height:auto;color:#ffffff;font-family:Georgia,serif;font-size:24px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
+    '<tr><td bgcolor="#A7C4D6" style="' + GLACIAR + 'padding:24px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo-negro.png" width="240" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;outline:none;width:240px;max-width:100%;height:auto;color:#000000;font-family:Georgia,serif;font-size:24px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
     '<tr><td style="padding:36px 32px 8px;">' +
       '<p style="margin:0 0 14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6a6a6a;">' + e(titulo) + '</p>' +
       '<p style="margin:0 0 16px;font-size:16px;line-height:24px;">' + e(saludo) + '</p>' +
       '<p style="margin:0 0 28px;font-size:15px;line-height:23px;color:#333333;">' + e(texto).split(String.fromCharCode(10)).join('<br>') + '</p>' +
-      '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="' + NEGRO + '">' +
-        '<a href="' + e(enlace) + '" style="display:inline-block;padding:16px 30px;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#ffffff;text-decoration:none;' + NEGRO + '">' +
-          '<span class="gb-scr" style="display:block;"><span class="gb-dif" style="display:block;color:#ffffff;">' + e(boton) + '</span></span></a>' +
+      '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#A7C4D6" style="' + GLACIAR + '">' +
+        '<a href="' + e(enlace) + '" style="display:inline-block;padding:16px 30px;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#000000;text-decoration:none;' + GLACIAR + '">' +
+          '<span style="display:block;color:#000000;">' + e(boton) + '</span></a>' +
       '</td></tr></table>' +
       '<p style="margin:28px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="' + e(enlace) + '" style="color:#09090b;word-break:break-all;">' + e(enlace) + '</a></p>' +
       '<p style="margin:18px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">' + e(nota) + (baja ? ' <a href="' + e(baja) + '" style="color:#09090b;">Darme de baja</a>' : '') + '</p>' +
@@ -1172,7 +1176,7 @@ function htmlInforme(r) {
     '<body style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#09090b;">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 12px;"><tr><td align="center">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;">' +
-    '<tr><td bgcolor="#000000" style="' + NEGRO + 'padding:22px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo.png" width="200" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;width:200px;max-width:100%;height:auto;color:#ffffff;font-family:Georgia,serif;font-size:22px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
+    '<tr><td bgcolor="#A7C4D6" style="background-color:#A7C4D6;background-image:linear-gradient(#A7C4D6,#A7C4D6);padding:22px 32px;text-align:center;"><img src="' + TIENDA + 'img/logo-correo-negro.png" width="200" alt="APHILLIPS" style="display:block;margin:0 auto;border:0;width:200px;max-width:100%;height:auto;color:#ffffff;font-family:Georgia,serif;font-size:22px;letter-spacing:4px;font-weight:bold;"></td></tr>' +
     '<tr><td style="padding:28px 32px 32px;">' +
     '<p style="margin:0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6a6a6a;">Informe semanal</p>' +
     '<p style="margin:6px 0 0;font-size:20px;font-weight:bold;">Del ' + dia(r.desde) + ' al ' + dia(r.hasta) + '</p>' + c +

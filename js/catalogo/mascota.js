@@ -8,6 +8,7 @@
 import { WHATSAPP_NUM } from './whatsapp.js';
 import { buscadorAbierto, toggleBuscador } from './buscador.js';
 import { vibrar } from './ui.js';
+import { sesion } from './sesion.js';
 
 const ICONOS = {
   chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/>',
@@ -71,78 +72,83 @@ const SVG = `
   <circle cx="60" cy="70" r="36" fill="url(#masc-caja)" stroke="#18181b" stroke-width="1.8"/>
   <circle cx="60" cy="70" r="31.5" fill="none" stroke="#7E9EB3" stroke-width="1"/>
   <path d="M33 56 A30 30 0 0 1 52 41" stroke="#E3EEF5" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9"/>
-  <!-- esfera -->
+  <!-- esfera (sin texto) -->
   <circle cx="60" cy="70" r="29" fill="url(#masc-esfera)" stroke="#18181b" stroke-width="1.2"/>
   <g stroke="#18181b" stroke-linecap="round">
-    <path d="M58.6 43.5v5M61.4 43.5v5" stroke-width="1.5"/>
-    <path d="M86.5 70h-5M33.5 70h5M60 96.5v-2.6" stroke-width="1.5"/>
-    <path d="M73.3 47l-1.6 2.8M83 56.8l-2.8 1.6M83 83.2l-2.8-1.6M73.3 93l-1.6-2.8M46.7 93l1.6-2.8M37 83.2l2.8-1.6M37 56.8l2.8 1.6M46.7 47l1.6 2.8" stroke-width="1.1"/>
+    <path d="M60 43.2v4M86.8 70h-4M33.2 70h4M60 96.8v-4" stroke-width="2"/>
+    <path d="M73.4 46.8l-1.5 2.6M83.2 56.6l-2.6 1.5M83.2 83.4l-2.6-1.5M73.4 93.2l-1.5-2.6M46.6 93.2l1.5-2.6M36.8 83.4l2.6-1.5M36.8 56.6l2.6 1.5M46.6 46.8l1.5 2.6" stroke-width="1.1"/>
   </g>
-  <text x="60" y="91.2" text-anchor="middle" font-family="Jost,Arial,sans-serif" font-size="3.3" font-weight="600" letter-spacing=".6" fill="#18181b">APHILLIPS</text>
-  <!-- agujas en 10:10, como en las fotos de catalogo -->
-  <path d="M60 60.3 L45.6 53.4 L46.2 51.9 L60.8 58.6 Z" fill="#18181b"/>
-  <path d="M59.4 60.1 L79.6 50.4 L80.2 51.7 L60.6 61.9 Z" fill="#18181b"/>
-  <path d="M45.9 52.7 L49 54.2" stroke="#A7C4D6" stroke-width="1.1" stroke-linecap="round"/>
-  <path d="M79.9 51 L76.4 52.7" stroke="#A7C4D6" stroke-width="1.1" stroke-linecap="round"/>
-  <circle cx="60" cy="60" r="2.1" fill="#18181b"/><circle cx="60" cy="60" r=".8" fill="#A7C4D6"/>
-  <!-- cejas: suben, bajan y se inclinan segun la cara -->
-  <g class="masc-cejas" fill="none" stroke="#18181b" stroke-width="1.6" stroke-linecap="round">
-    <path class="masc-ceja-i" d="M47.4 64.6 Q51 62.6 54.6 64.2"/>
-    <path class="masc-ceja-d" d="M65.4 64.2 Q69 62.6 72.6 64.6"/>
+  <!-- cejas gruesas (masculinas): suben, bajan y se inclinan segun la cara -->
+  <g class="masc-cejas" fill="#18181b">
+    <path class="masc-ceja-i" d="M42.2 54.8 Q48.6 50.4 55.2 53.4 L54.6 55.6 Q48.6 53.2 43 56.8 Z"/>
+    <path class="masc-ceja-d" d="M77.8 54.8 Q71.4 50.4 64.8 53.4 L65.4 55.6 Q71.4 53.2 77 56.8 Z"/>
   </g>
-  <!-- cara normal: ojos que parpadean y siguen el cursor, y sonrisa -->
+  <!-- normal: ojos grandes que parpadean y siguen el cursor -->
   <g class="masc-cara masc-cara-normal">
-  <g class="masc-ojos"><g class="masc-mira">
-    <ellipse cx="51" cy="71" rx="3.3" ry="4.2" fill="#18181b"/><ellipse cx="69" cy="71" rx="3.3" ry="4.2" fill="#18181b"/>
-    <circle cx="52.2" cy="69.4" r="1.2" fill="#fff"/><circle cx="70.2" cy="69.4" r="1.2" fill="#fff"/>
-  </g></g>
-  <!-- mejillas y sonrisa -->
-  <ellipse cx="45" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".55"/>
-  <ellipse cx="75" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".55"/>
-  <path d="M54 80 Q60 85.6 66 80" fill="none" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/>
+    <g class="masc-ojos"><ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><g class="masc-mira"><ellipse cx="50" cy="66" rx="3.6" ry="5" fill="#18181b"/><circle cx="51.3" cy="63.6" r="1.3" fill="#fff"/><ellipse cx="70" cy="66" rx="3.6" ry="5" fill="#18181b"/><circle cx="71.3" cy="63.6" r="1.3" fill="#fff"/></g></g>
+    <ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.45"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.45"/>
+    <path d="M53 80.8 Q60.5 86.4 67.4 80.2" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
   </g>
-  <!-- guino: un ojo cerrado y sonrisa de lado -->
-  <g class="masc-cara masc-cara-guino">
-    <ellipse cx="51" cy="71" rx="3.3" ry="4.2" fill="#18181b"/><circle cx="52.2" cy="69.4" r="1.2" fill="#fff"/>
-    <path d="M65.6 71.6 Q69 68.2 72.4 71.6" fill="none" stroke="#18181b" stroke-width="1.9" stroke-linecap="round"/>
-    <ellipse cx="45" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".8"/><ellipse cx="75" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".8"/>
-    <path d="M53.5 80.5 Q61 86.5 67.5 79" fill="none" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/>
-  </g>
-  <!-- feliz: ojos en arco y sonrisa abierta -->
+  <!-- feliz: ojos cerrados contentos y sonrisa abierta -->
   <g class="masc-cara masc-cara-feliz">
-    <path d="M47.6 72 Q51 67.6 54.4 72 M65.6 72 Q69 67.6 72.4 72" fill="none" stroke="#18181b" stroke-width="1.9" stroke-linecap="round"/>
-    <ellipse cx="45" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6" opacity=".85"/><ellipse cx="75" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6" opacity=".85"/>
-    <path d="M53.6 79 Q60 80.4 66.4 79 Q65.4 87 60 87 Q54.6 87 53.6 79 Z" fill="#18181b"/>
-    <path d="M56.6 84.6 Q60 82.8 63.4 84.6 Q62.4 86.6 60 86.6 Q57.6 86.6 56.6 84.6 Z" fill="#A7C4D6"/>
+    <path d="M42.6 66.4 Q49 58.6 55.4 66.4 M64.6 66.4 Q71 58.6 77.4 66.4" fill="none" stroke="#18181b" stroke-width="2.1" stroke-linecap="round"/>
+    <ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.85"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.85"/><path d="M52 79.6 Q60 81.6 68 79.6 Q67 88.8 60 88.8 Q53 88.8 52 79.6 Z" fill="#18181b"/><path d="M55.6 85.6 Q60 83.4 64.4 85.6 Q63.2 88.4 60 88.4 Q56.8 88.4 55.6 85.6 Z" fill="#A7C4D6"/>
   </g>
-  <!-- sorpresa: ojos grandes y boca en "o" -->
+  <!-- guino -->
+  <g class="masc-cara masc-cara-guino">
+    <ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="50" cy="66" rx="3.6" ry="5" fill="#18181b"/><circle cx="51.3" cy="63.6" r="1.3" fill="#fff"/>
+    <path d="M64.4 65.6 Q71 60.6 77.6 65.6" fill="none" stroke="#18181b" stroke-width="2.1" stroke-linecap="round"/>
+    <ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.75"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.75"/>
+    <path d="M53 80.6 Q61.5 86.6 68.4 79" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  <!-- sorpresa: ojos muy abiertos, pupilas chicas y boca en "o" -->
   <g class="masc-cara masc-cara-sorpresa">
-    <circle cx="51" cy="70.6" r="4.4" fill="#fff" stroke="#18181b" stroke-width="1.5"/><circle cx="69" cy="70.6" r="4.4" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
-    <circle cx="51.4" cy="71" r="2.3" fill="#18181b"/><circle cx="69.4" cy="71" r="2.3" fill="#18181b"/>
-    <circle cx="52.2" cy="70.1" r=".7" fill="#fff"/><circle cx="70.2" cy="70.1" r=".7" fill="#fff"/>
-    <ellipse cx="60" cy="82.6" rx="2.6" ry="3.1" fill="#18181b"/>
+    <ellipse cx="49" cy="64" rx="7.4" ry="9.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="7.4" ry="9.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="49.4" cy="64.6" rx="2.6" ry="3.4" fill="#18181b"/><circle cx="50.7" cy="62.2" r="1.3" fill="#fff"/><ellipse cx="70.6" cy="64.6" rx="2.6" ry="3.4" fill="#18181b"/><circle cx="71.9" cy="62.2" r="1.3" fill="#fff"/>
+    <ellipse cx="60" cy="83" rx="3" ry="3.8" fill="#18181b"/>
   </g>
-  <!-- pensativo: mira hacia arriba y boca de lado -->
+  <!-- pensativo: mira hacia arriba de lado y boca torcida -->
   <g class="masc-cara masc-cara-pensativo">
-    <ellipse cx="52.6" cy="69.4" rx="3" ry="3.9" fill="#18181b"/><ellipse cx="70.6" cy="69.4" rx="3" ry="3.9" fill="#18181b"/>
-    <circle cx="53.6" cy="67.9" r="1.1" fill="#fff"/><circle cx="71.6" cy="67.9" r="1.1" fill="#fff"/>
-    <path d="M55.6 81.8 Q60 80.4 64.6 82.6" fill="none" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/>
+    <ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="46.6" cy="61.4" rx="3.2" ry="4.4" fill="#18181b"/><circle cx="47.9" cy="59.0" r="1.3" fill="#fff"/><ellipse cx="68.6" cy="61.4" rx="3.2" ry="4.4" fill="#18181b"/><circle cx="69.9" cy="59.0" r="1.3" fill="#fff"/>
+    <path d="M54.6 82.4 Q60 80.6 66 83.4" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
   </g>
-  <!-- emocionado: ojos de estrella y sonrisa grande -->
+  <!-- emocionado: ojos de estrella y gran sonrisa -->
   <g class="masc-cara masc-cara-emocionado">
-    <path d="M51 66.2 L52.3 69.7 L55.8 71 L52.3 72.3 L51 75.8 L49.7 72.3 L46.2 71 L49.7 69.7 Z M69 66.2 L70.3 69.7 L73.8 71 L70.3 72.3 L69 75.8 L67.7 72.3 L64.2 71 L67.7 69.7 Z" fill="#18181b"/>
-    <ellipse cx="45" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6"/><ellipse cx="75" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6"/>
-    <path d="M53 78.6 Q60 80.2 67 78.6 Q66 87.6 60 87.6 Q54 87.6 53 78.6 Z" fill="#18181b"/>
-    <path d="M56.4 84.8 Q60 82.8 63.6 84.8 Q62.6 87 60 87 Q57.4 87 56.4 84.8 Z" fill="#A7C4D6"/>
+    <ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><path d="M49 59.00000000000001 L50.5 62.900000000000006 L54.4 64.4 L50.5 65.9 L49 69.80000000000001 L47.5 65.9 L43.6 64.4 L47.5 62.900000000000006 Z" fill="#18181b"/><path d="M71 59.00000000000001 L72.5 62.900000000000006 L76.4 64.4 L72.5 65.9 L71 69.80000000000001 L69.5 65.9 L65.6 64.4 L69.5 62.900000000000006 Z" fill="#18181b"/>
+    <ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.9"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.9"/><path d="M52 79.6 Q60 81.6 68 79.6 Q67 88.8 60 88.8 Q53 88.8 52 79.6 Z" fill="#18181b"/><path d="M55.6 85.6 Q60 83.4 64.4 85.6 Q63.2 88.4 60 88.4 Q56.8 88.4 55.6 85.6 Z" fill="#A7C4D6"/>
   </g>
-  <!-- dormido: ojos cerrados y boquita -->
+  <!-- enamorado: ojos de corazon (favoritos) -->
+  <g class="masc-cara masc-cara-enamorado">
+    <ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><path d="M49 68.8 C42.6 63.99999999999999 44.4 58.199999999999996 49 61.599999999999994 C53.6 58.199999999999996 55.4 63.99999999999999 49 68.8 Z" fill="#C94B62"/><path d="M71 68.8 C64.6 63.99999999999999 66.4 58.199999999999996 71 61.599999999999994 C75.6 58.199999999999996 77.4 63.99999999999999 71 68.8 Z" fill="#C94B62"/>
+    <ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="1"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="1"/>
+    <path d="M53.4 80.4 Q60 86.8 66.6 80.4" fill="none" stroke="#18181b" stroke-width="1.9" stroke-linecap="round"/>
+  </g>
+  <!-- timido: mira abajo de lado, sonrojado -->
+  <g class="masc-cara masc-cara-timido">
+    <ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="47.4" cy="68.4" rx="3.2" ry="4.4" fill="#18181b"/><circle cx="48.7" cy="66.0" r="1.3" fill="#fff"/><ellipse cx="67.4" cy="68.4" rx="3.2" ry="4.4" fill="#18181b"/><circle cx="68.7" cy="66.0" r="1.3" fill="#fff"/>
+    <ellipse cx="41.5" cy="76" rx="5" ry="2.8" fill="#E9A3AE" opacity=".8"/><ellipse cx="78.5" cy="76" rx="5" ry="2.8" fill="#E9A3AE" opacity=".8"/>
+    <path d="M56 81.6 Q60 84 64 81.6" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  <!-- arriba: mira el minutero que gira (tic, tac) -->
+  <g class="masc-cara masc-cara-arriba">
+    <ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="52.4" cy="60.6" rx="3.2" ry="4.4" fill="#18181b"/><circle cx="53.7" cy="58.2" r="1.3" fill="#fff"/><ellipse cx="67.6" cy="60.6" rx="3.2" ry="4.4" fill="#18181b"/><circle cx="68.9" cy="58.2" r="1.3" fill="#fff"/>
+    <ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.5"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.5"/>
+    <path d="M55.4 81.4 Q60 85 64.6 81.4" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  <!-- dormido -->
   <g class="masc-cara masc-cara-dormido">
-    <path d="M47.6 70.4 Q51 73.6 54.4 70.4 M65.6 70.4 Q69 73.6 72.4 70.4" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
-    <ellipse cx="60" cy="82" rx="1.7" ry="1.3" fill="#18181b"/>
+    <path d="M42.6 64.6 Q49 69.4 55.4 64.6 M64.6 64.6 Q71 69.4 77.4 64.6" fill="none" stroke="#18181b" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.4"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity="0.4"/>
+    <ellipse cx="60" cy="82.6" rx="2" ry="1.5" fill="#18181b"/>
   </g>
   <g class="masc-zzz" font-family="Jost,Arial,sans-serif" font-weight="700" fill="#18181b">
     <text x="82" y="40" font-size="7">z</text><text x="89" y="31" font-size="9">z</text><text x="97" y="20" font-size="11">Z</text>
   </g>
+  <!-- agujas desde el centro (la nariz es el eje): minutero hacia las 12 entre los ojos, horario hacia las 4 -->
+  <g class="masc-agujas" stroke="#18181b" stroke-linecap="round">
+    <path class="masc-minutero" d="M60 70 L60 47.6" stroke-width="1.7"/>
+    <path class="masc-horario" d="M60 70 L69.4 75.4" stroke-width="2.6"/>
+  </g>
+  <circle cx="60" cy="70" r="2.5" fill="#18181b"/><circle cx="60" cy="70" r=".9" fill="#A7C4D6"/>
   <!-- moño -->
   <g class="masc-mono">
     <path d="M60 101 L50.5 96.5 Q48.5 101 50.5 105.5 Z M60 101 L69.5 96.5 Q71.5 101 69.5 105.5 Z" fill="#09090b" stroke="#09090b" stroke-width="1" stroke-linejoin="round"/>
@@ -167,14 +173,14 @@ const SVG = `
   <!-- gesto: se tapa los ojos con las dos manos (contrasena); al espiar baja la izquierda -->
   <g class="masc-gesto masc-g-tapa">
     <g class="masc-tapa-i">
-      <path d="M28 82 Q35 85 43.6 77" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
-      <rect x="43.2" y="64" width="15" height="12.6" rx="5.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
-      <path d="M47.4 66.6v5M50.8 66v5.6M54.2 66.6v5" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+      <path d="M28 82 Q34 84 42 73" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="41.2" y="56.4" width="16.2" height="15.6" rx="6" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+      <path d="M45.4 59.4v6M49.2 58.8v6.6M53 59.4v6" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
     </g>
     <g class="masc-tapa-d">
-      <path d="M92 84 Q85 85 76.4 77" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
-      <rect x="61.8" y="64" width="15" height="12.6" rx="5.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
-      <path d="M65.8 66.6v5M69.2 66v5.6M72.6 66.6v5" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+      <path d="M92 84 Q86 84 78 73" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+      <rect x="62.6" y="56.4" width="16.2" height="15.6" rx="6" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+      <path d="M67 59.4v6M70.8 58.8v6.6M74.6 59.4v6" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
     </g>
   </g>
   <!-- gesto: mano en la barbilla (pensando) -->
@@ -355,7 +361,7 @@ function personalidad(){
     nFav = F._favoritos.size;
     F.alCambiarFavoritos(function(){
       var n = F._favoritos.size;
-      if(n > nFav){ gesto('emocionado', 'pulgar', 2600); decir(alAzar(['¡Guardado en tus favoritos!', '¡Excelente gusto!']), 2800, true); }
+      if(n > nFav){ gesto('enamorado', 'pulgar', 2800); decir(alAzar(['¡Me encanta! Guardado en favoritos', '¡Excelente gusto!', '¡Ese es un flechazo!']), 2800, true); }
       nFav = n;
     });
   });
@@ -394,7 +400,44 @@ function personalidad(){
       setTimeout(function(){ mira.style.transform = ''; }, 1400);
     }, 9000);
   }
-  // siesta: sin actividad un rato se duerme; al volver despierta sorprendido
+  // al pasar el mouse por encima se sonroja
+  _boton.addEventListener('pointerenter', function(e){
+    if(e.pointerType === 'mouse' && !_abierta && !_raiz.dataset.cara && !_raiz.dataset.gesto) gesto('timido', '', 1600);
+  });
+  // tic, tac: si el cliente lleva rato mirando un reloj, mira su minutero dar la vuelta y lo comenta
+  var tTic = 0, idTic = '', vecesTic = 0;
+  var FRASES_TIC = ['Tic, tac… este reloj te está esperando', 'Tic-tac, tic-tac… ¿te lo llevas?', 'El tiempo vuela… y este reloj también', 'Tic, tac… ¿te ayudo a decidir?'];
+  var tictac = function(){
+    if(_abierta || _raiz.dataset.cara === 'dormido' || _raiz.dataset.gesto === 'tapa') return;
+    clearTimeout(_tCara); clearTimeout(_tGesto); delete _raiz.dataset.gesto;
+    _raiz.dataset.cara = 'arriba';
+    var e = _raiz.querySelector('.masc-entra'); _raiz.classList.remove('tictac'); void e.offsetWidth;
+    _raiz.classList.add('tictac');
+    decir(alAzar(FRASES_TIC), 4600, true);
+    setTimeout(function(){ _raiz.classList.remove('tictac'); if(_raiz.dataset.cara === 'arriba') delete _raiz.dataset.cara; }, 5000);
+  };
+  var programarTic = function(espera){
+    clearTimeout(tTic);
+    tTic = setTimeout(function(){
+      var n = document.getElementById('modal-nombre');
+      if(!document.body.classList.contains('prod-abierto') || !n || n.textContent !== idTic) return;
+      tictac();
+      if(++vecesTic < 2) programarTic(40000);
+    }, espera);
+  };
+  document.addEventListener('reloj-abierto', function(){
+    setTimeout(function(){ var n = document.getElementById('modal-nombre'); idTic = n ? n.textContent : ''; vecesTic = 0; programarTic(18000); }, 200);
+  });
+  // al iniciar sesion la saluda por su nombre (una vez por visita)
+  var saludado = false;
+  document.addEventListener('sesion-cambiada', function(){
+    if(!sesion.activa || saludado || !sesion.perfil) return;
+    saludado = true;
+    reaccionar('salto', 'feliz', true);
+    var nombre = String(sesion.perfil.nombre || '').split(' ')[0];
+    decir(nombre ? '¡Hola, ' + nombre + '! Qué bueno verte' : '¡Hola! Qué bueno verte', 3200, true);
+  });
+  // siesta: sin actividad un rato se duerme (de noche, antes); al volver despierta sorprendido
   var tSiesta = 0;
   var despertar = function(){
     clearTimeout(tSiesta);
@@ -403,7 +446,7 @@ function personalidad(){
       if(_abierta || document.hidden) return;
       clearTimeout(_tCara); clearTimeout(_tGesto); delete _raiz.dataset.gesto;
       _raiz.dataset.cara = 'dormido'; _raiz.classList.add('durmiendo'); ocultarBurbuja();
-    }, 45000);
+    }, (new Date().getHours() >= 22 || new Date().getHours() < 6) ? 25000 : 45000);
   };
   ['pointermove', 'pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function(ev){ window.addEventListener(ev, despertar, { passive: true }); });
   despertar();

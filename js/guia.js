@@ -10,12 +10,11 @@
   function n(v){ return Math.round(v * 10) / 10; }
   $('lg-anio').textContent = new Date().getFullYear();
 
-  // ---------- un reloj visto de frente (esfera negra, bisel, indices, agujas a las 10:10) ----------
+  // ---------- el reloj de prueba es la mascota de la tienda ----------
+  // Caja y asas glaciar, esfera blanca con su cara (agujas desde el centro) y correa de cuero negra.
   // d = diametro en px; l2l = de asa a asa en px; correa = ancho entre asas en px; corona a la derecha
-  // Cronografo de acero: bisel taquimetrico, corona con estrias y dos pulsadores, esfera clara con
-  // XII, indices de barra, riel de minutos, 3 subesferas, ventana de fecha, agujas de espada y
-  // correa de cuero con costuras. Con poco tamano (comparacion) se omiten los textos finos.
   var _idReloj = 0;
+  var CARA_MASCOTA = '<g class="gu-cara"><path d="M42.2 54.8 Q48.6 50.4 55.2 53.4 L54.6 55.6 Q48.6 53.2 43 56.8 Z M77.8 54.8 Q71.4 50.4 64.8 53.4 L65.4 55.6 Q71.4 53.2 77 56.8 Z" fill="#18181b"/><ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="50" cy="66" rx="3.6" ry="5" fill="#18181b"/><ellipse cx="70" cy="66" rx="3.6" ry="5" fill="#18181b"/><circle cx="51.3" cy="63.6" r="1.3" fill="#fff"/><circle cx="71.3" cy="63.6" r="1.3" fill="#fff"/><ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity=".45"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity=".45"/><path d="M53 80.8 Q60.5 86.4 67.4 80.2" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/><path d="M60 70 L60 47.6" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/><path d="M60 70 L69.4 75.4" stroke="#18181b" stroke-width="2.6" stroke-linecap="round"/><circle cx="60" cy="70" r="2.5" fill="#18181b"/><circle cx="60" cy="70" r=".9" fill="#A7C4D6"/></g>';
   function pol(cx, cy, rad, ang){ return [cx + Math.sin(ang) * rad, cy - Math.cos(ang) * rad]; }
   function reloj(cx, cy, d, opc){
     opc = opc || {};
@@ -23,6 +22,7 @@
     var det = d >= 120 ? 2 : d >= 60 ? 1 : 0;        // nivel de detalle
     var sw = function(f){ return n(Math.max(.4, d * f)); };
     var id = 'gr' + (++_idReloj), s = '', i, a, p, q;
+    void id;
 
     // ---- correa de cuero (arriba y abajo), se desvanece en las puntas ----
     // (empieza debajo de la caja, entre las asas, y sigue opc.correaLargo mas alla de ellas)
@@ -53,102 +53,39 @@
       });
     }
 
-    // ---- asas (4), con forma: anchas en la caja y redondeadas en la punta ----
+
+    // ---- asas (4) glaciar, anchas en la caja y redondeadas en la punta ----
     var asa = Math.max(3, d * 0.1);
     [-1, 1].forEach(function(lado){ [-1, 1].forEach(function(arr){
       var xi = lado < 0 ? cx - correa/2 - asa : cx + correa/2, xe = xi + asa;
       var y0 = cy + arr * r * 0.62, y1 = cy + arr * h;
-      var ext = lado < 0 ? xi : xe;                      // borde exterior (se abre hacia la caja)
       var abre = lado < 0 ? -d*0.035 : d*0.035;
-      s += '<path d="M'+n(xi)+' '+n(y1)+' Q'+n((xi+xe)/2)+' '+n(y1+arr*asa*0.25)+' '+n(xe)+' '+n(y1)+' L'+n(lado<0?xe:xe+abre)+' '+n(y0)+' L'+n(lado<0?xi+abre:xi)+' '+n(y0)+' Z" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.006)+'"/>';
-      if(det) s += '<line x1="'+n((xi+xe)/2)+'" y1="'+n(y1 - arr*asa*0.2)+'" x2="'+n((xi+xe)/2 + (lado<0?abre*0.5:abre*0.5))+'" y2="'+n(y0)+'" stroke="#fff" stroke-width="'+sw(.005)+'" opacity=".7"/>';
-      void ext;
+      s += '<path d="M'+n(xi)+' '+n(y1)+' Q'+n((xi+xe)/2)+' '+n(y1+arr*asa*0.25)+' '+n(xe)+' '+n(y1)+' L'+n(lado<0?xe:xe+abre)+' '+n(y0)+' L'+n(lado<0?xi+abre:xi)+' '+n(y0)+' Z" fill="url(#gu-caja)" stroke="#18181b" stroke-width="'+sw(.012)+'" stroke-linejoin="round"/>';
     }); });
-
-    // ---- pulsadores (a las 2 y a las 4) y corona con estrias (a las 3) ----
-    [-1, 1].forEach(function(k){
-      var ang = Math.PI/2 + k * 0.62;
-      p = pol(cx, cy, r * 0.98, ang);
-      s += '<g transform="translate('+n(p[0])+' '+n(p[1])+') rotate('+n(ang*180/Math.PI - 90)+')">' +
-        '<rect x="0" y="'+n(-d*0.035)+'" width="'+n(d*0.07)+'" height="'+n(d*0.07)+'" rx="'+n(d*0.008)+'" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/>' +
-        '<rect x="'+n(d*0.07)+'" y="'+n(-d*0.045)+'" width="'+n(d*0.035)+'" height="'+n(d*0.09)+'" rx="'+n(d*0.01)+'" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/></g>';
-    });
-    s += '<rect x="'+n(cx + r*0.95)+'" y="'+n(cy - d*0.075)+'" width="'+n(d*0.09)+'" height="'+n(d*0.15)+'" rx="'+n(d*0.018)+'" fill="url(#gu-acero)" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/>';
-    if(det) for(i = 1; i < 7; i++){ var yc = cy - d*0.075 + i * d*0.15/7; s += '<line x1="'+n(cx + r*0.95 + d*0.01)+'" y1="'+n(yc)+'" x2="'+n(cx + r*0.95 + d*0.085)+'" y2="'+n(yc)+'" stroke="#8e8e95" stroke-width="'+sw(.004)+'"/>'; }
-
-    // ---- caja y bisel taquimetrico ----
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r)+'" fill="url(#gu-acero-r)" stroke="#8e8e95" stroke-width="'+sw(.008)+'"/>';
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.93)+'" fill="#f4f4f5" stroke="#a1a1aa" stroke-width="'+sw(.004)+'"/>';
-    if(det){
-      for(i = 0; i < 60; i++){ a = i * Math.PI / 30; p = pol(cx, cy, r*0.93, a); q = pol(cx, cy, r*(i % 5 ? 0.9 : 0.885), a);
-        s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#27272a" stroke-width="'+sw(i % 5 ? .003 : .005)+'"/>'; }
+    // ---- corona glaciar con estrias (a las 3) ----
+    s += '<rect x="'+n(cx + r*0.95)+'" y="'+n(cy - d*0.085)+'" width="'+n(d*0.1)+'" height="'+n(d*0.17)+'" rx="'+n(d*0.025)+'" fill="url(#gu-caja)" stroke="#18181b" stroke-width="'+sw(.01)+'"/>';
+    if(det) for(i = 1; i < 5; i++){ var yc = cy - d*0.085 + i * d*0.17/5; s += '<line x1="'+n(cx + r*0.95 + d*0.02)+'" y1="'+n(yc)+'" x2="'+n(cx + r*0.95 + d*0.08)+'" y2="'+n(yc)+'" stroke="#5f8099" stroke-width="'+sw(.005)+'"/>'; }
+    // ---- caja glaciar, aro interior, brillo y esfera blanca ----
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r)+'" fill="url(#gu-caja-r)" stroke="#18181b" stroke-width="'+sw(.016)+'"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.875)+'" fill="none" stroke="#7E9EB3" stroke-width="'+sw(.008)+'"/>';
+    if(det) s += '<path d="M'+n(cx - r*0.75)+' '+n(cy - r*0.38)+' A'+n(r*0.83)+' '+n(r*0.83)+' 0 0 1 '+n(cx - r*0.22)+' '+n(cy - r*0.8)+'" fill="none" stroke="#E3EEF5" stroke-width="'+sw(.03)+'" stroke-linecap="round" opacity=".9"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.8)+'" fill="url(#gu-esfera)" stroke="#18181b" stroke-width="'+sw(.01)+'"/>';
+    // indices: gruesos a las 12, 3, 6 y 9; finos el resto
+    for(i = 0; i < 12; i++){
+      a = i * Math.PI / 6; var grueso = i % 3 === 0;
+      p = pol(cx, cy, r*0.76, a); q = pol(cx, cy, r*(grueso ? 0.63 : 0.68), a);
+      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#18181b" stroke-width="'+sw(grueso ? .028 : .016)+'" stroke-linecap="round"/>';
     }
-    if(det === 2){
-      [60,65,70,75,80,85,90,95,100,110,120,130,150,180,200,250,300,400].forEach(function(v){
-        a = (3600 / v) / 60 * 2 * Math.PI; p = pol(cx, cy, r*0.835, a);
-        s += '<text x="'+n(p[0])+'" y="'+n(p[1])+'" font-size="'+n(d*0.034)+'" font-weight="600" fill="#27272a" text-anchor="middle" dominant-baseline="central" transform="rotate('+n(a*180/Math.PI + (a > Math.PI/2 && a < Math.PI*1.5 ? 180 : 0))+' '+n(p[0])+' '+n(p[1])+')">'+v+'</text>';
-      });
-      s += '<path id="'+id+'-arco" d="M'+n(cx + Math.sin(0.1)*r*0.835)+' '+n(cy - Math.cos(0.1)*r*0.835)+' A'+n(r*0.835)+' '+n(r*0.835)+' 0 0 1 '+n(cx + Math.sin(0.86)*r*0.835)+' '+n(cy - Math.cos(0.86)*r*0.835)+'" fill="none"/>';
-      s += '<text font-size="'+n(d*0.03)+'" font-weight="700" letter-spacing="'+n(d*0.004)+'" fill="#27272a" dominant-baseline="central"><textPath href="#'+id+'-arco" startOffset="50%" text-anchor="middle">TACHYMETER</textPath></text>';
-    }
-    // aro interior del bisel y esfera clara
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.78)+'" fill="#d4d4d8" stroke="#8e8e95" stroke-width="'+sw(.005)+'"/>';
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.75)+'" fill="url(#gu-esfera)"/>';
-    // riel de minutos
-    if(det) for(i = 0; i < 60; i++){ a = i * Math.PI / 30; p = pol(cx, cy, r*0.745, a); q = pol(cx, cy, r*(i % 5 ? 0.715 : 0.7), a);
-      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#3f3f46" stroke-width="'+sw(i % 5 ? .003 : .005)+'"/>'; }
-    // indices de barra (dobles, como facetados); XII a las 12; a las 3, 6 y 9 hay subesferas; fecha entre 4 y 5
-    for(i = 1; i < 12; i++){
-      if(i === 3 || i === 6 || i === 9) continue;
-      a = i * Math.PI / 6; p = pol(cx, cy, r*0.68, a); q = pol(cx, cy, r*0.53, a);
-      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#27272a" stroke-width="'+sw(.03)+'" stroke-linecap="square"/>';
-      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#fafafa" stroke-width="'+sw(.01)+'"/>';
-    }
-    if(det){
-      s += '<text x="'+cx+'" y="'+n(cy - r*0.56)+'" font-family="Georgia, \'Times New Roman\', serif" font-size="'+n(d*0.11)+'" font-weight="700" fill="#27272a" text-anchor="middle" dominant-baseline="central">XII</text>';
-    } else {
-      p = pol(cx, cy, r*0.68, 0); q = pol(cx, cy, r*0.5, 0);
-      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#27272a" stroke-width="'+sw(.04)+'"/>';
-    }
-    if(det === 2) s += '<text x="'+cx+'" y="'+n(cy - r*0.33)+'" font-size="'+n(d*0.032)+'" letter-spacing="'+n(d*0.006)+'" fill="#52525b" text-anchor="middle" dominant-baseline="central">AUTOMATIC</text>';
-    // ventana de fecha (entre las 4 y las 5)
-    p = pol(cx, cy, r*0.5, 2.45);
-    s += '<circle cx="'+n(p[0])+'" cy="'+n(p[1])+'" r="'+n(r*0.085)+'" fill="#fff" stroke="#3f3f46" stroke-width="'+sw(.006)+'"/>';
-    if(det) s += '<text x="'+n(p[0])+'" y="'+n(p[1])+'" font-size="'+n(d*0.06)+'" font-weight="600" fill="#27272a" text-anchor="middle" dominant-baseline="central">6</text>';
-
-    // ---- subesferas: 30 min (a las 9), segundos (a las 3) y 12 horas (a las 6) ----
-    [[-0.36, 0, ['30', '10', '20']], [0.36, 0, null], [0, 0.36, ['3', '6', '9']]].forEach(function(sd, k){
-      var sx = cx + sd[0]*r, sy = cy + sd[1]*r, sr = r*0.2;
-      s += '<circle cx="'+n(sx)+'" cy="'+n(sy)+'" r="'+n(sr)+'" fill="#e4e4e7" stroke="#52525b" stroke-width="'+sw(.006)+'"/>';
-      if(det) for(i = 0; i < 12; i++){ a = i * Math.PI / 6; p = pol(sx, sy, sr*0.95, a); q = pol(sx, sy, sr*(i % 3 ? 0.84 : 0.76), a);
-        s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#3f3f46" stroke-width="'+sw(.004)+'"/>'; }
-      if(det === 2 && sd[2]){
-        // numeros: en la de las 9 -> 30 arriba, 10 a la derecha, 20 a la izquierda; en la de las 6 -> 3, 6, 9
-        var pos = k === 0 ? [[0, -0.55], [0.55, 0.05], [-0.55, 0.05]] : [[0.55, 0.02], [0, 0.55], [-0.55, 0.02]];
-        pos.forEach(function(pp, j){ s += '<text x="'+n(sx + pp[0]*sr)+'" y="'+n(sy + pp[1]*sr)+'" font-size="'+n(d*0.042)+'" font-weight="700" fill="#27272a" text-anchor="middle" dominant-baseline="central">'+sd[2][j]+'</text>'; });
-      }
-      var ah = [-1.9, 1.05, -0.5][k]; p = pol(sx, sy, sr*0.8, ah); q = pol(sx, sy, sr*0.2, ah + Math.PI);
-      s += '<line x1="'+n(q[0])+'" y1="'+n(q[1])+'" x2="'+n(p[0])+'" y2="'+n(p[1])+'" stroke="#18181b" stroke-width="'+sw(.012)+'" stroke-linecap="round"/>';
-      s += '<circle cx="'+n(sx)+'" cy="'+n(sy)+'" r="'+n(sr*0.12)+'" fill="#18181b"/>';
-    });
-
-    // ---- agujas de espada (10:08) y segundero central largo ----
-    function espada(ang, largo, ancho){
-      var pt = pol(cx, cy, largo, ang), b1 = pol(cx, cy, largo*0.18, ang - Math.PI/2*0.0), l = pol(cx, cy, ancho, ang - Math.PI/2), rr = pol(cx, cy, ancho, ang + Math.PI/2);
-      var c1 = pol(l[0], l[1], largo*0.8, ang), c2 = pol(rr[0], rr[1], largo*0.8, ang), cola = pol(cx, cy, largo*0.12, ang + Math.PI);
-      void b1;
-      return '<path d="M'+n(cola[0])+' '+n(cola[1])+' L'+n(l[0])+' '+n(l[1])+' L'+n(c1[0])+' '+n(c1[1])+' L'+n(pt[0])+' '+n(pt[1])+' L'+n(c2[0])+' '+n(c2[1])+' L'+n(rr[0])+' '+n(rr[1])+' Z" fill="#fafafa" stroke="#27272a" stroke-width="'+sw(.007)+'" stroke-linejoin="round"/>';
-    }
-    s += espada(-1.05, r*0.45, d*0.024) + espada(0.98, r*0.66, d*0.019);
-    p = pol(cx, cy, r*0.72, 0); q = pol(cx, cy, r*0.2, Math.PI);
-    s += '<line x1="'+n(q[0])+'" y1="'+n(q[1])+'" x2="'+n(p[0])+'" y2="'+n(p[1])+'" stroke="#18181b" stroke-width="'+sw(.008)+'"/>';
-    s += '<circle cx="'+n(q[0])+'" cy="'+n(q[1])+'" r="'+n(d*0.016)+'" fill="#18181b"/>';
-    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(d*0.022)+'" fill="#18181b"/><circle cx="'+cx+'" cy="'+cy+'" r="'+n(d*0.009)+'" fill="#d4d4d8"/>';
-    // reflejo del cristal
-    if(det) s += '<path d="M'+n(cx - r*0.62)+' '+n(cy - r*0.28)+' A'+n(r*0.74)+' '+n(r*0.74)+' 0 0 1 '+n(cx + r*0.2)+' '+n(cy - r*0.7)+'" fill="none" stroke="#fff" stroke-width="'+sw(.02)+'" stroke-linecap="round" opacity=".35"/>';
+    // la cara de la mascota, escalada a esta esfera
+    var k = (r * 0.8) / 29;
+    s += '<g transform="translate('+n(cx)+' '+n(cy)+') scale('+(Math.round(k * 1000) / 1000)+') translate(-60 -70)">' + CARA_MASCOTA + '</g>';
+    void q; void p;
     return s;
   }
   var DEFS = '<defs>' +
+    '<linearGradient id="gu-caja" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9DCE8"/><stop offset=".45" stop-color="#A7C4D6"/><stop offset="1" stop-color="#86A6BA"/></linearGradient>' +
+    '<radialGradient id="gu-caja-r" cx=".38" cy=".32" r=".85"><stop offset="0" stop-color="#D6E5EE"/><stop offset=".55" stop-color="#A7C4D6"/><stop offset="1" stop-color="#86A6BA"/></radialGradient>' +
+    '<linearGradient id="gu-piel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1C7A6"/><stop offset=".55" stop-color="#E5B08C"/><stop offset="1" stop-color="#D29772"/></linearGradient>' +
     '<linearGradient id="gu-acero" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8b8be"/><stop offset=".45" stop-color="#f4f4f5"/><stop offset="1" stop-color="#a1a1aa"/></linearGradient>' +
     '<radialGradient id="gu-acero-r" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#fafafa"/><stop offset=".6" stop-color="#d4d4d8"/><stop offset="1" stop-color="#9a9aa1"/></radialGradient>' +
     '<radialGradient id="gu-esfera" cx=".45" cy=".4" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e9ec"/></radialGradient>' +
@@ -164,6 +101,32 @@
   function letra(x, y, t){ return '<circle cx="'+x+'" cy="'+y+'" r="11" fill="'+ORO+'"/><text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+t+'</text>'; }
   function texto(x, y, t, opc){ opc = opc || {}; return '<text x="'+n(x)+'" y="'+n(y)+'" text-anchor="'+(opc.ancla||'middle')+'" font-size="'+(opc.tam||13)+'" font-weight="'+(opc.peso||500)+'" fill="'+(opc.color||'#18181b')+'">'+t+'</text>'; }
   function svg(vb, cuerpo){ return '<svg viewBox="'+vb+'" xmlns="http://www.w3.org/2000/svg" font-family="Jost, Arial, sans-serif">'+DEFS+cuerpo+'</svg>'; }
+
+  // ---------- brazo y mano color piel (vista desde arriba: el dorso, con los dedos hacia la derecha) ----------
+  // x0 = donde termina la muneca y empieza la mano; cy = centro; a = ancho de la muneca en px
+  var PIEL_BORDE = '#B47A57', PIEL_LINEA = '#C58C68', UNA = '#F6DCCB';
+  function mano(x0, cy, a){
+    var c = '', k = a / 100;                       // todo se mide en "centesimos de muneca"
+    var X = function(v){ return n(x0 + v * k); }, Y = function(v){ return n(cy + v * k); };
+    // pulgar (arriba, sale del costado de la mano hacia adelante)
+    c += '<path d="M'+X(8)+' '+Y(-44)+' C'+X(20)+' '+Y(-62)+' '+X(44)+' '+Y(-72)+' '+X(62)+' '+Y(-70)+' C'+X(74)+' '+Y(-69)+' '+X(76)+' '+Y(-58)+' '+X(66)+' '+Y(-53)+' C'+X(52)+' '+Y(-47)+' '+X(40)+' '+Y(-44)+' '+X(30)+' '+Y(-36)+' Z" fill="url(#gu-piel)" stroke="'+PIEL_BORDE+'" stroke-width="1.4" stroke-linejoin="round"/>';
+    c += '<ellipse cx="'+X(66)+'" cy="'+Y(-63)+'" rx="'+n(6*k)+'" ry="'+n(4.2*k)+'" transform="rotate(-12 '+X(66)+' '+Y(-63)+')" fill="'+UNA+'" stroke="'+PIEL_LINEA+'" stroke-width=".9"/>';
+    // cuatro dedos: indice, medio, anular y menique (largos distintos), con unas y pliegues
+    [[-36, 74, 14], [-14, 84, 14.6], [8, 78, 14], [28, 62, 12.4]].forEach(function(dd){
+      var yc = dd[0], largo = dd[1], g = dd[2];
+      c += '<rect x="'+X(52)+'" y="'+Y(yc - g/2)+'" width="'+n(largo*k)+'" height="'+n(g*k)+'" rx="'+n(g*k/2)+'" fill="url(#gu-piel)" stroke="'+PIEL_BORDE+'" stroke-width="1.3"/>';
+      var xu = 52 + largo - 10;
+      c += '<rect x="'+X(xu)+'" y="'+Y(yc - g*0.3)+'" width="'+n(8*k)+'" height="'+n(g*0.6*k)+'" rx="'+n(g*0.3*k)+'" fill="'+UNA+'" stroke="'+PIEL_LINEA+'" stroke-width=".8"/>';
+      [0.5, 0.74].forEach(function(f){ var xx = 52 + largo * f; c += '<path d="M'+X(xx)+' '+Y(yc - g*0.32)+' q'+n(-1.6*k)+' '+n(g*0.32*k)+' 0 '+n(g*0.64*k)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".9" stroke-linecap="round"/>'; });
+    });
+    // dorso de la mano (tapa el inicio de los dedos) con nudillos
+    var dorso = 'M'+X(-8)+' '+Y(-48)+' C'+X(20)+' '+Y(-50)+' '+X(46)+' '+Y(-48)+' '+X(62)+' '+Y(-42)+' C'+X(68)+' '+Y(-20)+' '+X(68)+' '+Y(20)+' '+X(60)+' '+Y(36)+' C'+X(46)+' '+Y(44)+' '+X(20)+' '+Y(50)+' '+X(-8)+' '+Y(50);
+    c += '<path d="'+dorso+' Z" fill="url(#gu-piel)"/><path d="'+dorso+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4" stroke-linejoin="round"/>';
+    [-36, -14, 8, 28].forEach(function(yc){ c += '<path d="M'+X(56)+' '+Y(yc - 4)+' q'+n(3*k)+' '+n(4*k)+' 0 '+n(8*k)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width="1" stroke-linecap="round"/>'; });
+    // tendones suaves del dorso
+    [-24, -6, 12].forEach(function(yc){ c += '<path d="M'+X(12)+' '+Y(yc*0.7)+' L'+X(48)+' '+Y(yc)+'" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".55" stroke-linecap="round"/>'; });
+    return c;
+  }
 
   // ---------- A, B, C: las medidas (reloj de 42 mm a 4 px por mm) ----------
   (function(){
@@ -224,8 +187,8 @@
 
   // ---------- pasos para medir la muneca ----------
   (function(){
-    var piel = '#ececee', borde = '#b4b4ba';
-    var brazo = '<path d="M10 70 C60 62 120 60 170 66 L178 72 C200 60 224 62 232 80 C238 96 224 112 200 108 L178 104 C120 112 60 112 10 104 Z" fill="'+piel+'" stroke="'+borde+'" stroke-width="1.5"/>';
+    var brazo = '<path d="M-4 64 C60 62 120 64 168 67.8 L168 107 C120 110 60 112 -4 110 Z" fill="url(#gu-piel)"/>' + mano(164, 87, 40) +
+      '<path d="M-4 64 C60 62 120 64 168 67.8" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4"/><path d="M168 107 C120 110 60 112 -4 110" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4"/>';
     var p1 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><path d="M144 66 L176 40" stroke="#71717a" stroke-width="10" stroke-linecap="round" opacity=".25"/><path d="M144 66 L176 40" stroke="#fff" stroke-width="8" stroke-linecap="round"/>' + texto(120, 140, 'Tira alrededor de la muñeca', { tam: 12, color: '#52525b' });
     var p2 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><line x1="128" y1="86" x2="144" y2="86" stroke="'+ORO+'" stroke-width="2.5"/><path d="M150 84 L196 38 L204 46 L158 92 Z" fill="#d4d4d8" stroke="#a1a1aa"/><path d="M150 84 L146 96 L158 92" fill="#3f3f46"/>' + texto(120, 140, 'Marca donde se junta', { tam: 12, color: '#52525b' });
     var regla = '<rect x="14" y="70" width="212" height="34" rx="3" fill="#f4f4f5" stroke="#a1a1aa"/>';
@@ -249,9 +212,12 @@
     var l2lReal = base ? parseFloat(String(base.l2l || '').replace(',', '.')) : 0;
     var l2lMm = l2lReal > 0 ? l2lReal : mm * 1.2;
     var S = 4.2, ancho = cm * 10 * 0.3 * S, l2l = l2lMm * S, d = mm * S, cy = 175, cx = 300, c = '';
-    var piel = '#ececee', borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
-    // antebrazo (mas ancho hacia la izquierda), muneca y mano
-    c += '<path d="M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' 470 '+n(yTop+2)+' C520 '+n(yTop-6)+' 560 '+n(cy-ancho*0.7)+' 610 '+n(cy-ancho*0.66)+' C650 '+n(cy-ancho*0.62)+' 660 '+n(cy+ancho*0.62)+' 610 '+n(cy+ancho*0.68)+' C560 '+n(cy+ancho*0.72)+' 520 '+n(yBot+6)+' 470 '+n(yBot-2)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="'+piel+'" stroke="'+borde+'" stroke-width="1.5"/>';
+    var borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
+    // antebrazo (mas ancho hacia la izquierda) y muneca, color piel; despues la mano con sus dedos
+    var arr = 'M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' 466 '+n(cy-ancho*0.48), aba = 'M466 '+n(cy+ancho*0.5)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68);
+    c += '<path d="'+arr+' L466 '+n(cy+ancho*0.5)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="url(#gu-piel)"/>';
+    c += mano(462, cy, ancho);
+    c += '<path d="'+arr+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/><path d="'+aba+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/>';
     // borde de la muneca donde va el reloj (lineas punteadas)
     c += '<line x1="'+(cx-70)+'" y1="'+n(yTop)+'" x2="'+(cx+70)+'" y2="'+n(yTop)+'" stroke="'+borde+'" stroke-dasharray="4 4"/><line x1="'+(cx-70)+'" y1="'+n(yBot)+'" x2="'+(cx+70)+'" y2="'+n(yBot)+'" stroke="'+borde+'" stroke-dasharray="4 4"/>';
     var sobra = l2l > ancho;
@@ -264,7 +230,7 @@
     c += cota(xa, yTop, xa, yBot) + texto(xa - 10, cy + 4, 'Muñeca ' + Math.round(cm * 3) + ' mm', { ancla: 'end', tam: 12, peso: 600, color: ORO });
     var xr = cx + d/2 + 40;
     c += cota(xr, cy - l2l/2, xr, cy + l2l/2) + texto(xr + 8, cy + 4, 'Reloj ' + fmt(l2lMm) + ' mm' + (l2lReal > 0 ? '' : ' aprox.'), { ancla: 'start', tam: 12, peso: 600, color: ORO });
-    $('gu-sim').innerHTML = svg('0 0 660 350', c);
+    $('gu-sim').innerHTML = svg('0 0 '+n(Math.max(660, 470 + ancho * 1.4))+' 350', c);
 
     var razon = l2lMm / (cm * 3), rec = recomendado(cm), v;
     if(razon < 0.82) v = ['discreto', 'Discreto', 'Se ve pequeño y elegante en tu muñeca. Ideal si buscas algo clásico o de vestir.'];
