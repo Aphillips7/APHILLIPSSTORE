@@ -144,3 +144,53 @@
     .apartados{grid-template-columns:1fr;}
     .ven-filtros select,.ven-filtros .fil-balance{width:100%;}
   }
+
+  /* CLIENTES (rediseno fase 6): lista, segmentos, repetidos, ficha y linea de tiempo */
+  .cli-barra{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .cli-barra input{flex:1;min-width:200px;width:auto;}
+  .cli-barra select{width:auto;}
+  .cli-segmentos{margin-bottom:6px;}
+  .seg-n{font-size:11px;opacity:.7;margin-left:2px;font-variant-numeric:tabular-nums;}
+  .cli-duplicados{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .dup-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--card);border:1px dashed var(--border2);border-radius:var(--r-md);padding:9px 14px;font-size:13.5px;}
+  .cli-fila{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:var(--r-md);transition:background var(--fast) var(--ease);}
+  .cli-fila:hover{background:var(--bg2);}
+  .cli-fila:last-child{border-bottom:none;}
+  .cli-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-light);color:var(--black);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none;}
+  .cli-avatar.grande{width:52px;height:52px;font-size:20px;}
+  .cli-info{min-width:0;}
+  .cli-nombre{font-size:14.5px;font-weight:600;color:var(--black);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cli-sub{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cli-der{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+  .cli-total{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--black);}
+  button.enlace{background:none;border:none;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;}
+  .ficha-cli{padding:20px;}
+  .ficha-cab{display:flex;align-items:center;gap:12px;}
+  .ficha-nombre{flex:1;min-width:0;}
+  .ficha-nombre h3{margin:0;font-size:19px;font-weight:700;color:var(--black);letter-spacing:-0.02em;}
+  .ficha-nombre span{font-size:12.5px;color:var(--muted);}
+  .ficha-datos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0;}
+  .ficha-dato{background:var(--bg2);border-radius:var(--r-md);padding:9px 11px;display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .ficha-dato span{font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);}
+  .ficha-dato b{font-size:15px;color:var(--black);font-variant-numeric:tabular-nums;} .ficha-dato b.pos{color:var(--green);} .ficha-dato b.neg{color:var(--red);}
+  .ficha-nota{font-size:13px;color:var(--muted);background:var(--bg2);border-radius:var(--r-md);padding:9px 12px;margin-bottom:10px;line-height:1.5;}
+  .ficha-nota b{color:var(--black);}
+  .ficha-msg{border:1px solid var(--accent);background:var(--accent-light);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px;}
+  .ficha-msg p{margin:6px 0 10px;font-size:13.5px;line-height:1.5;color:var(--text);}
+  .ficha-acc{justify-content:flex-start;}
+  .ficha-pie{display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);}
+  .timeline{position:relative;display:flex;flex-direction:column;gap:12px;padding-left:18px;}
+  .timeline::before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:var(--border);}
+  .tl-item{position:relative;}
+  .tl-punto{position:absolute;left:-17px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--muted2);border:2px solid var(--card);}
+  .tl-ok{background:var(--green);} .tl-pendiente{background:var(--amber);} .tl-vencido{background:var(--red);} .tl-info{background:var(--g-actual);}
+  .tl-cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .tl-fecha{font-size:12px;color:var(--muted);}
+  .tl-monto{margin-left:auto;font-size:13.5px;font-variant-numeric:tabular-nums;color:var(--black);}
+  .tl-texto{font-size:13px;color:var(--text);margin-top:2px;line-height:1.4;overflow-wrap:anywhere;}
+  @media (max-width:600px){
+    .cli-fila{grid-template-columns:38px minmax(0,1fr) auto;}
+    .cli-wa{grid-column:2 / -1;justify-self:start;}
+    .ficha-datos{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .cli-barra select{width:100%;}
+  }

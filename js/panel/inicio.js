@@ -138,7 +138,7 @@ function renderPendientesInicio(){
   var sinCerrar = mesesSinCerrar();
   if(sinCerrar.length && new Date().getDate() >= 3) items.push(aviso(6, 'info', 'Cierre', 'Cerrar ' + (sinCerrar.length === 1 ? nombreMes(sinCerrar[0]) : sinCerrar.length + ' meses'), 'Revisa los numeros y cierra el mes para que no cambien', 'Cerrar mes', "irSeccion('finanzas','cierres')"));
   var avisosWeb = numeroBadge('cuentas-web-badge');
-  if(avisosWeb) items.push(aviso(1.5, 'pendiente', 'Avisos web', avisosWeb + ' aviso' + (avisosWeb !== 1 ? 's' : '') + ' por enviar', 'Clientes que pidieron que les avises de un reloj o una marca', 'Enviar', "irSeccion('clientes')"));
+  if(avisosWeb) items.push(aviso(1.5, 'pendiente', 'Avisos web', avisosWeb + ' aviso' + (avisosWeb !== 1 ? 's' : '') + ' por enviar', 'Clientes que pidieron que les avises de un reloj o una marca', 'Enviar', "irSeccion('clientes','cuentas')"));
   items.sort(function(a, b){ return a.orden - b.orden; });
   var c = document.getElementById('hoy-cont');
   if(c){ c.hidden = !items.length; c.textContent = items.length; }

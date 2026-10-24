@@ -846,11 +846,56 @@ if(location.hostname==='aphillips7.github.io'){
 <div id="page-clientes" class="page">
   <div class="section-title">Clientes</div>
   <div class="section-sub"></div>
+
+  <!-- CLIENTES > CLIENTES (fase 6): KPIs, segmentos, repetidos, alta y lista -->
+  <section data-vista="clientes">
+    <div class="acciones-pagina"><button type="button" class="btn btn-gold" onclick="abrirFormCliente()">+ Nuevo cliente</button></div>
+    <div id="cli-stats" class="kpi-grid"></div>
+    <div id="cli-duplicados" class="cli-duplicados" hidden></div>
+    <div class="card" id="cli-form" hidden>
+      <div class="card-title" id="cli-form-title">Nuevo cliente</div>
+      <input type="hidden" id="cli-edit-id" value="" />
+      <div class="grid-2">
+        <div class="field"><label for="cli-nombre">Nombre</label><input type="text" id="cli-nombre" maxlength="80" autocomplete="off" placeholder="Nombre y apellido" oninput="validarCliente()" /></div>
+        <div class="field"><label for="cli-tel">Telefono / WhatsApp</label><input type="tel" id="cli-tel" inputmode="tel" autocomplete="off" placeholder="6123-4567" oninput="validarCliente()" /></div>
+        <div class="field"><label for="cli-canal">Como llego</label><select id="cli-canal"><option value="whatsapp">WhatsApp</option><option value="instagram">Instagram</option><option value="facebook">Facebook</option><option value="directo">Directo</option><option value="web">Tienda web</option></select></div>
+        <div class="field"><label for="cli-producto">Reloj de interes</label><input type="text" id="cli-producto" maxlength="120" placeholder="Modelo o marca que busca" /></div>
+      </div>
+      <div class="field"><label for="cli-notas">Notas</label><textarea id="cli-notas" rows="2" maxlength="500" placeholder="Ej: le gustan los relojes grandes, muneca de 17 cm..."></textarea></div>
+      <div class="campo-ayuda" id="cli-ayuda" hidden></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gold" id="cli-submit-btn" onclick="registrarCliente()" style="flex:1;" disabled>Guardar cliente</button>
+        <button class="btn btn-outline" id="cli-cancel-btn" onclick="cancelarEdicionCliente()">Cancelar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cli-barra">
+        <input type="search" id="cli-search" placeholder="Buscar por nombre, telefono o reloj..." oninput="renderClientes()" />
+        <select id="cli-orden" onchange="renderClientes()">
+          <option value="reciente">Mas recientes</option>
+          <option value="ultima">Ultima compra</option>
+          <option value="gasto">Mas compran</option>
+          <option value="alfabetico">A-Z</option>
+        </select>
+      </div>
+      <div class="fin-periodos cli-segmentos" id="cli-segmentos"></div>
+      <div class="campo-ayuda" id="cli-seg-ayuda" hidden></div>
+      <div class="tenue-peq" id="cli-resultado"></div>
+      <div id="cli-lista"></div>
+    </div>
+  </section>
+
+  <!-- CLIENTES > CUENTAS DE LA TIENDA -->
+  <section data-vista="cuentas" hidden>
   <div class="card">
     <div class="card-title">Cuentas de la tienda <span id="cuentas-web-badge" class="badge badge-red" style="display:none;margin-left:6px;"></span></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Clientes que crearon su cuenta en la tienda (con correo o Google). Cada uno tiene su codigo AP-… y su WhatsApp no se repite. Aqui ves a quien avisar por WhatsApp y puedes vincular cada cuenta con tu cliente para que vea sus compras y apartados.</div>
     <div id="cuentas-web"></div>
   </div>
+  </section>
+
+  <!-- CLIENTES > BOLETIN -->
+  <section data-vista="boletin" hidden>
   <div class="card">
     <div class="card-title">Boletín <span id="boletin-badge" class="badge" style="display:none;margin-left:6px;"></span></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Quienes se suscribieron desde "Suscríbete al boletín" en el pie de la tienda. Reciben un correo de bienvenida con un enlace para darse de baja.</div>
@@ -872,40 +917,7 @@ if(location.hostname==='aphillips7.github.io'){
       </div>
     </details>
   </div>
-  <div class="card">
-    <div class="card-title" id="cli-form-title">Registrar cliente</div>
-    <input type="hidden" id="cli-edit-id" value="" />
-    <div class="grid-2">
-      <div class="field"><label>Nombre</label><input type="text" id="cli-nombre" placeholder="Nombre completo" /></div>
-      <div class="field"><label>Telefono / WhatsApp</label><input type="text" id="cli-tel" placeholder="+507 " /></div>
-      <div class="field"><label>Canal donde compro</label><select id="cli-canal"><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="instagram">Instagram</option><option value="directo">Directo</option><option value="web">Tienda web</option></select></div>
-      <div class="field"><label>Reloj de interes / que compro</label><input type="text" id="cli-producto" placeholder="Modelo del reloj" /></div>
-    </div>
-    <div class="field"><label>Notas</label><textarea id="cli-notas" rows="2" placeholder="Ej: Le interesa el Pro Diver en negro..."></textarea></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-gold" id="cli-submit-btn" onclick="registrarCliente()" style="flex:1;">Guardar cliente</button>
-      <button class="btn btn-outline" id="cli-cancel-btn" onclick="cancelarEdicionCliente()" style="display:none;">Cancelar</button>
-    </div>
-  </div>
-  <div class="card" style="padding:14px 20px;">
-    <div id="cli-stats" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-  </div>
-  <div class="card">
-    <div class="card-title" style="margin-bottom:10px;">Tus clientes</div>
-    <input type="text" id="cli-search" placeholder="Buscar por nombre o telefono..." oninput="renderClientes()" style="margin-bottom:10px;" />
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
-      <button type="button" class="btn btn-sm filtro-cliente active" onclick="setFiltroCliente(this,'todos')">Todos</button>
-      <button type="button" class="btn btn-sm filtro-cliente" onclick="setFiltroCliente(this,'saldo')" style="color:var(--red);border-color:var(--red);">Con saldo pendiente</button>
-      <button type="button" class="btn btn-sm filtro-cliente" onclick="setFiltroCliente(this,'prospecto')" style="color:var(--blue);border-color:var(--blue);">Prospectos</button>
-      <button type="button" class="btn btn-sm filtro-cliente" onclick="setFiltroCliente(this,'cliente')" style="color:var(--green);border-color:var(--green);">Ya compraron</button>
-      <select id="cli-orden" onchange="renderClientes()" style="width:auto;margin-left:auto;">
-        <option value="reciente">Mas reciente</option>
-        <option value="alfabetico">Alfabetico (A-Z)</option>
-        <option value="gasto">Mayor gasto</option>
-      </select>
-    </div>
-    <div id="cli-lista"><div class="empty"><span></span>Sin clientes aun.</div></div>
-  </div>
+  </section>
 </div>
 
 <!-- AUTH OVERLAY (CODIGO DE AUTENTICACION / TOTP) -->
