@@ -12,7 +12,7 @@
   /* saludo con la mano cada tanto, y parpadeo */
   .masc-saludo{transform-box:view-box;transform-origin:28px 82px;animation:mascSaluda 7s ease-in-out infinite;}
   @keyframes mascSaluda{0%,70%,100%{transform:rotate(0);}74%{transform:rotate(14deg);}78%{transform:rotate(-6deg);}82%{transform:rotate(14deg);}86%{transform:rotate(-4deg);}90%{transform:rotate(0);}}
-  .masc-ojos{transform-box:view-box;transform-origin:60px 70px;animation:mascParpadeo 5.5s infinite;}
+  .masc-ojos{transform-box:view-box;transform-origin:60px 64px;animation:mascParpadeo 5.5s infinite;}
   @keyframes mascParpadeo{0%,93%,100%{transform:scaleY(1);}95%{transform:scaleY(.12);}}
   @media (hover:hover) and (pointer:fine){
     .masc-boton:hover .masc-flota{animation-play-state:paused;transform:translateY(-4px) rotate(-4deg);transition:transform .25s var(--ease);}
@@ -55,7 +55,10 @@
   .mascota[data-cara="sorpresa"] .masc-cara-sorpresa,
   .mascota[data-cara="pensativo"] .masc-cara-pensativo,
   .mascota[data-cara="emocionado"] .masc-cara-emocionado,
-  .mascota[data-cara="dormido"] .masc-cara-dormido{display:inline;}
+  .mascota[data-cara="dormido"] .masc-cara-dormido,
+  .mascota[data-cara="enamorado"] .masc-cara-enamorado,
+  .mascota[data-cara="timido"] .masc-cara-timido,
+  .mascota[data-cara="arriba"] .masc-cara-arriba{display:inline;}
 
   /* cejas: se mueven segun la cara (y de vez en cuando suben solas) */
   .masc-cejas path{transform-box:fill-box;transform-origin:50% 50%;transition:transform .25s var(--ease);}
@@ -67,6 +70,9 @@
   .mascota[data-cara="pensativo"] .masc-ceja-i{transform:translateY(-2px) rotate(-12deg);}
   .mascota[data-cara="pensativo"] .masc-ceja-d{transform:translateY(.8px) rotate(6deg);}
   .mascota[data-cara="dormido"] .masc-cejas path{transform:translateY(1.4px);}
+  .mascota[data-cara="enamorado"] .masc-cejas path,.mascota[data-cara="arriba"] .masc-cejas path{transform:translateY(-2px);}
+  .mascota[data-cara="timido"] .masc-ceja-i{transform:translateY(.6px) rotate(6deg);}
+  .mascota[data-cara="timido"] .masc-ceja-d{transform:translateY(.6px) rotate(-6deg);}
   /* mirada */
   .masc-mira{transition:transform .35s var(--ease);}
   /* gestos de los brazos */
@@ -119,3 +125,13 @@
   .masc-tapa-i{transform-box:view-box;transition:transform .3s cubic-bezier(.3,1.4,.5,1);}
   .mascota[data-gesto="espia"] .masc-tapa-i{transform:translate(-2px,10px);}
   .mascota[data-gesto="tapa"] .masc-ojos,.mascota[data-gesto="espia"] .masc-ojos{animation:none;}
+
+  /* tic, tac: el minutero da la vuelta a saltitos y el reloj se balancea */
+  .masc-minutero,.masc-horario{transform-box:view-box;transform-origin:60px 70px;}
+  .mascota.tictac .masc-minutero{animation:mascTic 4.8s steps(12) 1;}
+  .mascota.tictac .masc-horario{animation:mascTac 4.8s linear 1;}
+  .mascota.tictac .masc-entra{animation:mascBalanceo .4s ease-in-out 12 alternate;transform-origin:50% 95%;}
+  @keyframes mascTic{to{transform:rotate(360deg);}}
+  @keyframes mascTac{to{transform:rotate(30deg);}}
+  @keyframes mascBalanceo{from{transform:rotate(-4deg);}to{transform:rotate(4deg);}}
+  @media (prefers-reduced-motion:reduce){ .mascota.tictac .masc-minutero,.mascota.tictac .masc-horario,.mascota.tictac .masc-entra{animation:none;} }

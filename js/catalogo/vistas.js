@@ -16,7 +16,7 @@ var _HASH_GEN = {'#hombre':'hombre', '#mujer':'mujer', '#todos':''};
 var _MARCAS = {
   invicta: { nombre:'Invicta', desc:'Fundada en Suiza en 1837, Invicta combina diseño audaz y gran presencia en la muñeca: relojes de buceo y cronógrafos con carácter, a un precio accesible. Consulta la disponibilidad de cada pieza directamente por WhatsApp.' },
   bulova: { nombre:'Bulova', desc:'Desde 1875 en Nueva York, Bulova es sinónimo de innovación y precisión: movimientos automáticos, esferas abiertas y acabados elegantes. Consulta la disponibilidad de cada pieza directamente por WhatsApp.' },
-  technomarine: { nombre:'TechnoMarine', desc:'Nacida en Miami en 1997, TechnoMarine mezcla espíritu deportivo y lujo casual, con correas intercambiables y diseños llenos de color. Consulta la disponibilidad de cada pieza directamente por WhatsApp.' }
+  technomarine: { nombre:'TechnoMarine', desc:'Nacida en Miami en 1997, TechnoMarine mezcla espíritu deportivo y estilo casual, con correas intercambiables y diseños llenos de color. Consulta la disponibilidad de cada pieza directamente por WhatsApp.' }
 };
 function _marcaDeHash(h){ var m = (h||'').replace(/^#marca-/, ''); return (h||'').indexOf('#marca-')===0 && _MARCAS[m] ? m : ''; }
 function _esHashCatalogo(h){ return Object.prototype.hasOwnProperty.call(_HASH_GEN, h) || !!_marcaDeHash(h); }
@@ -63,7 +63,7 @@ function toggleDesc(){
 }
 function _refrescarHeader(){ window.dispatchEvent(new Event('resize')); }
 // Titulo de la pestana segun la vista (inicio, genero o marca)
-var TITULO_INICIO = 'Aphillips Store — Relojes de lujo en Panamá';
+var TITULO_INICIO = 'Aphillips Store — Relojes originales en Panamá';
 function _tituloVista(g, marca){
   document.title = marca && _MARCAS[marca] ? 'Relojes ' + _MARCAS[marca].nombre + ' — Aphillips Store'
     : (_TITULOS_GEN[g || ''] || 'Relojes') + ' — Aphillips Store';
