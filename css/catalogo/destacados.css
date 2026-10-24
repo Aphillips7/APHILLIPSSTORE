@@ -67,7 +67,5 @@
 
   /* fotos del catalogo en el carrusel: el reloj completo, fundido con el degradado */
   .dest-foto{cursor:pointer;}
-  /* "darken" y no "multiply": el blanco de la foto toma el color del fondo, pero el reloj conserva sus colores
-     reales (con multiply el degradado celeste teñia el acero de azul) */
-  .dest-foto .g{object-fit:contain;padding:9%;box-sizing:border-box;mix-blend-mode:darken;}
+  .dest-foto .g{object-fit:contain;padding:9%;box-sizing:border-box;mix-blend-mode:multiply;}
   .dest-comprar button{padding:0;border:none;background:none;font:inherit;cursor:pointer;}
