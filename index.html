@@ -394,41 +394,33 @@ if(location.hostname==='aphillips7.github.io'){
 
 <!-- INVENTARIO -->
 <div id="page-inventario" class="page">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px;">
-    <div><div class="section-title" style="margin-bottom:2px;">Inventario</div><div class="section-sub" style="margin-bottom:0;"></div></div>
-    <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar" style="flex-shrink:0;">+ Registrar unidad</button>
+  <div class="acciones-pagina">
+    <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar">+ Registrar reloj</button>
+    <button class="btn btn-outline" onclick="exportarInventarioCSV()">Exportar a Excel</button>
   </div>
-  <div class="grid-4" style="margin-top:20px;">
-    <div class="stat-box"><div class="stat-label">Disponibles</div><div class="stat-value" id="inv-stat-disponibles">0</div></div>
-    <div class="stat-box"><div class="stat-label">En transito</div><div class="stat-value" style="color:var(--blue)" id="inv-stat-transito">0</div></div>
-    <div class="stat-box"><div class="stat-label">Bajo pedido</div><div class="stat-value" style="color:var(--slate)" id="inv-stat-bajopedido">0</div></div>
-    <div class="stat-box"><div class="stat-label">Valor en stock</div><div class="stat-value gold money" id="inv-stat-valor">$0</div></div>
-  </div>
-  <div class="card" style="padding:14px 20px;margin-top:0;">
-    <div style="display:flex;gap:10px;align-items:center;">
-      <input type="text" id="inv-search" placeholder="Buscar por modelo, referencia o coleccion..." oninput="renderInventario()" style="flex:1;border:none;background:transparent;padding:0;font-size:14px;" />
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('inv-search').value='';renderInventario()">Limpiar</button>
-    </div>
-    <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
-      <button class="btn btn-sm filtro-estado active" onclick="setFiltroEstado(this,'')">Todos</button>
-      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'disponible')" style="color:var(--green);border-color:var(--green);">Disponible</button>
-      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'transito')" style="color:var(--blue);border-color:var(--blue);">En transito</button>
-      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'bajopedido')" style="color:var(--slate);border-color:var(--slate);">Bajo pedido</button>
-      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'reservado')" style="color:var(--accent-strong);border-color:var(--accent);">Reservado</button>
-      <button class="btn btn-sm filtro-estado" onclick="setFiltroEstado(this,'vendido')" style="color:var(--red);border-color:var(--red);">Vendido</button>
-    </div>
-  </div>
+  <div id="inv-kpis" class="kpi-grid"></div>
+  <div class="inv-calidad" id="inv-calidad"></div>
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="card-title" style="margin:0;">Unidades registradas</div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn btn-outline btn-sm" onclick="toggleVista('lista')" id="vista-lista" style="border-color:var(--accent);color:var(--accent-strong);">Lista</button>
-        <button class="btn btn-outline btn-sm" onclick="toggleVista('modelo')" id="vista-modelo">Por modelo</button>
+    <div class="inv-barra">
+      <input type="search" id="inv-search" placeholder="Buscar por modelo, referencia, coleccion o guia..." oninput="renderInventario()" />
+      <div class="inv-vistas" role="group" aria-label="Vista">
+        <button type="button" class="inv-vista" onclick="toggleVista('lista')" id="vista-lista">Lista</button>
+        <button type="button" class="inv-vista" onclick="toggleVista('cuadricula')" id="vista-cuadricula">Fotos</button>
+        <button type="button" class="inv-vista" onclick="toggleVista('modelo')" id="vista-modelo">Por modelo</button>
       </div>
     </div>
+    <div class="fin-periodos inv-estados">
+      <button type="button" class="fin-mes-btn filtro-estado active" onclick="setFiltroEstado(this,'')">Todos</button>
+      <button type="button" class="fin-mes-btn filtro-estado" onclick="setFiltroEstado(this,'disponible')">Disponible</button>
+      <button type="button" class="fin-mes-btn filtro-estado" onclick="setFiltroEstado(this,'transito')">En transito</button>
+      <button type="button" class="fin-mes-btn filtro-estado" onclick="setFiltroEstado(this,'bajopedido')">Bajo pedido</button>
+      <button type="button" class="fin-mes-btn filtro-estado" onclick="setFiltroEstado(this,'reservado')">Apartado</button>
+      <button type="button" class="fin-mes-btn filtro-estado" onclick="setFiltroEstado(this,'vendido')">Vendido</button>
+    </div>
+    <div class="tenue-peq" id="inv-resultado"></div>
     <div id="inv-lista"><div class="empty"><span></span>Sin unidades registradas aun.</div></div>
+    <div class="tenue-peq inv-abc-ayuda"><span class="abc abc-A">A</span> <span class="abc abc-B">B</span> <span class="abc abc-C">C</span> clase del modelo segun la ganancia de sus ventas en 12 meses: A deja el 80 % de la ganancia; reponer primero los A.</div>
   </div>
-
   <!-- FORMULARIO -->
   <div id="inv-form-wrapper" style="display:none;">
     <div class="card" style="border-color:var(--accent);">
@@ -648,7 +640,7 @@ if(location.hostname==='aphillips7.github.io'){
       <a class="btn btn-outline btn-sm" href="/" target="_blank" style="text-decoration:none;">Ver catalogo</a>
     </div>
   </div>
-  <div class="grid-3">
+  <div class="grid-3 cat-stats">
     <div class="stat-box"><div class="stat-label">Visibles en el catalogo</div><div class="stat-value" id="cat-stat-visibles">0</div></div>
     <div class="stat-box"><div class="stat-label">Ocultos manualmente</div><div class="stat-value" style="color:var(--muted)" id="cat-stat-ocultos">0</div></div>
     <div class="stat-box"><div class="stat-label">Clics a WhatsApp (total)</div><div class="stat-value" style="color:var(--green)" id="cat-stat-clics">0</div></div>

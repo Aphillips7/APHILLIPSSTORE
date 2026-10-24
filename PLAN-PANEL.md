@@ -213,3 +213,16 @@ Botones desactivados en gris.
 - Arreglado: el buscador global y "Recordar" de Por cobrar leian `telefono`, pero los clientes guardan `tel`.
 - Verificacion: verificar.mjs OK; sin errores ni desborde; prueba: unir mueve la venta y las notas; telefono repetido
   bloquea Guardar. Capturas f6-pc-claro-clientes, f6-cel-oscuro-ficha.
+
+### Fase 7 — Inventario: TERMINADA (2026-10-24, rama `panel-f7-inventario`, CACHE_NAME aphillips-v129)
+- KPIs: disponibles (valor a precio), en transito (pagado), apartados (por cobrar), vendidos este mes, capital en
+  relojes (y valor a precio), margen promedio del stock disponible. Cada uno filtra o lleva a su pantalla.
+- "Para revisar": chips con conteo que filtran la lista (sin foto, sin medida, sin precio, sin costo, margen < 15 %,
+  +60 dias sin venderse, transito +20 dias, oculto en la tienda).
+- Tres vistas recordadas: Lista, Fotos (cuadricula con estado, margen, dias y clase) y Por modelo.
+- Clase ABC por modelo segun la ganancia de sus ventas en 12 meses (A = 80 % de la ganancia): chip en lista y fotos.
+- Poka-yoke del formulario: un reloj publico sin fotos se ofrece guardar OCULTO en la tienda (recomendado).
+- Catalogo: % de vistas que escriben por WhatsApp por reloj; filas y cifras ordenadas en celular.
+- Exportar inventario a Excel desde la pagina.
+- Verificacion: verificar.mjs OK; sin errores ni desborde. Capturas f7-pc-claro-cuadricula,
+  f7-cel-oscuro-lista-filtrada, f7-cel-claro-catalogo.
