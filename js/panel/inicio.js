@@ -1,29 +1,24 @@
 // =================== DASHBOARD (seccion de inicio, rediseno fase 3) ===================
 // KPIs del mes contra el anterior, "Hoy necesitas" (cada aviso con su boton directo), meta con
 // proyeccion, grafica de 12 meses, mas vistos vs mas vendidos y actividad reciente.
-import { finMesKey } from './finanzas/fechas.js';
 import { save, saveMeta, state } from './state.js';
 import { diasEnInventario, esPublicable, saldoPendienteReserva } from '../products.js';
 import { dinero, esc, estadoHTML, kpiHTML, vacioHTML } from './componentes.js';
 import { barrasH, barrasLinea } from './graficas.js';
+import { diasParaLimite, nombreMes, resultadosMes } from './finanzas/calculos.js';
+import { mesesSinCerrar } from './finanzas/resumen.js';
 
-const DIAS_PLAZO_ABONO = 30;     // una reserva con saldo pasa a "vencida" despues de estos dias
 const DIAS_TRANSITO = 20, DIAS_REBAJAR = 45;
 const ABIERTOS = ['solicitado', 'confirmado', 'pagado', 'enviado'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MESES_C = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 function claveMes(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
-// Ingresos = ventas + abonos (el abono es dinero que ya entro; al completar el apartado solo se registra
-// el saldo como venta, con el costo completo). Asi coincide con Finanzas.
-function esIngreso(m){ return m.tipo === 'venta' || m.tipo === 'abono'; }
+// Mismos calculos que Finanzas (finanzas/calculos.js): ganancia neta = ganancia bruta - gastos operativos;
+// el margen que se muestra es el bruto (lo que deja cada venta).
 function resumenMes(clave){
-  var movs = state.movimientos.filter(function(m){ return esIngreso(m) && finMesKey(m.fecha) === clave; });
-  var ingresos = movs.reduce(function(a, b){ return a + (b.monto || 0); }, 0);
-  var ganancia = movs.reduce(function(a, b){ return a + ((b.monto || 0) - (b.costo || 0)); }, 0);
-  return { ingresos: ingresos, ganancia: ganancia, margen: ingresos ? Math.round(ganancia / ingresos * 100) : 0,
-    ventas: movs.filter(function(m){ return m.tipo === 'venta' && !m._soloRegistro; }).length,
-    abonos: movs.filter(function(m){ return m.tipo === 'abono'; }).length };
+  var r = resultadosMes(clave);
+  return { ingresos: r.ingresos, ganancia: r.neta, bruta: r.bruta, gastos: r.gastos, margen: r.margenBruto, ventas: r.nVentas, abonos: r.nAbonos };
 }
 function costoDe(p){ return Number(p.costoTotal) || ((Number(p.costo) || 0) + (Number(p.importacion) || 0)); }
 function pedidosAbiertos(){ return (window.__pedidosWeb || []).filter(function(p){ return ABIERTOS.indexOf(p.estado) !== -1; }); }
@@ -60,7 +55,7 @@ function renderKpis(actual, anterior){
   var porCobrar = reservas.reduce(function(a, p){ return a + saldoPendienteReserva(p); }, 0);
   cont.innerHTML = [
     kpiHTML({ label: 'Ventas del mes', valor: dinero(actual.ingresos), actual: actual.ingresos, anterior: anterior.ingresos, onclick: "irSeccion('finanzas','resumen')" }),
-    kpiHTML({ label: 'Ganancia neta', valor: dinero(actual.ganancia), tono: actual.ganancia < 0 ? 'neg' : 'pos', actual: actual.ganancia, anterior: anterior.ganancia }),
+    kpiHTML({ label: 'Ganancia neta', valor: dinero(actual.ganancia), tono: actual.ganancia < 0 ? 'neg' : 'pos', actual: actual.ganancia, anterior: anterior.ganancia, pie: 'tras ' + dinero(actual.gastos) + ' de gastos', onclick: "irSeccion('finanzas','resumen')" }),
     kpiHTML({ label: 'Margen promedio', valor: actual.margen + '%', tono: !actual.ingresos ? '' : actual.margen >= 30 ? 'pos' : actual.margen < 15 ? 'neg' : '', actual: actual.margen, anterior: anterior.margen, pie: actual.ventas + ' venta' + (actual.ventas !== 1 ? 's' : '') }),
     kpiHTML({ label: 'Inventario', valor: dinero(valorCosto), pie: 'a costo · a precio ' + dinero(valorPrecio), onclick: "irSeccion('inventario','relojes')" }),
     kpiHTML({ label: 'Pedidos web', valor: String(pedidos.length), pie: porConfirmar ? porConfirmar + ' por confirmar' : 'al dia', onclick: "irSeccion('ventas','pedidos')" }),
@@ -124,7 +119,7 @@ function renderPendientesInicio(){
     if(p.estado === 'reservado' && p.reserva){
       var saldo = saldoPendienteReserva(p);
       if(saldo > 0){
-        var d = diasEnInventario(p.reserva.fechaInicio), quedan = d === null ? null : DIAS_PLAZO_ABONO - d;
+        var quedan = diasParaLimite(p);
         if(quedan !== null && quedan < 0) items.push(aviso(1, 'vencido', 'Abono vencido', nombre, (p.reserva.clienteNombre || 'Cliente') + ' debe ' + dinero(saldo) + ' · vencio hace ' + (-quedan) + ' dias', 'Registrar abono', "abrirAbonoModal('" + id + "')"));
         else items.push(aviso(4, 'pendiente', 'Reserva', nombre, (p.reserva.clienteNombre || 'Cliente') + ' debe ' + dinero(saldo) + (quedan !== null ? ' · plazo en ' + quedan + ' dias' : ''), 'Abono', "abrirAbonoModal('" + id + "')"));
       }
@@ -140,6 +135,8 @@ function renderPendientesInicio(){
       items.push(aviso(5, 'info', 'Catalogo', nombre, 'Se ve en la tienda sin ' + falta, 'Completar', editar(id)));
     }
   });
+  var sinCerrar = mesesSinCerrar();
+  if(sinCerrar.length && new Date().getDate() >= 3) items.push(aviso(6, 'info', 'Cierre', 'Cerrar ' + (sinCerrar.length === 1 ? nombreMes(sinCerrar[0]) : sinCerrar.length + ' meses'), 'Revisa los numeros y cierra el mes para que no cambien', 'Cerrar mes', "irSeccion('finanzas','cierres')"));
   var avisosWeb = numeroBadge('cuentas-web-badge');
   if(avisosWeb) items.push(aviso(1.5, 'pendiente', 'Avisos web', avisosWeb + ' aviso' + (avisosWeb !== 1 ? 's' : '') + ' por enviar', 'Clientes que pidieron que les avises de un reloj o una marca', 'Enviar', "irSeccion('clientes')"));
   items.sort(function(a, b){ return a.orden - b.orden; });

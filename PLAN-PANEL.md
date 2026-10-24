@@ -150,3 +150,28 @@ Botones desactivados en gris.
   (.claude/prueba/datos-prueba.js, no se guarda ni se envia), sin errores ni desborde:
   reporte-noche/capturas-panel/f3-pc-claro.png, f3-pc-oscuro.png, f3-cel-claro.png, f3-cel-oscuro.png, f3-pc-vacio.png.
 - Falta / para despues: el plazo de 30 dias para abonos debe pasar a la reserva (fecha limite) en la fase 5.
+
+### Fase 4 — Finanzas: TERMINADA (2026-10-24, rama `panel-f4-finanzas`, CACHE_NAME aphillips-v126)
+- Nuevo `finanzas/calculos.js`: una sola forma de contar el dinero para todo el panel. Ingresos = ventas + abonos
+  - devoluciones de abonos; ganancia bruta = ingresos - costo vendido; ganancia neta = bruta - gastos operativos;
+  flujo = entradas - (compras + gastos + retiros). El Dashboard usa lo mismo (su "Ganancia neta" ahora resta gastos).
+- Finanzas con 6 pestanas: Resumen, Rentabilidad, Por cobrar, Movimientos, Registrar, Cierres.
+- Resumen: periodo (este mes, mes anterior, 3 meses, ano, todo) con comparacion contra el periodo anterior del mismo
+  largo; 6 KPIs; avisos (gasto > 20 %, perdida, flujo negativo, capital estancado > 30 %, meses sin cerrar); estado de
+  resultados; punto de equilibrio (gastos promedio / margen bruto) y proyeccion del mes; flujo de caja 12 meses;
+  gastos por categoria; dinero por metodo; reparto 40/30/30 de la ganancia neta (dona); exportar el periodo a Excel.
+- Rentabilidad: margen bruto, ticket, descuentos dados, dias promedio para vender; ganancia por marca; ventas por
+  canal; relojes mas rentables; inventario como dinero (capital, valor a precio, estancado +60 dias con precio sugerido).
+- Por cobrar: apartados con saldo, fecha limite (reserva.fechaLimite o 30 dias), estado, Registrar abono / Entregar y
+  "Recordar" por WhatsApp (enlace con mensaje; lo envia el dueno).
+- Cierres: cerrar solo meses terminados (guarda resumen y huella en config/main -> state.cierres, sincronizado y en
+  el respaldo); con el mes cerrado no se pueden borrar sus movimientos (candado); reabrir con confirmacion; aviso si
+  cambio despues del cierre; estado de resultados mes por mes a Excel. Dashboard avisa "Cerrar mes" desde el dia 3.
+- Movimientos: buscador, exportar lo filtrado, textos escapados; arreglado el balance (las compras se sumaban como entrada).
+- Poka-yoke en Registrar: gasto/retiro con boton activo solo con descripcion y monto validos, monto a centavos, mas
+  categorias, aviso de duplicado del mismo dia, retiro mayor que el saldo del metodo pide confirmacion; traspaso
+  bloqueado si el origen quedaria negativo o es igual al destino (con el saldo disponible a la vista).
+- Tablas del panel en celular: cada fila se ve como tarjeta con etiquetas (componentes.css), sirve para todas las fases.
+- Verificacion: verificar.mjs OK; capturas con datos de ejemplo sin errores ni desborde; prueba funcional: cerrar mes
+  pasado OK, borrar movimiento de mes cerrado bloqueado, mes actual no se puede cerrar, reabrir OK. Capturas:
+  f4-pc-oscuro-resumen, f4-cel-claro-rentabilidad, f4-cel-claro-por-cobrar, f4-cel-claro-cierres, f4-cel-claro-traspaso-bloqueado.

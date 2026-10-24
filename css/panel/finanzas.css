@@ -39,3 +39,55 @@
   .inv-picker-sub{font-size:12px;color:var(--muted);}
   .inv-picker-precio{font-size:12px;font-family:inherit;color:var(--green);margin-top:4px;font-weight:500;font-variant-numeric:tabular-nums;}
   .inv-picker-empty{text-align:center;color:var(--muted);font-size:14px;padding:24px 0;letter-spacing:-0.01em;}
+
+  /* FINANZAS (rediseno fase 4): periodo, avisos, estado de resultados, equilibrio, metodos y cierres */
+  .pos{color:var(--green);} .neg{color:var(--red);}
+  .fin-barra{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin-bottom:14px;}
+  .fin-periodos{display:flex;gap:6px;flex-wrap:wrap;}
+  .fin-intro{margin:0;font-size:13.5px;color:var(--muted);max-width:62ch;line-height:1.5;}
+  .fin-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;margin-bottom:14px;}
+  .fin-grid > .card{margin-bottom:0;}
+  .fin-avisos{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .fin-avisos:empty{display:none;}
+  .fin-aviso{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 14px;font-size:13.5px;color:var(--text);}
+  .fin-aviso > span:not(.estado){flex:1;min-width:180px;line-height:1.45;}
+  .er-tabla{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums;}
+  .er-tabla td{padding:7px 0;border-bottom:1px solid var(--border);color:var(--text);}
+  .er-tabla td.der{text-align:right;white-space:nowrap;padding-left:12px;}
+  .er-tabla tr.er-sub td{font-weight:600;color:var(--black);}
+  .er-tabla tr.er-total td{font-weight:700;font-size:16px;color:var(--green);border-bottom:2px solid var(--black);}
+  .er-tabla tr.er-total.neg td,.er-tabla tr.er-sub.neg td{color:var(--red);}
+  .er-tabla tr.er-sep td{padding-top:16px;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);}
+  .er-nota{font-size:12px;font-weight:500;color:var(--muted);margin-left:4px;}
+  .eq-cifra{display:flex;flex-direction:column;gap:2px;margin-bottom:6px;}
+  .eq-cifra b{font-size:28px;font-weight:700;letter-spacing:-0.03em;color:var(--black);font-variant-numeric:tabular-nums;}
+  .eq-texto{font-size:13.5px;color:var(--muted);line-height:1.55;margin:0 0 12px;}
+  .eq-pie{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted);}
+  .eq-proy,.inv-dinero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+  .inv-dinero{margin:0 0 14px;padding:0;border:none;}
+  .eq-proy > div,.inv-dinero > div{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .eq-proy b,.inv-dinero b{font-size:20px;font-weight:700;letter-spacing:-0.02em;color:var(--black);font-variant-numeric:tabular-nums;}
+  .eq-proy b.pos,.inv-dinero b.pos{color:var(--green);} .eq-proy b.neg,.inv-dinero b.neg{color:var(--red);}
+  .eq-proy small,.inv-dinero small{font-size:12.5px;color:var(--muted);}
+  .metodo-fila{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .metodo-fila b{font-variant-numeric:tabular-nums;color:var(--black);} .metodo-fila b.neg{color:var(--red);}
+  .metodo-fila.tenue{color:var(--muted);}
+  .saldo-metodo{flex:1;min-width:110px;background:var(--bg2);border-radius:var(--r-md);padding:9px 12px;display:flex;flex-direction:column;gap:2px;text-align:center;}
+  .saldo-metodo span{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);}
+  .saldo-metodo b{font-size:15px;font-variant-numeric:tabular-nums;color:var(--black);} .saldo-metodo b.neg{color:var(--red);}
+  .acciones-fila{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;}
+  .tabla .tenue-peq{padding:0;font-size:12px;}
+  .campo-ayuda{font-size:12.5px;color:var(--muted);margin:-4px 0 10px;line-height:1.45;}
+  .campo-ayuda.error{color:var(--red);}
+  .btn.btn-exito{background:var(--green)!important;border-color:var(--green)!important;color:#fff!important;}
+  .fil-balance{margin-left:auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .mov-candado{font-size:14px;opacity:.55;padding:0 8px;}
+  @media (max-width:1000px){ .fin-grid{grid-template-columns:1fr;} }
+  @media (max-width:600px){
+    .fin-barra > .btn{width:100%;}
+    .fin-periodos{flex-wrap:nowrap;overflow-x:auto;margin:0 -2px;padding:2px;scrollbar-width:none;}
+    .fin-periodos::-webkit-scrollbar{display:none;}
+    .fin-periodos .fin-mes-btn{flex:none;}
+    .fil-balance{margin-left:0;width:100%;}
+  }
+  a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}

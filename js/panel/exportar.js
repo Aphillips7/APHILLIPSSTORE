@@ -37,17 +37,18 @@ function exportarInventarioCSV(){
 }
 
 var TIPOS = { venta: 'Venta', compra: 'Compra', gasto: 'Gasto', retiro: 'Retiro', abono: 'Abono', traspaso: 'Traspaso', reserva_cancelada: 'Apartado cancelado' };
-function exportarMovimientosCSV(){
+// filtro opcional (m => bool) y nombre de archivo: Finanzas exporta solo el periodo elegido
+function exportarMovimientosCSV(filtro, nombre){
   var filas = [['Fecha', 'Tipo', 'Descripción', 'Monto', 'Costo del reloj', 'Ganancia', 'Forma de pago', 'Canal', 'Cliente', 'Categoría']];
-  state.movimientos.slice().sort(function(a, b){ return (a._ts || 0) - (b._ts || 0); }).forEach(function(m){
+  state.movimientos.filter(function(m){ return typeof filtro !== 'function' || filtro(m); }).sort(function(a, b){ return (a._ts || 0) - (b._ts || 0); }).forEach(function(m){
     var monto = Number(m.monto) || 0, costo = Number(m.costo) || 0;
     var ganancia = (m.tipo === 'venta' || m.tipo === 'abono') ? monto - costo : '';
     filas.push([m.fecha, TIPOS[m.tipo] || m.tipo, m.desc, monto, m.tipo === 'venta' ? costo : '', ganancia,
       m.metodoPago || (m.metodoOrigen ? m.metodoOrigen + ' → ' + m.metodoDestino : ''), m.canal, m.clienteNombre, m.categoria]);
   });
-  descargarCSV('movimientos-aphillips', filas);
+  descargarCSV(typeof nombre === 'string' ? nombre + '-aphillips' : 'movimientos-aphillips', filas);
 }
 
-export { exportarInventarioCSV, exportarMovimientosCSV };
+export { descargarCSV, exportarInventarioCSV, exportarMovimientosCSV };
 // Usadas desde atributos onclick del HTML
 Object.assign(window, { exportarInventarioCSV, exportarMovimientosCSV });

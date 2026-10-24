@@ -198,7 +198,9 @@ if(location.hostname==='aphillips7.github.io'){
     <button class="inner-tab active" onclick="showInner('fin','registrar')">Registrar</button>
     <button class="inner-tab" onclick="showInner('fin','historial')">Historial</button>
     <button class="inner-tab" onclick="showInner('fin','resumen')">Resumen</button>
-    <button class="inner-tab" onclick="showInner('fin','analisis')">Analisis</button>
+    <button class="inner-tab" onclick="showInner('fin','analisis')">Rentabilidad</button>
+    <button class="inner-tab" onclick="showInner('fin','cobrar')">Por cobrar</button>
+    <button class="inner-tab" onclick="showInner('fin','cierres')">Cierres</button>
   </div>
 
   <!-- REGISTRAR -->
@@ -274,14 +276,15 @@ if(location.hostname==='aphillips7.github.io'){
     <div id="bloque-otro" style="display:none;margin-bottom:16px;" class="card">
       <div class="card-title" style="margin-bottom:14px;" id="bloque-otro-title">Gasto operativo</div>
       <div class="field" id="fin-categoria-wrap"><label>Categoria</label>
-        <select id="fin-categoria"><option value="Marketing">Marketing</option><option value="Logistica/Envios">Logistica / Envios</option><option value="Empaque">Empaque</option><option value="Herramientas">Herramientas</option><option value="Otro">Otro</option></select>
+        <select id="fin-categoria" onchange="validarOtro()"><option value="Marketing">Marketing y publicidad</option><option value="Logistica/Envios">Logistica / Envios</option><option value="Empaque">Empaque</option><option value="Comisiones/Bancos">Comisiones y bancos</option><option value="Servicios">Servicios (internet, apps, dominio)</option><option value="Garantias/Reparaciones">Garantias y reparaciones</option><option value="Herramientas">Herramientas</option><option value="Impuestos/Tramites">Impuestos y tramites</option><option value="Otro">Otro</option></select>
       </div>
-      <div class="field"><label>Descripcion</label><input type="text" id="fin-desc-otro" placeholder="Ej: Empaque, publicidad, envio..." /></div>
-      <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-otro" placeholder="0.00" /></div></div>
+      <div class="field"><label>Descripcion</label><input type="text" id="fin-desc-otro" maxlength="120" placeholder="Ej: Publicidad en Instagram de la semana" oninput="validarOtro()" /></div>
+      <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-otro" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" oninput="validarOtro()" /></div></div>
       <div class="field"><label>Metodo de pago</label>
-        <select id="fin-metodo-otro"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+        <select id="fin-metodo-otro" onchange="validarOtro()"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
-      <button class="btn btn-gold" id="btn-registrar-otro" onclick="registrarOtro()" style="width:100%;margin-top:4px;">Registrar</button>
+      <div class="campo-ayuda" id="otro-ayuda" hidden></div>
+      <button class="btn btn-gold" id="btn-registrar-otro" onclick="registrarOtro()" style="width:100%;margin-top:4px;" disabled>Registrar</button>
     </div>
 
     <!-- TRASPASO INTERNO BLOCK -->
@@ -290,14 +293,15 @@ if(location.hostname==='aphillips7.github.io'){
       <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Usa esto cuando muevas dinero que ya es tuyo entre metodos (ej: pasar efectivo a Yappy). No se cuenta como venta ni gasto, solo mueve el saldo de un lado a otro.</div>
       <div class="grid-2">
         <div class="field" style="margin:0;"><label>De donde sale</label>
-          <select id="traspaso-origen"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+          <select id="traspaso-origen" onchange="validarTraspaso()"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
         </div>
         <div class="field" style="margin:0;"><label>A donde entra</label>
-          <select id="traspaso-destino"><option value="yappy">Yappy</option><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+          <select id="traspaso-destino" onchange="validarTraspaso()"><option value="yappy">Yappy</option><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
         </div>
       </div>
-      <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="traspaso-monto" placeholder="0.00" /></div></div>
-      <button class="btn btn-gold" id="btn-registrar-traspaso" onclick="registrarTraspaso()" style="width:100%;margin-top:4px;">Registrar traspaso</button>
+      <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="traspaso-monto" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" oninput="validarTraspaso()" /></div></div>
+      <div class="campo-ayuda" id="traspaso-ayuda" hidden></div>
+      <button class="btn btn-gold" id="btn-registrar-traspaso" onclick="registrarTraspaso()" style="width:100%;margin-top:4px;" disabled>Registrar traspaso</button>
     </div>
 
     <!-- SALDO AUTOMATICO -->
@@ -325,64 +329,66 @@ if(location.hostname==='aphillips7.github.io'){
           <option value="">Todos</option><option value="venta">Ventas</option><option value="abono">Abonos</option>
           <option value="compra">Compras</option><option value="gasto">Gastos</option><option value="retiro">Retiros</option><option value="traspaso">Traspasos</option>
         </select>
-        <div id="fil-balance" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);"></div>
+        <input type="search" id="fil-buscar" placeholder="Buscar movimiento..." oninput="renderHistorial()" style="flex:1;min-width:160px;" />
+        <button type="button" class="btn btn-outline btn-sm" onclick="exportarHistorialCSV()">Exportar</button>
+        <div id="fil-balance" class="fil-balance"></div>
       </div>
     </div>
     <div class="card" style="margin-top:0;border-top:none;"><div id="fin-lista"><div class="empty"><span></span>Sin movimientos aun.</div></div></div>
   </div>
 
-  <!-- RESUMEN -->
+  <!-- RESUMEN (fase 4): periodo, KPIs, estado de resultados, equilibrio, flujo, gastos, metodos y reparto -->
   <div id="fin-resumen" class="inner-page">
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="res-meses-btns"></div>
-    <div class="grid-3" style="margin-bottom:16px;">
-      <div class="stat-box"><div class="stat-label">Ventas del periodo</div><div class="stat-value gold money" id="res-ventas">$0</div><div class="stat-hint" id="res-num-ventas">0 ventas</div></div>
-      <div class="stat-box"><div class="stat-label">Ganancia neta</div><div class="stat-value green money" id="res-ganancia">$0</div><div class="stat-hint" id="res-margen-prom">Margen: 0%</div></div>
-      <div class="stat-box"><div class="stat-label">Balance neto</div><div class="stat-value money" id="res-balance">$0</div><div class="stat-hint">Entradas menos Salidas</div></div>
+    <div class="fin-barra">
+      <div class="fin-periodos" id="fin-periodos"></div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="exportarPeriodoCSV()">Exportar a Excel</button>
     </div>
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title" style="margin-bottom:16px;">Meta del mes</div>
-      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-        <div class="fin-gauge-wrap">
-          <svg class="fin-gauge-svg" viewBox="0 0 140 80">
-            <path d="M10,75 A60,60 0 0,1 130,75" fill="none" stroke="var(--border)" stroke-width="10" stroke-linecap="round"/>
-            <path id="gauge-arc" d="M10,75 A60,60 0 0,1 130,75" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 188"/>
-          </svg>
-          <div class="fin-gauge-pct" id="gauge-pct">0%</div>
-          <div class="fin-gauge-label">de la meta</div>
-        </div>
-        <div style="flex:1;min-width:180px;">
-          <div style="font-size:20px;font-family:'Cormorant Garamond',serif;font-weight:300;margin-bottom:4px;" id="gauge-texto">Sin meta definida</div>
-          <div style="font-size:12px;color:var(--muted);" id="gauge-sub"></div>
-          <div style="margin-top:12px;display:flex;gap:8px;align-items:flex-end;">
-            <div class="field" style="flex:1;margin:0;"><label>Meta ($)</label><div class="currency-wrap"><input type="number" id="meta-input2" placeholder="Ej: 5000" /></div></div>
-            <button class="btn btn-gold btn-sm" onclick="guardarMetaResumen()">Guardar</button>
-          </div>
-        </div>
+    <div id="fin-kpis" class="kpi-grid"></div>
+    <div id="fin-alertas" class="fin-avisos"></div>
+    <div class="fin-grid">
+      <div class="card"><div class="card-title">Estado de resultados</div><div id="fin-er"></div></div>
+      <div class="card"><div class="card-title">Punto de equilibrio y proyeccion del mes</div><div id="fin-equilibrio"></div></div>
+    </div>
+    <div class="grafica">
+      <div class="grafica-cab">
+        <div><div class="grafica-titulo">Flujo de caja, ultimos 12 meses</div><div class="grafica-sub" id="fin-flujo-sub"></div></div>
+        <div class="grafica-ley"><span><i class="ley-actual"></i>Entradas</span><span><i class="ley-comp"></i>Salidas</span></div>
       </div>
+      <div class="grafica-cuerpo" id="fin-flujo-graf"></div>
     </div>
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title" style="margin-bottom:12px;">Distribucion 40-30-30</div>
-      <div id="fin-alerta-gasto" class="fin-alerta-gasto">Los gastos operativos superan el 20% de tus ventas.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-        <div class="fin-3030-box" style="background:var(--blue-bg);"><div class="fin-3030-label">Reinversion 40%</div><div class="fin-3030-val" style="color:var(--blue);" id="res-reinversion">$0</div></div>
-        <div class="fin-3030-box" style="background:var(--green-bg);"><div class="fin-3030-label">Tu dinero 30%</div><div class="fin-3030-val" style="color:var(--green);" id="res-personal">$0</div></div>
-        <div class="fin-3030-box" style="background:var(--accent-light);"><div class="fin-3030-label">Fondo op. 30%</div><div class="fin-3030-val" style="color:var(--accent-strong);" id="res-fondo">$0</div></div>
-      </div>
-      <div id="fin-bar-403030"></div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Gastos por categoria</div><div id="fin-gastos-cat"></div></div>
+      <div class="card"><div class="card-title">Dinero por metodo de pago</div><div id="fin-metodos"></div></div>
     </div>
-    <div class="card"><div class="card-title">Ventas por canal</div><div id="res-canales"><div class="empty"><span></span>Sin datos aun</div></div></div>
+    <div class="card"><div class="card-title">Reparto de la ganancia neta (40 · 30 · 30)</div><div id="fin-reparto"></div></div>
   </div>
 
-  <!-- ANALISIS -->
+  <!-- RENTABILIDAD (fase 4) -->
   <div id="fin-analisis" class="inner-page">
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="an-meses-btns"></div>
-    <div class="card" style="margin-bottom:16px;"><div class="card-title" style="margin-bottom:16px;">Ventas por mes</div><div id="fin-chart-barras" style="display:flex;align-items:flex-end;gap:6px;height:140px;padding-bottom:24px;overflow-x:auto;"></div></div>
-    <div class="card" style="margin-bottom:16px;"><div class="card-title" style="margin-bottom:12px;">Ingresos vs Salidas</div><div id="fin-ing-sal"></div></div>
-    <div class="card" style="margin-bottom:16px;"><div class="card-title" style="margin-bottom:12px;">Gastos por categoria</div><div id="fin-gastos-categoria"></div></div>
+    <div class="fin-barra"><div class="fin-periodos" id="fin-periodos-an"></div></div>
+    <div id="fin-kpis-an" class="kpi-grid"></div>
     <div class="grid-2">
-      <div class="stat-box"><div class="stat-label">Margen promedio</div><div class="stat-value gold" id="an-margen-prom">0%</div><div class="stat-hint">de todas las ventas</div></div>
-      <div class="stat-box"><div class="stat-label">Ticket promedio</div><div class="stat-value money" id="an-ticket">$0</div><div class="stat-hint">por venta</div></div>
+      <div class="card"><div class="card-title">Ganancia por marca</div><div id="fin-marcas"></div></div>
+      <div class="card"><div class="card-title">Ventas por canal</div><div id="fin-canales"></div></div>
     </div>
+    <div class="card"><div class="card-title">Relojes mas rentables</div><div id="fin-top-relojes"></div></div>
+    <div class="card"><div class="card-title">Inventario como dinero</div><div id="fin-inv-dinero"></div></div>
+  </div>
+
+  <!-- POR COBRAR (fase 4) -->
+  <div id="fin-cobrar" class="inner-page">
+    <div id="fin-kpis-cobrar" class="kpi-grid"></div>
+    <div class="card"><div class="card-title">Apartados con saldo</div><div id="fin-tabla-cobrar"></div></div>
+  </div>
+
+  <!-- CIERRES DE MES (fase 4) -->
+  <div id="fin-cierres" class="inner-page">
+    <div class="fin-barra">
+      <p class="fin-intro">Cierra cada mes cuando revises sus numeros: queda guardado su resumen y ya no se pueden borrar movimientos de ese mes por accidente.</p>
+      <button type="button" class="btn btn-outline btn-sm" onclick="exportarCierresCSV()">Estado de resultados por mes (Excel)</button>
+    </div>
+    <div id="fin-kpis-cierres" class="kpi-grid"></div>
+    <div class="card"><div id="fin-tabla-cierres"></div></div>
   </div>
 </div>
 

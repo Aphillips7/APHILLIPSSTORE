@@ -8,6 +8,8 @@ import { renderCatalogoAdmin } from './catalogo-admin.js';
 import { renderClientes } from './clientes/clientes.js';
 import { renderContenido } from './contenido.js';
 import { renderAnalisis } from './finanzas/analisis.js';
+import { renderCierres } from './finanzas/cierre.js';
+import { renderCobrar } from './finanzas/cobrar.js';
 import { renderFinanzas } from './finanzas/finanzas.js';
 import { renderHistorial } from './finanzas/historial.js';
 import { selTipo } from './finanzas/registrar-venta.js';
@@ -42,9 +44,11 @@ const SECCIONES = [
   { id: 'clientes', t: 'Clientes', subs: [{ id: 'clientes', t: 'Clientes', page: 'clientes', contador: 'cuentas-web-badge' }] },
   { id: 'finanzas', t: 'Finanzas', subs: [
     { id: 'resumen', t: 'Resumen', page: 'finanzas', inner: 'resumen' },
-    { id: 'analisis', t: 'Analisis', page: 'finanzas', inner: 'analisis' },
+    { id: 'analisis', t: 'Rentabilidad', page: 'finanzas', inner: 'analisis' },
+    { id: 'cobrar', t: 'Por cobrar', page: 'finanzas', inner: 'cobrar' },
     { id: 'movimientos', t: 'Movimientos', page: 'finanzas', inner: 'historial' },
-    { id: 'registrar', t: 'Registrar', page: 'finanzas', inner: 'registrar' }] },
+    { id: 'registrar', t: 'Registrar', page: 'finanzas', inner: 'registrar' },
+    { id: 'cierres', t: 'Cierres', page: 'finanzas', inner: 'cierres' }] },
   { id: 'ajustes', t: 'Ajustes', subs: [
     { id: 'general', t: 'General', page: 'ajustes', contador: 'salud-badge' },
     { id: 'contenido', t: 'Contenido', page: 'contenido' },
@@ -112,6 +116,8 @@ function mostrarInner(prefix, name){
   if(name === 'resumen') renderResumen();
   if(name === 'historial') renderHistorial();
   if(name === 'analisis') renderAnalisis();
+  if(name === 'cobrar') renderCobrar();
+  if(name === 'cierres') renderCierres();
 }
 function renderPagina(page){
   if(page === 'inicio') renderInicio();
@@ -153,7 +159,7 @@ function showPage(ev, name){
 }
 function showInner(prefix, name){
   if(prefix === 'fin'){
-    var mapa = { resumen: 'resumen', analisis: 'analisis', historial: 'movimientos', registrar: 'registrar' };
+    var mapa = { resumen: 'resumen', analisis: 'analisis', historial: 'movimientos', registrar: 'registrar', cobrar: 'cobrar', cierres: 'cierres' };
     irSeccion(_actual.sec === 'ventas' && name === 'registrar' ? 'ventas' : 'finanzas', mapa[name]);
     return;
   }

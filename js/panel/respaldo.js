@@ -14,7 +14,8 @@ function construirDatosRespaldo(){
     meta:state.meta,
     ideas:state.ideas,
     tasks:state.tasks,
-    weekTasks:state.weekTasks
+    weekTasks:state.weekTasks,
+    cierres:state.cierres
   };
 }
 function renderResumenRespaldo(){
@@ -62,7 +63,7 @@ async function copiarRespaldoComoTexto(){
 }
 async function borrarYRecargarDesdeNube(){
   if(!confirm('Esto borra los datos guardados en ESTE dispositivo (no en la nube) y los vuelve a descargar desde la nube. Usalo solo si ves algo raro o desactualizado en este dispositivo. Continuar?'))return;
-  ['inventario','movimientos','clientes','tasks','meta','weekTasks','ideas','lastSync','syncHistory'].forEach(function(k){ localStorage.removeItem(k); });
+  ['inventario','movimientos','clientes','tasks','meta','weekTasks','ideas','cierres','lastSync','syncHistory'].forEach(function(k){ localStorage.removeItem(k); });
   try{ await borrarDatosLocales(); }catch(e){}
   location.reload();
 }
@@ -95,9 +96,10 @@ function importarJSON(e){
     if(Array.isArray(data.ideas)) state.ideas=data.ideas;
     if(Array.isArray(data.tasks)) state.tasks=data.tasks;
     if(data.weekTasks && typeof data.weekTasks==='object') state.weekTasks=data.weekTasks;
+    if(data.cierres && typeof data.cierres==='object' && !Array.isArray(data.cierres)) state.cierres=data.cierres;
 
     ['inventario','movimientos','clientes'].forEach(function(k){ asegurarIds(k); });
-    ['movimientos','inventario','clientes','ideas','tasks','weekTasks'].forEach(function(k){ save(k); });
+    ['movimientos','inventario','clientes','ideas','tasks','weekTasks','cierres'].forEach(function(k){ save(k); });
     saveMeta();
 
     refrescarVistaCompleta();

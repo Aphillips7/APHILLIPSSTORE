@@ -24,7 +24,7 @@ export function kpiHTML(o){
     var v = variacion(o.actual, o.anterior);
     if(v === null) pie += '<span class="kpi-var igual">nuevo</span>';
     else pie += '<span class="kpi-var ' + (v > 0 ? 'sube' : v < 0 ? 'baja' : 'igual') + (o.inverso ? ' inv' : '') + '">' + Math.abs(v) + '%</span>';
-    pie += '<span>vs mes anterior</span>';
+    pie += '<span>' + esc(o.vs || 'vs mes anterior') + '</span>';
   }
   if(o.pie) pie += '<span>' + esc(o.pie) + '</span>';
   var tag = o.onclick ? 'button type="button" onclick="' + esc(o.onclick) + '"' : 'div';
@@ -57,13 +57,14 @@ export function vacioHTML(o){
     '</div>';
 }
 
-// Tabla. cols = [{ t:'Titulo', der?:true }], filas = [[celdaHTML, ...]] (las celdas ya vienen escapadas)
+// Tabla. cols = [{ t:'Titulo', der?:true }], filas = [[celdaHTML, ...]] (las celdas ya vienen escapadas).
+// En celular cada fila se ve como tarjeta: la primera celda es el titulo y las demas llevan su etiqueta (data-label).
 export function tablaHTML(cols, filas, vacio){
   if(!filas.length) return vacioHTML(vacio || { icono: 'caja', titulo: 'Sin datos todavia' });
   return '<div class="tabla-wrap"><table class="tabla"><thead><tr>' +
     cols.map(function(c){ return '<th' + (c.der ? ' class="der"' : '') + '>' + esc(c.t) + '</th>'; }).join('') +
     '</tr></thead><tbody>' +
-    filas.map(function(f){ return '<tr>' + f.map(function(celda, i){ return '<td' + (cols[i] && cols[i].der ? ' class="der"' : '') + '>' + celda + '</td>'; }).join('') + '</tr>'; }).join('') +
+    filas.map(function(f){ return '<tr>' + f.map(function(celda, i){ return '<td' + (cols[i] && cols[i].der ? ' class="der"' : '') + ' data-label="' + esc(cols[i] ? cols[i].t : '') + '">' + celda + '</td>'; }).join('') + '</tr>'; }).join('') +
     '</tbody></table></div>';
 }
 

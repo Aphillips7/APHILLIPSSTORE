@@ -14,6 +14,7 @@ const state = {
   meta: parseFloat(localStorage.getItem('meta') || '0'),
   weekTasks: JSON.parse(localStorage.getItem('weekTasks') || '{}'),
   ideas: JSON.parse(localStorage.getItem('ideas') || '[]'),
+  cierres: (function(){ try{ return JSON.parse(localStorage.getItem('cierres') || '{}') || {}; }catch(e){ return {}; } })(),   // meses cerrados (Finanzas > Cierres)
 };
 
 const COLECCIONES = ['inventario', 'movimientos', 'clientes'];
