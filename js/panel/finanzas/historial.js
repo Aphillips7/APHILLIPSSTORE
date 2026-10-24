@@ -6,6 +6,7 @@ import { fechaEnMesCerrado } from './calculos.js';
 import { esc } from '../componentes.js';
 import { exportarMovimientosCSV } from '../exportar.js';
 
+const SIGNO={venta:1,abono:1,compra:-1,gasto:-1,retiro:-1};
 function renderHistorial() {
   var filMes=document.getElementById('fil-mes');
   if(filMes){
@@ -29,7 +30,10 @@ function renderHistorial() {
     var ri=state.movimientos.indexOf(m);
     var t=tipos[m.tipo]||['badge-blue',m.tipo];
     var gan=m.tipo==='venta'?' · Gan: <span class="money pos">$'+(m.monto-(m.costo||0)).toLocaleString()+'</span>':'';
-    var mc=(m.tipo==='venta'||m.tipo==='abono')?'pos':(m.tipo==='gasto'||m.tipo==='retiro')?'neg':'';
+    // signo claro: + entra (ventas, abonos) · − sale (compras, gastos, retiros) · ⇄ solo cambia de metodo
+    var signo=SIGNO[m.tipo]||0;
+    var mc=signo>0?'pos':signo<0?'neg':'';
+    var montoTxt=(m.tipo==='traspaso'?'⇄ ':signo>0?'+':signo<0?'−':'')+'$'+(Number(m.monto)||0).toLocaleString();
     var descuento='';
     if(m.tipo==='venta'&&m.precioObjetivo&&m.precioObjetivo>m.monto){
       var difPct=Math.round(((m.precioObjetivo-m.monto)/m.precioObjetivo)*100);
@@ -37,7 +41,7 @@ function renderHistorial() {
     }
     var clienteTxt=m.clienteNombre?' · '+m.clienteNombre:'';
     var metodoTxt=m.metodoPago?' · '+({efectivo:'Efectivo',yappy:'Yappy',transferencia:'Transferencia',tarjeta:'Tarjeta',otro:'Otro'}[m.metodoPago]||m.metodoPago):'';
-    return '<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+esc(m.desc)+'</div><div class="list-item-sub">'+m.fecha+' · '+esc(m.canal||'')+metodoTxt+esc(clienteTxt)+gan+descuento+'</div></div><span class="badge '+t[0]+'">'+t[1]+'</span><span class="money '+mc+'" style="min-width:70px;text-align:right;">$'+m.monto.toLocaleString()+'</span>'+(fechaEnMesCerrado(m.fecha)?'<span class="mov-candado" title="Mes cerrado">&#128274;</span>':'<button class="btn btn-danger" onclick="eliminarMov('+ri+')" aria-label="Eliminar movimiento">&#128465;</button>')+'</div>';
+    return '<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+esc(m.desc)+'</div><div class="list-item-sub">'+m.fecha+' · '+esc(m.canal||'')+metodoTxt+esc(clienteTxt)+gan+descuento+'</div></div><span class="badge '+t[0]+'">'+t[1]+'</span><span class="money '+mc+'" style="min-width:78px;text-align:right;" title="'+(signo>0?'Dinero que entra':signo<0?'Dinero que sale':'No cambia tu dinero')+'">'+montoTxt+'</span>'+(fechaEnMesCerrado(m.fecha)?'<span class="mov-candado" title="Mes cerrado">&#128274;</span>':'<button class="btn btn-danger" onclick="eliminarMov('+ri+')" aria-label="Eliminar movimiento">&#128465;</button>')+'</div>';
   }).join('');
 }
 // poka-yoke: un movimiento de un mes cerrado no se puede borrar (hay que reabrir el mes en Finanzas > Cierres)
