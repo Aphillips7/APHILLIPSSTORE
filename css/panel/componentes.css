@@ -148,7 +148,7 @@
   .num{font-variant-numeric:tabular-nums;}
 
   /* Tarjeta KPI: etiqueta, valor y variacion contra el mes anterior */
-  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:14px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:14px;}
   .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;min-width:0;}
   button.kpi{font:inherit;color:inherit;text-align:left;cursor:pointer;transition:border-color var(--fast) var(--ease),box-shadow var(--fast) var(--ease);}
   button.kpi:hover{border-color:var(--border2);box-shadow:var(--shadow-lg);}
@@ -219,3 +219,24 @@
     .kpi-pie span:not(.kpi-var){display:none;}   /* en celular solo la flecha y el % */
     .grafica{padding:14px;}
   }
+
+  /* Ranking en barras horizontales (graficas.js barrasH) */
+  .bh-fila{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'l v' 'b b';align-items:center;gap:4px 10px;padding:6px 0;font-size:13px;}
+  .bh-label{grid-area:l;} .bh-valor{grid-area:v;} .bh-pista{grid-area:b;}
+  .bh-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+  .bh-pista{height:8px;background:var(--bg2);border-radius:var(--r-pill);overflow:hidden;}
+  .bh-barra{display:block;height:100%;background:var(--g-actual);border-radius:var(--r-pill);}
+  .bh-valor{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;text-align:right;}
+  .bh-valor em{font-style:normal;font-weight:400;color:var(--muted);font-size:12px;}
+  /* Dona (graficas.js dona) */
+  .dona{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .dona svg{flex:none;}
+  .dona-valor{fill:var(--black) !important;font-size:17px !important;font-weight:700;}
+  .dona-texto{fill:var(--muted);font-size:10.5px !important;}
+  .dona-ley{flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;font-size:13px;}
+  .dona-ley div{display:flex;align-items:center;gap:8px;}
+  .dona-ley i{width:10px;height:10px;border-radius:3px;flex:none;}
+  .dona-ley span{flex:1;color:var(--muted);}
+  .dona-ley b{font-variant-numeric:tabular-nums;}
+  .dona-ley em{font-style:normal;font-weight:400;color:var(--muted);font-size:12px;}
+  .tenue-peq{font-size:13px;color:var(--muted);padding:8px 0;}

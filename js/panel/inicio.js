@@ -1,180 +1,222 @@
-// =================== INICIO ===================
+// =================== DASHBOARD (seccion de inicio, rediseno fase 3) ===================
+// KPIs del mes contra el anterior, "Hoy necesitas" (cada aviso con su boton directo), meta con
+// proyeccion, grafica de 12 meses, mas vistos vs mas vendidos y actividad reciente.
 import { finMesKey } from './finanzas/fechas.js';
 import { save, saveMeta, state } from './state.js';
-import { diasEnInventario, saldoPendienteReserva } from '../products.js';
+import { diasEnInventario, esPublicable, saldoPendienteReserva } from '../products.js';
+import { dinero, esc, estadoHTML, kpiHTML, vacioHTML } from './componentes.js';
+import { barrasH, barrasLinea } from './graficas.js';
 
-function renderInicio() {
+const DIAS_PLAZO_ABONO = 30;     // una reserva con saldo pasa a "vencida" despues de estos dias
+const DIAS_TRANSITO = 20, DIAS_REBAJAR = 45;
+const ABIERTOS = ['solicitado', 'confirmado', 'pagado', 'enviado'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_C = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function claveMes(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+// Ingresos = ventas + abonos (el abono es dinero que ya entro; al completar el apartado solo se registra
+// el saldo como venta, con el costo completo). Asi coincide con Finanzas.
+function esIngreso(m){ return m.tipo === 'venta' || m.tipo === 'abono'; }
+function resumenMes(clave){
+  var movs = state.movimientos.filter(function(m){ return esIngreso(m) && finMesKey(m.fecha) === clave; });
+  var ingresos = movs.reduce(function(a, b){ return a + (b.monto || 0); }, 0);
+  var ganancia = movs.reduce(function(a, b){ return a + ((b.monto || 0) - (b.costo || 0)); }, 0);
+  return { ingresos: ingresos, ganancia: ganancia, margen: ingresos ? Math.round(ganancia / ingresos * 100) : 0,
+    ventas: movs.filter(function(m){ return m.tipo === 'venta' && !m._soloRegistro; }).length,
+    abonos: movs.filter(function(m){ return m.tipo === 'abono'; }).length };
+}
+function costoDe(p){ return Number(p.costoTotal) || ((Number(p.costo) || 0) + (Number(p.importacion) || 0)); }
+function pedidosAbiertos(){ return (window.__pedidosWeb || []).filter(function(p){ return ABIERTOS.indexOf(p.estado) !== -1; }); }
+function numeroBadge(id){ var b = document.getElementById(id); return b && b.style.display !== 'none' ? (parseInt(b.textContent, 10) || 0) : 0; }
+
+function renderInicio(){
   var hoy = new Date();
-  var mesActualKey = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
-  var mesAntDate = new Date(hoy.getFullYear(), hoy.getMonth()-1, 1);
-  var mesAnteriorKey = mesAntDate.getFullYear() + '-' + String(mesAntDate.getMonth()+1).padStart(2,'0');
+  var actual = resumenMes(claveMes(hoy));
+  var anterior = resumenMes(claveMes(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1)));
 
-  // Ingresos del mes = ventas + abonos de apartados (el abono es dinero que ya entro; al completar el
-  // apartado solo se registra el saldo como venta, con el costo completo). Asi coincide con Finanzas.
-  const esIngreso = m => m.tipo === 'venta' || m.tipo === 'abono';
-  const ventas = state.movimientos.filter(m => esIngreso(m) && finMesKey(m.fecha) === mesActualKey);
-  const ventasMesAnt = state.movimientos.filter(m => esIngreso(m) && finMesKey(m.fecha) === mesAnteriorKey);
-  const numVentas = ventas.filter(m => m.tipo === 'venta' && !m._soloRegistro).length;
-  const totalVentas = ventas.reduce((a, b) => a + b.monto, 0);
-  const totalVentasAnt = ventasMesAnt.reduce((a, b) => a + b.monto, 0);
-  const totalGanancia = ventas.reduce((a, b) => a + (b.monto - (b.costo || 0)), 0);
-  const totalGananciaAnt = ventasMesAnt.reduce((a, b) => a + (b.monto - (b.costo || 0)), 0);
-  const stock = state.inventario.filter(i => i.estado === 'disponible').length;
-
-  document.getElementById('stat-ventas-mes').textContent = '$' + totalVentas.toLocaleString();
-  document.getElementById('stat-ganancia').textContent = '$' + totalGanancia.toLocaleString();
-  document.getElementById('stat-stock').textContent = stock;
-  const numAbonos = ventas.filter(m => m.tipo === 'abono').length;
-  document.getElementById('stat-hint-ventas').textContent = numVentas + ' venta' + (numVentas !== 1 ? 's' : '') + (numAbonos ? ' · ' + numAbonos + ' abono' + (numAbonos !== 1 ? 's' : '') : '');
-  setTrendInicio('trend-ventas', totalVentas, totalVentasAnt);
-  setTrendInicio('trend-ganancia', totalGanancia, totalGananciaAnt);
-
-  var mesesNombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var h = hoy.getHours();
+  var sal = document.getElementById('dash-saludo');
+  if(sal) sal.textContent = (h < 12 ? 'Buenos dias' : h < 19 ? 'Buenas tardes' : 'Buenas noches') + ', Alberto';
   var mesLabelEl = document.getElementById('inicio-mes-label');
-  if (mesLabelEl) mesLabelEl.textContent = 'Tu resumen de ' + mesesNombres[hoy.getMonth()] + ' ' + hoy.getFullYear();
+  if(mesLabelEl) mesLabelEl.textContent = 'Tu negocio en ' + MESES[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
-  var diasRestEl = document.getElementById('meta-dias-restantes');
-  if (state.meta > 0) {
-    const pct = Math.min(Math.round((totalVentas / state.meta) * 100), 100);
-    document.getElementById('meta-label').textContent = '$' + totalVentas.toLocaleString() + ' de $' + state.meta.toLocaleString() + ' meta';
-    document.getElementById('meta-pct').textContent = pct + '%';
-    document.getElementById('meta-fill').style.width = pct + '%';
-    document.getElementById('meta-input').value = state.meta;
-    if (diasRestEl) {
-      var diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).getDate();
-      var diasRestantes = diasEnMes - hoy.getDate();
-      diasRestEl.textContent = diasRestantes > 0 ? diasRestantes + ' dia' + (diasRestantes !== 1 ? 's' : '') + ' restantes este mes' : 'Ultimo dia del mes';
-    }
-  } else {
-    document.getElementById('meta-label').textContent = 'Sin meta definida';
-    document.getElementById('meta-pct').textContent = '0%';
-    document.getElementById('meta-fill').style.width = '0%';
-    if (diasRestEl) diasRestEl.textContent = '';
-  }
-
-  renderChecklist();
+  renderKpis(actual, anterior);
+  renderMeta(actual, hoy);
   renderPendientesInicio();
-  renderMiniChartInicio();
+  renderGrafica(hoy);
+  renderTop();
   renderRecientesInicio();
+  renderChecklist();
 }
-function setTrendInicio(id, actual, anterior) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  if (!anterior || anterior <= 0) { el.textContent = ''; return; }
-  var diff = Math.round(((actual - anterior) / anterior) * 100);
-  var arrow = diff >= 0 ? '\u25B2' : '\u25BC';
-  var color = diff >= 0 ? 'var(--green)' : 'var(--red)';
-  el.innerHTML = '<span style="color:'+color+';font-weight:500;">'+arrow+' '+Math.abs(diff)+'%</span> vs mes anterior';
+
+function renderKpis(actual, anterior){
+  var cont = document.getElementById('dash-kpis'); if(!cont) return;
+  var enStock = state.inventario.filter(function(p){ return ['disponible', 'transito', 'reservado'].indexOf(p.estado) !== -1; });
+  var valorCosto = enStock.reduce(function(a, p){ return a + costoDe(p); }, 0);
+  var valorPrecio = enStock.reduce(function(a, p){ return a + (Number(p.precio) || 0); }, 0);
+  var pedidos = pedidosAbiertos();
+  var porConfirmar = pedidos.filter(function(p){ return p.estado === 'solicitado'; }).length;
+  var reservas = state.inventario.filter(function(p){ return p.estado === 'reservado' && p.reserva; });
+  var porCobrar = reservas.reduce(function(a, p){ return a + saldoPendienteReserva(p); }, 0);
+  cont.innerHTML = [
+    kpiHTML({ label: 'Ventas del mes', valor: dinero(actual.ingresos), actual: actual.ingresos, anterior: anterior.ingresos, onclick: "irSeccion('finanzas','resumen')" }),
+    kpiHTML({ label: 'Ganancia neta', valor: dinero(actual.ganancia), tono: actual.ganancia < 0 ? 'neg' : 'pos', actual: actual.ganancia, anterior: anterior.ganancia }),
+    kpiHTML({ label: 'Margen promedio', valor: actual.margen + '%', tono: !actual.ingresos ? '' : actual.margen >= 30 ? 'pos' : actual.margen < 15 ? 'neg' : '', actual: actual.margen, anterior: anterior.margen, pie: actual.ventas + ' venta' + (actual.ventas !== 1 ? 's' : '') }),
+    kpiHTML({ label: 'Inventario', valor: dinero(valorCosto), pie: 'a costo · a precio ' + dinero(valorPrecio), onclick: "irSeccion('inventario','relojes')" }),
+    kpiHTML({ label: 'Pedidos web', valor: String(pedidos.length), pie: porConfirmar ? porConfirmar + ' por confirmar' : 'al dia', onclick: "irSeccion('ventas','pedidos')" }),
+    kpiHTML({ label: 'Por cobrar', valor: dinero(porCobrar), pie: reservas.length + ' reserva' + (reservas.length !== 1 ? 's' : '') + ' activa' + (reservas.length !== 1 ? 's' : '') })
+  ].join('');
 }
-function renderPendientesInicio() {
-  var cont = document.getElementById('pendientes-container');
-  if (!cont) return;
+
+function renderMeta(actual, hoy){
+  var label = document.getElementById('meta-label'), pctEl = document.getElementById('meta-pct'), fill = document.getElementById('meta-fill');
+  var diasEl = document.getElementById('meta-dias-restantes'), proy = document.getElementById('meta-proyeccion');
+  if(!label) return;
+  var diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate(), dia = hoy.getDate(), quedan = diasMes - dia;
+  var inp = document.getElementById('meta-input');
+  if(inp && document.activeElement !== inp) inp.value = state.meta > 0 ? state.meta : '';
+  validarMeta();
+  if(!(state.meta > 0)){
+    label.textContent = 'Sin meta definida'; pctEl.textContent = '0%'; fill.style.width = '0%';
+    if(diasEl) diasEl.textContent = 'Pon una meta para ver si vas a tiempo.';
+    if(proy) proy.innerHTML = '';
+    return;
+  }
+  var pct = Math.round(actual.ingresos / state.meta * 100);
+  label.textContent = dinero(actual.ingresos) + ' de ' + dinero(state.meta);
+  pctEl.textContent = pct + '%';
+  fill.style.width = Math.min(pct, 100) + '%';
+  if(diasEl) diasEl.textContent = quedan > 0 ? quedan + ' dia' + (quedan !== 1 ? 's' : '') + ' restantes este mes' : 'Ultimo dia del mes';
+  if(!proy) return;
+  var ritmo = actual.ingresos / dia, cierre = Math.round(ritmo * diasMes), falta = Math.max(0, state.meta - actual.ingresos);
+  var vaBien = cierre >= state.meta;
+  proy.innerHTML = pct >= 100 ? estadoHTML('ok', 'Meta cumplida') + '<span>Vas ' + dinero(actual.ingresos - state.meta) + ' por encima.</span>' :
+    estadoHTML(vaBien ? 'ok' : 'pendiente', vaBien ? 'A tiempo' : 'Por debajo del ritmo') +
+    '<span>Al ritmo actual cierras en <b>' + dinero(cierre) + '</b>' + (quedan > 0 ? '; te faltan ' + dinero(falta) + ' (' + dinero(Math.ceil(falta / Math.max(1, quedan))) + ' por dia).' : '.') + '</span>';
+}
+// poka-yoke: Guardar solo se activa con una meta valida y distinta de la actual
+function validarMeta(){
+  var inp = document.getElementById('meta-input'), b = document.getElementById('meta-guardar');
+  if(!inp || !b) return false;
+  var v = Number(inp.value);
+  var ok = inp.value !== '' && isFinite(v) && v > 0 && v < 10000000 && Math.round(v) !== Math.round(state.meta || 0);
+  b.disabled = !ok;
+  inp.setAttribute('aria-invalid', inp.value !== '' && !(v > 0) ? 'true' : 'false');
+  return ok;
+}
+function guardarMeta(){
+  if(!validarMeta()) return;
+  state.meta = Math.round(Number(document.getElementById('meta-input').value));
+  saveMeta(); renderInicio();
+}
+
+// ---------- Hoy necesitas ----------
+function aviso(orden, tipo, etiqueta, titulo, sub, boton, accion){ return { orden: orden, tipo: tipo, etiqueta: etiqueta, titulo: titulo, sub: sub, boton: boton, accion: accion }; }
+function editar(id){ return "irSeccion('inventario','relojes');editarProducto('" + id + "')"; }
+function renderPendientesInicio(){
+  var cont = document.getElementById('pendientes-container'); if(!cont) return;
   var items = [];
-  state.inventario.forEach(function(p) {
-    if (p.estado === 'reservado' && p.reserva) {
+  var porConfirmar = pedidosAbiertos().filter(function(p){ return p.estado === 'solicitado'; });
+  if(porConfirmar.length) items.push(aviso(0, 'vencido', 'Pedido web', porConfirmar.length + ' pedido' + (porConfirmar.length !== 1 ? 's' : '') + ' por confirmar',
+    porConfirmar.slice(0, 3).map(function(p){ return p.numero + ' · ' + p.reloj; }).join(' / '), 'Confirmar', "irSeccion('ventas','pedidos')"));
+  state.inventario.forEach(function(p){
+    var id = esc(p.id), nombre = p.nombre || 'Sin nombre';
+    if(p.estado === 'reservado' && p.reserva){
       var saldo = saldoPendienteReserva(p);
-      if (saldo > 0) {
-        items.push({ orden: 1, html:
-          '<div class="list-item" style="padding:10px 0;">'+
-            '<div class="list-item-info"><div class="list-item-name">'+p.nombre+'</div>'+
-            '<div class="list-item-sub">Reservado por '+(p.reserva.clienteNombre||'—')+' · Saldo pendiente</div></div>'+
-            '<span class="badge badge-gold">$'+saldo.toLocaleString()+'</span></div>' });
+      if(saldo > 0){
+        var d = diasEnInventario(p.reserva.fechaInicio), quedan = d === null ? null : DIAS_PLAZO_ABONO - d;
+        if(quedan !== null && quedan < 0) items.push(aviso(1, 'vencido', 'Abono vencido', nombre, (p.reserva.clienteNombre || 'Cliente') + ' debe ' + dinero(saldo) + ' · vencio hace ' + (-quedan) + ' dias', 'Registrar abono', "abrirAbonoModal('" + id + "')"));
+        else items.push(aviso(4, 'pendiente', 'Reserva', nombre, (p.reserva.clienteNombre || 'Cliente') + ' debe ' + dinero(saldo) + (quedan !== null ? ' · plazo en ' + quedan + ' dias' : ''), 'Abono', "abrirAbonoModal('" + id + "')"));
       }
-    } else if (p.estado === 'transito') {
+    } else if(p.estado === 'transito'){
       var dT = diasEnInventario(p.fecha);
-      if (dT !== null && dT > 20) {
-        var subTransito = 'En transito hace ' + dT + ' dias' + (p.paqueteria ? ' · ' + p.paqueteria : '') + (p.tracking ? ' · Guia: ' + p.tracking : '');
-        items.push({ orden: 2, html:
-          '<div class="list-item" style="padding:10px 0;">'+
-            '<div class="list-item-info"><div class="list-item-name">'+p.nombre+'</div>'+
-            '<div class="list-item-sub">'+subTransito+'</div></div>'+
-            '<span class="badge badge-blue">Revisar envio</span></div>' });
-      }
-    } else if (p.estado === 'disponible') {
+      if(dT !== null && dT > DIAS_TRANSITO) items.push(aviso(2, 'pendiente', 'Transito', nombre, 'En camino hace ' + dT + ' dias' + (p.paqueteria ? ' · ' + p.paqueteria : '') + (p.tracking ? ' · guia ' + p.tracking : ''), 'Revisar envio', "verDetalle('" + id + "')"));
+    } else if(p.estado === 'disponible'){
       var dD = diasEnInventario(p.fecha);
-      if (dD !== null && dD > 45) {
-        items.push({ orden: 3, html:
-          '<div class="list-item" style="padding:10px 0;">'+
-            '<div class="list-item-info"><div class="list-item-name">'+p.nombre+'</div>'+
-            '<div class="list-item-sub">'+dD+' dias en inventario sin venderse</div></div>'+
-            '<span class="badge badge-red">Rebajar</span></div>' });
-      }
+      if(dD !== null && dD > DIAS_REBAJAR) items.push(aviso(3, 'pendiente', 'Sin rotar', nombre, dD + ' dias disponible sin venderse · ' + dinero(p.precio), 'Rebajar', editar(id)));
+    }
+    if(esPublicable(p) && p.estado !== 'vendido' && (!(p.fotos && p.fotos.length) && !p.foto || !p.mm)){
+      var falta = [(!(p.fotos && p.fotos.length) && !p.foto) ? 'foto' : '', !p.mm ? 'medida (mm)' : ''].filter(Boolean).join(' y ');
+      items.push(aviso(5, 'info', 'Catalogo', nombre, 'Se ve en la tienda sin ' + falta, 'Completar', editar(id)));
     }
   });
-  items.sort(function(a,b){ return a.orden - b.orden; });
-  cont.innerHTML = items.length ? items.map(function(x){ return x.html; }).join('') :
-    '<div class="empty" style="padding:20px 0;"><span></span>Todo al dia, sin pendientes por ahora.</div>';
+  var avisosWeb = numeroBadge('cuentas-web-badge');
+  if(avisosWeb) items.push(aviso(1.5, 'pendiente', 'Avisos web', avisosWeb + ' aviso' + (avisosWeb !== 1 ? 's' : '') + ' por enviar', 'Clientes que pidieron que les avises de un reloj o una marca', 'Enviar', "irSeccion('clientes')"));
+  items.sort(function(a, b){ return a.orden - b.orden; });
+  var c = document.getElementById('hoy-cont');
+  if(c){ c.hidden = !items.length; c.textContent = items.length; }
+  if(!items.length){ cont.innerHTML = vacioHTML({ icono: 'listo', titulo: 'Todo al dia', texto: 'No hay pedidos, cobros ni relojes que necesiten algo hoy.' }); return; }
+  var MAX = 8;
+  cont.innerHTML = '<div class="hoy-lista">' + items.slice(0, MAX).map(function(x){
+    return '<div class="hoy-item">' + estadoHTML(x.tipo, x.etiqueta) +
+      '<div class="hoy-texto"><div class="hoy-titulo">' + esc(x.titulo) + '</div><div class="hoy-sub">' + esc(x.sub) + '</div></div>' +
+      '<button type="button" class="btn btn-sm ' + (x.tipo === 'vencido' ? 'btn-gold' : 'btn-outline') + '" onclick="' + x.accion + '">' + esc(x.boton) + '</button></div>';
+  }).join('') + '</div>' + (items.length > MAX ? '<div class="hoy-mas">y ' + (items.length - MAX) + ' mas en Inventario y Ventas</div>' : '');
 }
 
-function renderMiniChartInicio() {
-  var cont = document.getElementById('mini-chart-container');
-  if (!cont) return;
-  var diasNombres = ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
-  var dias = [];
-  for (var i = 6; i >= 0; i--) {
-    var d = new Date();
-    d.setDate(d.getDate() - i);
-    dias.push(d);
+// ---------- grafica de 12 meses ----------
+function renderGrafica(hoy){
+  var el = document.getElementById('dash-grafica'); if(!el) return;
+  var et = [], ventas = [], ganancia = [];
+  for(var i = 11; i >= 0; i--){
+    var d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1), r = resumenMes(claveMes(d));
+    et.push(MESES_C[d.getMonth()]); ventas.push(r.ingresos); ganancia.push(r.ganancia);
   }
-  var datos = dias.map(function(d) {
-    var key = d.toLocaleDateString('es-MX');
-    var total = state.movimientos.filter(function(m){ return m.tipo === 'venta' && m.fecha === key; })
-      .reduce(function(a,b){ return a + b.monto; }, 0);
-    return { label: diasNombres[d.getDay()], total: total };
-  });
-  var max = Math.max.apply(null, datos.map(function(x){ return x.total; }).concat([1]));
-  cont.innerHTML = datos.map(function(x) {
-    var pct = Math.round((x.total / max) * 100);
-    return '<div class="fin-bar-row"><span class="fin-bar-label">'+x.label+'</span>'+
-      '<div class="fin-bar-track"><div class="fin-bar-fill" style="width:'+pct+'%;background:var(--accent);"></div></div>'+
-      '<span class="fin-bar-val money'+(x.total>0?' pos':'')+'">$'+x.total.toLocaleString()+'</span></div>';
-  }).join('');
+  var total = ventas.reduce(function(a, b){ return a + b; }, 0), gan = ganancia.reduce(function(a, b){ return a + b; }, 0);
+  var sub = document.getElementById('dash-grafica-sub');
+  if(sub) sub.textContent = 'Total ' + dinero(total) + ' en ventas · ' + dinero(gan) + ' de ganancia' + (total ? ' (' + Math.round(gan / total * 100) + '%)' : '');
+  var ley = document.getElementById('dash-ley-meta'); if(ley) ley.hidden = !(state.meta > 0);
+  if(!total){ el.innerHTML = vacioHTML({ icono: 'grafica', titulo: 'Aun no hay ventas', texto: 'Cuando registres ventas veras aqui como va cada mes.', boton: '+ Registrar venta', onclick: "irARegistrar('venta')" }); return; }
+  barrasLinea(el, { etiquetas: et, barras: ventas, linea: ganancia, meta: state.meta > 0 ? state.meta : 0, nombreBarras: 'Ventas', nombreLinea: 'Ganancia', resaltar: 11 });
 }
-function renderRecientesInicio() {
-  var cont = document.getElementById('recientes-container');
-  if (!cont) return;
-  var ventasRecientes = state.movimientos.filter(function(m){ return m.tipo === 'venta' && !m._soloRegistro; })
-    .slice().sort(function(a,b){ return (b._ts||0) - (a._ts||0); }).slice(0,4);
-  var htmlVentas = ventasRecientes.length ? ventasRecientes.map(function(v) {
-    return '<div class="list-item" style="padding:8px 0;">'+
-      '<div class="list-item-info"><div class="list-item-name">'+v.desc+'</div>'+
-      '<div class="list-item-sub">'+(v.clienteNombre||'Sin cliente')+' · '+v.fecha+'</div></div>'+
-      '<span class="money pos">$'+v.monto.toLocaleString()+'</span></div>';
-  }).join('') : '<div class="empty" style="padding:16px 0;"><span></span>Aun no hay ventas registradas.</div>';
 
-  var hoy = new Date();
-  var mesActualKey = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
-  var porCliente = {};
-  state.movimientos.filter(function(m){ return m.tipo === 'venta' && finMesKey(m.fecha) === mesActualKey; }).forEach(function(v) {
-    if (!v.clienteNombre) return;
-    porCliente[v.clienteNombre] = (porCliente[v.clienteNombre]||0) + v.monto;
+// ---------- mas vistos vs mas vendidos (ultimos 90 dias de ventas) ----------
+function renderTop(){
+  var el = document.getElementById('dash-top'); if(!el) return;
+  var porId = {}; state.inventario.forEach(function(p){ porId[p.id] = p; });
+  var vistos = Object.keys(state.metricas || {}).map(function(id){ var m = state.metricas[id] || {}; return { id: id, vistas: m.vistas || 0, clics: m.clics || 0 }; })
+    .filter(function(x){ return porId[x.id] && x.vistas > 0; }).sort(function(a, b){ return b.vistas - a.vistas; }).slice(0, 5);
+  var vendidos = {};
+  state.movimientos.forEach(function(m){
+    if(m.tipo !== 'venta' || m._soloRegistro) return;
+    var d = diasEnInventario(m.fecha); if(d === null || d > 90) return;
+    var nombre = (porId[m.invId] && porId[m.invId].nombre) || m.desc || 'Venta';
+    vendidos[nombre] = vendidos[nombre] || { n: 0, monto: 0 };
+    vendidos[nombre].n++; vendidos[nombre].monto += m.monto || 0;
   });
-  var topArr = Object.entries(porCliente).sort(function(a,b){ return b[1]-a[1]; });
-  var topCliente = topArr.length ? topArr[0][0] : '—';
+  var topV = Object.keys(vendidos).map(function(k){ return { label: k, valor: vendidos[k].n, extra: dinero(vendidos[k].monto) }; }).sort(function(a, b){ return b.valor - a.valor || 0; }).slice(0, 5);
+  var nombresVendidos = topV.map(function(x){ return x.label; });
+  el.innerHTML = '<div class="top-cols">' +
+    '<div><div class="eyebrow">Mas vistos en la tienda</div>' + (vistos.length ? barrasH(vistos.map(function(x){
+      var n = porId[x.id].nombre || 'Sin nombre';
+      return { label: n, valor: x.vistas, extra: (x.clics ? x.clics + ' WhatsApp' : '') + (nombresVendidos.indexOf(n) === -1 && porId[x.id].estado === 'disponible' ? ' · sin venta' : '') };
+    }), function(v){ return v + ' vistas'; }) : '<div class="tenue-peq">Aun no hay vistas registradas.</div>') + '</div>' +
+    '<div><div class="eyebrow">Mas vendidos (90 dias)</div>' + (topV.length ? barrasH(topV, function(v){ return v + ' vendido' + (v !== 1 ? 's' : ''); }) : '<div class="tenue-peq">Sin ventas en los ultimos 90 dias.</div>') + '</div>' +
+    '</div>' + (vistos.some(function(x){ return nombresVendidos.indexOf(porId[x.id].nombre) === -1 && porId[x.id].estado === 'disponible'; }) ?
+      '<div class="top-nota">Los que se ven mucho y no se venden: revisa precio, fotos o publicalos en historias.</div>' : '');
+}
 
-  var reservasActivas = state.inventario.filter(function(p){ return p.estado === 'reservado' && p.reserva; });
-  var saldoTotal = reservasActivas.reduce(function(a,p){ return a + saldoPendienteReserva(p); }, 0);
-
-  var htmlExtra = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">'+
-    '<div class="fin-3030-box" style="background:var(--bg2);"><div class="fin-3030-label">Cliente top del mes</div><div class="fin-3030-val" style="font-size:14px;">'+topCliente+'</div></div>'+
-    '<div class="fin-3030-box" style="background:var(--accent-light);"><div class="fin-3030-label">Reservas activas</div><div class="fin-3030-val" style="color:var(--accent-strong);">'+reservasActivas.length+'</div></div>'+
-    '<div class="fin-3030-box" style="background:var(--blue-bg);"><div class="fin-3030-label">Saldo por cobrar</div><div class="fin-3030-val" style="color:var(--blue);">$'+saldoTotal.toLocaleString()+'</div></div>'+
-  '</div>';
-
-  cont.innerHTML = htmlVentas + htmlExtra;
+// ---------- actividad reciente ----------
+const TIPOS = { venta: ['ok', 'Venta', 1], abono: ['ok', 'Abono', 1], compra: ['info', 'Compra', -1], gasto: ['vencido', 'Gasto', -1], retiro: ['pendiente', 'Retiro', -1], traspaso: ['cancelado', 'Traspaso', 0], reserva_cancelada: ['cancelado', 'Reserva cancelada', 0] };
+function renderRecientesInicio(){
+  var cont = document.getElementById('recientes-container'); if(!cont) return;
+  var movs = state.movimientos.filter(function(m){ return !m._soloRegistro && TIPOS[m.tipo]; }).slice().sort(function(a, b){ return (b._ts || 0) - (a._ts || 0); }).slice(0, 6);
+  if(!movs.length){ cont.innerHTML = vacioHTML({ icono: 'caja', titulo: 'Sin movimientos todavia', texto: 'Aqui veras las ultimas ventas, compras y gastos.' }); return; }
+  cont.innerHTML = movs.map(function(m){
+    var t = TIPOS[m.tipo], monto = m.monto || 0;
+    return '<div class="list-item" style="padding:10px 0;">' + estadoHTML(t[0], t[1]) +
+      '<div class="list-item-info"><div class="list-item-name">' + esc(m.desc || t[1]) + '</div><div class="list-item-sub">' + esc([m.clienteNombre, m.fecha].filter(Boolean).join(' · ')) + '</div></div>' +
+      '<span class="money ' + (t[2] > 0 ? 'pos' : t[2] < 0 ? 'neg' : '') + '">' + (t[2] < 0 ? '-' : t[2] > 0 ? '+' : '') + dinero(Math.abs(monto)) + '</span></div>';
+  }).join('');
 }
 
 function abrirReglasModal() { document.getElementById('reglas-overlay').classList.add('open'); }
 function cerrarReglasModal() { document.getElementById('reglas-overlay').classList.remove('open'); }
-function guardarMeta() {
-  const val = parseFloat(document.getElementById('meta-input').value);
-  if (!val || val <= 0) return;
-  state.meta = val; saveMeta(); renderInicio();
-}
 
 const defaultTasks = ['Revisar mensajes de clientes','Publicar story con inventario disponible','Apuntar ventas del dia','Responder comentarios en marketplace'];
 function renderChecklist() {
   const container = document.getElementById('checklist-container');
+  if (!container) return;
   if (state.tasks.length === 0) {
     defaultTasks.forEach(t => state.tasks.push({ text: t, done: false, id: Date.now() + Math.random() }));
     save('tasks');
@@ -182,8 +224,8 @@ function renderChecklist() {
   container.innerHTML = state.tasks.map((t, i) => `
     <div class="check-item ${t.done ? 'done' : ''}" onclick="toggleTask(${i})">
       <input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation();toggleTask(${i})" />
-      <label>${t.text}</label>
-      <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();removeTask(${i})">x</button>
+      <label>${esc(t.text)}</label>
+      <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();removeTask(${i})" aria-label="Quitar tarea">x</button>
     </div>`).join('');
 }
 function toggleTask(i) { state.tasks[i].done = !state.tasks[i].done; save('tasks'); renderChecklist(); }
@@ -195,6 +237,17 @@ function addTask() {
   input.value = ''; save('tasks'); renderChecklist();
 }
 
-export { abrirReglasModal, addTask, cerrarReglasModal, defaultTasks, guardarMeta, removeTask, renderChecklist, renderInicio, renderMiniChartInicio, renderPendientesInicio, renderRecientesInicio, setTrendInicio, toggleTask };
+// los pedidos web y los avisos llegan aparte: si cambian sus contadores, se actualiza el dashboard visible
+var _tObs = null;
+function vigilarExternos(){
+  var obs = new MutationObserver(function(){
+    clearTimeout(_tObs);
+    _tObs = setTimeout(function(){ var p = document.getElementById('page-inicio'); if(p && p.classList.contains('active')) renderInicio(); }, 300);
+  });
+  ['pedidos-web-badge', 'cuentas-web-badge'].forEach(function(id){ var b = document.getElementById(id); if(b) obs.observe(b, { attributes: true, childList: true, characterData: true, subtree: true }); });
+}
+vigilarExternos();
+
+export { abrirReglasModal, addTask, cerrarReglasModal, defaultTasks, guardarMeta, removeTask, renderChecklist, renderInicio, renderPendientesInicio, renderRecientesInicio, toggleTask };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { abrirReglasModal, addTask, cerrarReglasModal, guardarMeta, removeTask, toggleTask });
+Object.assign(window, { abrirReglasModal, addTask, cerrarReglasModal, guardarMeta, removeTask, toggleTask, validarMeta });

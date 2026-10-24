@@ -131,3 +131,22 @@ Botones desactivados en gris.
   f2-cel-claro-ventas, f2-cel-oscuro-mas, f2-cel-claro-nuevo, f2-cel-oscuro-ajustes, f2-cel-oscuro-buscador.
 - Falta / para despues: la seccion Ventas solo tiene pedidos web y registrar (tablero, KPIs y reservas en la
   fase 5); Clientes y Ajustes > General se completan en las fases 6 y 8.
+
+### Fase 3 — Dashboard: TERMINADA (2026-10-24, rama `panel-f3-dashboard`, CACHE_NAME aphillips-v125)
+- `js/panel/inicio.js` reescrito y `page-inicio` rehecho. Saludo segun la hora y botones Registrar venta / Compra / Reglas.
+- 6 KPIs (tocables): ventas del mes, ganancia neta y margen promedio con variacion vs mes anterior; inventario a
+  costo y a precio (disponible + transito + reservado); pedidos web abiertos (y cuantos por confirmar); por cobrar.
+- "Hoy necesitas" ordenado por urgencia, cada aviso con su boton: Confirmar pedido web, Registrar abono (reserva
+  vencida a los 30 dias de apartada; constante DIAS_PLAZO_ABONO), Enviar avisos web, Revisar envio (>20 dias en
+  transito), Rebajar (>45 dias disponible), Completar (publicado sin foto o sin medida).
+- Meta del mes: progreso, proyeccion de cierre al ritmo actual, cuanto falta por dia, etiqueta "A tiempo" /
+  "Por debajo del ritmo". Poka-yoke: Guardar desactivado hasta que la meta sea un numero > 0 y distinto; Enter guarda.
+- Grafica de 12 meses (ventas en glaciar, ganancia en linea, meta punteada) con `js/panel/graficas.js` nuevo
+  (barras+linea, dona, barras horizontales; SVG al ancho real, textos de 11 px en celular y PC; tooltip nativo).
+- Mas vistos (metricas del catalogo) vs mas vendidos (90 dias) con aviso de los que se ven y no se venden.
+- Actividad reciente con etiqueta por tipo y monto con signo; checklist del dia se mantiene (textos escapados).
+- Se quito la mini grafica de 7 dias (la reemplaza la de 12 meses). Nuevo css/panel/dashboard.css.
+- Verificacion: `node scripts/verificar.mjs` OK; capturas con datos de EJEMPLO solo en memoria
+  (.claude/prueba/datos-prueba.js, no se guarda ni se envia), sin errores ni desborde:
+  reporte-noche/capturas-panel/f3-pc-claro.png, f3-pc-oscuro.png, f3-cel-claro.png, f3-cel-oscuro.png, f3-pc-vacio.png.
+- Falta / para despues: el plazo de 30 dias para abonos debe pasar a la reserva (fecha limite) en la fase 5.
