@@ -50,12 +50,22 @@ const SVG = `
   <rect x="94" y="64" width="8" height="12" rx="2" fill="url(#masc-caja)" stroke="#18181b" stroke-width="1.5"/>
   <path d="M96.5 66v8M99.5 66v8" stroke="#5f8099" stroke-width=".8"/>
   <!-- brazo derecho (apoyado en la cintura) -->
+  <g class="masc-der-normal">
   <path class="masc-brazo-der" d="M92 84 Q104 89 101 98" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
   <g class="masc-guante-der">
     <path d="M95.6 101.5 Q94.4 107.6 98.4 110.2 Q102.4 112 104.8 108.4 Q106.6 104.6 105 100.6 Z" fill="#fff" stroke="#18181b" stroke-width="1.5" stroke-linejoin="round"/>
     <path d="M95.8 103.4 Q92.6 104 93.2 106.8 Q94.6 108.2 96.4 106.6" fill="#fff" stroke="#18181b" stroke-width="1.4" stroke-linejoin="round"/>
     <path d="M100 106.5v3M102.8 105.8v3" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
     <rect x="95.6" y="97.8" width="9.6" height="3.8" rx="1.6" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
+  </g>
+  </g>
+  <!-- gesto: senala hacia arriba con el indice -->
+  <g class="masc-gesto masc-g-senala">
+    <path d="M92 84 Q106 83 108.6 71" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+    <rect x="106.2" y="52.6" width="3.6" height="10.4" rx="1.8" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
+    <rect x="103.6" y="60.4" width="10" height="9" rx="3.4" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+    <path d="M106 64v3M108.6 64.4v3" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+    <rect x="103.8" y="68.6" width="9.6" height="3.6" rx="1.6" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
   </g>
   <!-- caja -->
   <circle cx="60" cy="70" r="36" fill="url(#masc-caja)" stroke="#18181b" stroke-width="1.8"/>
@@ -75,12 +85,17 @@ const SVG = `
   <path d="M45.9 52.7 L49 54.2" stroke="#A7C4D6" stroke-width="1.1" stroke-linecap="round"/>
   <path d="M79.9 51 L76.4 52.7" stroke="#A7C4D6" stroke-width="1.1" stroke-linecap="round"/>
   <circle cx="60" cy="60" r="2.1" fill="#18181b"/><circle cx="60" cy="60" r=".8" fill="#A7C4D6"/>
-  <!-- cara normal: ojos que parpadean y sonrisa -->
+  <!-- cejas: suben, bajan y se inclinan segun la cara -->
+  <g class="masc-cejas" fill="none" stroke="#18181b" stroke-width="1.6" stroke-linecap="round">
+    <path class="masc-ceja-i" d="M47.4 64.6 Q51 62.6 54.6 64.2"/>
+    <path class="masc-ceja-d" d="M65.4 64.2 Q69 62.6 72.6 64.6"/>
+  </g>
+  <!-- cara normal: ojos que parpadean y siguen el cursor, y sonrisa -->
   <g class="masc-cara masc-cara-normal">
-  <g class="masc-ojos">
+  <g class="masc-ojos"><g class="masc-mira">
     <ellipse cx="51" cy="71" rx="3.3" ry="4.2" fill="#18181b"/><ellipse cx="69" cy="71" rx="3.3" ry="4.2" fill="#18181b"/>
     <circle cx="52.2" cy="69.4" r="1.2" fill="#fff"/><circle cx="70.2" cy="69.4" r="1.2" fill="#fff"/>
-  </g>
+  </g></g>
   <!-- mejillas y sonrisa -->
   <ellipse cx="45" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".55"/>
   <ellipse cx="75" cy="77.5" rx="3.6" ry="2" fill="#A7C4D6" opacity=".55"/>
@@ -107,6 +122,27 @@ const SVG = `
     <circle cx="52.2" cy="70.1" r=".7" fill="#fff"/><circle cx="70.2" cy="70.1" r=".7" fill="#fff"/>
     <ellipse cx="60" cy="82.6" rx="2.6" ry="3.1" fill="#18181b"/>
   </g>
+  <!-- pensativo: mira hacia arriba y boca de lado -->
+  <g class="masc-cara masc-cara-pensativo">
+    <ellipse cx="52.6" cy="69.4" rx="3" ry="3.9" fill="#18181b"/><ellipse cx="70.6" cy="69.4" rx="3" ry="3.9" fill="#18181b"/>
+    <circle cx="53.6" cy="67.9" r="1.1" fill="#fff"/><circle cx="71.6" cy="67.9" r="1.1" fill="#fff"/>
+    <path d="M55.6 81.8 Q60 80.4 64.6 82.6" fill="none" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/>
+  </g>
+  <!-- emocionado: ojos de estrella y sonrisa grande -->
+  <g class="masc-cara masc-cara-emocionado">
+    <path d="M51 66.2 L52.3 69.7 L55.8 71 L52.3 72.3 L51 75.8 L49.7 72.3 L46.2 71 L49.7 69.7 Z M69 66.2 L70.3 69.7 L73.8 71 L70.3 72.3 L69 75.8 L67.7 72.3 L64.2 71 L67.7 69.7 Z" fill="#18181b"/>
+    <ellipse cx="45" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6"/><ellipse cx="75" cy="77" rx="3.8" ry="2.1" fill="#A7C4D6"/>
+    <path d="M53 78.6 Q60 80.2 67 78.6 Q66 87.6 60 87.6 Q54 87.6 53 78.6 Z" fill="#18181b"/>
+    <path d="M56.4 84.8 Q60 82.8 63.6 84.8 Q62.6 87 60 87 Q57.4 87 56.4 84.8 Z" fill="#A7C4D6"/>
+  </g>
+  <!-- dormido: ojos cerrados y boquita -->
+  <g class="masc-cara masc-cara-dormido">
+    <path d="M47.6 70.4 Q51 73.6 54.4 70.4 M65.6 70.4 Q69 73.6 72.4 70.4" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
+    <ellipse cx="60" cy="82" rx="1.7" ry="1.3" fill="#18181b"/>
+  </g>
+  <g class="masc-zzz" font-family="Jost,Arial,sans-serif" font-weight="700" fill="#18181b">
+    <text x="82" y="40" font-size="7">z</text><text x="89" y="31" font-size="9">z</text><text x="97" y="20" font-size="11">Z</text>
+  </g>
   <!-- moño -->
   <g class="masc-mono">
     <path d="M60 101 L50.5 96.5 Q48.5 101 50.5 105.5 Z M60 101 L69.5 96.5 Q71.5 101 69.5 105.5 Z" fill="#09090b" stroke="#09090b" stroke-width="1" stroke-linejoin="round"/>
@@ -119,6 +155,20 @@ const SVG = `
     <path d="M20.2 59.6 Q22.8 56.8 24.2 59 Q24.4 62.4 20.6 63.6" fill="#fff" stroke="#18181b" stroke-width="1.4" stroke-linejoin="round"/>
     <path d="M13.8 52.4v4.4M16.8 51.4v4.8" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
     <rect x="11.4" y="62.2" width="9.8" height="3.8" rx="1.6" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
+  </g>
+  <!-- gesto: pulgar arriba -->
+  <g class="masc-gesto masc-g-pulgar">
+    <path d="M28 82 Q14 82 14.4 70" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M12.2 59.6 Q11 51.6 14.2 50.8 Q16.8 51 16.4 59.6" fill="#fff" stroke="#18181b" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="8.6" y="58.6" width="12.4" height="10" rx="3.8" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+    <path d="M9.6 62h4M9.6 65h4" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
+    <rect x="9.4" y="67.6" width="10.6" height="3.6" rx="1.6" fill="#fff" stroke="#18181b" stroke-width="1.4"/>
+  </g>
+  <!-- gesto: mano en la barbilla (pensando) -->
+  <g class="masc-gesto masc-g-menton">
+    <path d="M28 82 Q27 95 35.6 94" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+    <rect x="34" y="85.4" width="10.4" height="9.6" rx="4" fill="#fff" stroke="#18181b" stroke-width="1.5"/>
+    <path d="M37.4 87.6v3.4M40.4 87.4v3.6" stroke="#18181b" stroke-width=".9" stroke-linecap="round"/>
   </g>
 </svg>`;
 
@@ -226,7 +276,9 @@ function reaccionar(entrada, cara, saluda){
   void e.offsetWidth;   // reinicia la animacion aunque sea la misma
   _raiz.classList.add('entra-' + entrada);
   if(saluda) _raiz.classList.add('saluda');
+  _raiz.classList.remove('durmiendo');
   _raiz.dataset.cara = cara;
+  delete _raiz.dataset.gesto;
   clearTimeout(_tCara); clearTimeout(_tRev);
   _tCara = setTimeout(function(){ delete _raiz.dataset.cara; }, 2600);
   _tRev = setTimeout(function(){ _raiz.classList.remove('entra-salto', 'entra-giro', 'saluda'); }, 1400);
@@ -252,7 +304,98 @@ function vigilarVistas(){
 
 }
 
+// ---------- personalidad: frases, gestos, mirada y siesta ----------
+// Caras: normal, feliz, guino, sorpresa, pensativo, emocionado, dormido. Gestos (brazos): saluda,
+// pulgar, menton, senala. Frases cortas en el globito, sin repetirse seguido (una cada ~8 s como mucho).
+let _tGesto = 0, _ultimaFrase = 0, _tFrase = 0;
+function gesto(cara, g, ms){
+  if(_abierta || _raiz.dataset.cara === 'dormido' && cara !== 'sorpresa') return;
+  _raiz.dataset.cara = cara;
+  if(g) _raiz.dataset.gesto = g; else delete _raiz.dataset.gesto;
+  clearTimeout(_tCara); clearTimeout(_tGesto);
+  _tCara = setTimeout(function(){ delete _raiz.dataset.cara; }, ms || 2600);
+  _tGesto = setTimeout(function(){ delete _raiz.dataset.gesto; }, ms || 2600);
+}
+function decir(texto, ms, forzar){
+  if(_abierta || !_burbuja) return;
+  var ahora = Date.now();
+  if(!forzar && ahora - _ultimaFrase < 8000) return;
+  _ultimaFrase = ahora;
+  _burbuja.textContent = texto;
+  _burbuja.classList.add('on');
+  clearTimeout(_tFrase);
+  _tFrase = setTimeout(ocultarBurbuja, ms || 3200);
+}
+function alAzar(lista){ return lista[Math.floor(Math.random() * lista.length)]; }
+function personalidad(){
+  // reloj abierto: a veces comenta, senalando
+  document.addEventListener('reloj-abierto', function(){
+    if(Math.random() < .6) setTimeout(function(){
+      gesto('emocionado', 'senala', 2800);
+      decir(alAzar(['¡Qué buena elección!', 'Este es de mis favoritos', '¿Te ayudo con la talla?', '¡Mira qué detalles!']));
+    }, 1100);
+  });
+  // favorito agregado: emocionado con el pulgar arriba
+  var nFav = -1;
+  import('./favoritos.js').then(function(F){
+    nFav = F._favoritos.size;
+    F.alCambiarFavoritos(function(){
+      var n = F._favoritos.size;
+      if(n > nFav){ gesto('emocionado', 'pulgar', 2600); decir(alAzar(['¡Guardado en tus favoritos!', '¡Excelente gusto!']), 2800, true); }
+      nFav = n;
+    });
+  });
+  // buscador abierto: pensativo con la mano en la barbilla
+  var hd = document.getElementById('site-header');
+  if(hd){
+    var abierto = false;
+    new MutationObserver(function(){
+      var ahora = hd.classList.contains('search-open');
+      if(ahora && !abierto){ gesto('pensativo', 'menton', 3200); decir('¿Qué estilo buscas?', 3000); }
+      abierto = ahora;
+    }).observe(hd, { attributes: true, attributeFilter: ['class'] });
+  }
+  // "Comprar por WhatsApp": guino y pulgar arriba
+  var wa = document.getElementById('modal-wa');
+  if(wa) wa.addEventListener('click', function(){ gesto('guino', 'pulgar', 2600); decir('¡Te esperamos en WhatsApp!', 2600, true); });
+  // la mirada sigue el cursor (computadora)
+  var mira = _raiz.querySelector('.masc-mira'), pend = false, px = 0, py = 0;
+  if(mira && window.matchMedia && matchMedia('(hover:hover) and (pointer:fine)').matches){
+    window.addEventListener('pointermove', function(e){
+      px = e.clientX; py = e.clientY;
+      if(pend) return; pend = true;
+      requestAnimationFrame(function(){
+        pend = false;
+        var r = _boton.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height * .55;
+        var dx = px - cx, dy = py - cy, d = Math.sqrt(dx * dx + dy * dy) || 1, k = Math.min(1, d / 260);
+        mira.style.transform = 'translate(' + (dx / d * 1.6 * k).toFixed(2) + 'px,' + (dy / d * 1.6 * k).toFixed(2) + 'px)';
+      });
+    }, { passive: true });
+  } else if(mira){
+    // en el celular mira a los lados de vez en cuando
+    setInterval(function(){
+      if(document.hidden || _raiz.dataset.cara) return;
+      mira.style.transform = 'translate(' + alAzar([-1.4, 1.4, 0]) + 'px,' + alAzar([0, -.8]) + 'px)';
+      setTimeout(function(){ mira.style.transform = ''; }, 1400);
+    }, 9000);
+  }
+  // siesta: sin actividad un rato se duerme; al volver despierta sorprendido
+  var tSiesta = 0;
+  var despertar = function(){
+    clearTimeout(tSiesta);
+    if(_raiz.dataset.cara === 'dormido'){ _raiz.classList.remove('durmiendo'); delete _raiz.dataset.cara; gesto('sorpresa', '', 1200); }
+    tSiesta = setTimeout(function(){
+      if(_abierta || document.hidden) return;
+      clearTimeout(_tCara); clearTimeout(_tGesto); delete _raiz.dataset.gesto;
+      _raiz.dataset.cara = 'dormido'; _raiz.classList.add('durmiendo'); ocultarBurbuja();
+    }, 45000);
+  };
+  ['pointermove', 'pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function(ev){ window.addEventListener(ev, despertar, { passive: true }); });
+  despertar();
+}
+
 crear();
 vigilarVistas();
+personalidad();
 
 export { abrir as abrirMascota, cerrarPanel as cerrarMascota };

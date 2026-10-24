@@ -52,7 +52,40 @@
   .mascota:not([data-cara]) .masc-cara-normal,
   .mascota[data-cara="guino"] .masc-cara-guino,
   .mascota[data-cara="feliz"] .masc-cara-feliz,
-  .mascota[data-cara="sorpresa"] .masc-cara-sorpresa{display:inline;}
+  .mascota[data-cara="sorpresa"] .masc-cara-sorpresa,
+  .mascota[data-cara="pensativo"] .masc-cara-pensativo,
+  .mascota[data-cara="emocionado"] .masc-cara-emocionado,
+  .mascota[data-cara="dormido"] .masc-cara-dormido{display:inline;}
+
+  /* cejas: se mueven segun la cara (y de vez en cuando suben solas) */
+  .masc-cejas path{transform-box:fill-box;transform-origin:50% 50%;transition:transform .25s var(--ease);}
+  .mascota:not([data-cara]) .masc-cejas{animation:mascCejas 9s ease-in-out infinite;}
+  @keyframes mascCejas{0%,86%,100%{transform:none;}89%,94%{transform:translateY(-1.6px);}}
+  .mascota[data-cara="sorpresa"] .masc-cejas path,.mascota[data-cara="emocionado"] .masc-cejas path{transform:translateY(-2.4px);}
+  .mascota[data-cara="feliz"] .masc-cejas path{transform:translateY(-1.2px);}
+  .mascota[data-cara="guino"] .masc-ceja-d{transform:translateY(1.4px) rotate(8deg);}
+  .mascota[data-cara="pensativo"] .masc-ceja-i{transform:translateY(-2px) rotate(-12deg);}
+  .mascota[data-cara="pensativo"] .masc-ceja-d{transform:translateY(.8px) rotate(6deg);}
+  .mascota[data-cara="dormido"] .masc-cejas path{transform:translateY(1.4px);}
+  /* mirada */
+  .masc-mira{transition:transform .35s var(--ease);}
+  /* gestos de los brazos */
+  .masc-gesto{display:none;}
+  .mascota[data-gesto="pulgar"] .masc-g-pulgar,.mascota[data-gesto="menton"] .masc-g-menton,.mascota[data-gesto="senala"] .masc-g-senala{display:inline;}
+  .mascota[data-gesto="pulgar"] .masc-saludo,.mascota[data-gesto="menton"] .masc-saludo,.mascota[data-gesto="senala"] .masc-der-normal{display:none;}
+  .masc-g-pulgar,.masc-g-senala{transform-box:view-box;animation:mascGesto .5s cubic-bezier(.3,1.5,.5,1) both;}
+  .masc-g-pulgar{transform-origin:28px 82px;}
+  .masc-g-senala{transform-origin:92px 84px;}
+  @keyframes mascGesto{from{transform:rotate(-18deg) scale(.85);}to{transform:none;}}
+  /* siesta: zzz que suben y flota mas lento */
+  .masc-zzz{display:none;}
+  .mascota[data-cara="dormido"] .masc-zzz{display:inline;}
+  .masc-zzz text{animation:mascZ 2.4s ease-in-out infinite;opacity:0;}
+  .masc-zzz text:nth-child(2){animation-delay:.6s;}
+  .masc-zzz text:nth-child(3){animation-delay:1.2s;}
+  @keyframes mascZ{0%{opacity:0;transform:translateY(4px);}30%{opacity:1;}100%{opacity:0;transform:translateY(-6px);}}
+  .mascota.durmiendo .masc-flota{animation-duration:6s;}
+  .mascota.durmiendo .masc-saludo{animation:none;}
 
   /* entrada al cambiar de seccion: saltito con rebote, o un giro al abrir un reloj */
   .masc-entra{display:block;width:100%;height:100%;transform-origin:50% 90%;}
@@ -68,6 +101,7 @@
 
   @media (min-width:640px){ .mascota{right:22px;bottom:18px;} .masc-boton{width:94px;height:130px;} }
   @media (prefers-reduced-motion:reduce){
-    .masc-flota,.masc-sombra,.masc-saludo,.masc-ojos,.masc-entra{animation:none !important;}
+    .masc-flota,.masc-sombra,.masc-saludo,.masc-ojos,.masc-entra,.masc-cejas,.masc-g-pulgar,.masc-g-senala{animation:none !important;}
+    .masc-zzz text{animation:none !important;opacity:1;}
     .masc-panel,.masc-burbuja{transition:none;}
   }
