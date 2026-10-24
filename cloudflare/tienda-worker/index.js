@@ -24,7 +24,10 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.hostname === 'www.' + DOMINIO) {
+    // siempre por conexion segura: http:// y www. van a https://aphillipsstore.com (sin esto, quien entraba
+    // por un enlace "http://" veia "No seguro" en el navegador)
+    if (url.protocol === 'http:' || url.hostname === 'www.' + DOMINIO) {
+      url.protocol = 'https:';
       url.hostname = DOMINIO;
       return Response.redirect(url.toString(), 301);
     }
