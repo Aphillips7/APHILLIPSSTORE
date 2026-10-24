@@ -62,20 +62,26 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `nav.js` | Navegacion de 6 secciones (Dashboard, Ventas, Inventario, Clientes, Finanzas, Ajustes) con sub-pestanas: barra lateral contraible en PC (`aphillips_barra_mini`), barra inferior + boton "+" y hoja "Mas" en celular, buscador global (relojes, clientes, pedidos web; atajo "/"), contadores que leen los badges existentes, punto ambar si una seccion tiene un formulario a medias (y aviso al cerrar la pagina), recuerda la ultima seccion (`aphillips_vista`). `showPage`/`showInner`/`irARegistrar` quedan como alias de lo viejo; `mostrarVista` cambia de pantalla sin pedir el codigo (lo usa auth-overlay) |
 | `tema.js` | Boton de tema automatico / claro / oscuro (localStorage `aphillips_tema`, atributo `data-theme` en `<html>`; index.html lo aplica antes de pintar) |
 | `componentes.js` | HTML de los componentes comunes: `kpiHTML` (con variacion vs mes anterior), `estadoHTML`, `vacioHTML`, `tablaHTML`, `graficaHTML`, `dinero`, `esc` (estilos en `css/panel/componentes.css`) |
-| `inicio.js` | Dashboard: KPIs del mes vs el anterior (ventas, ganancia, margen, inventario a costo y a precio, pedidos web, por cobrar), "Hoy necesitas" con boton directo (pedidos por confirmar, abonos vencidos a los 30 dias, transito > 20 dias, disponible > 45 dias, publicados sin foto o medida, avisos web), meta con proyeccion de cierre (Guardar desactivado hasta que la meta sea valida), grafica de 12 meses, mas vistos vs mas vendidos, actividad reciente y checklist |
+| `inicio.js` | Dashboard: KPIs del mes vs el anterior (ventas, ganancia neta = bruta - gastos, margen bruto, inventario a costo y a precio, pedidos web, por cobrar), "Hoy necesitas" con boton directo (pedidos por confirmar, abonos vencidos segun la fecha limite del apartado, mes sin cerrar, transito > 20 dias, disponible > 45 dias, publicados sin foto o medida, avisos web), meta con proyeccion de cierre (Guardar desactivado hasta que la meta sea valida), grafica de 12 meses, mas vistos vs mas vendidos, actividad reciente y checklist |
 | `graficas.js` | Graficas en SVG propio al ancho real del contenedor (se redibujan al cambiar el tamano): `barrasLinea` (barras + linea + meta punteada), `dona`, `barrasH`, `compacto` ($1.2k) |
-| `catalogo-admin.js` | Pestana Catalogo: visibilidad, metricas, links al catalogo |
-| `contenido.js` | Pestana Contenido: plan semanal e ideas |
+| `catalogo-admin.js` | Inventario > Catalogo: visibilidad, metricas (vistas, aperturas, clics y % de vistas que escriben), links al catalogo |
+| `contenido.js` | Ajustes > Contenido: plan semanal e ideas |
 | `sesion.js` | Login con correo/contrasena, recuperar contrasena, cerrar sesion |
 | `respaldo.js` | Exportar/importar respaldo JSON; respaldos automaticos de Cloudflare (listar, descargar, hacer uno ahora) |
 | `pwa.js` | Boton "instalar app" y registro del service worker |
 | `finanzas/fechas.js` | Helpers de fechas `d/m/aaaa` y meses |
 | `finanzas/registrar-venta.js` | Selector de tipo y registrar venta desde el inventario |
 | `finanzas/registrar-compra.js` | Registrar compra; `autoRegistrarCompraInv`, `existeCompraDe` |
-| `finanzas/registrar-otros.js` | Gasto, retiro y traspaso entre metodos de pago |
-| `finanzas/historial.js` · `resumen.js` · `analisis.js` · `finanzas.js` | Sub-pantallas de Finanzas y saldo por metodo |
-| `inventario/lista.js` | Lista/vista por modelo, filtros, cambiar estado, eliminar |
-| `inventario/formulario.js` | Registrar/editar/duplicar unidad, vista previa de margen |
+| `finanzas/registrar-otros.js` | Gasto, retiro y traspaso. Poka-yoke: boton activo solo con datos validos, aviso de duplicado del dia, retiro mayor que el saldo pide confirmacion, traspaso que dejaria el origen negativo bloqueado |
+| `finanzas/calculos.js` | **Unica forma de contar el dinero** (Dashboard, Finanzas, Ventas, cierres): `estadoResultados` (ingresos = ventas + abonos - devoluciones; bruta = ingresos - costo vendido; neta = bruta - gastos; flujo = entradas - compras - gastos - retiros), periodos con su comparacion, saldo por metodo, inventario como dinero, reservas por cobrar con fecha limite, meses cerrados |
+| `finanzas/resumen.js` | Finanzas > Resumen: periodo, KPIs, avisos, estado de resultados, punto de equilibrio y proyeccion, flujo de 12 meses, gastos por categoria, dinero por metodo, reparto 40/30/30, exportar el periodo |
+| `finanzas/analisis.js` | Finanzas > Rentabilidad: margen, ticket, descuentos, dias para vender, ganancia por marca, ventas por canal, relojes mas rentables, capital estancado con precio sugerido |
+| `finanzas/cobrar.js` | Finanzas > Por cobrar: apartados con saldo, fecha limite, Registrar abono / Entregar y recordatorio por WhatsApp |
+| `finanzas/cierre.js` | Finanzas > Cierres: cerrar meses terminados (`state.cierres` en `config/main`), reabrir con confirmacion, estado de resultados mes por mes a Excel. Un mes cerrado no deja borrar sus movimientos |
+| `finanzas/historial.js` · `finanzas.js` | Finanzas > Movimientos (buscador, exportar lo filtrado, candado en meses cerrados) y saldo por metodo de Registrar |
+| `ventas/ventas.js` | Ventas > Resumen (conversion web, tiempo a entrega, cancelados, embudo, canales, mejores dias, mejores clientes), Apartados (barra de pago, fecha limite, +7 dias hasta 90) e Historial de ventas |
+| `inventario/lista.js` | Inventario > Relojes: KPIs de stock, chips "Para revisar" (calidad), vistas Lista / Fotos / Por modelo, clase ABC por ganancia de 12 meses, filtros, cambiar estado, eliminar |
+| `inventario/formulario.js` | Registrar/editar/duplicar unidad, vista previa de margen; un reloj publico sin fotos se ofrece guardar oculto |
 | `inventario/ficha.js` | "Pegar especificaciones": ordena la tabla de la marca en grupos (`p.ficha`), rellena los campos de siempre; el catalogo la muestra agrupada |
 | `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal. De cada una sube ademas una copia JPEG (1200 px, < 600 KB) para la vista previa en WhatsApp (`fotosJpg`, y la de la principal en `fotoCompartir`) |
 | `inventario/fondo.js` | Quita el fondo liso (relleno desde los bordes), recorta y centra el reloj en un cuadrado de 1400 px al 86 %, para que todas las fotos se vean del mismo tamano. "Arreglar fotos ya subidas" lo aplica a las existentes (el bucket de fotos tiene CORS GET para el dominio) |
@@ -83,8 +89,9 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/venta-modal.js` | Modal "vender" desde el inventario |
 | `inventario/reservas.js` | Reservar, abonos, completar y cancelar reserva |
 | `inventario/transacciones.js` | `cambiarEstadoSeguro()`: transaccion anti venta doble |
-| `clientes/clientes.js` | Alta/edicion/lista de clientes, `poblarSelectClientes` |
-| `clientes/cliente-detalle.js` | Ficha del cliente, historial, "contactado hoy" |
+| `clientes/clientes.js` | Clientes: KPIs de cartera, segmentos, lista con WhatsApp sugerido, aviso y union de repetidos, alta/edicion (telefono unico), `poblarSelectClientes` |
+| `clientes/segmentos.js` | Perfil calculado de cada cliente, segmentos (VIP, compradores, nuevos, inactivos, prospectos, por contactar, con saldo), mensaje de WhatsApp sugerido y deteccion de repetidos. Los clientes guardan el telefono en `tel` |
+| `clientes/cliente-detalle.js` | Ficha del cliente: datos clave, mensaje sugerido y linea de tiempo (compras, abonos, apartados, pedidos web, contactos) |
 | `clientes/salud.js` | Tarjeta "Salud de la tienda": errores de la semana (`/admin/errores`), vista previa del informe semanal y de los avisos por correo |
 | `clientes/cuentas-web.js` | Cuentas de clientes del catalogo: avisos pendientes (un toque abre WhatsApp con el mensaje y lo marca enviado) y vincular cada cuenta con un cliente del panel |
 | `ventas/pedidos-web.js` | Pedidos web: tablero por estado con buscador; solo muestra el boton del siguiente paso (confirmar envio/retiro, registrar venta, enviado con guia, entregado, cancelar). "Registrar venta" busca o crea el cliente del panel por su WhatsApp, lo vincula a la cuenta, abre la venta con todo puesto y al confirmarla marca el pedido como pagado |
@@ -130,7 +137,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/{id}` | Una unidad (reloj). **Privado** | Solo admin |
 | `movimientos/{id}` | Ventas, compras, gastos, retiros, abonos, traspasos | Solo admin |
 | `clientes/{id}` | Nombre, telefono, canal, producto de interes, notas | Solo admin |
-| `config/main` | `meta`, `tasks`, `weekTasks`, `ideas` | Solo admin |
+| `config/main` | `meta`, `tasks`, `weekTasks`, `ideas`, `cierres` (meses cerrados: `{ 'aaaa-mm': { cerradoEl, ingresos, neta, gastos, flujo, movimientos, huella } }`, solo si hay alguno) | Solo admin |
 | `authSettings/{uid}` | Secreto TOTP y hashes de codigos de respaldo | Solo admin |
 
 Ademas: catalogo publico en R2 (`publico/catalogo.json`, todos leen, admin publica) y metricas en
@@ -146,7 +153,7 @@ colorEsfera, movimiento, agua, cristal, color, descripcion, notas, fotos (URLs e
 fotosJpg (privado: {urlFoto: urlJpeg}), eta (aaaa-mm-dd),
 ocultoCatalogo` y **privados**: `costo, importacion (aduana/envio), costoTotal, precio (venta
 objetivo), precioMin, margen (%), proveedor, serie, paqueteria, tracking, fecha (alta, d/m/aaaa),
-precioVenta, fechaVenta, reserva {clienteId, clienteNombre, precioAcordado, fechaInicio,
+precioVenta, fechaVenta, reserva {clienteId, clienteNombre, precioAcordado, fechaInicio, fechaLimite (d/m/aaaa; si falta, inicio + 30 dias),
 abonos:[{monto, fecha, metodoPago}]}, estado, _ts`.
 
 ### Catalogo publico (`GET /catalogo`)
@@ -190,6 +197,9 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
 - **Compra automatica**: al registrar una unidad `disponible` con costo (o pasar de transito a
   disponible) se crea un movimiento `compra` si no existe ya uno para esa unidad.
 - **Reparto de ganancia**: 40 % reinversion, 30 % personal, 30 % fondo operativo.
+- **Ganancia neta** (finanzas/calculos.js): ventas + abonos - devoluciones de abonos (gasto "Reembolso") - costo de los relojes vendidos - gastos operativos. Las compras de inventario no son gasto y los retiros son dinero del dueno; ambos solo cuentan en el flujo de caja. El reparto 40/30/30 se hace sobre la ganancia neta.
+- **Cierre de mes**: solo meses terminados; con el mes cerrado no se borran sus movimientos (candado en Movimientos) hasta reabrirlo. El Dashboard avisa desde el dia 3 si hay meses sin cerrar.
+- **Apartados**: al reservar se elige el plazo (7 a 60 dias, 30 por defecto) -> `reserva.fechaLimite`; se puede extender de 7 en 7 dias hasta 90 dias desde que se aparto.
 - **Reservas**: saldo = precio acordado − abonos. Completar crea una `venta` por el saldo (o un
   registro de monto 0 si ya estaba pagado). Cancelar permite devolver el abono (gasto "Reembolso")
   o retenerlo; siempre deja un movimiento `reserva_cancelada`.
@@ -209,7 +219,7 @@ Orden en el catalogo: disponible → transito → bajo pedido → vendido (`orde
 
 ## Almacenamiento local (navegador)
 
-Panel: `tasks`, `meta`, `weekTasks`, `ideas` (copia de `config/main`), `lastSync`, `syncHistory`,
+Panel: `tasks`, `meta`, `weekTasks`, `ideas`, `cierres` (copia de `config/main`), `aphillips_vista`, `aphillips_barra_mini`, `aphillips_tema`, `aphillips_vista_inv`, `lastSync`, `syncHistory`,
 `lastExportISO`, `authTotpPendiente`; IndexedDB `aphillips-panel` (datos + cambios sin enviar).
 Catalogo: `aphillips_favoritos`, `aphillips_catalogo` (ultima lista de relojes), `aphillips_sesion`
 (hay sesion: cargar Firebase Auth al abrir), `aphillips_no_contar`.

@@ -226,3 +226,16 @@ Botones desactivados en gris.
 - Exportar inventario a Excel desde la pagina.
 - Verificacion: verificar.mjs OK; sin errores ni desborde. Capturas f7-pc-claro-cuadricula,
   f7-cel-oscuro-lista-filtrada, f7-cel-claro-catalogo.
+
+### Fase 8 — Ajustes y cierre: TERMINADA (2026-10-24, rama `panel-f8-ajustes`, CACHE_NAME aphillips-v130)
+- Ajustes > General: salud de la tienda, apariencia, exportar a Excel (inventario, movimientos, estado de resultados
+  por mes), "Instalar como app" (antes estaba detras del codigo de Sync) y "Reglas del negocio" (de donde sale cada
+  numero y cada aviso).
+- ARCHITECTURE.md actualizado: modulos nuevos (calculos, cobrar, cierre, ventas, segmentos), config/main.cierres,
+  reserva.fechaLimite, reglas de ganancia neta, cierres y apartados, claves de localStorage.
+- Revision final: 19 pantallas x (PC claro 1366x800 y celular oscuro 390x844) = 38 capturas sin errores de consola
+  ni desborde horizontal; verificar.mjs OK.
+
+## Estado final
+Las 8 fases estan terminadas y unidas a main en la computadora. Nada publicado ni empujado: publicar requiere el "si"
+del dueno con `node scripts/publicar.mjs` (la API no cambio).
