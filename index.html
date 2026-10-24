@@ -569,32 +569,40 @@ if(location.hostname==='aphillips7.github.io'){
 
 <!-- VENTA MODAL -->
 <div id="venta-overlay">
-  <div style="background:var(--card);border-radius:4px;padding:24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:4px;">Registrar venta</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="venta-modal-nombre"></div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase;">Costo del reloj</div>
-    <div style="font-size:16px;font-family:'DM Mono',monospace;color:var(--black);margin-bottom:16px;" id="venta-modal-costo"></div>
-    <label>Precio de venta real ($)</label>
-    <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="venta-modal-precio" placeholder="0.00" style="font-size:18px;" onkeydown="if(event.key==='Enter')confirmarVentaModal()" /></div>
-    <label>Canal de venta</label>
-    <select id="venta-modal-canal" style="margin-bottom:16px;"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="otro">Otro</option></select>
-    <label>Metodo de pago</label>
-    <select id="venta-modal-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
-    <label>Cliente (opcional)</label>
-    <select id="venta-modal-cliente" style="margin-bottom:16px;"><option value="">Sin cliente registrado</option></select>
-    <div id="venta-modal-preview" style="display:none;background:var(--bg2);border-radius:8px;padding:10px 14px;margin-bottom:16px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Distribucion 40-30-30</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Reinversion</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--blue);" id="vm-reinv">$0</div></div>
-        <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Tu dinero</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green);" id="vm-personal">$0</div></div>
-        <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Fondo</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent-strong);" id="vm-fondo">$0</div></div>
-        <div style="flex:1;min-width:70px;text-align:center;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em;">Ganancia</div><div style="font-family:'DM Mono',monospace;font-size:13px;" id="vm-ganancia">$0</div></div>
-      </div>
+  <!-- Vender en un toque (desde la lista, las fotos, la ficha o un pedido web). Poka-yoke: Confirmar se activa
+       solo con precio, canal y metodo de pago; el cliente es opcional y se busca con la lupa o se crea aqui. -->
+  <div class="vm-caja" role="dialog" aria-modal="true" aria-labelledby="vm-titulo">
+    <div class="vm-cab">
+      <span class="cat-foto" id="venta-modal-foto"></span>
+      <div class="vm-cab-txt"><div class="vm-titulo" id="vm-titulo">Registrar venta</div><div class="vm-sub" id="venta-modal-nombre"></div></div>
+      <button type="button" class="vm-x" onclick="cerrarVentaModal()" aria-label="Cerrar">&times;</button>
     </div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-outline" onclick="cerrarVentaModal()" style="flex:1;">Cancelar</button>
-      <button class="btn btn-gold" onclick="confirmarVentaModal()" style="flex:2;">Confirmar venta</button>
+    <div class="vm-fila-costo"><span>Costo del reloj</span><b id="venta-modal-costo"></b></div>
+    <label for="venta-modal-precio">Precio de venta</label>
+    <div class="currency-wrap vm-precio"><input type="number" id="venta-modal-precio" min="0" step="0.01" inputmode="decimal" placeholder="0.00" /></div>
+    <div class="vm-resultado" id="venta-modal-preview" hidden>
+      <div><span>Ganancia</span><b id="vm-ganancia">$0</b></div>
+      <div><span>Margen</span><b id="vm-margen">0%</b></div>
+      <div><span>Reinversion 40 %</span><b id="vm-reinv">$0</b></div>
+      <div><span>Para ti 30 %</span><b id="vm-personal">$0</b></div>
     </div>
+    <label>¿Por donde se vendio?</label>
+    <div class="vm-chips" id="vm-canales" data-campo="venta-modal-canal"></div>
+    <input type="hidden" id="venta-modal-canal" value="" />
+    <label>¿Como pago?</label>
+    <div class="vm-chips" id="vm-metodos" data-campo="venta-modal-metodo"></div>
+    <input type="hidden" id="venta-modal-metodo" value="" />
+    <label for="vm-buscar-cliente">Cliente <span class="vm-opcional">opcional</span></label>
+    <input type="hidden" id="venta-modal-cliente" value="" />
+    <div class="vm-cliente-sel" id="vm-cliente-sel" hidden></div>
+    <div class="vm-buscador" id="vm-buscador">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="search" id="vm-buscar-cliente" placeholder="Buscar por nombre o telefono..." autocomplete="off" />
+    </div>
+    <div class="vm-resultados" id="vm-resultados" hidden></div>
+    <div class="campo-ayuda" id="vm-ayuda" hidden></div>
+    <button type="button" class="btn btn-gold vm-confirmar" id="vm-confirmar" onclick="confirmarVentaModal()" disabled>Confirmar venta</button>
+    <button type="button" class="metodo-cancelar" onclick="cerrarVentaModal()">Cancelar</button>
   </div>
 </div>
 

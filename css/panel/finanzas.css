@@ -286,4 +286,6 @@
     .cat-cab .acciones-fila{width:100%;} .cat-cab .acciones-fila .btn{flex:1;}
     .cat-vitrina-cab select{width:100%;}
   }
-  .inv-grid-llego{margin-top:8px;width:100%;justify-content:center;}
+  .inv-grid-acc{display:flex;gap:6px;margin-top:8px;}
+  .inv-grid-acc:empty{display:none;}
+  .inv-grid-acc .btn{flex:1;justify-content:center;padding-left:6px;padding-right:6px;}
