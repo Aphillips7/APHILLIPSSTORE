@@ -81,7 +81,6 @@ function validarUnidad(item, esEdicion, estadoAntes){
   var publico=PUBLICOS.indexOf(item.estado)!==-1&&!item.ocultoCatalogo;
   if(item.precio>0&&item.costoTotal>0&&item.precio<item.costoTotal) avisos.push('El precio ($'+item.precio+') es MENOR que el costo total ($'+item.costoTotal.toFixed(2)+'): perderias dinero.');
   if(item.precioMin>0&&item.costoTotal>0&&item.precioMin<item.costoTotal) avisos.push('El precio minimo ($'+item.precioMin+') es menor que el costo total ($'+item.costoTotal.toFixed(2)+').');
-  if(publico&&!item.foto) avisos.push('No tiene fotos: se vera en la tienda sin foto.');
   if(publico&&!item.mm) avisos.push('No tiene el tamaño de la caja (mm): no saldra en la guia de tamaños ni en los filtros por tamaño.');
   if(item.estado==='transito'&&item.eta&&new Date(item.eta+'T23:59:59')<new Date()) avisos.push('La fecha estimada de llegada ('+item.eta+') ya paso.');
   if(item.sku){
@@ -89,6 +88,11 @@ function validarUnidad(item, esEdicion, estadoAntes){
     if(mismo.length) avisos.push('Ya tienes '+mismo.length+' unidad'+(mismo.length===1?'':'es')+' sin vender con la referencia '+item.sku+'. Si es otra unidad del mismo modelo esta bien; si no, seria un duplicado.');
   }
   if(avisos.length&&!confirm('Revisa antes de guardar:\n\n- '+avisos.join('\n- ')+'\n\n¿Guardar de todas formas?')) return false;
+  // sin fotos no deberia verse en la tienda: se ofrece guardarlo oculto hasta que tenga fotos
+  if(publico&&!item.foto&&confirm('Este reloj no tiene fotos.\n\n¿Lo guardo OCULTO en la tienda hasta que le pongas fotos? (recomendado)\n\nAceptar = guardarlo oculto · Cancelar = publicarlo sin foto')){
+    item.ocultoCatalogo=true;
+    var chk=document.getElementById('inv-oculto-catalogo'); if(chk) chk.checked=true;
+  }
   return true;
 }
 // Vendido y Reservado solo se eligen desde "Vender" / "Apartar" (registran el dinero); en el formulario

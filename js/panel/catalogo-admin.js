@@ -38,7 +38,7 @@ function renderCatalogoAdmin(){
       makeFotoHtml(p.foto,48)+
       '<div class="list-item-info">'+
         '<div class="list-item-name" style="display:flex;align-items:center;gap:8px;">'+p.nombre+(p.sku?' <span style="color:var(--muted);font-size:12px;">· '+p.sku+'</span>':'')+' <span class="badge '+(estadosBadge[p.estado]||'')+'">'+(etiquetas[p.estado]||p.estado)+'</span></div>'+
-        '<div class="list-item-sub">'+(m.vistas||0)+' vistas · '+(m.aperturas||0)+' aperturas · '+(m.clics||0)+' clics'+(pub?'':' · no publicado en este momento')+'</div>'+
+        '<div class="list-item-sub">'+(m.vistas||0)+' vistas · '+(m.aperturas||0)+' aperturas · '+(m.clics||0)+' clics'+((m.vistas||0)>=10?' · <b>'+Math.round((m.clics||0)/(m.vistas||1)*1000)/10+'%</b> de las vistas escriben':'')+(pub?'':' · no publicado en este momento')+'</div>'+
       '</div>'+
       visBtn+linkBtn+
     '</div>';
