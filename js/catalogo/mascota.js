@@ -414,17 +414,21 @@ function vigilarClaves(){
   // con "Mi cuenta" abierta la mascota queda visible encima del panel
   var pc = document.getElementById('panel-cuenta');
   if(pc) new MutationObserver(function(){ _raiz.classList.toggle('sobre-cuenta', pc.classList.contains('open')); }).observe(pc, { attributes: true, attributeFilter: ['class'] });
-  var esClave = function(el){ return el && el.dataset && el.dataset.clave === '1'; };
+  // campo de contrasena o su boton de ojo (al tocar el ojo sigue tapada)
+  var esClave = function(el){ return !!el && ((el.dataset && el.dataset.clave === '1') || (el.classList && el.classList.contains('cta-ver-clave'))); };
   var aplicar = function(el){
     if(esClave(el)){
       clearTimeout(_tGesto); clearTimeout(_tCara); delete _raiz.dataset.cara; ocultarBurbuja();
-      _raiz.dataset.gesto = el.type === 'text' ? 'espia' : 'tapa';
+      _raiz.dataset.gesto = 'tapa';
     }else if(_raiz.dataset.gesto === 'tapa' || _raiz.dataset.gesto === 'espia'){
       delete _raiz.dataset.gesto;
     }
   };
   document.addEventListener('focusin', function(e){ aplicar(e.target); });
-  document.addEventListener('focusout', function(){ setTimeout(function(){ aplicar(document.activeElement); }, 60); });
+  // en el celular tocar el ojo quita el foco un instante: ese toque no cuenta como "tocar otra cosa"
+  var tocoOjo = 0;
+  document.addEventListener('pointerdown', function(e){ if(e.target.closest && e.target.closest('.cta-ver-clave')) tocoOjo = Date.now(); }, true);
+  document.addEventListener('focusout', function(){ setTimeout(function(){ if(Date.now() - tocoOjo < 600) return; aplicar(document.activeElement); }, 60); });
   document.addEventListener('clave-visible', function(e){ aplicar(e.detail.campo); });
 }
 
