@@ -52,7 +52,7 @@ function erroresDe(form){
   if(v('nombre') !== null && !v('nombre')) e.nombre = 'Escribe tu nombre.';
   if(v('apellido') !== null && !v('apellido')) e.apellido = 'Escribe tu apellido.';
   if(v('email') !== null){ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('email'))) e.email = 'Escribe un correo válido.'; }
-  if(v('telefono') !== null){ if(!v('telefono')) e.telefono = 'Tu WhatsApp es necesario para atenderte.'; else if(!telefonoValido(v('telefono'))) e.telefono = '8 dígitos si es de Panamá, o con el código de tu país.'; }
+  if(v('telefono') !== null){ if(!v('telefono')) e.telefono = 'Tu teléfono es necesario para atenderte.'; else if(!telefonoValido(v('telefono'))) e.telefono = '8 dígitos si es de Panamá, o con el código de tu país.'; }
   if(v('clave') !== null && !claveSegura(form.querySelector('[name="clave"]').value)) e.clave = 'Mínimo 8 caracteres, con una mayúscula y una minúscula.';
   if(v('clave2') !== null && form.querySelector('[name="clave2"]').value !== form.querySelector('[name="clave"]').value) e.clave2 = 'Las dos contraseñas no coinciden.';
   if(v('terminos') === false) e.terminos = 'Necesario para crear tu cuenta.';
@@ -139,7 +139,7 @@ function htmlRegistro(){
   return '<form class="mc-form" onsubmit="return crearCuenta(event)" novalidate>' +
     '<div class="mc-dos">' + campo('nombre', 'Nombre', '', { auto: 'given-name', oblig: true }) + campo('apellido', 'Apellido(s)', '', { auto: 'family-name', oblig: true }) + '</div>' +
     campo('email', 'Correo electrónico', '', { tipo: 'email', auto: 'email', modo: 'email', max: 120, oblig: true }) +
-    campo('telefono', 'WhatsApp', '', { tipo: 'tel', auto: 'tel', modo: 'tel', max: 20, oblig: true, ayuda: 'Ej. 6123-4567. Te escribimos por aquí sobre tus pedidos.' }) +
+    campo('telefono', 'Teléfono', '', { tipo: 'tel', auto: 'tel', modo: 'tel', max: 20, oblig: true, ayuda: 'Ej. 6123-4567. Te escribimos por aquí sobre tus pedidos.' }) +
     campo('clave', 'Contraseña', '', { tipo: 'password', auto: 'new-password', max: 100, oblig: true, ayuda: 'Mínimo 8 caracteres, con una mayúscula y una minúscula.' }) +
     campo('clave2', 'Confirma tu contraseña', '', { tipo: 'password', auto: 'new-password', max: 100, oblig: true }) +
     casilla('terminos', TEXTO_TERMINOS, false, true) + casilla('novedades', TEXTO_NOVEDADES, false) +
@@ -156,7 +156,7 @@ function htmlCompletar(){
     '<p class="cta-texto" style="margin-top:-14px;"><b>' + esc(p.email || '') + '</b></p>' +
     '<form class="mc-form" onsubmit="return completarRegistro(event)" novalidate>' +
       '<div class="mc-dos">' + campo('nombre', 'Nombre', nombre, { auto: 'given-name', oblig: true }) + campo('apellido', 'Apellido(s)', apellido, { auto: 'family-name', oblig: true }) + '</div>' +
-      campo('telefono', 'WhatsApp', p.telefono, { tipo: 'tel', auto: 'tel', modo: 'tel', max: 20, oblig: true, ayuda: 'Ej. 6123-4567. Te escribimos por aquí sobre tus pedidos.' }) +
+      campo('telefono', 'Teléfono', p.telefono, { tipo: 'tel', auto: 'tel', modo: 'tel', max: 20, oblig: true, ayuda: 'Ej. 6123-4567. Te escribimos por aquí sobre tus pedidos.' }) +
       (p.terminos && p.mayorEdad ? '' : casilla('terminos', TEXTO_TERMINOS, false, true)) + casilla('novedades', TEXTO_NOVEDADES, p.novedades) +
       '<div class="cta-fila" style="margin-top:8px;"><button type="submit" class="cta-btn primario" disabled>Guardar y continuar</button>' +
       '<button type="button" class="cta-link" onclick="cerrarSesionCliente()">Cerrar sesión</button></div>' +
@@ -232,7 +232,7 @@ function htmlDatos(){
     '<h3 class="mc-sub">Datos personales</h3>' +
     '<div class="mc-dos">' + campo('nombre', 'Nombre', p.nombre, { auto: 'given-name', oblig: true }) + campo('apellido', 'Apellido(s)', p.apellido, { auto: 'family-name', oblig: true }) + '</div>' +
     '<div class="cta-campo mc-fijo"><input type="email" value="' + esc(p.email || '') + '" disabled placeholder=" "><label>Correo electrónico</label></div>' +
-    campo('telefono', 'WhatsApp', p.telefono, { tipo: 'tel', auto: 'tel', modo: 'tel', max: 20, oblig: true }) +
+    campo('telefono', 'Teléfono', p.telefono, { tipo: 'tel', auto: 'tel', modo: 'tel', max: 20, oblig: true }) +
     '<div class="mc-dos">' + campo('cedula', 'Cédula o pasaporte', p.cedula, { max: 20, ayuda: 'Para la factura y la garantía.' }) +
       campo('nacimiento', 'Fecha de nacimiento', p.nacimiento, { tipo: 'date', extra: ' max="' + maxNac.toISOString().slice(0, 10) + '" min="1910-01-01"' }) + '</div>' +
     '<div class="mc-dos">' + campo('muneca', 'Medida de tu muñeca (cm)', p.muneca, { modo: 'decimal', max: 5, ayuda: '<a href="guia-de-tamanos">¿Cómo medirla?</a> Te recomendamos el tamaño ideal.' }) +
