@@ -43,7 +43,8 @@ function renderKpis(r, c, per){
   el.innerHTML = [
     kpi({ label: 'Ingresos', valor: dinero(r.ingresos), actualV: r.ingresos, pie: r.nVentas + ' venta' + (r.nVentas !== 1 ? 's' : '') + (r.nAbonos ? ' · ' + r.nAbonos + ' abono' + (r.nAbonos !== 1 ? 's' : '') : '') }, c, 'ingresos', per),
     kpi({ label: 'Ganancia bruta', valor: dinero(r.bruta), tono: r.bruta < 0 ? 'neg' : '', actualV: r.bruta, pie: 'margen ' + r.margenBruto + '%' }, c, 'bruta', per),
-    kpi({ label: 'Gastos', valor: dinero(r.gastos), inverso: true, actualV: r.gastos, pie: r.ingresos ? Math.round(r.gastos / r.ingresos * 100) + '% de los ingresos' : '' }, c, 'gastos', per),
+    // el gasto es dinero que sale: se muestra con signo menos y en rojo (la flecha roja hacia arriba = gastaste mas)
+    kpi({ label: 'Gastos', valor: r.gastos ? '−' + dinero(r.gastos) : dinero(0), tono: r.gastos ? 'neg' : '', inverso: true, actualV: r.gastos, pie: r.ingresos ? Math.round(r.gastos / r.ingresos * 100) + '% de los ingresos' : 'dinero que salio' }, c, 'gastos', per),
     kpi({ label: 'Ganancia neta', valor: dinero(r.neta), tono: r.neta < 0 ? 'neg' : 'pos', actualV: r.neta, pie: 'margen neto ' + r.margenNeto + '%' }, c, 'neta', per),
     kpi({ label: 'Flujo de caja', valor: dinero(r.flujo), tono: r.flujo < 0 ? 'neg' : '', actualV: r.flujo, pie: 'entradas menos salidas' }, c, 'flujo', per),
     kpiHTML({ label: 'Dinero en caja', valor: dinero(caja), tono: caja < 0 ? 'neg' : '', pie: 'saldo de todos los metodos', onclick: "irSeccion('finanzas','registrar')" })
