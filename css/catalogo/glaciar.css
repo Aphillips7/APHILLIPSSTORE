@@ -60,7 +60,7 @@
 
 
   /* pestanas y puntos de los carruseles (la regla de puntos queda negra) */
-  html.glaciar .dest-tab.on{border-bottom:2px solid var(--glaciar);}
+  html.glaciar .dest-tab.on{border-bottom:2px solid var(--glaciar);}   /* titulo "Mas vendidos" */
   html.glaciar .dest-punto.on,html.glaciar .pf-punto.on{background:var(--glaciar);}
 
 
