@@ -14,7 +14,7 @@
   // Caja y asas glaciar, esfera blanca con su cara (agujas desde el centro) y correa de cuero negra.
   // d = diametro en px; l2l = de asa a asa en px; correa = ancho entre asas en px; corona a la derecha
   var _idReloj = 0;
-  var CARA_MASCOTA = '<g class="gu-cara"><path d="M42.2 54.8 Q48.6 50.4 55.2 53.4 L54.6 55.6 Q48.6 53.2 43 56.8 Z M77.8 54.8 Q71.4 50.4 64.8 53.4 L65.4 55.6 Q71.4 53.2 77 56.8 Z" fill="#18181b"/><ellipse cx="49" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="71" cy="64" rx="6.6" ry="8.2" fill="#fff" stroke="#18181b" stroke-width="1.5"/><ellipse cx="50" cy="66" rx="3.6" ry="5" fill="#18181b"/><ellipse cx="70" cy="66" rx="3.6" ry="5" fill="#18181b"/><circle cx="51.3" cy="63.6" r="1.3" fill="#fff"/><circle cx="71.3" cy="63.6" r="1.3" fill="#fff"/><ellipse cx="41.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity=".45"/><ellipse cx="78.5" cy="75.5" rx="4" ry="2.2" fill="#A7C4D6" opacity=".45"/><path d="M53 80.8 Q60.5 86.4 67.4 80.2" fill="none" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/><path d="M60 70 L60 47.6" stroke="#18181b" stroke-width="1.7" stroke-linecap="round"/><path d="M60 70 L69.4 75.4" stroke="#18181b" stroke-width="2.6" stroke-linecap="round"/><circle cx="60" cy="70" r="2.5" fill="#18181b"/><circle cx="60" cy="70" r=".9" fill="#A7C4D6"/></g>';
+  var CARA_MASCOTA = '<g class="gu-cara"><path d="M44.6 55.6 Q49.6 53 54.6 54.8 M65.4 54.8 Q70.4 53 75.4 55.6" fill="none" stroke="#18181b" stroke-width="1.3" stroke-linecap="round"/><ellipse cx="49.6" cy="62.6" rx="4.4" ry="5.4" fill="#fff" stroke="#18181b" stroke-width="1.1"/><ellipse cx="70.4" cy="62.6" rx="4.4" ry="5.4" fill="#fff" stroke="#18181b" stroke-width="1.1"/><ellipse cx="50.2" cy="63.8" rx="2.3" ry="3.1" fill="#18181b"/><ellipse cx="69.8" cy="63.8" rx="2.3" ry="3.1" fill="#18181b"/><circle cx="51" cy="62.4" r=".8" fill="#fff"/><circle cx="70.6" cy="62.4" r=".8" fill="#fff"/><path d="M55.4 80.6 Q60 83.2 64.6 80.6" fill="none" stroke="#18181b" stroke-width="1.3" stroke-linecap="round"/><path d="M60 47 L61.1 66 L60 71 L58.9 66 Z" fill="#18181b"/><path d="M71.5 76.6 L62.2 72.6 L59.2 70.8 L61.4 68.6 Z" fill="#18181b"/><circle cx="60" cy="70" r="1.8" fill="#18181b"/><circle cx="60" cy="70" r=".7" fill="#A7C4D6"/></g>';
   function pol(cx, cy, rad, ang){ return [cx + Math.sin(ang) * rad, cy - Math.cos(ang) * rad]; }
   function reloj(cx, cy, d, opc){
     opc = opc || {};
@@ -70,11 +70,15 @@
     s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.875)+'" fill="none" stroke="#7E9EB3" stroke-width="'+sw(.008)+'"/>';
     if(det) s += '<path d="M'+n(cx - r*0.75)+' '+n(cy - r*0.38)+' A'+n(r*0.83)+' '+n(r*0.83)+' 0 0 1 '+n(cx - r*0.22)+' '+n(cy - r*0.8)+'" fill="none" stroke="#E3EEF5" stroke-width="'+sw(.03)+'" stroke-linecap="round" opacity=".9"/>';
     s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+n(r*0.8)+'" fill="url(#gu-esfera)" stroke="#18181b" stroke-width="'+sw(.01)+'"/>';
-    // indices: gruesos a las 12, 3, 6 y 9; finos el resto
+    // riel de minutos fino e indices de barra delgados (dobles a las 12)
+    if(det) for(i = 0; i < 60; i++){ if(i % 5 === 0) continue; a = i * Math.PI / 30; p = pol(cx, cy, r*0.775, a); q = pol(cx, cy, r*0.745, a);
+      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#52525b" stroke-width="'+sw(.004)+'"/>'; }
     for(i = 0; i < 12; i++){
       a = i * Math.PI / 6; var grueso = i % 3 === 0;
-      p = pol(cx, cy, r*0.76, a); q = pol(cx, cy, r*(grueso ? 0.63 : 0.68), a);
-      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#18181b" stroke-width="'+sw(grueso ? .028 : .016)+'" stroke-linecap="round"/>';
+      if(i === 0){ [-1, 1].forEach(function(lado){ var pp = pol(cx + lado * r * 0.035, cy, r*0.775, 0), qq = pol(cx + lado * r * 0.035, cy, r*0.62, 0);
+        s += '<line x1="'+n(pp[0])+'" y1="'+n(pp[1])+'" x2="'+n(qq[0])+'" y2="'+n(qq[1])+'" stroke="#18181b" stroke-width="'+sw(.016)+'"/>'; }); continue; }
+      p = pol(cx, cy, r*0.775, a); q = pol(cx, cy, r*(grueso ? 0.64 : 0.68), a);
+      s += '<line x1="'+n(p[0])+'" y1="'+n(p[1])+'" x2="'+n(q[0])+'" y2="'+n(q[1])+'" stroke="#18181b" stroke-width="'+sw(grueso ? .02 : .012)+'"/>';
     }
     // la cara de la mascota, escalada a esta esfera
     var k = (r * 0.8) / 29;
@@ -108,23 +112,24 @@
   function mano(x0, cy, a){
     var c = '', k = a / 100;                       // todo se mide en "centesimos de muneca"
     var X = function(v){ return n(x0 + v * k); }, Y = function(v){ return n(cy + v * k); };
-    // pulgar (arriba, sale del costado de la mano hacia adelante)
-    c += '<path d="M'+X(8)+' '+Y(-44)+' C'+X(20)+' '+Y(-62)+' '+X(44)+' '+Y(-72)+' '+X(62)+' '+Y(-70)+' C'+X(74)+' '+Y(-69)+' '+X(76)+' '+Y(-58)+' '+X(66)+' '+Y(-53)+' C'+X(52)+' '+Y(-47)+' '+X(40)+' '+Y(-44)+' '+X(30)+' '+Y(-36)+' Z" fill="url(#gu-piel)" stroke="'+PIEL_BORDE+'" stroke-width="1.4" stroke-linejoin="round"/>';
-    c += '<ellipse cx="'+X(66)+'" cy="'+Y(-63)+'" rx="'+n(6*k)+'" ry="'+n(4.2*k)+'" transform="rotate(-12 '+X(66)+' '+Y(-63)+')" fill="'+UNA+'" stroke="'+PIEL_LINEA+'" stroke-width=".9"/>';
-    // cuatro dedos: indice, medio, anular y menique (largos distintos), con unas y pliegues
-    [[-36, 74, 14], [-14, 84, 14.6], [8, 78, 14], [28, 62, 12.4]].forEach(function(dd){
-      var yc = dd[0], largo = dd[1], g = dd[2];
-      c += '<rect x="'+X(52)+'" y="'+Y(yc - g/2)+'" width="'+n(largo*k)+'" height="'+n(g*k)+'" rx="'+n(g*k/2)+'" fill="url(#gu-piel)" stroke="'+PIEL_BORDE+'" stroke-width="1.3"/>';
-      var xu = 52 + largo - 10;
-      c += '<rect x="'+X(xu)+'" y="'+Y(yc - g*0.3)+'" width="'+n(8*k)+'" height="'+n(g*0.6*k)+'" rx="'+n(g*0.3*k)+'" fill="'+UNA+'" stroke="'+PIEL_LINEA+'" stroke-width=".8"/>';
-      [0.5, 0.74].forEach(function(f){ var xx = 52 + largo * f; c += '<path d="M'+X(xx)+' '+Y(yc - g*0.32)+' q'+n(-1.6*k)+' '+n(g*0.32*k)+' 0 '+n(g*0.64*k)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".9" stroke-linecap="round"/>'; });
-    });
-    // dorso de la mano (tapa el inicio de los dedos) con nudillos
-    var dorso = 'M'+X(-8)+' '+Y(-48)+' C'+X(20)+' '+Y(-50)+' '+X(46)+' '+Y(-48)+' '+X(62)+' '+Y(-42)+' C'+X(68)+' '+Y(-20)+' '+X(68)+' '+Y(20)+' '+X(60)+' '+Y(36)+' C'+X(46)+' '+Y(44)+' '+X(20)+' '+Y(50)+' '+X(-8)+' '+Y(50);
-    c += '<path d="'+dorso+' Z" fill="url(#gu-piel)"/><path d="'+dorso+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4" stroke-linejoin="round"/>';
-    [-36, -14, 8, 28].forEach(function(yc){ c += '<path d="M'+X(56)+' '+Y(yc - 4)+' q'+n(3*k)+' '+n(4*k)+' 0 '+n(8*k)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width="1" stroke-linecap="round"/>'; });
-    // tendones suaves del dorso
-    [-24, -6, 12].forEach(function(yc){ c += '<path d="M'+X(12)+' '+Y(yc*0.7)+' L'+X(48)+' '+Y(yc)+'" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".55" stroke-linecap="round"/>'; });
+    // dedo afinado con punta redondeada: t/b = bordes, l = largo desde los nudillos (x = 50)
+    function dedo(t, b, l){
+      var m = (t + b) / 2;
+      return '<path d="M'+X(46)+' '+Y(t)+' C'+X(50 + l*0.55)+' '+Y(t + 0.6)+' '+X(50 + l - 6)+' '+Y(t + 1.6)+' '+X(50 + l - 1)+' '+Y(m - (b - t)*0.22)+' Q'+X(50 + l + 1.2)+' '+Y(m)+' '+X(50 + l - 1)+' '+Y(m + (b - t)*0.22)+' C'+X(50 + l - 6)+' '+Y(b - 1.6)+' '+X(50 + l*0.55)+' '+Y(b - 0.6)+' '+X(46)+' '+Y(b)+' Z" fill="#E8B48F" stroke="'+PIEL_BORDE+'" stroke-width="1.1" stroke-linejoin="round"/>' +
+        '<path d="M'+X(50 + l - 8.5)+' '+Y(t + 3)+' Q'+X(50 + l - 2.4)+' '+Y(m)+' '+X(50 + l - 8.5)+' '+Y(b - 3)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".55" stroke-linecap="round"/>';
+    }
+    // pulgar (arriba), relajado hacia adelante
+    c += '<path d="M'+X(12)+' '+Y(-46)+' C'+X(24)+' '+Y(-62)+' '+X(46)+' '+Y(-68)+' '+X(60)+' '+Y(-62)+' Q'+X(66)+' '+Y(-58)+' '+X(60)+' '+Y(-53)+' C'+X(48)+' '+Y(-50)+' '+X(38)+' '+Y(-46)+' '+X(32)+' '+Y(-40)+' Z" fill="#E8B48F" stroke="'+PIEL_BORDE+'" stroke-width="1.1" stroke-linejoin="round"/>';
+    c += '<path d="M'+X(53)+' '+Y(-62.5)+' Q'+X(60)+' '+Y(-59.5)+' '+X(55)+' '+Y(-55)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".55" stroke-linecap="round"/>';
+    // dedos de abajo hacia arriba (el indice queda encima)
+    c += dedo(18.5, 33, 50) + dedo(-1.5, 17.5, 64) + dedo(-21.5, -1.5, 70) + dedo(-41, -21.5, 63);
+    // dorso: tapa la base de los dedos; borde solo arriba y abajo (se une con la muneca sin costura)
+    var dorso = 'M'+X(-8)+' '+Y(-47)+' C'+X(18)+' '+Y(-49)+' '+X(40)+' '+Y(-46)+' '+X(54)+' '+Y(-40)+' C'+X(60)+' '+Y(-24)+' '+X(60)+' '+Y(18)+' '+X(54)+' '+Y(32)+' C'+X(40)+' '+Y(40)+' '+X(18)+' '+Y(46)+' '+X(-8)+' '+Y(46);
+    c += '<path d="'+dorso+' Z" fill="#E8B48F"/>';
+    c += '<path d="M'+X(-8)+' '+Y(-47)+' C'+X(18)+' '+Y(-49)+' '+X(40)+' '+Y(-46)+' '+X(54)+' '+Y(-40)+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/>';
+    c += '<path d="M'+X(54)+' '+Y(32)+' C'+X(40)+' '+Y(40)+' '+X(18)+' '+Y(46)+' '+X(-8)+' '+Y(46)+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/>';
+    // nudillos apenas marcados
+    [-31, -11, 8, 26].forEach(function(yc){ c += '<path d="M'+X(50)+' '+Y(yc - 3)+' q'+n(2.2*k)+' '+n(3*k)+' 0 '+n(6*k)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".45" stroke-linecap="round"/>'; });
     return c;
   }
 
@@ -187,7 +192,7 @@
 
   // ---------- pasos para medir la muneca ----------
   (function(){
-    var brazo = '<path d="M-4 64 C60 62 120 64 168 67.8 L168 107 C120 110 60 112 -4 110 Z" fill="url(#gu-piel)"/>' + mano(164, 87, 40) +
+    var brazo = '<path d="M-4 64 C60 62 120 64 168 67.8 L168 107 C120 110 60 112 -4 110 Z" fill="#E8B48F"/>' + mano(164, 87, 40) +
       '<path d="M-4 64 C60 62 120 64 168 67.8" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4"/><path d="M168 107 C120 110 60 112 -4 110" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.4"/>';
     var p1 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><path d="M144 66 L176 40" stroke="#71717a" stroke-width="10" stroke-linecap="round" opacity=".25"/><path d="M144 66 L176 40" stroke="#fff" stroke-width="8" stroke-linecap="round"/>' + texto(120, 140, 'Tira alrededor de la muñeca', { tam: 12, color: '#52525b' });
     var p2 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><line x1="128" y1="86" x2="144" y2="86" stroke="'+ORO+'" stroke-width="2.5"/><path d="M150 84 L196 38 L204 46 L158 92 Z" fill="#d4d4d8" stroke="#a1a1aa"/><path d="M150 84 L146 96 L158 92" fill="#3f3f46"/>' + texto(120, 140, 'Marca donde se junta', { tam: 12, color: '#52525b' });
@@ -215,7 +220,7 @@
     var borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
     // antebrazo (mas ancho hacia la izquierda) y muneca, color piel; despues la mano con sus dedos
     var arr = 'M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' 466 '+n(cy-ancho*0.48), aba = 'M466 '+n(cy+ancho*0.5)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68);
-    c += '<path d="'+arr+' L466 '+n(cy+ancho*0.5)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="url(#gu-piel)"/>';
+    c += '<path d="'+arr+' L466 '+n(cy+ancho*0.5)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="#E8B48F"/>';
     c += mano(462, cy, ancho);
     c += '<path d="'+arr+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/><path d="'+aba+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/>';
     // borde de la muneca donde va el reloj (lineas punteadas)
@@ -254,16 +259,12 @@
     return '<a class="gu-reloj" href="/?id='+encodeURIComponent(r.id)+'"><span class="gu-reloj-foto">'+foto+'<span class="gu-mm">'+esc(parseFloat(r.mm))+' mm</span></span><span class="gu-reloj-nombre">'+esc(r.nombre)+'</span>'+(precio ? '<span class="gu-reloj-precio">'+esc(precio)+'</span>' : '')+'</a>';
   }
   // una fila de relojes: se ven solo los que caben (4 en PC, 2 en celular) y un boton para ver el resto
-  function fila(lista, titulo){
+  // "Ver todos" abre el catalogo con el filtro de esa medida ya puesto (/relojes?mm=42 o ?mm=39-42)
+  function fila(lista, titulo, mm){
     var pocosPc = lista.length <= 4 ? ' pocos-pc' : '';
     return '<div class="gu-grupo">' + titulo + '<div class="gu-fila">' + lista.map(tarjeta).join('') + '</div>' +
-      (lista.length > 2 ? '<button type="button" class="gu-ver-todos' + pocosPc + '" data-t="Ver todos ('+lista.length+')">Ver todos ('+lista.length+')</button>' : '') + '</div>';
+      (lista.length > 2 && mm ? '<a class="gu-ver-todos' + pocosPc + '" href="/relojes?mm=' + encodeURIComponent(mm) + '">Ver todos (' + lista.length + ')</a>' : '') + '</div>';
   }
-  document.addEventListener('click', function(e){
-    var b = e.target.closest ? e.target.closest('.gu-ver-todos') : null; if(!b) return;
-    var abierto = b.parentElement.classList.toggle('todos');
-    b.textContent = abierto ? 'Ver menos' : b.dataset.t;
-  });
   // relojes de la tienda del tamano elegido en el control; si no hay de esa medida exacta,
   // los mas cercanos (hasta 2 mm de diferencia)
   function pintarSugeridos(){
@@ -276,14 +277,15 @@
         .sort(function(a, b){ return Math.abs(parseFloat(a.mm) - mmSel) - Math.abs(parseFloat(b.mm) - mmSel); });
       titulo = 'Relojes de la tienda cerca de ' + mmSel + ' mm';
     }
-    cont.innerHTML = lista.length ? fila(lista, '<h3>' + titulo + '</h3>')
+    var exacta = lista.every(function(r){ return Math.round(parseFloat(r.mm)) === mmSel; });
+    cont.innerHTML = lista.length ? fila(lista, '<h3>' + titulo + '</h3>', exacta ? String(mmSel) : (mmSel - 2) + '-' + (mmSel + 2))
       : '<h3>Relojes de la tienda de ' + mmSel + ' mm</h3><p class="gu-tip">Ahora no tenemos relojes de esta medida. Escríbenos y te ayudamos a conseguirlo.</p>';
   }
   function pintarTienda(){
     var grupos = [['Hasta 38 mm', 0, 38.9], ['39 a 42 mm', 39, 42.9], ['43 a 45 mm', 43, 45.9], ['46 mm o más', 46, 99]];
     var h = grupos.map(function(g){
       var l = _catalogo.filter(function(r){ var mm = parseFloat(r.mm); return mm >= g[1] && mm <= g[2]; });
-      return l.length ? fila(l, '<h3>'+g[0]+' <span>('+l.length+')</span></h3>') : '';
+      return l.length ? fila(l, '<h3>'+g[0]+' <span>('+l.length+')</span></h3>', g[1] + '-' + Math.floor(g[2])) : '';
     }).join('');
     $('gu-tienda').innerHTML = h || '<p class="gu-tip">Pronto agregaremos más relojes.</p>';
   }

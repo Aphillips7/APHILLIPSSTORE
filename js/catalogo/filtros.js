@@ -42,6 +42,22 @@ var _FACETAS = [
 ];
 var _filtros = {}, _fltAbiertas = {};
 function limpiarFiltros(){ _filtros = {}; }
+// Llegada desde la guia de tamanos ("Ver todos"): /relojes?mm=42 o ?mm=39-42 marca esas medidas en el
+// filtro "Tamano de caja". Se aplica una sola vez, cuando ya cargaron los relojes, y se quita de la direccion.
+var _mmUrl = (function(){
+  var v = new URLSearchParams(location.search).get('mm'); if(!v) return null;
+  var m = /^(\d{2})(?:-(\d{2}))?$/.exec(v); if(!m) return null;
+  return [Number(m[1]), Number(m[2] || m[1])];
+})();
+function aplicarMmDeUrl(){
+  if(!_mmUrl || !relojes.length) return false;
+  var desde = _mmUrl[0], hasta = _mmUrl[1], sel = {};
+  relojes.forEach(function(r){ var mm = parseFloat(r.mm); if(mm >= desde && mm < hasta + 1) sel[_fval(r,'mm').toLowerCase()] = true; });
+  _mmUrl = null;
+  if(Object.keys(sel).length) _filtros.mm = sel;
+  var u = new URL(location.href); u.searchParams.delete('mm'); history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+  return true;
+}
 function _fval(r,k){ var v = (k==='mm') ? (r.mm ? r.mm+' mm' : '') : r[k]; return v==null ? '' : String(v).trim(); }
 function _facOk(r, omit){
   for(var i=0;i<_FACETAS.length;i++){
@@ -131,6 +147,6 @@ window.addEventListener('resize', function(){
   if(p && b && box && !box.classList.contains('abierta') && p.clientHeight) b.style.visibility = (p.scrollHeight > p.clientHeight + 1) ? 'visible' : 'hidden';
 });
 
-export { _busOk, coincideBusqueda, _FACETAS, _facOk, _filtros, _fltAbiertas, _fval, _nFiltros, _orden, abrirFiltros, abrirOrden, actualizarFltUI, cerrarFiltros, cerrarOrden, fltReset, fltSec, fltToggle, limpiarFiltros, ordSel, renderFiltros, setOrden };
+export { _busOk, coincideBusqueda, _FACETAS, _facOk, _filtros, _fltAbiertas, _fval, _nFiltros, _orden, abrirFiltros, abrirOrden, actualizarFltUI, cerrarFiltros, cerrarOrden, fltReset, fltSec, fltToggle, limpiarFiltros, ordSel, renderFiltros, setOrden, aplicarMmDeUrl };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { abrirFiltros, abrirOrden, cerrarFiltros, cerrarOrden, fltReset, fltSec, fltToggle, ordSel });

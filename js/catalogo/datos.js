@@ -1,5 +1,6 @@
 import { render } from './grid.js';
 import { abrir } from './modal.js';
+import { aplicarMmDeUrl } from './filtros.js';
 
 // Relojes del catalogo publico.
 // Se leen de Cloudflare (https://api.aphillipsstore.com/catalogo) y se vuelven a pedir cada minuto
@@ -25,6 +26,7 @@ function aplicar(lista){
   var MOVIMIENTOS = { 'cuarzo japones': 'Cuarzo', 'cuarzo japonés': 'Cuarzo', 'automatico': 'Automático', 'cronografo cuarzo': 'Cronógrafo de cuarzo' };
   relojes.forEach(function(r){ var m = MOVIMIENTOS[String(r.movimiento || '').trim().toLowerCase()]; if(m) r.movimiento = m; });
   relojes.sort(function(a,b){ return (b._ts||0)-(a._ts||0); });
+  aplicarMmDeUrl();   // si viene de la guia de tamanos con ?mm=
   render();
   if(!_deepLinkHandled){
     _deepLinkHandled = true;

@@ -78,3 +78,9 @@
     .gu-pasos figure{display:grid;grid-template-columns:140px 1fr;gap:12px;align-items:center;}
     .gu-pasos figcaption{margin:0;}
   }
+
+  /* "Ver todos" lleva al catalogo filtrado: glaciar con letras negras, como los demas botones */
+  .gu-ver-todos{text-align:center;text-decoration:none;width:max-content;background:var(--glaciar,#A7C4D6);border-color:var(--glaciar,#A7C4D6);color:var(--black);}
+  @media (hover:hover) and (pointer:fine){ .gu-ver-todos:hover{background:var(--black);border-color:var(--black);color:#fff;} }
+  .gu-boton{display:inline-flex;align-items:center;gap:10px;}
+  .gu-boton svg{width:16px;height:16px;flex:none;}

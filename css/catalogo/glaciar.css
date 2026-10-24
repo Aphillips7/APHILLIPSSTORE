@@ -99,7 +99,7 @@
   @media (hover:hover) and (pointer:fine){
     html.glaciar .ctl-btn:hover,
     html.glaciar .fav-cerrar:hover,
-    html.glaciar .gu-ver-todos:hover{background:var(--glaciar);border-color:var(--glaciar);color:var(--black);}
+    html.glaciar .gu-ver-todos:hover{background:var(--black);border-color:var(--black);color:#fff;}
   }
 
   /* otros azules que habia en la tienda pasan al mismo glaciar (o a negro si son numeros/texto) */
