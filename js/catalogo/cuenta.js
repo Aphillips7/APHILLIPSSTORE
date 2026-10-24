@@ -509,7 +509,7 @@ function pintar(){
     cont.innerHTML = aviso +
       '<section class="cta-seccion">' +
       // cabecera de bienvenida: titulo de la tienda, una linea de presentacion y los beneficios de tener cuenta
-      '<div class="cta-bienvenida"><span class="cta-eyebrow">Aphillips Store</span>' +
+      '<div class="cta-bienvenida">' +
         '<h2 class="cta-gran">' + (_modo === 'crear' ? 'Crea tu cuenta' : 'Mi cuenta') + '</h2>' +
         '<p>' + (_modo === 'crear' ? 'Únete y recibe una atención personalizada en cada compra.' : 'Inicia sesión para una atención personalizada en cada compra.') + '</p>' +
         '<ul class="cta-beneficios">' +
