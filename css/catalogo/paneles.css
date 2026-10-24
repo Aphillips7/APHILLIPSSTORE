@@ -202,3 +202,12 @@
   /* "¿No tienes cuenta?" con boton ancho para crear cuenta, debajo del formulario de entrar */
   .cta-crear-nueva{margin-top:28px;padding-top:22px;border-top:1px solid var(--border2);}
   .cta-crear-nueva span{display:block;margin-bottom:10px;font-size:var(--fs-texto);color:var(--gris-texto);}
+
+  /* cabecera de "Mi cuenta" sin sesion: titulo con la tipografia de la tienda y beneficios con iconos */
+  .cta-bienvenida{margin:0 0 26px;}
+  .cta-eyebrow{display:block;font-size:var(--fs-etiqueta);font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--black);line-height:14px;}
+  .cta-gran{font-family:var(--font-titulo);font-size:var(--fs-titulo);font-weight:800;letter-spacing:.01em;line-height:26px;text-transform:uppercase;color:var(--black);margin:4px 0 10px;}
+  .cta-bienvenida p{font-size:var(--fs-texto);line-height:20px;color:var(--gris-texto);margin:0 0 18px;max-width:42ch;}
+  .cta-beneficios{list-style:none;margin:0;padding:16px 0 0;border-top:1px solid var(--border2);display:flex;flex-direction:column;gap:12px;}
+  .cta-beneficios li{display:flex;align-items:center;gap:12px;font-size:var(--fs-texto);color:var(--black);}
+  .cta-beneficios svg{flex:none;width:30px;height:30px;padding:6px;box-sizing:border-box;border-radius:50%;background:var(--glaciar,#A7C4D6);fill:none;stroke:var(--black);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
