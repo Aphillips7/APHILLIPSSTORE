@@ -1,38 +1,44 @@
 // =================== CARRUSEL DESTACADOS ===================
-// Modelos del carrusel (aun no estan en el catalogo). En "fotos": la 1.ª es el reloj de frente, las demas
-// (muñeca, detalle...) aparecen con las flechitas de la tarjeta. "precio" y "etiqueta" se muestran solo si tienen texto.
-import { _destEsc } from './ui.js';
+// "Mas vendidos": los relojes a la venta con mas clics a WhatsApp (GET /destacados de la API, que solo da
+// sus ids en orden). Si todavia no hay clics, se muestran los ultimos relojes disponibles. "Comprar ahora"
+// (o tocar la foto) abre la ficha completa del reloj.
+import { relojes } from './datos.js';
+import { abrir } from './modal.js';
+import { _destEsc, miniatura } from './ui.js';
 
-var DEST_LOCAL = [
- {
-  "nombre": "Invicta",
-  "detalle": "Pro Diver Automático",
-  "precio": "",
-  "etiqueta": "",
-  "fotos": [
-   "img/destacado-1.webp"
-  ]
- },
- {
-  "nombre": "Invicta",
-  "detalle": "Pro Diver Automático",
-  "precio": "",
-  "etiqueta": "",
-  "fotos": [
-   "img/destacado-2.webp"
-  ]
- },
- {
-  "nombre": "Invicta",
-  "detalle": "Pro Diver Automático",
-  "precio": "",
-  "etiqueta": "",
-  "fotos": [
-   "img/destacado-3.webp"
-  ]
- }
-];
+const API_DEST = 'https://api.aphillipsstore.com/destacados';
+var DEST_LOCAL = [];
+var _destIds = null, _destMovido = 0;
 
+function _destItem(r){
+  var partes = String(r.nombre || 'Reloj').split(' ');
+  var fotos = [r.foto].concat(r.fotos || []).filter(function(u, k, a){ return u && a.indexOf(u) === k; }).slice(0, 4);
+  return { id: r.id, nombre: partes[0], detalle: partes.slice(1).join(' '), precio: r.precio ? '$' + Number(r.precio).toLocaleString() : '', etiqueta: '', fotos: fotos };
+}
+function _destArmar(){
+  if(!relojes.length) return false;
+  var porId = {}; relojes.forEach(function(r){ porId[r.id] = r; });
+  var lista = (_destIds || []).map(function(id){ return porId[id]; }).filter(Boolean);
+  if(lista.length < 3){   // sin suficientes clics todavia: se completa con los ultimos disponibles
+    relojes.forEach(function(r){ if(lista.length < 6 && r.estado === 'disponible' && lista.indexOf(r) === -1) lista.push(r); });
+  }
+  DEST_LOCAL = lista.map(_destItem);
+  _destHtml = [];
+  renderDestacados();
+  return true;
+}
+function cargarDestacados(){
+  fetch(API_DEST).then(function(r){ return r.ok ? r.json() : { ids: [] }; }).catch(function(){ return { ids: [] }; }).then(function(d){
+    _destIds = Array.isArray(d.ids) ? d.ids : [];
+    var intentos = 0;
+    (function esperar(){ if(_destArmar() || ++intentos > 60) return; setTimeout(esperar, 300); })();
+  });
+}
+// abre la ficha del reloj (si no se estaba arrastrando el carrusel)
+function destAbrir(id){
+  if(Date.now() - _destMovido < 400) return;
+  abrir(id);
+}
 
 function _destVis(){ var t=document.getElementById('dest-track'); return Math.max(1, parseInt(getComputedStyle(t).getPropertyValue('--vis'))||3); }
 var _bolsa = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l-1 12h-11z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>';
@@ -45,15 +51,15 @@ var _destN = 0, _destIdx = 0, _destC = 0, _destAnim = false, _destT = 0, _destHt
 function _destMod(i){ return _destN ? ((i % _destN) + _destN) % _destN : 0; }
 function _destPaso(){ var c=document.querySelector('#dest-track .dest-card'); return c ? c.getBoundingClientRect().width : 0; }
 function _destCard(r){
-  var fotos = (r.fotos||[]).map(function(src,i){ return '<img class="g'+(i===0?' on frente':'')+'" src="'+_destEsc(src)+'" alt="" draggable="false">'; }).join('');
+  var fotos = (r.fotos||[]).map(function(src,i){ return '<img class="g'+(i===0?' on frente':'')+'" src="'+_destEsc(miniatura(src))+'" data-completa="'+_destEsc(src)+'" onerror="if(!fotoRespaldo(this))this.remove()" alt="" draggable="false">'; }).join('');
   if(!fotos) fotos = '<span class="sinfoto">Sin foto</span>';
   var gal = (r.fotos||[]).length>1 ? '<button type="button" class="dest-gal izq" aria-label="Imagen anterior" onclick="destGal(this,-1)">'+_chevI+'</button><button type="button" class="dest-gal der" aria-label="Imagen siguiente" onclick="destGal(this,1)">'+_chevD+'</button>' : '';
   return '<div class="dest-card">'+
-    '<div class="dest-foto">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
+    '<div class="dest-foto" onclick="destAbrir(\''+_destEsc(r.id)+'\')">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
     '<div class="dest-nombre">'+_destEsc(r.nombre)+'</div>'+
     (r.detalle?'<div class="dest-sub">'+_destEsc(r.detalle)+'</div>':'')+
     (r.precio?'<div class="dest-precio">'+_destEsc(r.precio)+'</div>':'')+
-    '<div class="dest-comprar"><span>'+_bolsa+'Comprar ahora</span></div>'+
+    '<div class="dest-comprar"><button type="button" onclick="destAbrir(\''+_destEsc(r.id)+'\')"><span>'+_bolsa+'Comprar ahora</span></button></div>'+
   '</div>';
 }
 function _destPos(anim){
@@ -67,6 +73,7 @@ function renderDestacados(){
   var sec = document.getElementById('destacados'), track = document.getElementById('dest-track'); if(!track) return;
   _destN = DEST_LOCAL.length;
   if(!_destN){ sec.style.display='none'; return; }
+  sec.style.display='';
   var vis = _destVis();
   _destC = _destN>1 ? vis+2 : 0;
   if(_destHtml.length !== _destN) _destHtml = DEST_LOCAL.map(_destCard);
@@ -142,6 +149,7 @@ function destActualizar(){
     st.classList.remove('arrastrando');
     var paso = _destPaso(), dir = 0;
     if(Math.abs(dx) > Math.min(60, paso*0.2)) dir = dx<0 ? 1 : -1;
+    _destMovido = Date.now();
     if(dir){ _destAnim = true; _destIdx += dir; clearTimeout(_destT); _destT = setTimeout(_destFin, 800); }
     _destPos(true); destActualizar();
   }
@@ -150,8 +158,9 @@ function destActualizar(){
   var ult = 0;
   window.addEventListener('resize', function(){ var v=_destVis(); if(v!==ult){ ult=v; renderDestacados(); } });
   renderDestacados(); ult = _destVis();
+  cargarDestacados();
 })();
 
 export { _bolsa, _chevD, _chevI, _destAnim, _destC, _destCard, _destFin, _destHtml, _destIdx, _destMod, _destN, _destPaso, _destPos, _destT, _destVis, DEST_LOCAL, destActualizar, destGal, destIr, destMover, destPuntos, renderDestacados };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { destGal, destIr, destMover });
+Object.assign(window, { destAbrir, destGal, destIr, destMover });

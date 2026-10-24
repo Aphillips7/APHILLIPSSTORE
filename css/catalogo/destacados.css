@@ -64,3 +64,8 @@
   .dest-flecha:active:not(:disabled){transform:scale(.94);}
   @media (max-width:900px){ #destacados{--vis:2;--peek:7cqw;} }
   @media (max-width:560px){ #destacados{--vis:1;--peek:9cqw;} .dest-badge{top:10px;left:10px;font-size:10px;} }
+
+  /* fotos del catalogo en el carrusel: el reloj completo, fundido con el degradado */
+  .dest-foto{cursor:pointer;}
+  .dest-foto .g{object-fit:contain;padding:9%;box-sizing:border-box;mix-blend-mode:multiply;}
+  .dest-comprar button{padding:0;border:none;background:none;font:inherit;cursor:pointer;}
