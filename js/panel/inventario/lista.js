@@ -1,5 +1,5 @@
 // =================== INVENTARIO ===================
-import { autoRegistrarCompraInv, existeCompraDe } from '../finanzas/registrar-compra.js';
+import { sincronizarCompraInv } from '../finanzas/registrar-compra.js';
 import { verDetalle } from './detalle.js';
 import { editarProducto } from './formulario.js';
 import { abrirReservaModal } from './reservas.js';
@@ -116,7 +116,8 @@ function cambiarEstado(id,val){
   }
   state.inventario[i].estado=val;
   save('inventario');
-  if(antes==='transito'&&val==='disponible'&&!existeCompraDe(state.inventario[i])){autoRegistrarCompraInv(state.inventario[i]);}
+  // al pasar a un estado pagado (por ejemplo de bajo pedido a transito) la compra se registra sola
+  var avisoC=sincronizarCompraInv(state.inventario[i]); if(avisoC&&window.toastPanel) window.toastPanel(avisoC);
   renderInventario();
 }
 
