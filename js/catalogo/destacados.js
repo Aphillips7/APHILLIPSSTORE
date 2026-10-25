@@ -45,18 +45,87 @@ var _bolsa = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 var _chevI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
 var _chevD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
 
-// Filtro que vuelve transparente SOLO el blanco del fondo de la foto: el degradado celeste se ve detras y el
-// reloj conserva sus colores reales (antes la mezcla "multiply" tambien le teñia el reloj de celeste).
-// alfa = 6 x (2,94 - (R+G+B)): blanco puro y casi blanco -> transparente; todo lo demas queda opaco.
-// feComposite "in" con la transparencia original: el margen vacio alrededor de la foto sigue transparente.
+// FOTOS SIN FONDO: en el carrusel el fondo blanco de cada foto se vuelve transparente para que se vea el
+// degradado celeste detras, sin tocar el reloj. Se borra SOLO el blanco que toca los bordes de la foto (relleno
+// desde las orillas), asi los brillos blancos del acero quedan intactos (antes un filtro de color tambien
+// borraba esos brillos y en iPhone se veian manchas celestes dentro del reloj). Se hace una vez por foto, en
+// un lienzo, y se guarda en memoria. Si no se puede (sin permiso de la imagen o error), la foto se muestra con
+// el filtro de respaldo.
+var _sinFondo = {};   // url -> Promise<blob url>
 (function(){
   if(document.getElementById('filtro-sin-blanco')) return;
   var d = document.createElement('div');
   d.setAttribute('aria-hidden', 'true');
   d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+  // respaldo: alfa = 6 x (2,94 - (R+G+B)); feComposite "in" deja transparente el margen vacio de la foto
   d.innerHTML = '<svg width="0" height="0"><filter id="filtro-sin-blanco" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -6 -6 -6 0 17.64" result="sinblanco"/><feComposite in="sinblanco" in2="SourceAlpha" operator="in"/></filter></svg>';
   document.body.appendChild(d);
 })();
+function quitarFondoBlanco(url){
+  if(_sinFondo[url]) return _sinFondo[url];
+  // "?sf=1": direccion propia, asi el navegador no reutiliza una copia guardada sin permiso de lectura
+  _sinFondo[url] = fetch(url + (url.indexOf('?') === -1 ? '?' : '&') + 'sf=1', { mode: 'cors', credentials: 'omit' })
+    .then(function(r){ if(!r.ok) throw new Error('foto ' + r.status); return r.blob(); })
+    .then(function(b){ return createImageBitmap(b); })
+    .then(function(img){
+      var k = Math.min(1, 760 / Math.max(img.width, img.height));   // 760 px bastan para la tarjeta del carrusel
+      var W = Math.max(1, Math.round(img.width * k)), H = Math.max(1, Math.round(img.height * k));
+      var c = document.createElement('canvas'); c.width = W; c.height = H;
+      var x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
+      var d = x.getImageData(0, 0, W, H), p = d.data, n = W * H;
+      // blanco del fondo: los tres canales altos y casi sin color (el ruido del JPG se tolera)
+      function blanco(i){ var r = p[i], g = p[i+1], b = p[i+2], mn = Math.min(r, g, b); return mn >= 232 && Math.max(r, g, b) - mn <= 22; }
+      // relleno desde las orillas con una pila de enteros: cada pixel entra una sola vez (rapido en celular)
+      var fondo = new Uint8Array(n), pila = new Int32Array(n), tope = 0, xx, yy, q;
+      function meter(v){ if(!fondo[v] && blanco(v * 4)){ fondo[v] = 1; pila[tope++] = v; } }
+      for(xx = 0; xx < W; xx++){ meter(xx); meter((H - 1) * W + xx); }
+      for(yy = 0; yy < H; yy++){ meter(yy * W); meter(yy * W + W - 1); }
+      while(tope){
+        q = pila[--tope]; xx = q % W; yy = (q / W) | 0;
+        if(xx > 0) meter(q - 1); if(xx < W - 1) meter(q + 1);
+        if(yy > 0) meter(q - W); if(yy < H - 1) meter(q + W);
+      }
+      // borde suave: cada pixel toma la transparencia promedio de su vecindario 3x3; en el borde del reloj los
+      // pixeles casi blancos (el halo del recorte) se vuelven parcialmente transparentes
+      for(yy = 0; yy < H; yy++) for(xx = 0; xx < W; xx++){
+        q = yy * W + xx;
+        if(fondo[q]){ p[q * 4 + 3] = 0; continue; }
+        var t = 0, m = 0;
+        for(var dy = -1; dy <= 1; dy++) for(var dx = -1; dx <= 1; dx++){
+          var X = xx + dx, Y = yy + dy; if(X < 0 || Y < 0 || X >= W || Y >= H) continue;
+          m++; if(fondo[Y * W + X]) t++;
+        }
+        if(t){
+          var mn = Math.min(p[q*4], p[q*4+1], p[q*4+2]);
+          var blancura = Math.max(0, Math.min(1, (mn - 200) / 55));   // 0 = oscuro, 1 = casi blanco
+          p[q * 4 + 3] = Math.round(255 * (1 - (t / m) * blancura));
+        }
+      }
+      x.putImageData(d, 0, 0);
+      return new Promise(function(ok, mal){ c.toBlob(function(b){ b ? ok(URL.createObjectURL(b)) : mal(new Error('sin blob')); }, 'image/png'); });
+    });
+  return _sinFondo[url];
+}
+// aplica la foto sin fondo a todas las tarjetas del carrusel (las copias del carrusel infinito comparten foto)
+function _destSinFondo(){
+  // tarjeta chica (celular, pantalla normal): basta la miniatura de 480 px, mucho mas liviana; si no, la foto completa
+  var tarjeta = document.querySelector('#dest-track .dest-foto');
+  var px = tarjeta ? tarjeta.getBoundingClientRect().width * (window.devicePixelRatio || 1) : 9999;
+  document.querySelectorAll('#dest-track img.g.esperando').forEach(function(img){
+    var completa = img.getAttribute('data-completa'); if(!completa) return;
+    var url = px <= 560 ? miniatura(completa) : completa;
+    var listo = false;
+    var mostrar = function(){ img.classList.remove('esperando'); };
+    // si tarda mucho, se muestra con el filtro de respaldo y se cambia cuando este lista
+    var t = setTimeout(function(){ if(!listo){ img.classList.add('con-filtro'); mostrar(); } }, 2500);
+    quitarFondoBlanco(url).then(function(blob){
+      listo = true; clearTimeout(t);
+      img.removeAttribute('srcset'); img.removeAttribute('sizes');
+      img.onload = function(){ img.classList.remove('con-filtro'); mostrar(); };
+      img.src = blob;
+    }).catch(function(){ listo = true; clearTimeout(t); img.classList.add('con-filtro'); mostrar(); });
+  });
+}
 
 // Carrusel infinito: la ventana (con las lineas entre tarjetas) queda fija y solo se desliza el contenido.
 // Se dibujan copias a ambos lados y, al terminar de deslizar, se salta sin animacion a la posicion equivalente.
@@ -65,7 +134,7 @@ function _destMod(i){ return _destN ? ((i % _destN) + _destN) % _destN : 0; }
 function _destPaso(){ var c=document.querySelector('#dest-track .dest-card'); return c ? c.getBoundingClientRect().width : 0; }
 function _destCard(r){
   // solo la foto de portada (sin galeria ni flechas en el carrusel)
-  var fotos = (r.fotos||[]).slice(0, 1).map(function(src){ return '<img class="g on frente" src="'+_destEsc(miniatura(src))+'"'+srcsetFoto(src, '(max-width:600px) 85vw, (max-width:1100px) 45vw, 30vw')+' data-completa="'+_destEsc(src)+'" onerror="if(!fotoRespaldo(this))this.remove()" alt="" draggable="false">'; }).join('');
+  var fotos = (r.fotos||[]).slice(0, 1).map(function(src){ return '<img class="g on frente esperando" src="'+_destEsc(miniatura(src))+'"'+srcsetFoto(src, '(max-width:600px) 85vw, (max-width:1100px) 45vw, 30vw')+' data-completa="'+_destEsc(src)+'" onerror="if(!fotoRespaldo(this))this.remove()" alt="" draggable="false">'; }).join('');
   if(!fotos) fotos = '<span class="sinfoto">Sin foto</span>';
   var gal = '';
   return '<div class="dest-card">'+
@@ -94,6 +163,7 @@ function renderDestacados(){
   var h = '';
   for(var k=-_destC; k<_destN+_destC; k++) h += _destHtml[_destMod(k)];
   track.innerHTML = h;
+  _destSinFondo();   // fotos sin fondo blanco (ver arriba)
   var dv = ''; for(var j=0; j<=vis; j++) dv += '<i style="--k:'+j+'"></i>';
   document.getElementById('dest-div').innerHTML = dv;
   _destAnim = false; _destIdx = _destMod(_destIdx);
