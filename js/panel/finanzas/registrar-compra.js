@@ -58,6 +58,7 @@ function registrarCompra() {
   var monto=parseFloat(document.getElementById('fin-monto-compra').value);
   var metodoPago=document.getElementById('fin-metodo-compra')?document.getElementById('fin-metodo-compra').value:'';
   if(!monto||monto<=0){alert('Ingresa el costo pagado.');return;}
+  if(!metodoPago){alert('Elige con que pagaste (Yappy, efectivo...): asi cuadra el dinero por metodo.');return;}
   // el reloj queda con ese costo: costo + importacion = total pagado, y su margen se recalcula
   var it=state.inventario[i], imp=Number(it.importacion)||0;
   if(imp>monto) imp=0;
@@ -67,6 +68,7 @@ function registrarCompra() {
   state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'compra',invId:p.id||null,desc:p.nombre+(p.sku?' · Ref. '+p.sku:''),monto:monto,canal:'compra',metodoPago:metodoPago,costo:0,fecha:new Date().toLocaleDateString('es-MX')});
   save('movimientos');
   limpiarSeleccionCompra(); renderInicio();
+  var fmc=document.getElementById('fin-metodo-compra'); if(fmc) fmc.value='';
   var btn=document.getElementById('btn-registrar-compra');
   if(btn){var orig=btn.textContent;btn.textContent='Compra registrada';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1800);}
 }
@@ -120,8 +122,9 @@ function sincronizarCompraInv(p){
     save('movimientos');
     return 'La compra en Movimientos se actualizo a $' + costo.toLocaleString('en-US') + '.';
   }
-  state.movimientos.unshift({ id: idAleatorio('mov'), _ts: Date.now(), tipo: dif > 0 ? 'compra' : 'gasto', invId: p.id, desc: 'Ajuste de costo · ' + desc,
-    monto: Math.abs(dif), canal: dif > 0 ? 'compra' : 'reembolso', categoria: dif > 0 ? '' : 'Reembolso', metodoPago: p.metodoCompra || '', costo: 0, fecha: hoy(), _auto: true });
+  // costo mas alto: compra por la diferencia; costo mas bajo: compra NEGATIVA (vuelve dinero a la caja)
+  state.movimientos.unshift({ id: idAleatorio('mov'), _ts: Date.now(), tipo: 'compra', invId: p.id, desc: (dif > 0 ? 'Ajuste de costo · ' : 'Ajuste de costo (baja) · ') + desc,
+    monto: dif, canal: 'compra', metodoPago: p.metodoCompra || '', costo: 0, fecha: hoy(), _auto: true });
   save('movimientos');
   return 'Se registro un ajuste de costo de $' + Math.abs(dif).toLocaleString('en-US') + ' (el mes de la compra original esta cerrado).';
 }

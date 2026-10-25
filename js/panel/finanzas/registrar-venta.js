@@ -138,12 +138,14 @@ async function registrarMovimiento() {
   var clienteId = document.getElementById('fin-cliente') ? document.getElementById('fin-cliente').value : '';
   var cliente = clienteId ? state.clientes.find(c=>c.id===clienteId) : null;
   if (!monto || monto <= 0) { alert('Ingresa el precio de venta.'); return; }
+  if (!metodoPago) { alert('Elige como pago el cliente (Yappy, efectivo...): asi cuadra el dinero por metodo.'); return; }
   // poka-yoke: no se vende dos veces, y un apartado se completa desde su ficha (respeta los abonos)
   if (p.estado === 'vendido') { alert('Este reloj ya esta vendido.'); limpiarSeleccion(); return; }
   if (p.estado === 'reservado') { alert('Este reloj esta apartado por ' + (p.reserva ? p.reserva.clienteNombre : 'un cliente') + '. Usa "Completar venta" en su ficha para que cuenten los abonos.'); return; }
   var costoP = p.costoTotal || 0;
   var resumen = 'Confirmar venta:\n\n' + p.nombre + (p.sku ? ' · Ref. ' + p.sku : '') + '\nPrecio: $' + monto.toLocaleString() + '\nCanal: ' + canal + (metodoPago ? ' · Pago: ' + metodoPago : '') + (cliente ? '\nCliente: ' + cliente.nombre : '');
   if (costoP > 0 && monto < costoP) resumen += '\n\nOJO: vendes por DEBAJO del costo ($' + costoP.toLocaleString() + '): pierdes $' + (costoP - monto).toLocaleString() + '.';
+  else if (p.precioMin > 0 && monto < p.precioMin) resumen += '\n\nOJO: es menos que tu precio minimo ($' + p.precioMin.toLocaleString() + ').';
   if (!confirm(resumen)) return;
   var fechaVenta = new Date().toLocaleDateString('es-MX');
   _registrando = true;
@@ -160,6 +162,7 @@ async function registrarMovimiento() {
   save('inventario');
   registrarCompraSiFalta(state.inventario[i]);   // un reloj en transito o bajo pedido tambien tuvo un costo
   limpiarSeleccion();
+  var fm = document.getElementById('fin-metodo'); if (fm) fm.value = '';
   renderInicio();
   var btn = document.getElementById('btn-registrar-mov');
   if (btn) { var orig=btn.textContent; btn.textContent='Venta registrada'; btn.style.background='var(--green)'; setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; },2000); }

@@ -4,6 +4,7 @@ import { renderInicio } from '../inicio.js';
 import { cerrarModal } from './detalle.js';
 import { renderInventario } from './lista.js';
 import { avisarError, cambiarEstadoSeguro } from './transacciones.js';
+import { elegirMetodoPago } from '../componentes.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 import { saldoPendienteReserva, totalAbonadoReserva } from '../../products.js';
 
@@ -19,6 +20,7 @@ function abrirReservaModal(id){
   document.getElementById('reserva-modal-nombre').textContent=p.nombre+(p.sku?' · Ref. '+p.sku:'');
   document.getElementById('reserva-precio').value=p.precio||'';
   document.getElementById('reserva-abono').value='';
+  document.getElementById('reserva-metodo').value='';
   var pl=document.getElementById('reserva-plazo'); if(pl) pl.value='30';
   document.getElementById('reserva-overlay').classList.add('open');
 }
@@ -35,6 +37,7 @@ async function confirmarReserva(){
   var abono=parseFloat(document.getElementById('reserva-abono').value)||0;
   if(abono<0||abono>precioAcordado){alert('El abono no puede ser mayor al precio acordado.');return;}
   var metodoPago=document.getElementById('reserva-metodo').value;
+  if(abono>0&&!metodoPago){alert('Elige como pago el abono (Yappy, efectivo...).');return;}
   var i=idxInv(id);
   if(i===-1){ invNoExiste(); cerrarReservaModal(); return; }
   var p=state.inventario[i];
@@ -71,6 +74,7 @@ function abrirAbonoModal(id){
   _abonoModalIdx=id;var p=state.inventario[i];
   document.getElementById('abono-modal-info').textContent=p.nombre+' · '+p.reserva.clienteNombre+' · Saldo pendiente: $'+saldoPendienteReserva(p).toLocaleString();
   document.getElementById('abono-monto').value='';
+  document.getElementById('abono-metodo').value='';
   document.getElementById('abono-overlay').classList.add('open');
 }
 function cerrarAbonoModal(){document.getElementById('abono-overlay').classList.remove('open');_abonoModalIdx=null;}
@@ -84,6 +88,7 @@ function confirmarAbono(){
   if(!monto||monto<=0){alert('Ingresa el monto del abono.');return;}
   if(monto>saldo){alert('Ese monto es mayor al saldo pendiente ($'+saldo.toLocaleString()+'). Si quiere completar la venta, usa "Completar venta".');return;}
   var metodoPago=document.getElementById('abono-metodo').value;
+  if(!metodoPago){alert('Elige como pago el abono (Yappy, efectivo...).');return;}
   if(!confirm('Registrar abono de $'+monto.toLocaleString()+' ('+metodoPago+') de '+p.reserva.clienteNombre+'.\nSaldo despues del abono: $'+(saldo-monto).toLocaleString()+'.')) return;
   var hoy=new Date().toLocaleDateString('es-MX');
   p.reserva.abonos.push({monto:monto,fecha:hoy,metodoPago:metodoPago});
@@ -95,21 +100,6 @@ function confirmarAbono(){
   renderInventario();renderInicio();refrescarVentas();
 }
 
-// forma de pago escrita a mano: se acepta el numero o la palabra, y si no se entiende se vuelve a preguntar
-// (antes cualquier error de dedo quedaba como "otro" y descuadraba "Saldo por metodo")
-function pedirMetodoPago(texto){
-  var LISTA=['efectivo','yappy','transferencia','tarjeta','otro'];
-  var aviso='';
-  for(;;){
-    var r=prompt(aviso+texto+'\n\n1 efectivo · 2 yappy · 3 transferencia · 4 tarjeta · 5 otro\n(escribe el numero o la palabra)','2');
-    if(r===null) return null;
-    r=String(r).trim().toLowerCase();
-    if(/^[1-5]$/.test(r)) return LISTA[+r-1];
-    var m=LISTA.filter(function(x){ return x.indexOf(r)===0&&r.length>=2; });
-    if(m.length===1) return m[0];
-    aviso='No entendi "'+r+'". ';
-  }
-}
 async function completarVentaReserva(id){
   if(_ocupado) return;
   var i=idxInv(id);
@@ -122,8 +112,8 @@ async function completarVentaReserva(id){
   // forma de pago del saldo, para que cuente en "Saldo por metodo" de Finanzas
   var metodoSaldo='';
   if(saldo>0){
-    metodoSaldo=pedirMetodoPago('¿Cómo pagó el saldo de $'+saldo.toLocaleString()+'?');
-    if(metodoSaldo===null) return;
+    metodoSaldo=await elegirMetodoPago('¿Como pago el saldo?', p.reserva.clienteNombre+' paga $'+saldo.toLocaleString()+' para completar '+p.nombre+'.');
+    if(!metodoSaldo) return;
   }
   _ocupado=true;
   try{ await cambiarEstadoSeguro(id, p.estado, {estado:'vendido', precioVenta:p.reserva.precioAcordado, fechaVenta:hoy}, ['reserva']); }
@@ -170,12 +160,18 @@ async function cancelarReserva(id){
   if(totalAbonado>0){
     if(devolver){
       seDevolvio=true;
-      state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',invId:p.id,desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:totalAbonado,canal:'reembolso',categoria:'Reembolso',metodoPago:((p.reserva.abonos||[])[0]||{}).metodoPago||'',costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
+      // una devolucion por cada metodo con que abono (antes todo salia del metodo del primer abono)
+      var porMetodo={};
+      (p.reserva.abonos||[]).forEach(function(a){ var k=a.metodoPago||''; porMetodo[k]=(porMetodo[k]||0)+(Number(a.monto)||0); });
+      Object.keys(porMetodo).forEach(function(k){
+        if(!(porMetodo[k]>0)) return;
+        state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'gasto',invId:p.id,desc:'Devolucion de abono · '+p.reserva.clienteNombre+' · '+p.nombre,monto:Math.round(porMetodo[k]*100)/100,canal:'reembolso',categoria:'Reembolso',metodoPago:k,costo:0,clienteId:p.reserva.clienteId,clienteNombre:p.reserva.clienteNombre,fecha:new Date().toLocaleDateString('es-MX')});
+      });
       save('movimientos');
     }
   }
   if(clienteIdRes){
-    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'reserva_cancelada',desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+(totalAbonado>0?(seDevolvio?' · Abono devuelto':' · Abono retenido'):''),monto:0,canal:'reserva_cancelada',clienteId:clienteIdRes,clienteNombre:clienteNombreRes,fecha:new Date().toLocaleDateString('es-MX')});
+    state.movimientos.unshift({id:idAleatorio('mov'),_ts:Date.now(),tipo:'reserva_cancelada',invId:p.id,desc:p.nombre+(p.sku?' · Ref. '+p.sku:'')+(totalAbonado>0?(seDevolvio?' · Abono devuelto':' · Abono retenido'):''),monto:0,canal:'reserva_cancelada',clienteId:clienteIdRes,clienteNombre:clienteNombreRes,fecha:new Date().toLocaleDateString('es-MX')});
     save('movimientos');
   }
   i=idxInv(id);
