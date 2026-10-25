@@ -1,7 +1,7 @@
-// Service Worker de APHILLIPS STORE — version del cache
+﻿// Service Worker de APHILLIPS STORE â€” version del cache
 // Cada vez que publiques cambios en HTML, CSS o JS, sube este numero
 // (ej: 'aphillips-v3'). Al activarse la version nueva se borra el cache viejo.
-const CACHE_NAME = 'aphillips-v153';
+const CACHE_NAME = 'aphillips-v156';
 
 // Solo el "cascaron" de la app: nunca datos, nunca Firebase, nunca fuentes externas.
 // Si agregas o renombras un archivo en /css o /js, agregalo tambien aqui.
@@ -37,6 +37,7 @@ const SHELL_FILES = [
   './css/catalogo/listado.css',
   './css/catalogo/filtros.css',
   './css/catalogo/marcas.css',
+  './css/catalogo/futuro.css',
   './css/catalogo/pie.css',
   './css/catalogo/hora.css',
   './css/catalogo/glaciar.css',
@@ -157,7 +158,7 @@ self.addEventListener('fetch', function (event) {
 
   // Solo nos metemos en peticiones GET de nuestro propio dominio.
   // Todo lo demas (Firebase, Firestore, Auth, Google Fonts, CDNs) pasa de largo,
-  // intacto, directo a la red — nunca lo tocamos ni lo cacheamos.
+  // intacto, directo a la red â€” nunca lo tocamos ni lo cacheamos.
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) {
     return;
   }
