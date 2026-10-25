@@ -269,6 +269,7 @@
   .cat-badge{font-size:12px;font-weight:600;border-radius:var(--r-pill);padding:2px 9px;background:var(--green-bg);color:var(--green);}
   .cat-vitrina-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .cat-vitrina-cab select{width:auto;}
+  .cat-vitrina-cab .cat-buscar{flex:1;min-width:200px;max-width:420px;margin-left:auto;}
   .cat-reloj{display:flex;align-items:center;gap:10px;min-width:0;}
   .cat-reloj > div{display:flex;flex-direction:column;gap:1px;min-width:0;}
   .cat-reloj b{font-size:13.5px;color:var(--black);font-weight:600;}
@@ -284,7 +285,8 @@
   @media (max-width:600px){
     .cat-embudo .embudo-paso{grid-template-columns:110px minmax(0,1fr) 44px 40px;font-size:12.5px;}
     .cat-cab .acciones-fila{width:100%;} .cat-cab .acciones-fila .btn{flex:1;}
-    .cat-vitrina-cab select{width:100%;}
+    .cat-vitrina-cab select{width:100%;order:4;}
+    .cat-vitrina-cab .cat-buscar{max-width:none;width:100%;flex-basis:100%;margin-left:0;order:3;}
   }
   .inv-grid-acc{display:flex;gap:6px;margin-top:8px;}
   .inv-grid-acc:empty{display:none;}

@@ -665,6 +665,7 @@ if(location.hostname==='aphillips7.github.io'){
   <div class="card">
     <div class="cat-vitrina-cab">
       <div class="card-title" style="margin:0;">Vitrina</div>
+      <input type="search" id="cat-buscar" class="cat-buscar" placeholder="Buscar modelo, referencia o coleccion..." oninput="buscarVitrina(this.value)" autocomplete="off" aria-label="Buscar en la vitrina" />
       <select id="cat-orden" onchange="setOrdenCatalogo(this.value)" aria-label="Ordenar">
         <option value="clics">Mas WhatsApp</option><option value="vistas">Mas vistas</option><option value="tasa">Mejor tasa de contacto</option><option value="precio">Mayor precio</option>
       </select>
