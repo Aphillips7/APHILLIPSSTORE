@@ -50,7 +50,7 @@ function render(){
     var spec = [r.movimiento, r.mm ? r.mm+' mm' : '', r.materialCaja].filter(Boolean).join(', ');
     if(!spec) spec = (r.sku?'Ref. '+r.sku:'')+(r.coleccion?(r.sku?' · ':'')+r.coleccion:'');
     // bajo pedido sin precio: no se muestra precio (la consulta se hace desde la ficha del reloj)
-    var precioHtml = (pedido && !r.precio) ? '' : '<div class="ci-precio">$'+(r.precio||0).toLocaleString()+'</div>';
+    var precioHtml = (pedido && !r.precio) ? '<div class="ci-precio ci-cotiza">Precio a cotizar</div>' : '<div class="ci-precio">$'+(r.precio||0).toLocaleString()+'</div>';   // bajo pedido sin precio: misma linea, asi la tarjeta mide igual
     // "Nuevo": relojes agregados en los ultimos 14 dias (fecha de alta = _ts)
     var nuevo = !agotado && r._ts && (Date.now() - r._ts) < 14 * 86400000;
     return '<div class="card'+(agotado?' card-agotado':'')+'" data-id="'+r.id+'" onclick="abrir(\''+r.id+'\')" role="link" tabindex="0" aria-label="'+esc(r.nombre||'Reloj')+'">'+
@@ -60,7 +60,7 @@ function render(){
         '<div class="ci-txt">'+
           '<span class="ci-eti '+eti.cls+'">'+eti.txt+'</span>'+
           '<div class="ci-nombre">'+esc(r.nombre||'')+'</div>'+
-          (spec?'<div class="ci-spec">'+esc(spec)+'</div>':'')+
+          '<div class="ci-spec">'+esc(spec||'')+'</div>'+   // siempre: reserva su espacio (tarjetas parejas)
           precioHtml+
         '</div>'+
       '</div>'+

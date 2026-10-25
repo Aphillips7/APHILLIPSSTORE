@@ -3,6 +3,7 @@
 // por WhatsApp -> se vende), que relojes necesitan algo (mucho interes y nadie escribe, nadie los ve,
 // publicados incompletos) y la vitrina completa con visibilidad y link por reloj.
 // Las metricas (state.metricas) son acumuladas por reloj: { vistas, aperturas, clics }.
+import { coleccionDe } from './inventario/colecciones.js';
 import { renderInventario } from './inventario/lista.js';
 import { idxInv, invNoExiste, save, state } from './state.js';
 import { esPublicable, rutaReloj } from '../products.js';
@@ -11,7 +12,9 @@ import { dinero, esc, estadoHTML, kpiHTML, tablaHTML, vacioHTML } from './compon
 const URL_TIENDA = 'https://aphillipsstore.com/';
 const ESTADOS = { disponible: ['ok', 'Disponible'], transito: ['info', 'En transito'], bajopedido: ['cancelado', 'Bajo pedido'], vendido: ['vencido', 'Vendido'], reservado: ['pendiente', 'Apartado'] };
 const MIN_VISTAS = 15;      // con menos vistas no se calculan tasas (serian ruido)
-var _filtro = 'visibles', _orden = 'clics';
+var _filtro = 'visibles', _orden = 'clics', _buscar = '', _todos = [];
+// texto sin acentos ni simbolos, para buscar "pro diver", "prodiver" o la referencia
+function plano(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
 
 function met(p){ var m = state.metricas[p.id] || {}; return { vistas: m.vistas || 0, aperturas: m.aperturas || 0, clics: m.clics || 0 }; }
 function pct(a, b){ return b > 0 ? Math.round(a / b * 1000) / 10 : 0; }
@@ -82,6 +85,7 @@ function renderOportunidades(visibles){
 
 // vitrina completa con filtro, orden, metricas y visibilidad
 function renderVitrina(todos){
+  _todos = todos;
   var chips = document.getElementById('cat-filtros');
   var cuenta = { visibles: todos.filter(esPublicable).length, ocultos: todos.filter(function(p){ return p.ocultoCatalogo; }).length,
     incompletos: todos.filter(function(p){ return esPublicable(p) && p.estado !== 'vendido' && incompleto(p).length; }).length, todos: todos.length };
@@ -93,6 +97,10 @@ function renderVitrina(todos){
     if(_filtro === 'ocultos') return p.ocultoCatalogo;
     if(_filtro === 'incompletos') return esPublicable(p) && p.estado !== 'vendido' && incompleto(p).length;
     return true;
+  }).filter(function(p){
+    if(!_buscar) return true;
+    var t = plano([p.nombre, p.sku, p.coleccion, coleccionDe(p).coleccion, p.genero].join(' '));
+    return t.indexOf(_buscar) !== -1 || t.replace(/ /g, '').indexOf(_buscar.replace(/ /g, '')) !== -1;
   }).map(function(p){ var m = met(p); return { p: p, m: m, tasa: m.vistas >= MIN_VISTAS ? pct(m.clics, m.vistas) : null }; });
   lista.sort(function(a, b){
     if(_orden === 'vistas') return b.m.vistas - a.m.vistas;
@@ -112,8 +120,10 @@ function renderVitrina(todos){
           (p.estado !== 'vendido' ? '<label class="cat-switch" title="' + (p.ocultoCatalogo ? 'Oculto: toca para mostrarlo' : 'Visible: toca para ocultarlo') + '"><input type="checkbox"' + (p.ocultoCatalogo ? '' : ' checked') + ' onchange="toggleOcultoCatalogo(\'' + id + '\')"><span></span>' + (p.ocultoCatalogo ? 'Oculto' : 'Visible') + '</label>' : '') +
           (pub ? '<button type="button" class="btn btn-outline btn-sm" onclick="copiarLinkReloj(\'' + id + '\')">Link</button>' : '') +
         '</div>'];
-    }), { icono: 'caja', titulo: 'Ningun reloj en este filtro' });
+    }), { icono: 'caja', titulo: _buscar ? 'Ningun reloj coincide con la busqueda' : 'Ningun reloj en este filtro' });
 }
+// el buscador solo redibuja la tabla (rapido y sin perder lo escrito)
+function buscarVitrina(v){ _buscar = plano(v); renderVitrina(_todos); }
 function setFiltroCatalogo(f){ _filtro = f; renderCatalogoAdmin(); }
 function setOrdenCatalogo(o){ _orden = o; renderCatalogoAdmin(); }
 
@@ -145,4 +155,4 @@ function renderMetricasCatalogo(){ renderCatalogoAdmin(); }
 
 export { copiarLinkCatalogo, copiarLinkReloj, renderCatalogoAdmin, renderMetricasCatalogo, toggleOcultoCatalogo };
 // Usadas desde atributos onclick/oninput del HTML
-Object.assign(window, { copiarLinkCatalogo, copiarLinkReloj, setFiltroCatalogo, setOrdenCatalogo, toggleOcultoCatalogo });
+Object.assign(window, { buscarVitrina, copiarLinkCatalogo, copiarLinkReloj, setFiltroCatalogo, setOrdenCatalogo, toggleOcultoCatalogo });

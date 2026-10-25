@@ -1,4 +1,5 @@
 // =================== INVENTARIO ===================
+import { coleccionDe, htmlPorColeccion } from './colecciones.js';
 import { registrarCompraConMetodo } from '../finanzas/registrar-compra.js';
 import { verDetalle } from './detalle.js';
 import './llegada.js';   // boton "Ya llego" (yaLlego en window)
@@ -151,7 +152,7 @@ function renderInventario(){
   var estadosBadge={disponible:'badge-green',transito:'badge-blue',bajopedido:'badge-slate',reservado:'badge-gold',vendido:'badge-red'};
   var etiquetas={disponible:'Disponible',transito:'En transito',bajopedido:'Bajo pedido',reservado:'Reservado',vendido:'Vendido'};
   var items=state.inventario.map((p,i)=>({p,i})).filter(x=>{
-    var mQ=(x.p.nombre||'').toLowerCase().includes(query)||(x.p.sku||'').toLowerCase().includes(query)||(x.p.coleccion||'').toLowerCase().includes(query)||(x.p.tracking||'').toLowerCase().includes(query);
+    var mQ=!query||(x.p.nombre||'').toLowerCase().includes(query)||(x.p.sku||'').toLowerCase().includes(query)||(x.p.coleccion||'').toLowerCase().includes(query)||(x.p.tracking||'').toLowerCase().includes(query)||coleccionDe(x.p).coleccion.toLowerCase().includes(query);
     var mE=!_filtroEstado||x.p.estado===_filtroEstado;
     var cal=_filtroCalidad&&CALIDAD.find(function(c){ return c.id===_filtroCalidad; });
     return mQ&&mE&&(!cal||cal.f(x.p));
@@ -167,40 +168,15 @@ function renderInventario(){
       return '<div class="inv-grid-card" onclick="verDetalle(\''+esc(q.id)+'\')">'+
         '<div class="inv-grid-foto">'+foto+'<span class="inv-grid-est est-'+q.estado+'">'+(etiq[q.estado]||q.estado)+'</span>'+chipABC(abc[claveModelo(q.nombre)])+(q.ocultoCatalogo?'<span class="inv-grid-oculto" title="Oculto en la tienda">Oculto</span>':'')+'</div>'+
         '<div class="inv-grid-info"><b>'+esc(q.nombre)+'</b><span>'+esc([q.sku,q.mm?q.mm+' mm':''].filter(Boolean).join(' · '))+'</span>'+
-        '<div class="inv-grid-precio"><b>'+dinero(q.precio)+'</b>'+(mg!==null?'<span class="'+(mg>=30?'pos':mg<15?'neg':'')+'">'+mg+'%</span>':'')+(dias!==null?diasBadge(dias):'')+'</div>'+
+        '<div class="inv-grid-precio"><b>'+(q.precio>0?dinero(q.precio):'<span class="tenue-peq">Sin precio</span>')+'</b>'+(mg!==null?'<span class="'+(mg>=30?'pos':mg<15?'neg':'')+'">'+mg+'%</span>':'')+(dias!==null?diasBadge(dias):'')+'</div>'+
         '<div class="inv-grid-acc">'+(q.estado==='transito'?'<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();yaLlego(\''+esc(q.id)+'\')">Ya llego</button>':'')+
         (['disponible','transito','bajopedido'].indexOf(q.estado)!==-1?'<button type="button" class="btn btn-gold btn-sm" onclick="event.stopPropagation();abrirVentaModal(\''+esc(q.id)+'\')">Vendido</button>':'')+'</div></div></div>';
     }).join('')+'</div>';
     return;
   }
   if(_vistaActual==='modelo'){
-    var grupos={};
-    items.forEach(x=>{var key=x.p.nombre;if(!grupos[key])grupos[key]=[];grupos[key].push(x);});
-    lista.innerHTML=Object.entries(grupos).map(([modelo,units])=>{
-      var disp=units.filter(x=>x.p.estado==='disponible').length;
-      var tran=units.filter(x=>x.p.estado==='transito').length;
-      var conCosto=units.filter(x=>x.p.costoTotal>0);
-      var promedio=conCosto.length?conCosto.reduce((a,x)=>a+x.p.costoTotal,0)/conCosto.length:0;
-      var fotoSrc='';units.forEach(x=>{if(!fotoSrc&&x.p.foto)fotoSrc=x.p.foto;});
-      var unitsHtml=units.map(x=>{
-        var imp=x.p.estado==='transito'&&!x.p.importacion;
-        var mc=x.p.margen>=30?'var(--green)':x.p.margen>=15?'var(--amber)':'var(--red)';
-        return'<div style="display:flex;align-items:center;gap:8px;padding:8px 0 8px 66px;border-top:1px solid var(--border);">'+
-          '<div style="flex:1;"><div style="font-size:12px;color:var(--black);">'+(imp?'<span style="color:var(--blue)">Importacion pendiente</span>':'Costo: $'+x.p.costoTotal.toFixed(2))+((!imp&&x.p.precio)?' · Margen: <span style="color:'+mc+'">'+x.p.margen+'%</span>':'')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);">Venta: $'+(x.p.precio||0).toLocaleString()+' · '+x.p.fecha+'</div></div>'+
-          '<span class="badge '+(estadosBadge[x.p.estado]||'badge-blue')+'">'+(etiquetas[x.p.estado]||x.p.estado)+'</span>'+
-          '<button class="btn btn-outline btn-sm" onclick="verDetalle(\''+x.p.id+'\')" title="Ver">&#128065;</button>'+
-          '<button class="btn btn-outline btn-sm" onclick="editarProducto(\''+x.p.id+'\')" title="Editar">&#9998;</button>'+
-          '<button class="btn btn-danger" onclick="eliminarProducto(\''+x.p.id+'\')" title="Eliminar">&#128465;</button>'+
-        '</div>';
-      }).join('');
-      return'<div style="margin-bottom:4px;">'+
-        '<div class="list-item" style="gap:14px;padding-bottom:8px;cursor:pointer;" onclick="verDetalle(\''+units[0].p.id+'\')">'+
-          makeFotoHtml(fotoSrc,52)+
-          '<div class="list-item-info"><div class="list-item-name">'+modelo+(units[0].p.sku?' <span style="color:var(--muted);font-size:12px;">· '+units[0].p.sku+'</span>':'')+' </div>'+
-          '<div class="list-item-sub">'+units.length+' ud. · '+disp+' disponible · '+tran+' en transito'+(promedio?' · Costo prom. $'+promedio.toFixed(2):'')+' </div></div>'+
-        '</div>'+unitsHtml+'</div>';
-    }).join('<div style="height:6px;"></div>');
+    // por coleccion: marca + coleccion base (Pro Diver Scuba y Pro Diver Automatico van juntos), ver colecciones.js
+    lista.innerHTML=htmlPorColeccion(items);
   } else {
     lista.innerHTML=items.map(({p,i})=>{
       var imp=p.estado==='transito'&&!p.importacion;

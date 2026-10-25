@@ -269,6 +269,7 @@
   .cat-badge{font-size:12px;font-weight:600;border-radius:var(--r-pill);padding:2px 9px;background:var(--green-bg);color:var(--green);}
   .cat-vitrina-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .cat-vitrina-cab select{width:auto;}
+  .cat-vitrina-cab .cat-buscar{flex:1;min-width:200px;max-width:420px;margin-left:auto;}
   .cat-reloj{display:flex;align-items:center;gap:10px;min-width:0;}
   .cat-reloj > div{display:flex;flex-direction:column;gap:1px;min-width:0;}
   .cat-reloj b{font-size:13.5px;color:var(--black);font-weight:600;}
@@ -284,8 +285,69 @@
   @media (max-width:600px){
     .cat-embudo .embudo-paso{grid-template-columns:110px minmax(0,1fr) 44px 40px;font-size:12.5px;}
     .cat-cab .acciones-fila{width:100%;} .cat-cab .acciones-fila .btn{flex:1;}
-    .cat-vitrina-cab select{width:100%;}
+    .cat-vitrina-cab select{width:100%;order:4;}
+    .cat-vitrina-cab .cat-buscar{max-width:none;width:100%;flex-basis:100%;margin-left:0;order:3;}
   }
   .inv-grid-acc{display:flex;gap:6px;margin-top:8px;}
   .inv-grid-acc:empty{display:none;}
   .inv-grid-acc .btn{flex:1;justify-content:center;padding-left:6px;padding-right:6px;}
+
+  /* ---------- Inventario por coleccion ---------- */
+  .col-grupo{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:16px;}
+  .col-cab{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border);}
+  .col-emblema{width:56px;height:56px;border-radius:50%;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .col-emblema span{font-size:18px;font-weight:700;letter-spacing:.04em;color:var(--accent-strong);}
+  .col-titulo{min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .col-marca{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .col-titulo h3{font-size:19px;font-weight:600;color:var(--black);line-height:1.2;margin:0;text-wrap:balance;}
+  .col-sub{font-size:12.5px;color:var(--muted);}
+  .col-cifras{display:flex;gap:6px;}
+  .col-estados{display:grid;grid-template-columns:repeat(5,minmax(64px,auto));gap:6px;}
+  .col-dinero{display:grid;grid-template-columns:repeat(2,minmax(84px,auto));gap:6px;}
+  .col-cifra{background:var(--bg2);border-radius:var(--r-md);padding:6px 10px;text-align:center;display:flex;flex-direction:column;gap:1px;}
+  .col-cifra b{font-size:15px;color:var(--black);font-variant-numeric:tabular-nums;}
+  .col-cifra span{font-size:10.5px;color:var(--muted);white-space:nowrap;}
+  .col-cifra.cero b{color:var(--muted2);}
+  .col-fichas{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:stretch;}
+  .col-ficha .inv-grid-info{flex:1;}
+  .col-datos{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin:8px 0 0;padding:8px 0 0;border-top:1px dashed var(--border);}
+  .col-datos div{display:flex;flex-direction:column;min-width:0;}
+  .col-datos dt{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .col-datos dd{margin:0;font-size:13.5px;font-weight:600;color:var(--black);font-variant-numeric:tabular-nums;}
+  .col-datos dd.pos{color:var(--green);} .col-datos dd.neg{color:var(--red);}
+  .col-pend{font-size:11.5px;color:var(--blue);font-weight:600;}
+  .col-ficha-nota{margin-top:6px;font-size:12px;color:var(--amber);}
+  .col-acc{display:flex;gap:6px;margin-top:auto;padding-top:10px;}
+  .col-acc .btn{flex:1;justify-content:center;padding-left:6px;padding-right:6px;}
+  .col-acc .col-ico{flex:0 0 36px;}
+  @media (max-width:1100px){
+    .col-cab{grid-template-columns:auto minmax(0,1fr);}
+    .col-cifras{grid-column:1 / -1;flex-direction:column;}
+    .col-estados{grid-template-columns:repeat(5,minmax(0,1fr));}
+    .col-dinero{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+  @media (max-width:600px){
+    .col-grupo{padding:12px;}
+    .col-emblema{width:46px;height:46px;} .col-emblema span{font-size:15px;}
+    .col-titulo h3{font-size:17px;}
+    .col-cifra{padding:6px 4px;} .col-cifra span{font-size:9.5px;white-space:normal;line-height:1.15;}
+    .col-fichas{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+    .col-datos dd{font-size:12.5px;}
+  }
+
+  /* Tarjetas parejas en el panel (Fotos y Por coleccion): nombre siempre de 2 lineas, la linea de datos en una
+     sola linea con "..." y los botones siempre abajo, aunque un texto sea mas largo que los demas. */
+  .inv-grid-info{flex:1;}
+  .inv-grid-info > b{min-height:calc(1.3em * 2);}
+  .inv-grid-info > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .inv-grid-acc{margin-top:auto;padding-top:8px;}
+  .inv-grid-precio{min-height:24px;}
+  .col-ficha-nota{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* sin botones (vendido o apartado) la tarjeta guarda el mismo espacio: todas las filas miden igual */
+  .inv-grid-acc:empty{display:flex;visibility:hidden;min-height:39px;}
+  .col-datos dd{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .col-ficha-nota{min-height:18px;line-height:18px;}
+  .inv-grid-precio{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;}
+  .inv-grid-precio .dias-alerta{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .inv-grid-acc{min-height:39px;box-sizing:border-box;}
+  .col-datos dt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
