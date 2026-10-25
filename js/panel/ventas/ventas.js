@@ -2,7 +2,7 @@
 // Resumen comercial (KPIs del periodo, embudo de pedidos web, canales, mejores dias y mejores clientes),
 // Apartados (saldo, barra de pago, fecha limite y acciones) e Historial de ventas con filtros.
 // Los pedidos web viven en ventas/pedidos-web.js.
-import { CANALES, METODOS, claveMes, estadoResultados, fechaLimiteReserva, movimientosDe, periodo, reservasPorCobrar, ultimosMeses } from '../finanzas/calculos.js';
+import { CANALES, METODOS, claveMes, cobradoDeVenta, estadoResultados, fechaLimiteReserva, movimientosDe, periodo, reservasPorCobrar, ultimosMeses } from '../finanzas/calculos.js';
 import { finParseFecha } from '../finanzas/fechas.js';
 import { chipsPeriodo } from '../finanzas/resumen.js';
 import { dinero, esc, estadoHTML, kpiHTML, tablaHTML, vacioHTML } from '../componentes.js';
@@ -19,6 +19,8 @@ var _per = 'mes', _perHist = 'mes', _vista = 'resumen';
 function pedidos(){ return window.__pedidosWeb || []; }
 function hecho(p, estado){ return (p.historial || []).find(function(h){ return h.estado === estado; }); }
 function ventasDe(meses){ return movimientosDe(meses).filter(function(m){ return m.tipo === 'venta' && !m._soloRegistro; }); }
+// para listar relojes vendidos: tambien los apartados pagados por completo con abonos (venta de $0)
+function ventasConApartados(meses){ return movimientosDe(meses).filter(function(m){ return m.tipo === 'venta'; }); }
 
 // ---------- vista activa ----------
 function mostrarVistaVentas(v){
@@ -94,7 +96,7 @@ function renderResumenVentas(){
 
   // mejores clientes del periodo
   var cli = {};
-  ventas.forEach(function(m){ var n = m.clienteNombre; if(!n) return; var x = cli[n] || (cli[n] = { v: 0, n: 0 }); x.v += Number(m.monto) || 0; x.n++; });
+  ventasConApartados(per.meses).forEach(function(m){ var n = m.clienteNombre; if(!n) return; var x = cli[n] || (cli[n] = { v: 0, n: 0 }); x.v += cobradoDeVenta(m); x.n++; });
   var top = Object.keys(cli).sort(function(a, b){ return cli[b].v - cli[a].v; }).slice(0, 6);
   var et = document.getElementById('ven-clientes-top');
   if(et) et.innerHTML = top.length ? barrasH(top.map(function(n){ return { label: n, valor: cli[n].v, extra: cli[n].n + ' compra' + (cli[n].n !== 1 ? 's' : '') }; })) +
@@ -156,7 +158,7 @@ function ventasHistorial(){
   var per = periodo(_perHist);
   var canal = (document.getElementById('ven-f-canal') || {}).value || '';
   var q = sinAcentos((document.getElementById('ven-f-buscar') || {}).value || '').trim();
-  return ventasDe(per.meses).filter(function(m){
+  return ventasConApartados(per.meses).filter(function(m){
     if(canal && (m.canal || 'otro') !== canal) return false;
     if(q && sinAcentos([m.desc, m.clienteNombre, m.fecha, m.monto].join(' ')).indexOf(q) === -1) return false;
     return true;
@@ -167,15 +169,16 @@ function renderHistorialVentas(){
   var sel = document.getElementById('ven-f-canal');
   if(sel && sel.options.length <= 1) sel.innerHTML = '<option value="">Todos los canales</option>' + Object.keys(CANALES).map(function(k){ return '<option value="' + k + '">' + CANALES[k] + '</option>'; }).join('');
   var v = ventasHistorial();
-  var tot = v.reduce(function(a, m){ return a + (Number(m.monto) || 0); }, 0), gan = v.reduce(function(a, m){ return a + (Number(m.monto) || 0) - (Number(m.costo) || 0); }, 0);
+  var tot = v.reduce(function(a, m){ return a + cobradoDeVenta(m); }, 0), gan = v.reduce(function(a, m){ return a + cobradoDeVenta(m) - (Number(m.costo) || 0); }, 0);
   var res = document.getElementById('ven-hist-res');
   if(res) res.textContent = v.length + ' venta' + (v.length !== 1 ? 's' : '') + ' · ' + dinero(tot) + ' · ganancia ' + dinero(gan) + (tot ? ' (' + Math.round(gan / tot * 100) + '%)' : '');
   var el = document.getElementById('ven-historial'); if(!el) return;
   el.innerHTML = tablaHTML([{ t: 'Reloj' }, { t: 'Fecha' }, { t: 'Cliente' }, { t: 'Canal' }, { t: 'Pago' }, { t: 'Precio', der: true }, { t: 'Ganancia', der: true }],
     v.slice(0, 200).map(function(m){
-      var g = (Number(m.monto) || 0) - (Number(m.costo) || 0);
-      var desc = m.precioObjetivo && m.precioObjetivo > m.monto ? ' <span class="tenue-peq">−' + Math.round((1 - m.monto / m.precioObjetivo) * 100) + '%</span>' : '';
-      return [esc(m.desc), esc(m.fecha), esc(m.clienteNombre || '—'), esc(CANALES[m.canal] || m.canal || '—'), esc(METODOS[m.metodoPago] || '—'), dinero(m.monto) + desc, '<span class="' + (g < 0 ? 'neg' : 'pos') + '">' + dinero(g) + '</span>'];
+      var cob = cobradoDeVenta(m), g = cob - (Number(m.costo) || 0);
+      var desc = m.precioObjetivo && m.precioObjetivo > cob ? ' <span class="tenue-peq">−' + Math.round((1 - cob / m.precioObjetivo) * 100) + '%</span>' : '';
+      var conAbonos = cob !== (Number(m.monto) || 0) ? ' <span class="tenue-peq">con abonos</span>' : '';
+      return [esc(m.desc), esc(m.fecha), esc(m.clienteNombre || '—'), esc(CANALES[m.canal] || m.canal || '—'), esc(METODOS[m.metodoPago] || (m._deApartado ? 'Apartado' : '—')), dinero(cob) + desc + conAbonos, '<span class="' + (g < 0 ? 'neg' : 'pos') + '">' + dinero(g) + '</span>'];
     }), { icono: 'grafica', titulo: 'No hay ventas con estos filtros' });
 }
 function setPeriodoHistVentas(id){ _perHist = id; renderHistorialVentas(); }

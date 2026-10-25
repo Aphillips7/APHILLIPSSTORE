@@ -18,8 +18,9 @@ function renderHistorial() {
   var q=((document.getElementById('fil-buscar')||{}).value||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
   var movs=filtrados(mesFil,tipoFil,q);
   // entradas: ventas y abonos · salidas: compras, gastos y retiros (antes las compras se sumaban como entrada)
-  var ent=movs.filter(m=>SIGNO[m.tipo]>0).reduce((a,b)=>a+(Number(b.monto)||0),0);
-  var sal=movs.filter(m=>SIGNO[m.tipo]<0).reduce((a,b)=>a+(Number(b.monto)||0),0);
+  // cada movimiento suma con su signo (un ajuste de costo a la baja es una compra negativa: devuelve dinero)
+  var ent=0,sal=0;
+  movs.forEach(function(m){ var v=(SIGNO[m.tipo]||0)*(Number(m.monto)||0); if(v>0) ent+=v; else sal-=v; });
   var bal=document.getElementById('fil-balance');
   if(bal) bal.innerHTML='Entradas <span style="color:var(--green)">$'+ent.toLocaleString()+'</span> &nbsp; Salidas <span style="color:var(--red)">$'+sal.toLocaleString()+'</span> &nbsp; Neto <span style="color:'+(ent-sal>=0?'var(--green)':'var(--red)')+'">$'+(ent-sal).toLocaleString()+'</span>';
   var lista=document.getElementById('fin-lista');
@@ -32,9 +33,9 @@ function renderHistorial() {
     var ganV=m.tipo==='venta'?cobradoDeVenta(m)-(Number(m.costo)||0):0;
     var gan=m.tipo==='venta'?' · Gan: <span class="money '+(ganV<0?'neg':'pos')+'">$'+Math.round(ganV).toLocaleString()+'</span>'+(!(Number(m.costo)>0)?' <span style="color:var(--red)">(sin costo)</span>':''):'';
     // signo claro: + entra (ventas, abonos) · − sale (compras, gastos, retiros) · ⇄ solo cambia de metodo
-    var signo=SIGNO[m.tipo]||0;
+    var signo=(SIGNO[m.tipo]||0)*((Number(m.monto)||0)<0?-1:1);
     var mc=signo>0?'pos':signo<0?'neg':'';
-    var montoTxt=(m.tipo==='traspaso'?'⇄ ':signo>0?'+':signo<0?'−':'')+'$'+(Number(m.monto)||0).toLocaleString();
+    var montoTxt=(m.tipo==='traspaso'?'⇄ ':signo>0?'+':signo<0?'−':'')+'$'+Math.abs(Number(m.monto)||0).toLocaleString();
     var descuento='';
     if(m.tipo==='venta'&&m.precioObjetivo&&m.precioObjetivo>m.monto){
       var difPct=Math.round(((m.precioObjetivo-m.monto)/m.precioObjetivo)*100);

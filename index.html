@@ -242,11 +242,11 @@ if(location.hostname==='aphillips7.github.io'){
       <div class="grid-2" style="margin-top:14px;">
         <div class="field" style="margin:0;"><label>Precio de venta ($)</label><div class="currency-wrap"><input type="number" id="fin-monto" placeholder="0.00" oninput="actualizarPreview()" /></div></div>
         <div class="field" style="margin:0;"><label>Canal de venta</label>
-          <select id="fin-canal"><option value="instagram">Instagram</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="otro">Otro</option></select>
+          <select id="fin-canal"><option value="instagram">Instagram</option><option value="web">Tienda web</option><option value="directo">Venta directa</option><option value="facebook">Facebook</option><option value="whatsapp">WhatsApp</option><option value="otro">Otro</option></select>
         </div>
       </div>
       <div class="field"><label>Metodo de pago</label>
-        <select id="fin-metodo"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+        <select id="fin-metodo"><option value="" selected>Elige como pago…</option><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
       <div class="field"><label>Cliente (opcional)</label>
         <select id="fin-cliente"><option value="">Sin cliente registrado</option></select>
@@ -269,7 +269,7 @@ if(location.hostname==='aphillips7.github.io'){
       </div>
       <div class="field" style="margin-top:14px;margin-bottom:0;"><label>Costo total pagado ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-compra" placeholder="0.00" /></div></div>
       <div class="field"><label>Metodo de pago</label>
-        <select id="fin-metodo-compra"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+        <select id="fin-metodo-compra"><option value="" selected>Elige como pago…</option><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
       <input type="hidden" id="fin-compra-index" value="" />
       <button class="btn btn-gold" id="btn-registrar-compra" onclick="registrarCompra()" style="width:100%;margin-top:14px;">Registrar compra</button>
@@ -285,7 +285,7 @@ if(location.hostname==='aphillips7.github.io'){
       <div class="field"><label>Descripcion</label><input type="text" id="fin-desc-otro" maxlength="120" placeholder="Ej: Publicidad en Instagram de la semana" oninput="validarOtro()" /></div>
       <div class="field"><label>Monto ($)</label><div class="currency-wrap"><input type="number" id="fin-monto-otro" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" oninput="validarOtro()" /></div></div>
       <div class="field"><label>Metodo de pago</label>
-        <select id="fin-metodo-otro" onchange="validarOtro()"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+        <select id="fin-metodo-otro" onchange="validarOtro()"><option value="" selected>Elige como pago…</option><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
       <div class="campo-ayuda" id="otro-ayuda" hidden></div>
       <button class="btn btn-gold" id="btn-registrar-otro" onclick="registrarOtro()" style="width:100%;margin-top:4px;" disabled>Registrar</button>
@@ -619,7 +619,7 @@ if(location.hostname==='aphillips7.github.io'){
     <label>Plazo para completar el pago</label>
     <select id="reserva-plazo" style="margin-bottom:12px;"><option value="7">7 dias</option><option value="15">15 dias</option><option value="30" selected>30 dias</option><option value="45">45 dias</option><option value="60">60 dias</option></select>
     <label>Metodo de pago</label>
-    <select id="reserva-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+    <select id="reserva-metodo" style="margin-bottom:16px;"><option value="" selected>Elige como pago…</option><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline" onclick="cerrarReservaModal()" style="flex:1;">Cancelar</button>
       <button class="btn btn-gold" onclick="confirmarReserva()" style="flex:2;">Confirmar reserva</button>
@@ -635,7 +635,7 @@ if(location.hostname==='aphillips7.github.io'){
     <label>Monto del abono ($)</label>
     <div class="currency-wrap" style="margin-bottom:12px;"><input type="number" id="abono-monto" placeholder="0.00" /></div>
     <label>Metodo de pago</label>
-    <select id="abono-metodo" style="margin-bottom:16px;"><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
+    <select id="abono-metodo" style="margin-bottom:16px;"><option value="" selected>Elige como pago…</option><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline" onclick="cerrarAbonoModal()" style="flex:1;">Cancelar</button>
       <button class="btn btn-gold" onclick="confirmarAbono()" style="flex:2;">Registrar abono</button>

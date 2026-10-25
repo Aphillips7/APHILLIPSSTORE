@@ -33,11 +33,13 @@ function validarOtro(){
   var desc = ((el('fin-desc-otro') || {}).value || '').trim();
   var monto = leerMonto('fin-monto-otro');
   var crudo = (el('fin-monto-otro') || {}).value || '';
-  var ok = desc.length >= 3 && monto > 0 && monto < MONTO_MAX;
+  var metodo = (el('fin-metodo-otro') || {}).value || '';
+  var ok = desc.length >= 3 && monto > 0 && monto < MONTO_MAX && !!metodo;
   btn.disabled = !ok;
   if(crudo !== '' && !(monto > 0)) ayuda('otro-ayuda', 'El monto debe ser mayor que 0.', true);
   else if(monto >= MONTO_MAX) ayuda('otro-ayuda', 'Ese monto es demasiado alto. Revisa los ceros.', true);
   else if(desc && desc.length < 3) ayuda('otro-ayuda', 'Escribe una descripcion un poco mas clara.', true);
+  else if(desc.length >= 3 && monto > 0 && !metodo) ayuda('otro-ayuda', 'Elige con que se pago (Yappy, efectivo...).', true);
   else if(tipo === 'retiro' && monto > 0){
     var m = (el('fin-metodo-otro') || {}).value, s = saldosPorMetodo().porMetodo[m] || 0;
     ayuda('otro-ayuda', 'Saldo en ' + (METODOS[m] || m) + ': ' + dinero(s) + (monto > s ? ' · el retiro es mayor que el saldo' : ''), monto > s);
@@ -66,6 +68,7 @@ function registrarOtro() {
   save('movimientos');
   el('fin-desc-otro').value = '';
   el('fin-monto-otro').value = '';
+  if(el('fin-metodo-otro')) el('fin-metodo-otro').value = '';
   [el('fin-desc-otro'), el('fin-monto-otro')].forEach(function(x){ if(x) delete x.dataset.tocado; });
   renderInicio();
   validarOtro();

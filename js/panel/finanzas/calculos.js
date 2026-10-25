@@ -164,7 +164,19 @@ function reservasPorCobrar(){
 function cobradoDeVenta(m){
   var deApartado = m._deApartado || /Saldo final de|Venta completada con/.test(m.desc || '');
   if(!(m.invId && deApartado)) return num(m.monto);
-  return num(m.monto) + state.movimientos.filter(function(x){ return x.tipo === 'abono' && x.invId === m.invId; }).reduce(function(a, x){ return a + num(x.monto); }, 0);
+  return num(m.monto) + abonosDeVenta(m).reduce(function(a, x){ return a + num(x.monto); }, 0);
+}
+// Abonos que pertenecen a la venta de un apartado: los del mismo reloj registrados antes de la venta y despues del
+// ultimo apartado cancelado o la ultima venta de ese reloj (sin _ts, como antes: todos los del reloj)
+function abonosDeVenta(m){
+  var abonos = state.movimientos.filter(function(x){ return x.tipo === 'abono' && x.invId === m.invId; });
+  if(!m._ts) return abonos;
+  var desde = 0;
+  state.movimientos.forEach(function(x){
+    if(x === m || x.invId !== m.invId || !x._ts || x._ts >= m._ts) return;
+    if(x.tipo === 'reserva_cancelada' || x.tipo === 'venta') desde = Math.max(desde, x._ts);
+  });
+  return abonos.filter(function(x){ return !x._ts || (x._ts > desde && x._ts <= m._ts); });
 }
 function ventasPorReloj(movs){
   return movs.filter(function(m){ return m.tipo === 'venta'; }).map(function(m){
