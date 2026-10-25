@@ -68,5 +68,9 @@
   /* fotos del catalogo en el carrusel: el reloj completo, fundido con el degradado */
   .dest-foto{cursor:pointer;}
   /* el blanco de la foto se vuelve transparente con un filtro (ver destacados.js): el reloj no se tiñe */
-  .dest-foto .g{object-fit:contain;padding:9%;box-sizing:border-box;filter:url(#filtro-sin-blanco);}
+  /* la foto llega ya sin fondo blanco (ver destacados.js); mientras se prepara no se muestra, y si no se pudo
+     preparar usa el filtro de respaldo */
+  .dest-foto .g{object-fit:contain;padding:9%;box-sizing:border-box;}
+  .dest-foto .g.on.esperando{opacity:0;}
+  .dest-foto .g.con-filtro{filter:url(#filtro-sin-blanco);}
   .dest-comprar button{padding:0;border:none;background:none;font:inherit;cursor:pointer;}
