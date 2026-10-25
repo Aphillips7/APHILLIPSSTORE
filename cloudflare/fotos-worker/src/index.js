@@ -781,7 +781,7 @@ async function adminAvisado(request, env, cors) {
 // Email Sending desde noreply@aphillipsstore.com, con el diseno de la tienda. El enlace lleva a la
 // tienda (?modo=verificar|contrasena&oobCode=...) y alli el catalogo termina la accion.
 // Sin FIREBASE_SA o sin el binding EMAIL se responde 503 y el catalogo usa los correos de Firebase.
-const REMITENTE = { email: 'noreply@aphillipsstore.com', name: 'Aphillips Store' };
+const REMITENTE = { email: 'noreply@aphillipsstore.com', name: 'APHILLIPS STORE' };
 const RESPONDER_A = 'info@aphillipsstore.com';
 const TIENDA = 'https://aphillipsstore.com/';
 const MINUTO = 60000;
@@ -858,11 +858,11 @@ function htmlCorreo({ titulo, saludo, texto, boton, enlace, nota, baja }) {
       '<p style="margin:18px 0 0;font-size:12px;line-height:18px;color:#6a6a6a;">' + e(nota) + (baja ? ' <a href="' + e(baja) + '" style="color:#09090b;">Darme de baja</a>' : '') + '</p>' +
     '</td></tr>' +
     '<tr><td style="padding:28px 32px 32px;border-top:1px solid #e4e4e7;margin-top:24px;font-size:11px;line-height:17px;color:#8a8a8a;text-align:center;">' +
-      'Aphillips Store · Relojes en Panamá<br><a href="' + TIENDA + '" style="color:#8a8a8a;">aphillipsstore.com</a> · ¿Dudas? Responde a este correo.' +
+      'APHILLIPS STORE · Relojes en Panamá<br><a href="' + TIENDA + '" style="color:#8a8a8a;">aphillipsstore.com</a> · ¿Dudas? Responde a este correo.' +
     '</td></tr></table></td></tr></table></body></html>';
 }
 async function enviarCorreo(env, para, asunto, datos) {
-  const texto = datos.saludo + '\n\n' + datos.texto + '\n\n' + datos.boton + ': ' + datos.enlace + '\n\n' + datos.nota + (datos.baja ? ' ' + datos.baja : '') + '\n\nAphillips Store · aphillipsstore.com';
+  const texto = datos.saludo + '\n\n' + datos.texto + '\n\n' + datos.boton + ': ' + datos.enlace + '\n\n' + datos.nota + (datos.baja ? ' ' + datos.baja : '') + '\n\nAPHILLIPS STORE · aphillipsstore.com';
   await env.EMAIL.send({ from: REMITENTE, to: para, replyTo: RESPONDER_A, subject: asunto, html: htmlCorreo({ titulo: asunto, ...datos }), text: texto });
 }
 // cuantos envios hubo con esta clave en la ventana; si no paso el limite, anota uno nuevo
@@ -886,9 +886,9 @@ async function correoVerificacion(request, env, cors, sesion) {
   try {
     const enlace = await enlaceFirebase(env, 'VERIFY_EMAIL', sesion.email);
     if (!enlace) return json({ error: 'No encontramos la cuenta' }, 404, cors);
-    await enviarCorreo(env, sesion.email, 'Activa tu cuenta de Aphillips Store', {
+    await enviarCorreo(env, sesion.email, 'Activa tu cuenta de APHILLIPS STORE', {
       saludo: 'Hola' + (nombre ? ' ' + nombre : '') + ',',
-      texto: 'Gracias por crear tu cuenta en Aphillips Store. Toca el botón para confirmar tu correo y empezar a guardar tus favoritos y recibir avisos de tus relojes.',
+      texto: 'Gracias por crear tu cuenta en APHILLIPS STORE. Toca el botón para confirmar tu correo y empezar a guardar tus favoritos y recibir avisos de tus relojes.',
       boton: 'Activar mi cuenta', enlace,
       nota: 'Si no creaste esta cuenta, puedes ignorar este correo.'
     });
@@ -911,9 +911,9 @@ async function correoRecuperar(request, env, cors) {
   try {
     const enlace = await enlaceFirebase(env, 'PASSWORD_RESET', email);
     if (enlace) {
-      await enviarCorreo(env, email, 'Crea una contraseña nueva para Aphillips Store', {
+      await enviarCorreo(env, email, 'Crea una contraseña nueva para APHILLIPS STORE', {
         saludo: 'Hola,',
-        texto: 'Recibimos una solicitud para cambiar la contraseña de tu cuenta en Aphillips Store. Toca el botón para crear una nueva.',
+        texto: 'Recibimos una solicitud para cambiar la contraseña de tu cuenta en APHILLIPS STORE. Toca el botón para crear una nueva.',
         boton: 'Crear contraseña nueva', enlace,
         nota: 'El enlace vence en 1 hora. Si no lo pediste, ignora este correo: tu contraseña no cambia.'
       });
@@ -945,7 +945,7 @@ async function suscribirBoletin(request, env, cors) {
   if (env.EMAIL && (await dentroDelLimite(env, 'boldia:' + email, 1, 1440 * MINUTO))) {
     try {
       const baja = 'https://api.aphillipsstore.com/boletin/baja?t=' + token;
-      await enviarCorreo(env, email, 'Ya estás suscrito a Aphillips Store', {
+      await enviarCorreo(env, email, 'Ya estás suscrito a APHILLIPS STORE', {
         saludo: 'Hola' + (nombre ? ' ' + nombre.split(' ')[0] : '') + ',',
         texto: 'Gracias por suscribirte. Te avisaremos cuando lleguen relojes nuevos, de ofertas especiales y de novedades de la tienda. Nada de spam: solo lo que vale la pena.',
         boton: 'Ver los relojes', enlace: 'https://aphillipsstore.com/',
@@ -964,7 +964,7 @@ async function bajaBoletin(url, env) {
     if (!r.meta || r.meta.changes === 0) { const e = await env.DB.prepare('SELECT 1 FROM boletin WHERE token = ?1').bind(t).first(); ok = !!e; }
   }
   const msg = ok ? 'Listo, ya no recibirás más correos del boletín.' : 'Este enlace no es válido.';
-  const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boletín — Aphillips Store</title></head>' +
+  const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boletín — APHILLIPS STORE</title></head>' +
     '<body style="margin:0;font-family:Arial,sans-serif;background:#f4f4f5;color:#18181b;display:flex;min-height:100vh;align-items:center;justify-content:center;">' +
     '<div style="background:#fff;padding:32px 28px;max-width:420px;margin:16px;text-align:center;border-radius:12px;"><p style="font-size:17px;line-height:1.5;margin:0 0 20px;">' + msg + '</p>' +
     '<a href="https://aphillipsstore.com/" style="display:inline-block;background:#A7C4D6;color:#000;text-decoration:none;padding:12px 22px;font-size:13px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;">Volver a la tienda</a></div></body></html>';
@@ -1077,7 +1077,7 @@ async function avisosPorCorreo(env, enviar) {
     try {
       await enviarCorreo(env, a.email, asunto, {
         saludo: 'Hola' + (a.nombre ? ' ' + String(a.nombre).split(' ')[0] : '') + ',', texto, boton, enlace,
-        nota: 'Recibes este correo porque pediste un aviso en tu cuenta de Aphillips Store. Puedes quitarlo cuando quieras desde "Mi cuenta".'
+        nota: 'Recibes este correo porque pediste un aviso en tu cuenta de APHILLIPS STORE. Puedes quitarlo cuando quieras desde "Mi cuenta".'
       });
       await env.DB.prepare('UPDATE avisos SET avisado = ?4, estado_base = ?5, precio_base = ?6 WHERE uid = ?1 AND tipo = ?2 AND valor = ?3')
         .bind(a.uid, a.tipo, a.valor, Date.now(), estadoNuevo || '', Number(precioNuevo) || 0).run();
@@ -1172,7 +1172,7 @@ function htmlInforme(r) {
   c += titulo('Errores en la página') + (r.errores && r.errores.length ? tabla(r.errores.slice(0, 5).map((x) => fila(e(x.mensaje).slice(0, 90) + '<br><span style="font-size:11px;color:#71717a;">' + e(x.paginas || '').slice(0, 60) + ' · ' + e(x.navegadores || '') + '</span>', x.veces + ' vez' + (x.veces !== 1 ? 'es' : '')))) : vacio('Ningún error registrado esta semana.'));
   if (r.masVistos.length) c += titulo('Relojes más vistos (desde el inicio)') + tabla(r.masVistos.map((m) => fila(e(m.nombre), m.vistas + ' vistas · ' + m.clics + ' a WhatsApp')));
   return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<meta name="color-scheme" content="light only"><title>Informe semanal — Aphillips Store</title></head>' +
+    '<meta name="color-scheme" content="light only"><title>Informe semanal — APHILLIPS STORE</title></head>' +
     '<body style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#09090b;">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 12px;"><tr><td align="center">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;">' +
@@ -1186,7 +1186,7 @@ function htmlInforme(r) {
 async function enviarInforme(env) {
   if (!env.EMAIL) throw new Error('falta el envio de correo');
   const r = await datosInforme(env);
-  await env.EMAIL.send({ from: REMITENTE, to: PARA_INFORME, subject: 'Informe semanal de Aphillips Store', html: htmlInforme(r),
+  await env.EMAIL.send({ from: REMITENTE, to: PARA_INFORME, subject: 'Informe semanal de APHILLIPS STORE', html: htmlInforme(r),
     text: 'Informe semanal: ' + r.numVentas + ' ventas, ingresos $' + r.ingresos + ', ganancia $' + r.ganancia + '. Detalles en aphillipsstore.com/admin' });
   return { ok: true, ventas: r.numVentas, ingresos: r.ingresos };
 }

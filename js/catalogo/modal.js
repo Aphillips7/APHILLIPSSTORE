@@ -225,7 +225,7 @@ function enlaceReloj(id){ return 'https://aphillipsstore.com/?id=' + encodeURICo
 function compartirReloj(r){
   var url = enlaceReloj(r.id);
   if(navigator.share){
-    navigator.share({ title: (r.nombre || 'Reloj') + ' — Aphillips Store', text: 'Mira este reloj en Aphillips Store', url: url }).catch(function(){});
+    navigator.share({ title: (r.nombre || 'Reloj') + ' — APHILLIPS STORE', text: 'Mira este reloj en APHILLIPS STORE', url: url }).catch(function(){});
     return;
   }
   var listo = function(){ toast('Enlace copiado. Pégalo donde quieras compartirlo.'); };

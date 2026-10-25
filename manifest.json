@@ -1,7 +1,7 @@
 {
-  "name": "Aphillips Store",
+  "name": "APHILLIPS STORE",
   "short_name": "Aphillips",
-  "description": "Panel privado de inventario, finanzas y clientes de Aphillips Store.",
+  "description": "Panel privado de inventario, finanzas y clientes de APHILLIPS STORE.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

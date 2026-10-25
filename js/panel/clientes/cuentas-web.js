@@ -48,7 +48,7 @@ function avisosPendientes(){
   (_cuentas || []).forEach(function(c){
     if(!c.telefono) return;
     (c.avisos || []).forEach(function(a){
-      var hola = '¡Hola' + (primerNombre(c) ? ' ' + primerNombre(c) : '') + '! Te escribo de Aphillips Store. ';
+      var hola = '¡Hola' + (primerNombre(c) ? ' ' + primerNombre(c) : '') + '! Te escribo de APHILLIPS STORE. ';
       if(a.tipo === 'reloj'){
         var p = state.inventario.find(function(x){ return x.id === a.valor; });
         if(!p || !esPublicable(p) || p.estado !== 'disponible') return;

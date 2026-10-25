@@ -59,7 +59,7 @@ function etiquetaPrincipal(pf){
 
 // Mensaje de WhatsApp segun el momento del cliente (el dueno lo revisa y lo envia)
 function mensajeSugerido(pf){
-  var n = primerNombre(pf.c), hola = 'Hola' + (n ? ' ' + n : '') + ', te escribe Aphillips Store. ';
+  var n = primerNombre(pf.c), hola = 'Hola' + (n ? ' ' + n : '') + ', te escribe APHILLIPS STORE. ';
   if(pf.seg.saldo) return hola + 'Te recuerdo que tu apartado tiene un saldo de $' + Math.round(pf.saldo).toLocaleString('en-US') + '. ¿Cuando te queda bien completarlo?';
   if(pf.seg.inactivos) return hola + '¿Como te ha ido con tu reloj? Nos llegaron modelos nuevos y me acorde de ti. ¿Te mando fotos de lo que tenemos disponible?';
   if(pf.seg.vip) return hola + 'Gracias por seguir confiando en nosotros. Antes de publicarlos, quiero mostrarte primero los relojes que acaban de llegar. ¿Te paso las fotos?';

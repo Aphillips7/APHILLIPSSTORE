@@ -7,9 +7,9 @@ let _filtroMarca = '';
 
 var _TITULOS_GEN = {'':'Todos los relojes', hombre:'Relojes para hombre', mujer:'Relojes para mujer'};
 var _DESC_GEN = {
-  '': 'Explora todos los relojes disponibles en Aphillips Store. Toca cualquiera para ver sus detalles y consulta la disponibilidad directamente por WhatsApp.',
-  hombre: 'Los relojes para hombre de Aphillips Store combinan elegancia y carácter: diseños audaces, movimientos automáticos y acabados pensados para durar. Consulta la disponibilidad de cada pieza directamente por WhatsApp.',
-  mujer: 'Los relojes para mujer de Aphillips Store reúnen estilo y precisión: diseños refinados, detalles cuidados y piezas seleccionadas para acompañarte todos los días. Consulta la disponibilidad de cada pieza directamente por WhatsApp.'
+  '': 'Explora todos los relojes disponibles en APHILLIPS STORE. Toca cualquiera para ver sus detalles y consulta la disponibilidad directamente por WhatsApp.',
+  hombre: 'Los relojes para hombre de APHILLIPS STORE combinan elegancia y carácter: diseños audaces, movimientos automáticos y acabados pensados para durar. Consulta la disponibilidad de cada pieza directamente por WhatsApp.',
+  mujer: 'Los relojes para mujer de APHILLIPS STORE reúnen estilo y precisión: diseños refinados, detalles cuidados y piezas seleccionadas para acompañarte todos los días. Consulta la disponibilidad de cada pieza directamente por WhatsApp.'
 };
 var _HASH_GEN = {'#hombre':'hombre', '#mujer':'mujer', '#todos':''};
 // Marcas: un reloj es de la marca si su nombre o coleccion la mencionan (sin importar espacios ni acentos)
@@ -63,10 +63,10 @@ function toggleDesc(){
 }
 function _refrescarHeader(){ window.dispatchEvent(new Event('resize')); }
 // Titulo de la pestana segun la vista (inicio, genero o marca)
-var TITULO_INICIO = 'Aphillips Store — Relojes originales en Panamá';
+var TITULO_INICIO = 'APHILLIPS STORE — Relojes originales en Panamá';
 function _tituloVista(g, marca){
-  document.title = marca && _MARCAS[marca] ? 'Relojes ' + _MARCAS[marca].nombre + ' — Aphillips Store'
-    : (_TITULOS_GEN[g || ''] || 'Relojes') + ' — Aphillips Store';
+  document.title = marca && _MARCAS[marca] ? 'Relojes ' + _MARCAS[marca].nombre + ' — APHILLIPS STORE'
+    : (_TITULOS_GEN[g || ''] || 'Relojes') + ' — APHILLIPS STORE';
 }
 // g = genero ('' = todos). marca opcional: si viene, muestra la pagina de esa marca.
 function mostrarCatalogo(g, push, marca){
