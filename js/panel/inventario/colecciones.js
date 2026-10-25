@@ -3,7 +3,8 @@
 // "Invicta Pro Diver"; "Spedway Racing" (con error de dedo) entra en "Invicta Speedway". La coleccion sale del
 // campo "coleccion" (y si esta vacio, del nombre) comparada con las colecciones conocidas de cada marca;
 // si no coincide con ninguna, se usa lo que este escrito.
-// Cada coleccion muestra su emblema (iniciales), sus cifras y una mini ficha simetrica por reloj.
+// Cada coleccion muestra su emblema (iniciales) y sus cifras; sus relojes (mini fichas simetricas) se despliegan
+// al tocarla, asi la lista se recorre rapido. Las abiertas se recuerdan en este dispositivo.
 import { dinero, esc } from '../componentes.js';
 import { diasEnInventario } from '../../products.js';
 
@@ -17,6 +18,10 @@ const COLECCIONES = {
     'Computron', 'Archive', 'Oceanographer', 'Hack', 'Millennia', 'Rubaiyat', 'Regatta', 'Crystal', 'Modern', 'Aerojet', 'Joseph Bulova', 'Accutron'],
   TechnoMarine: ['Manta Ray', 'Cruise', 'Reef', 'Black Reef', 'Blue Reef', 'UF6', 'Sea', 'Technocell', 'MoonSun', 'Sea Manta']
 };
+const CLAVE_ABIERTAS = 'aphillips_colecciones_abiertas';
+var _abiertas = leerAbiertas();
+function leerAbiertas(){ try{ return new Set(JSON.parse(localStorage.getItem(CLAVE_ABIERTAS) || '[]')); }catch(e){ return new Set(); } }
+function guardarAbiertas(){ try{ localStorage.setItem(CLAVE_ABIERTAS, JSON.stringify(Array.from(_abiertas))); }catch(e){} }
 const ORDEN_ESTADO = { disponible: 0, transito: 1, reservado: 2, bajopedido: 3, vendido: 4 };
 const ETIQUETA = { disponible: 'Disponible', transito: 'En transito', bajopedido: 'Bajo pedido', reservado: 'Apartado', vendido: 'Vendido' };
 
@@ -66,15 +71,16 @@ function iniciales(col){
 function costoDe(p){ return Number(p.costoTotal) || ((Number(p.costo) || 0) + (Number(p.importacion) || 0)); }
 
 // HTML de la vista "Por coleccion" para la lista de unidades ya filtrada (items = [{p, i}])
-function htmlPorColeccion(items){
+function htmlPorColeccion(items, abrirTodo){
   var grupos = {};
   items.forEach(function(x){
     var c = coleccionDe(x.p);
-    (grupos[c.clave] || (grupos[c.clave] = { marca: c.marca, coleccion: c.coleccion, units: [] })).units.push(x.p);
+    (grupos[c.clave] || (grupos[c.clave] = { clave: c.clave, marca: c.marca, coleccion: c.coleccion, units: [] })).units.push(x.p);
   });
   var lista = Object.keys(grupos).map(function(k){ return grupos[k]; })
     .sort(function(a, b){ return (a.marca || 'zz').localeCompare(b.marca || 'zz') || a.coleccion.localeCompare(b.coleccion); });
-  return lista.map(function(g){
+  var barra = lista.length > 1 ? '<div class="col-barra"><span>' + lista.length + ' colecciones · toca una para ver sus relojes</span><div><button type="button" class="btn btn-outline btn-sm" onclick="todasColecciones(true)">Abrir todas</button><button type="button" class="btn btn-outline btn-sm" onclick="todasColecciones(false)">Cerrar todas</button></div></div>' : '';
+  return barra + lista.map(function(g){
     var u = g.units.sort(function(a, b){ return (ORDEN_ESTADO[a.estado] || 0) - (ORDEN_ESTADO[b.estado] || 0) || String(a.nombre).localeCompare(String(b.nombre)); });
     var cuenta = function(e){ return u.filter(function(p){ return p.estado === e; }).length; };
     var conCosto = u.filter(function(p){ return costoDe(p) > 0; });
@@ -88,14 +94,16 @@ function htmlPorColeccion(items){
       '<div class="col-cifra"><b>' + (prom ? dinero(prom) : '—') + '</b><span>Costo prom.</span></div>' +
       '<div class="col-cifra"><b>' + (valor ? dinero(valor) : '—') + '</b><span>Valor a la venta</span></div>';
     cifras = '<div class="col-estados">' + cifras + '</div><div class="col-dinero">' + dineros + '</div>';
-    return '<section class="col-grupo">' +
-      '<header class="col-cab">' +
+    var abierta = abrirTodo || _abiertas.has(g.clave), clave = esc(g.clave);
+    return '<section class="col-grupo' + (abierta ? ' abierta' : '') + '" data-col="' + clave + '">' +
+      '<header class="col-cab" role="button" tabindex="0" aria-expanded="' + abierta + '" onclick="toggleColeccion(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleColeccion(this);}">' +
         '<div class="col-emblema" aria-hidden="true"><span>' + esc(iniciales(g.coleccion)) + '</span></div>' +
         '<div class="col-titulo">' + (g.marca ? '<span class="col-marca">' + esc(g.marca) + '</span>' : '') + '<h3>' + esc(g.coleccion) + '</h3>' +
           '<span class="col-sub">' + u.length + ' reloj' + (u.length !== 1 ? 'es' : '') + ' · ' + nModelos + ' modelo' + (nModelos !== 1 ? 's' : '') + '</span></div>' +
         '<div class="col-cifras">' + cifras + '</div>' +
+        '<span class="col-flecha" aria-hidden="true"></span>' +
       '</header>' +
-      '<div class="col-fichas">' + u.map(fichaHTML).join('') + '</div>' +
+      '<div class="col-fichas"' + (abierta ? '' : ' hidden') + '>' + u.map(fichaHTML).join('') + '</div>' +
     '</section>';
   }).join('');
 }
@@ -128,4 +136,21 @@ function fichaHTML(p){
     '</div></article>';
 }
 
+// abre o cierra una coleccion sin volver a dibujar la lista (rapido y sin saltos)
+function toggleColeccion(cab){
+  var sec = cab.closest('.col-grupo'); if(!sec) return;
+  var abrir = !sec.classList.contains('abierta'), clave = sec.getAttribute('data-col');
+  sec.classList.toggle('abierta', abrir);
+  cab.setAttribute('aria-expanded', String(abrir));
+  var f = sec.querySelector('.col-fichas'); if(f) f.hidden = !abrir;
+  if(abrir) _abiertas.add(clave); else _abiertas.delete(clave);
+  guardarAbiertas();
+}
+// abrir o cerrar todas a la vez
+function todasColecciones(abrir){
+  document.querySelectorAll('.col-grupo').forEach(function(sec){ if(sec.classList.contains('abierta') !== abrir) toggleColeccion(sec.querySelector('.col-cab')); });
+}
+
 export { coleccionDe, htmlPorColeccion };
+// usadas desde atributos onclick del HTML
+Object.assign(window, { todasColecciones, toggleColeccion });

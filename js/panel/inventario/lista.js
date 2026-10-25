@@ -176,7 +176,7 @@ function renderInventario(){
   }
   if(_vistaActual==='modelo'){
     // por coleccion: marca + coleccion base (Pro Diver Scuba y Pro Diver Automatico van juntos), ver colecciones.js
-    lista.innerHTML=htmlPorColeccion(items);
+    lista.innerHTML=htmlPorColeccion(items, !!query);   // con busqueda, las colecciones encontradas se abren solas
   } else {
     lista.innerHTML=items.map(({p,i})=>{
       var imp=p.estado==='transito'&&!p.importacion;
