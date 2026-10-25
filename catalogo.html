@@ -249,30 +249,31 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
   </div>
 </section>
 
-<!-- SECCION "EL FUTURO EN TU MUNECA" (Bulova Futuro): parte clara con la portada y parte oscura con
-     "Encuentra tu proximo reloj". Estilos en css/catalogo/futuro.css. "Comprar ahora" y las tarjetas aun no
-     llevan a ningun reloj (se conectan cuando esten en el catalogo). -->
+<!-- SECCION "EL FUTURO EN TU MUNECA" (Bulova Future): parte clara con la portada y parte oscura con
+     "Encuentra tu proximo reloj". Estilos en css/catalogo/futuro.css. Solo los botones abren los relojes
+     (Comprar ahora y las flechas de las tarjetas); las fotos no son enlaces. -->
 <section id="futuro" aria-labelledby="fut-titulo">
   <div class="fut-claro">
     <div class="fut-marco">
       <div class="fut-cab">
-        <div><span class="fut-eti">Bulova Futuro</span><h2 class="fut-titulo" id="fut-titulo">El futuro<br>en tu muñeca</h2></div>
-        <p class="fut-desc"><b>Bulova Futuro.</b> Diseño minimalista de líneas puras: esfera negra con cuatro diamantes, caja y brazalete dorados y la precisión de Bulova en cada segundo.</p>
+        <div><span class="fut-eti">Bulova Future</span><h2 class="fut-titulo" id="fut-titulo">El futuro<br>en tu muñeca</h2></div>
+        <p class="fut-desc"><b>Bulova Future.</b> Diseño minimalista de líneas puras: esfera negra con cuatro diamantes, caja y brazalete dorados de 42 mm y la precisión de Bulova en cada segundo.</p>
       </div>
-      <figure class="fut-mini">
-        <div class="fut-mini-foto"><img src="img/futuro/futuro-muneca.webp" alt="Bulova Futuro dorado en la muñeca con camisa blanca" loading="lazy" decoding="async"></div>
-        <figcaption>Futuro</figcaption>
-      </figure>
       <div class="fut-escena">
+      <!-- foto pequena: sale desde la esquina de arriba a la derecha de la foto grande -->
+      <figure class="fut-mini">
+        <div class="fut-mini-foto"><img src="img/futuro/futuro-muneca.webp" alt="Bulova Future dorado en la muñeca con camisa blanca" loading="lazy" decoding="async"></div>
+        <figcaption>Future</figcaption>
+      </figure>
       <div class="fut-hero">
-        <img src="img/futuro/futuro-portada.webp" alt="Dos relojes Bulova Futuro, negro y dorado, sobre fondo negro" loading="lazy" decoding="async">
-        <div class="fut-comprar-caja"><button type="button" class="fut-comprar" aria-label="Comprar ahora el Bulova Futuro">Comprar ahora<span class="fut-flecha" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span></button></div>
+        <img src="img/futuro/futuro-portada.webp" alt="Dos relojes Bulova Future, negro y dorado, sobre fondo negro" loading="lazy" decoding="async">
+        <div class="fut-comprar-caja"><button type="button" class="fut-comprar" onclick="abrir('inv_1792910621299_9y8n2q3')" aria-label="Comprar ahora el Bulova Future">Comprar ahora<span class="fut-flecha" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span></button></div>
       </div>
         <!-- fuera de la foto: en PC va encajada en su esquina; en celular baja debajo de la foto -->
         <div class="fut-ficha-caja">
           <div class="fut-ficha">
-            <img src="img/futuro/futuro-reloj.webp" alt="Bulova Futuro dorado con esfera negra" loading="lazy" decoding="async">
-            <div><b>Bulova Futuro</b><span>Esfera negra con 4 diamantes, caja y brazalete dorados.</span></div>
+            <img src="img/futuro/futuro-reloj.webp" alt="Bulova Future dorado con esfera negra" loading="lazy" decoding="async">
+            <div><b>Bulova Future</b><span>42 mm, esfera negra con 4 diamantes, caja y brazalete dorados.</span></div>
           </div>
         </div>
       </div>
@@ -284,14 +285,14 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
       <h2 class="fut-titulo-2">Encuentra tu próximo reloj</h2>
       <div class="fut-cards">
         <figure class="fut-card fut-card-a">
-          <img src="img/futuro/futuro-automatico.webp" alt="Reloj Bulova automático de dos tonos en la muñeca" loading="lazy" decoding="async">
-          <span class="fut-esq" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg></span></span>
-          <figcaption class="fut-card-pie"><b>Bulova Automático</b><span>Muy pronto en la tienda.</span></figcaption>
+          <img src="img/futuro/futuro-automatico.webp" alt="Bulova Surveyor Automático de dos tonos en la muñeca" loading="lazy" decoding="async">
+          <span class="fut-esq"><button type="button" onclick="abrir('inv_1792910893482_y5nrgx0')" aria-label="Ver el Bulova Surveyor Automático"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg></button></span>
+          <figcaption class="fut-card-pie"><b>Bulova Surveyor Automático</b><span>Automático de 42 mm con esfera blanca de corazón abierto y 42 horas de reserva de marcha.</span></figcaption>
         </figure>
         <figure class="fut-card fut-card-b">
-          <img src="img/futuro/futuro-cronografo.webp" alt="Reloj Bulova cronógrafo de acero en la muñeca" loading="lazy" decoding="async">
-          <span class="fut-esq" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg></span></span>
-          <figcaption class="fut-card-pie"><b>Bulova Cronógrafo</b><span>Muy pronto en la tienda.</span></figcaption>
+          <img src="img/futuro/futuro-cronografo.webp" alt="Bulova Prestige de acero en la muñeca" loading="lazy" decoding="async">
+          <span class="fut-esq"><button type="button" onclick="abrir('inv_1792911375971_vt2bstz')" aria-label="Ver el Bulova Prestige"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg></button></span>
+          <figcaption class="fut-card-pie"><b>Bulova Prestige</b><span>40 mm de acero con esfera negra, cristal de zafiro y resistencia al agua de 100 m.</span></figcaption>
         </figure>
         <a class="fut-todos" href="/relojes" onclick="irAGenero('',event)"><i aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></i><b>Explora todos<br>los relojes</b></a>
       </div>

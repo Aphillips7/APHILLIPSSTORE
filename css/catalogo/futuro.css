@@ -10,7 +10,7 @@
   /* ---------- parte clara ---------- */
   .fut-claro{background:var(--fut-claro);padding:clamp(28px,4vw,56px) max(16px,4vw);}
   .fut-marco{position:relative;max-width:1240px;margin:0 auto;}
-  .fut-cab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);align-items:end;gap:16px 32px;min-height:clamp(120px,12vw,160px);padding-right:calc(clamp(170px,19vw,236px) + 18px);margin-bottom:18px;}
+  .fut-cab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);align-items:end;gap:16px 32px;margin-bottom:18px;}
   .fut-eti{display:block;font-size:var(--fs-etiqueta);font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--gris-texto,#71717a);margin-bottom:8px;}
   .fut-titulo{font-family:var(--font-titulo);font-weight:800;text-transform:uppercase;letter-spacing:-.01em;line-height:.95;font-size:clamp(32px,4.1vw,56px);color:var(--black,#09090b);margin:0;text-wrap:balance;}
   .fut-desc{font-size:var(--fs-texto);line-height:1.6;color:#3f3f46;margin:0;}
@@ -19,12 +19,11 @@
   .fut-escena{position:relative;}
   .fut-hero{position:relative;border-radius:var(--fut-r);overflow:hidden;aspect-ratio:16/8;background:#000;min-height:300px;}
   .fut-hero > img{width:100%;height:100%;object-fit:cover;display:block;}
-  /* foto pequena (arriba a la derecha): va sobre el titulo y entra en la esquina de la foto grande; el borde
-     del color del fondo forma la muesca */
+  /* foto pequena: sale desde la esquina de arriba a la derecha de la foto grande; el borde del color del fondo
+     forma la muesca. Encuadrada en el reloj de la muneca. */
   .fut-mini{position:absolute;top:0;right:0;width:clamp(170px,19vw,236px);margin:0;padding:0 0 14px 14px;background:var(--fut-claro);border-bottom-left-radius:calc(var(--fut-r) + 14px);z-index:2;}
-  /* mas alta que el titulo: baja y entra en la esquina de la foto grande (como en el boceto) */
-  .fut-mini-foto{border-radius:20px;overflow:hidden;height:clamp(220px,21vw,280px);background:#ddd;}
-  .fut-mini-foto img{width:100%;height:100%;object-fit:cover;display:block;}
+  .fut-mini-foto{border-radius:20px;overflow:hidden;aspect-ratio:1/1;max-width:100%;background:#ddd;}
+  .fut-mini-foto img{width:100%;height:100%;object-fit:cover;object-position:62% 42%;display:block;}
   .fut-mini figcaption{position:absolute;left:28px;bottom:26px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.5);}
   /* boton Comprar ahora (abajo a la izquierda) */
   .fut-comprar-caja{position:absolute;left:0;bottom:0;padding:14px 14px 0 0;background:var(--fut-claro);border-top-right-radius:calc(var(--fut-r) + 14px);z-index:2;}
@@ -52,7 +51,11 @@
   .fut-card-b > img{object-position:50% 70%;}
   /* esquina con flecha glaciar, encajada con un borde del color del fondo oscuro */
   .fut-esq{position:absolute;top:0;right:0;padding:0 0 10px 10px;background:var(--fut-oscuro);border-bottom-left-radius:22px;z-index:2;}
-  .fut-esq span{width:46px;height:46px;border-radius:14px;background:var(--fut-gl);color:var(--black,#09090b);display:flex;align-items:center;justify-content:center;}
+  /* la flecha es un boton (abre el reloj); la foto de la tarjeta no es enlace */
+  .fut-esq button{width:46px;height:46px;border:none;padding:0;border-radius:14px;background:var(--fut-gl);color:var(--black,#09090b);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform var(--fast) var(--ease),background var(--fast) var(--ease);}
+  .fut-esq button:hover{background:#bcd3e2;}
+  .fut-esq button:active{transform:scale(.94);}
+  .fut-esq button:focus-visible,.fut-comprar:focus-visible{outline:2px solid var(--fut-gl);outline-offset:3px;}
   .fut-esq svg{width:18px;height:18px;}
   .fut-card-pie{margin:10px;padding:14px 16px;border-radius:16px;background:#2a2a2e;flex:1;}
   .fut-card-pie b{display:block;font-size:var(--fs-seccion);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -65,17 +68,17 @@
 
   /* ---------- tablet ---------- */
   @media (max-width:1000px){
-    .fut-cab{grid-template-columns:1fr;padding-right:calc(clamp(140px,22vw,200px) + 14px);}
+    .fut-cab{grid-template-columns:1fr;}
     .fut-mini{width:clamp(140px,22vw,200px);}
   }
   /* ---------- celular ---------- */
   @media (max-width:720px){
     #futuro{--fut-r:20px;}
-    .fut-cab{padding-right:calc(34% + 10px);margin-bottom:16px;}
+    .fut-cab{margin-bottom:16px;}
     .fut-hero{aspect-ratio:4/5;min-height:0;}
     .fut-hero > img{object-position:42% 50%;}
     .fut-mini{width:34%;padding:0 0 10px 10px;border-bottom-left-radius:calc(var(--fut-r) + 10px);}
-    .fut-mini-foto{border-radius:14px;height:auto;aspect-ratio:1/1;}
+    .fut-mini-foto{border-radius:14px;}
     .fut-mini figcaption{display:none;}
     .fut-comprar-caja{padding:10px 10px 0 0;border-top-right-radius:calc(var(--fut-r) + 10px);}
     .fut-comprar{height:50px;gap:16px;padding-left:20px;}
