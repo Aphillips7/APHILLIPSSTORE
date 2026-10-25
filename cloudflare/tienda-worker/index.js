@@ -14,6 +14,7 @@
 //   /relojes, /relojes-hombre, /relojes-mujer, /invicta, /bulova, /technomarine -> el catalogo en esa seccion,
 //                       con su propio titulo y descripcion para Google
 //   /sitemap.xml     -> lista para Google: el catalogo, sus secciones y un enlace por cada reloj publicado (no vendido)
+//   /productos.xml   -> lista de productos para Google Merchant Center (Shopping): relojes disponibles con precio
 // /catalogo.html redirige a / y /index.html a /admin (direcciones sin .html).
 // Todo lo demas se sirve tal cual (css/, js/, img/...).
 // En GitHub Pages los archivos siguen funcionando igual: este Worker no los modifica.
@@ -39,6 +40,7 @@ export default {
     }
 
     if (url.pathname === '/sitemap.xml') return await sitemap(env);
+    if (url.pathname === '/productos.xml') return await feedMerchant(env);
     // icono de la pestana que algunos navegadores piden por defecto
     if (url.pathname === '/favicon.ico') return servir(env, request, '/img/favicon-48.png');
 
@@ -142,6 +144,47 @@ async function sitemap(env) {
   }
   const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map((u) => '  <url><loc>' + u + '</loc></url>').join('\n') + '\n</urlset>\n';
+  return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+}
+
+// ---------- lista de productos para Google Merchant Center (Shopping) ----------
+// Google la lee sola cada 24 h. Solo van los relojes disponibles con precio (Google exige precio y una fecha
+// para los que estan en camino); todo sale del catalogo publico, nunca de datos privados.
+const XML_ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
+function xmlEsc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, (c) => XML_ESC[c]); }
+async function feedMerchant(env) {
+  const d = await catalogo(env);
+  if (!d) return new Response('Catalogo no disponible', { status: 503 });
+  const GENERO = { hombre: 'male', mujer: 'female', unisex: 'unisex' };
+  const items = (d.relojes || []).filter((r) => r.estado === 'disponible' && Number(r.precio) > 0).map((r) => {
+    const fotos = (Array.isArray(r.fotos) && r.fotos.length ? r.fotos : [r.foto]).filter((f) => typeof f === 'string' && f.startsWith('https://'));
+    if (!fotos.length) return '';
+    const texto = (r.nombre || '') + ' ' + (r.coleccion || '');
+    const marca = MARCAS_TIENDA.find((m) => texto.toLowerCase().includes(m.toLowerCase()));
+    const tipo = r.genero === 'mujer' ? 'Reloj para mujer' : r.genero === 'hombre' ? 'Reloj para hombre' : 'Reloj';
+    const titulo = [r.nombre, r.sku, '-', tipo, r.mm ? r.mm + ' mm' : '', r.movimiento].filter(Boolean).join(' ');
+    const caja = [r.mm ? r.mm + ' mm' : '', r.materialCaja ? 'de ' + String(r.materialCaja).toLowerCase() : ''].filter(Boolean).join(' ');
+    const detalles = [r.movimiento, caja ? 'caja ' + caja : '', r.colorEsfera ? 'esfera ' + String(r.colorEsfera).toLowerCase() : '',
+      r.cristal ? 'cristal ' + r.cristal : ''].filter(Boolean).join(', ');
+    const descripcion = (r.descripcion || ((r.nombre || 'Reloj') + ' original' + (detalles ? ': ' + detalles : '') + '.')) +
+      ' Garantía de 1 año y envío a todo Panamá. APHILLIPS STORE.';
+    const campos = [
+      ['g:id', r.id], ['g:title', titulo.slice(0, 150)], ['g:description', descripcion.slice(0, 5000)],
+      ['g:link', 'https://' + DOMINIO + rutaReloj(r)], ['g:image_link', fotos[0]],
+      ...fotos.slice(1, 10).map((f) => ['g:additional_image_link', f]),
+      ['g:availability', 'in_stock'], ['g:price', Number(r.precio).toFixed(2) + ' USD'], ['g:condition', 'new'],
+      ['g:google_product_category', '201'], ['g:product_type', 'Relojes > ' + (marca || 'Otras marcas')], ['g:age_group', 'adult']
+    ];
+    if (marca) campos.push(['g:brand', marca]);
+    if (r.sku) campos.push(['g:mpn', r.sku]);
+    if (!marca || !r.sku) campos.push(['g:identifier_exists', 'no']);
+    if (GENERO[r.genero]) campos.push(['g:gender', GENERO[r.genero]]);
+    if (r.color || r.colorEsfera) campos.push(['g:color', r.color || r.colorEsfera]);
+    return '    <item>\n' + campos.map(([k, v]) => '      <' + k + '>' + xmlEsc(v) + '</' + k + '>').join('\n') + '\n    </item>';
+  }).filter(Boolean);
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n  <channel>\n' +
+    '    <title>APHILLIPS STORE</title>\n    <link>https://' + DOMINIO + '/</link>\n    <description>Relojes originales en Panamá</description>\n' +
+    items.join('\n') + '\n  </channel>\n</rss>\n';
   return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
 }
 
