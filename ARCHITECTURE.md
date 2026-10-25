@@ -81,6 +81,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `finanzas/historial.js` · `finanzas.js` | Finanzas > Movimientos (buscador, exportar lo filtrado, candado en meses cerrados) y saldo por metodo de Registrar |
 | `ventas/ventas.js` | Ventas > Resumen (conversion web, tiempo a entrega, cancelados, embudo, canales, mejores dias, mejores clientes), Apartados (barra de pago, fecha limite, +7 dias hasta 90) e Historial de ventas |
 | `inventario/lista.js` | Inventario > Relojes: KPIs de stock, chips "Para revisar" (calidad), vistas Lista / Fotos / Por modelo, clase ABC por ganancia de 12 meses, filtros, cambiar estado, eliminar |
+| `inventario/colecciones.js` | Vista "Por coleccion" del inventario: agrupa por marca + coleccion base (Pro Diver Scuba/Automatico en Pro Diver; tolera errores de dedo), emblema con iniciales, cifras por estado y mini ficha simetrica por reloj (costo, venta, margen, dias, acciones) |
 | `inventario/formulario.js` | Registrar/editar/duplicar unidad, vista previa de margen; un reloj publico sin fotos se ofrece guardar oculto |
 | `inventario/ficha.js` | "Pegar especificaciones": ordena la tabla de la marca en grupos (`p.ficha`), rellena los campos de siempre; el catalogo la muestra agrupada |
 | `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal. De cada una sube ademas una copia JPEG (1200 px, < 600 KB) para la vista previa en WhatsApp (`fotosJpg`, y la de la principal en `fotoCompartir`) |
