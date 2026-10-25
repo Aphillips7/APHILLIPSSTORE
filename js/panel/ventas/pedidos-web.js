@@ -87,7 +87,7 @@ function htmlPedido(p){
   else if(p.estado === 'confirmado') acciones = b('Registrar venta', "venderPedidoWeb('" + n + "')", 'btn-gold') + b('Ya está pagado', "avanzarPedidoWeb('" + n + "','pagado')") + b('Cancelar', "avanzarPedidoWeb('" + n + "','cancelado')", 'btn-danger');
   else if(p.estado === 'pagado') acciones = p.entrega === 'retiro' ? b('Marcar retirado', "avanzarPedidoWeb('" + n + "','entregado')", 'btn-gold') : b('Marcar enviado', "avanzarPedidoWeb('" + n + "','enviado')", 'btn-gold') + b('Entregado en mano', "avanzarPedidoWeb('" + n + "','entregado')");
   else if(p.estado === 'enviado') acciones = b('Marcar entregado', "avanzarPedidoWeb('" + n + "','entregado')", 'btn-gold');
-  var msg = '¡Hola' + (c.nombre ? ' ' + c.nombre : '') + '! Te escribo de Aphillips Store por tu pedido ' + p.numero + ' (' + p.reloj + ').';
+  var msg = '¡Hola' + (c.nombre ? ' ' + c.nombre : '') + '! Te escribo de APHILLIPS STORE por tu pedido ' + p.numero + ' (' + p.reloj + ').';
   var horas = (Date.now() - (p.actualizado || p.creado || Date.now())) / 3600000;
   var espera = ['solicitado', 'confirmado', 'pagado'].indexOf(p.estado) !== -1 && horas >= 24 ? '<span class="pw-espera' + (horas >= 48 ? ' tarde' : '') + '">' + (horas >= 48 ? Math.floor(horas / 24) + ' d' : Math.floor(horas) + ' h') + ' sin avanzar</span>' : '';
   return '<div class="pw-card">' +

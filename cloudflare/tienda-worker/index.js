@@ -89,17 +89,17 @@ export default {
 
 // ---------- secciones del catalogo con direccion propia ----------
 const SECCIONES = {
-  '/relojes': { hash: '#todos', titulo: 'Relojes originales en Panamá — Aphillips Store',
-    desc: 'Todos los relojes originales de Aphillips Store: Invicta, Bulova y TechnoMarine para hombre y mujer. Disponibles, en tránsito y bajo pedido, con envío a todo Panamá.' },
-  '/relojes-hombre': { hash: '#hombre', titulo: 'Relojes para hombre en Panamá — Aphillips Store',
+  '/relojes': { hash: '#todos', titulo: 'Relojes originales en Panamá — APHILLIPS STORE',
+    desc: 'Todos los relojes originales de APHILLIPS STORE: Invicta, Bulova y TechnoMarine para hombre y mujer. Disponibles, en tránsito y bajo pedido, con envío a todo Panamá.' },
+  '/relojes-hombre': { hash: '#hombre', titulo: 'Relojes para hombre en Panamá — APHILLIPS STORE',
     desc: 'Relojes originales para hombre en Panamá: buceo, cronógrafos y automáticos de Invicta, Bulova y TechnoMarine. Garantía de 1 año y envío a todo el país.' },
-  '/relojes-mujer': { hash: '#mujer', titulo: 'Relojes para mujer en Panamá — Aphillips Store',
+  '/relojes-mujer': { hash: '#mujer', titulo: 'Relojes para mujer en Panamá — APHILLIPS STORE',
     desc: 'Relojes originales para mujer en Panamá: diseños elegantes y precisos de Invicta, Bulova y TechnoMarine. Garantía de 1 año y envío a todo el país.' },
-  '/invicta': { hash: '#marca-invicta', titulo: 'Relojes Invicta originales en Panamá — Aphillips Store',
+  '/invicta': { hash: '#marca-invicta', titulo: 'Relojes Invicta originales en Panamá — APHILLIPS STORE',
     desc: 'Relojes Invicta originales en Panamá: Pro Diver, Speedway, Bolt y más. Precios, fotos reales, garantía de 1 año y envío a todo el país. Compra por WhatsApp.' },
-  '/bulova': { hash: '#marca-bulova', titulo: 'Relojes Bulova originales en Panamá — Aphillips Store',
+  '/bulova': { hash: '#marca-bulova', titulo: 'Relojes Bulova originales en Panamá — APHILLIPS STORE',
     desc: 'Relojes Bulova originales en Panamá: automáticos, esqueleto y clásicos. Precios, fotos reales, garantía de 1 año y envío a todo el país. Compra por WhatsApp.' },
-  '/technomarine': { hash: '#marca-technomarine', titulo: 'Relojes TechnoMarine originales en Panamá — Aphillips Store',
+  '/technomarine': { hash: '#marca-technomarine', titulo: 'Relojes TechnoMarine originales en Panamá — APHILLIPS STORE',
     desc: 'Relojes TechnoMarine originales en Panamá: Manta Ray, Cruise y más, con estilo deportivo. Precios, fotos reales, garantía de 1 año y envío a todo el país.' }
 };
 function seccion(pagina, ruta) {
@@ -154,7 +154,7 @@ async function vistaPreviaReloj(pagina, id, url, env) {
   if (!/^[A-Za-z0-9_-]{1,120}$/.test(id) || !pagina.ok) return pagina;
   const r = await relojDelCatalogo(id, env);
   if (!r) return pagina;
-  const titulo = (r.nombre || 'Reloj') + ' — Aphillips Store';
+  const titulo = (r.nombre || 'Reloj') + ' — APHILLIPS STORE';
   const partes = [ESTADOS[r.estado] || ''];
   if ((r.estado === 'disponible' || r.estado === 'transito') && r.precio > 0) partes.push('$' + r.precio);
   partes.push(r.estado === 'bajopedido' ? 'Cotiza por WhatsApp' : 'Escríbenos por WhatsApp');
@@ -199,7 +199,7 @@ function productoJsonLd(r, enlace) {
   if (Number(r.precio) > 0 && DISPONIBILIDAD[r.estado]) {
     p.offers = { '@type': 'Offer', url: enlace, priceCurrency: 'USD', price: Number(r.precio).toFixed(2),
       availability: 'https://schema.org/' + DISPONIBILIDAD[r.estado], itemCondition: 'https://schema.org/NewCondition',
-      seller: { '@type': 'Organization', name: 'Aphillips Store' } };
+      seller: { '@type': 'Organization', name: 'APHILLIPS STORE' } };
   }
   // migas de pan: Inicio > marca (o Relojes) > reloj; Google las muestra en vez de la direccion
   const seccionMarca = marca ? '/' + marca.toLowerCase() : '/relojes';

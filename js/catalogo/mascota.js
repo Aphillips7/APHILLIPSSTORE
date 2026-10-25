@@ -240,7 +240,7 @@ function crear(){
   _raiz.className = 'mascota';
   _raiz.innerHTML =
     '<div class="masc-panel" id="masc-panel" role="dialog" aria-label="¿En qué te ayudo?" hidden>' +
-      '<div class="masc-cab"><div><b>¿En qué te ayudo?</b><span>Asesoría de Aphillips Store</span></div>' +
+      '<div class="masc-cab"><div><b>¿En qué te ayudo?</b><span>Asesoría de APHILLIPS STORE</span></div>' +
       '<button type="button" class="masc-x" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       '<div class="masc-ops">' + OPCIONES.map(function(o, i){
         return '<button type="button" class="masc-op" data-i="' + i + '"><span class="masc-op-ico"><svg viewBox="0 0 24 24">' + ICONOS[o.icono] + '</svg></span>' +

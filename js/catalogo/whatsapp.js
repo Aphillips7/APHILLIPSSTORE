@@ -8,7 +8,7 @@ const WHATSAPP_NUM = '50762615442';
 
 // Enlaces de contacto del encabezado y del pie de pagina
 document.querySelectorAll('.wa-link').forEach(function(a){
-  a.href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('¡Hola! Tengo una pregunta sobre Aphillips Store.');
+  a.href = 'https://wa.me/'+WHATSAPP_NUM+'?text='+encodeURIComponent('¡Hola! Tengo una pregunta sobre APHILLIPS STORE.');
 });
 
 // reloj abierto en la ficha (para crear el pedido al tocar "Comprar por WhatsApp")

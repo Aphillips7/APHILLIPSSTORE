@@ -32,7 +32,7 @@ function renderCobrar(){
       var p = x.p, r = p.reserva, tel = telefonoDe(r.clienteId);
       var est = x.saldo <= 0 ? estadoHTML('ok', 'Pagado, falta entregar') : x.dias === null ? estadoHTML('info', 'Sin fecha') :
         x.dias < 0 ? estadoHTML('vencido', 'Vencido hace ' + (-x.dias) + ' d') : x.dias <= 7 ? estadoHTML('pendiente', 'Vence en ' + x.dias + ' d') : estadoHTML('ok', 'Al dia');
-      var msg = 'Hola ' + (r.clienteNombre || '').split(' ')[0] + ', te escribo de Aphillips Store por tu ' + p.nombre + '. Tu saldo pendiente es de ' + dinero(x.saldo) + '. ¿Cuando te queda bien completar el pago?';
+      var msg = 'Hola ' + (r.clienteNombre || '').split(' ')[0] + ', te escribo de APHILLIPS STORE por tu ' + p.nombre + '. Tu saldo pendiente es de ' + dinero(x.saldo) + '. ¿Cuando te queda bien completar el pago?';
       var acciones = (x.saldo > 0 ? '<button type="button" class="btn btn-gold btn-sm" onclick="abrirAbonoModal(\'' + esc(p.id) + '\')">Registrar abono</button>' :
         '<button type="button" class="btn btn-gold btn-sm" onclick="completarVentaReserva(\'' + esc(p.id) + '\')">Entregar</button>') +
         (tel && x.saldo > 0 ? ' <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://wa.me/' + tel + '?text=' + encodeURIComponent(msg) + '">Recordar</a>' : '');
