@@ -106,7 +106,8 @@ function fichaHTML(p){
   var foto = p.foto && /^https?:|^data:|^img\//.test(p.foto) ? '<img src="' + esc(p.foto) + '" alt="" loading="lazy" onerror="this.remove()">' : '<span class="inv-grid-sinfoto">Sin foto</span>';
   var imp = p.estado === 'transito' && !p.importacion;
   var linea2 = [p.sku ? 'Ref. ' + p.sku : '', p.mm ? p.mm + ' mm' : '', p.movimiento || ''].filter(Boolean).join(' · ');
-  var reserva = p.estado === 'reservado' && p.reserva ? '<div class="col-ficha-nota">Apartado por ' + esc(p.reserva.clienteNombre || 'un cliente') + '</div>' : '';
+  // la nota va siempre (vacia si no hay apartado) para que todas las fichas midan lo mismo
+  var reserva = '<div class="col-ficha-nota">' + (p.estado === 'reservado' && p.reserva ? 'Apartado por ' + esc(p.reserva.clienteNombre || 'un cliente') : '') + '</div>';
   var acciones = (p.estado === 'transito' ? '<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();yaLlego(\'' + id + '\')">Ya llego</button>' : '') +
     (['disponible', 'transito', 'bajopedido'].indexOf(p.estado) !== -1 ? '<button type="button" class="btn btn-gold btn-sm" onclick="event.stopPropagation();abrirVentaModal(\'' + id + '\')">Vendido</button>' : '');
   return '<article class="inv-grid-card col-ficha" onclick="verDetalle(\'' + id + '\')">' +

@@ -334,3 +334,20 @@
     .col-fichas{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
     .col-datos dd{font-size:12.5px;}
   }
+
+  /* Tarjetas parejas en el panel (Fotos y Por coleccion): nombre siempre de 2 lineas, la linea de datos en una
+     sola linea con "..." y los botones siempre abajo, aunque un texto sea mas largo que los demas. */
+  .inv-grid-info{flex:1;}
+  .inv-grid-info > b{min-height:calc(1.3em * 2);}
+  .inv-grid-info > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .inv-grid-acc{margin-top:auto;padding-top:8px;}
+  .inv-grid-precio{min-height:24px;}
+  .col-ficha-nota{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* sin botones (vendido o apartado) la tarjeta guarda el mismo espacio: todas las filas miden igual */
+  .inv-grid-acc:empty{display:flex;visibility:hidden;min-height:39px;}
+  .col-datos dd{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .col-ficha-nota{min-height:18px;line-height:18px;}
+  .inv-grid-precio{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;}
+  .inv-grid-precio .dias-alerta{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .inv-grid-acc{min-height:39px;box-sizing:border-box;}
+  .col-datos dt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}

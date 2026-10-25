@@ -57,8 +57,8 @@ function _destCard(r){
   return '<div class="dest-card">'+
     '<div class="dest-foto" onclick="destAbrir(\''+_destEsc(r.id)+'\')">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
     '<div class="dest-nombre">'+_destEsc(r.nombre)+'</div>'+
-    (r.detalle?'<div class="dest-sub">'+_destEsc(r.detalle)+'</div>':'')+
-    (r.precio?'<div class="dest-precio">'+_destEsc(r.precio)+'</div>':'')+
+    '<div class="dest-sub">'+_destEsc(r.detalle||'')+'</div>'+   // siempre: todas las tarjetas del carrusel miden lo mismo
+    '<div class="dest-precio">'+_destEsc(r.precio||'')+'</div>'+
     '<div class="dest-comprar"><button type="button" onclick="destAbrir(\''+_destEsc(r.id)+'\')"><span>'+_bolsa+'Comprar ahora</span></button></div>'+
   '</div>';
 }

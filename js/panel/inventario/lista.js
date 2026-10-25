@@ -168,7 +168,7 @@ function renderInventario(){
       return '<div class="inv-grid-card" onclick="verDetalle(\''+esc(q.id)+'\')">'+
         '<div class="inv-grid-foto">'+foto+'<span class="inv-grid-est est-'+q.estado+'">'+(etiq[q.estado]||q.estado)+'</span>'+chipABC(abc[claveModelo(q.nombre)])+(q.ocultoCatalogo?'<span class="inv-grid-oculto" title="Oculto en la tienda">Oculto</span>':'')+'</div>'+
         '<div class="inv-grid-info"><b>'+esc(q.nombre)+'</b><span>'+esc([q.sku,q.mm?q.mm+' mm':''].filter(Boolean).join(' · '))+'</span>'+
-        '<div class="inv-grid-precio"><b>'+dinero(q.precio)+'</b>'+(mg!==null?'<span class="'+(mg>=30?'pos':mg<15?'neg':'')+'">'+mg+'%</span>':'')+(dias!==null?diasBadge(dias):'')+'</div>'+
+        '<div class="inv-grid-precio"><b>'+(q.precio>0?dinero(q.precio):'<span class="tenue-peq">Sin precio</span>')+'</b>'+(mg!==null?'<span class="'+(mg>=30?'pos':mg<15?'neg':'')+'">'+mg+'%</span>':'')+(dias!==null?diasBadge(dias):'')+'</div>'+
         '<div class="inv-grid-acc">'+(q.estado==='transito'?'<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();yaLlego(\''+esc(q.id)+'\')">Ya llego</button>':'')+
         (['disponible','transito','bajopedido'].indexOf(q.estado)!==-1?'<button type="button" class="btn btn-gold btn-sm" onclick="event.stopPropagation();abrirVentaModal(\''+esc(q.id)+'\')">Vendido</button>':'')+'</div></div></div>';
     }).join('')+'</div>';
