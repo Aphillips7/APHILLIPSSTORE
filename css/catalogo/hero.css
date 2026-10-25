@@ -5,6 +5,8 @@
   .desktop-link, .icon-btn, .menu-btn, .header-bottom a, .fav-count { transition: color .35s var(--ease), background-color .35s var(--ease), border-color var(--fast) var(--ease); }
 
   .hero { display: block; position: relative; width: 100%; height: 100vh; height: 100svh; min-height: 560px; background: #000; overflow: hidden; }
+  /* esquinas de abajo ligeramente redondeadas (las de arriba quedan bajo el encabezado) */
+  .hero { border-radius: 0 0 clamp(14px, 1.8vw, 26px) clamp(14px, 1.8vw, 26px); }
   .hero picture { display: block; width: 100%; height: 100%; }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; display: block; }
   .hero::after { content:''; position:absolute; inset:0 0 auto 0; height:240px; pointer-events:none; background:linear-gradient(to bottom, rgba(0,0,0,.72) 0%, rgba(0,0,0,.38) 55%, rgba(0,0,0,0) 100%); }
