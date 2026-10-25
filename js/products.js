@@ -63,4 +63,17 @@ function ordenPeso(estado){
   return 0;
 }
 
-export { camposPublicos, DIAS_AGOTADO_VISIBLE, diasEnInventario, esPublicable, ordenPeso, saldoPendienteReserva, textoETA, totalAbonadoReserva };
+// Direccion propia de cada reloj para Google y para compartir: /reloj-technomarine-manta-ray-cstuzqs
+// (el nombre sin acentos y al final la clave: la ultima parte del id, que es la que identifica el reloj).
+// La usan la tienda y el panel. La misma funcion esta en cloudflare/tienda-worker/index.js: si cambias una, cambia la otra.
+function claveReloj(id){
+  var c = String(id || '').split('_').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return c || String(id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+function rutaReloj(r){
+  var slug = String((r && r.nombre) || 'reloj').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70).replace(/-+$/, '') || 'reloj';
+  return '/reloj-' + slug + '-' + claveReloj(r && r.id);
+}
+
+export { camposPublicos, claveReloj, DIAS_AGOTADO_VISIBLE, diasEnInventario, esPublicable, ordenPeso, rutaReloj, saldoPendienteReserva, textoETA, totalAbonadoReserva };

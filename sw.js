@@ -1,7 +1,7 @@
 // Service Worker de APHILLIPS STORE — version del cache
 // Cada vez que publiques cambios en HTML, CSS o JS, sube este numero
 // (ej: 'aphillips-v3'). Al activarse la version nueva se borra el cache viejo.
-const CACHE_NAME = 'aphillips-v143';
+const CACHE_NAME = 'aphillips-v144';
 
 // Solo el "cascaron" de la app: nunca datos, nunca Firebase, nunca fuentes externas.
 // Si agregas o renombras un archivo en /css o /js, agregalo tambien aqui.
@@ -180,7 +180,7 @@ self.addEventListener('fetch', function (event) {
         // sin internet y sin copia de esa direccion: el catalogo para los clientes, el panel para el panel
         var ruta = new URL(req.url).pathname;
         var esCatalogo = /catalogo\.html$/.test(ruta) ||
-          (ruta === '/' && /(^|\.)aphillipsstore\.com$/.test(self.location.hostname));
+          (/(^|\.)aphillipsstore\.com$/.test(self.location.hostname) && !/^\/(admin|index\.html)/.test(ruta));
         return caches.match(req).then(function (r) { return r || caches.match(esCatalogo ? './catalogo.html' : './index.html'); });
       })
   );

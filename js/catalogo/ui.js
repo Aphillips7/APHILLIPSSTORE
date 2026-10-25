@@ -12,7 +12,7 @@ function toast(msg){
 function _destEsc(t){ return String(t==null?'':t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
 // minusculas y sin acentos, para comparar textos ("Automático" = "automatico")
-function normalizar(t){ return String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function normalizar(t){ return String(t==null?'':t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
 
 // Miniatura (480 px) de una foto de R2 para las tarjetas: fotos.aphillipsstore.com/miniaturas/relojes/...
 // Si la foto no es de R2, se usa tal cual. La <img> lleva data-completa con la foto original, y
@@ -53,6 +53,8 @@ function sugerirCorreo(email){
   return '';
 }
 
+// claveReloj/rutaReloj (direccion propia de cada reloj) viven en products.js; se reexportan aqui por comodidad
+export { claveReloj, rutaReloj } from '../products.js';
 export { _destEsc, fotoRespaldo, miniatura, normalizar, srcsetFoto, sugerirCorreo, toast, vibrar };
 // usada desde el onerror de las <img> de las tarjetas
 window.fotoRespaldo = fotoRespaldo;

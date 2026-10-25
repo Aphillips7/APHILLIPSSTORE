@@ -5,7 +5,7 @@
 // Las metricas (state.metricas) son acumuladas por reloj: { vistas, aperturas, clics }.
 import { renderInventario } from './inventario/lista.js';
 import { idxInv, invNoExiste, save, state } from './state.js';
-import { esPublicable } from '../products.js';
+import { esPublicable, rutaReloj } from '../products.js';
 import { dinero, esc, estadoHTML, kpiHTML, tablaHTML, vacioHTML } from './componentes.js';
 
 const URL_TIENDA = 'https://aphillipsstore.com/';
@@ -126,7 +126,8 @@ function copiar(url, msg){
 function copiarLinkCatalogo(){ copiar(URL_TIENDA, 'Link de la tienda copiado'); }
 function copiarLinkReloj(id){
   var p = state.inventario.find(function(x){ return x.id === id; });
-  copiar(URL_TIENDA + '?id=' + encodeURIComponent(id), 'Link copiado' + (p ? ': ' + p.nombre : ''));
+  // la direccion propia del reloj (la que Google indexa); la vieja ?id= tambien sirve: el servidor la redirige
+  copiar(p ? URL_TIENDA + rutaReloj(p).slice(1) : URL_TIENDA + '?id=' + encodeURIComponent(id), 'Link copiado' + (p ? ': ' + p.nombre : ''));
 }
 function toggleOcultoCatalogo(id){
   var i = idxInv(id);

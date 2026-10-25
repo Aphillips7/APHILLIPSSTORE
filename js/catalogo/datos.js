@@ -1,6 +1,7 @@
 import { render } from './grid.js';
 import { abrir } from './modal.js';
 import { aplicarMmDeUrl } from './filtros.js';
+import { claveReloj } from './ui.js';
 
 // Relojes del catalogo publico.
 // Se leen de Cloudflare (https://api.aphillipsstore.com/catalogo) y se vuelven a pedir cada minuto
@@ -13,8 +14,11 @@ const CLAVE_LOCAL = 'aphillips_catalogo';
 let relojes = [];
 
 let _deepLinkHandled = false;
+// reloj con el que se abre la pagina: /reloj-nombre-clave (direccion nueva) o ?id= (enlaces viejos)
 const _idInicial = new URLSearchParams(location.search).get('id');
-if(_idInicial){ history.replaceState(null, '', location.pathname); }
+const _m = location.pathname.match(/^\/reloj-[a-z0-9-]*-([a-z0-9]+)\/?$/);
+const _claveInicial = _m ? _m[1] : '';
+if(_idInicial || _claveInicial){ history.replaceState(null, '', '/'); }
 
 let _ultimoJson = '';
 function aplicar(lista){
@@ -31,6 +35,7 @@ function aplicar(lista){
   if(!_deepLinkHandled){
     _deepLinkHandled = true;
     if(_idInicial){ abrir(_idInicial); }
+    else if(_claveInicial){ var ini = relojes.find(function(r){ return claveReloj(r.id) === _claveInicial; }); if(ini) abrir(ini.id); }
   }
 }
 function errorCarga(){
