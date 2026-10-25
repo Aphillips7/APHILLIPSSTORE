@@ -5,7 +5,7 @@
 // - Cuentas registradas: se pueden vincular con un cliente del panel para que vean sus compras y
 //   apartados en "Mi cuenta".
 import { firebase } from '../../firebase.js';
-import { esPublicable } from '../../products.js';
+import { esPublicable, rutaReloj } from '../../products.js';
 import { state } from '../state.js';
 
 const API = 'https://api.aphillipsstore.com';
@@ -57,7 +57,7 @@ function avisosPendientes(){
         if(!llego && !bajo) return;
         var motivo = llego ? 'ya está disponible' : 'bajó de $' + a.precio_base + ' a $' + p.precio;
         lista.push({ c: c, a: a, titulo: (p.nombre || 'Reloj') + ' · ' + (llego ? 'llegó' : 'bajó de precio'), estado: p.estado, precio: p.precio || 0,
-          msg: hola + 'El ' + (p.nombre || 'reloj') + ' que pediste ' + motivo + (p.precio > 0 && llego ? ' ($' + p.precio + ')' : '') + '. Míralo aquí: ' + TIENDA + '?id=' + encodeURIComponent(p.id) });
+          msg: hola + 'El ' + (p.nombre || 'reloj') + ' que pediste ' + motivo + (p.precio > 0 && llego ? ' ($' + p.precio + ')' : '') + '. Míralo aquí: ' + TIENDA + rutaReloj(p).slice(1) });
       }else if(a.tipo === 'marca'){
         var desde = Math.max(a.creado || 0, a.avisado || 0);
         var marca = a.valor;

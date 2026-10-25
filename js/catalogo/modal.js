@@ -1,7 +1,7 @@
 import { relojes } from './datos.js';
 import { _favoritos } from './favoritos.js';
 import { incMetrica } from './metricas.js';
-import { _destEsc as esc, miniatura, srcsetFoto, toast } from './ui.js';
+import { _destEsc as esc, miniatura, rutaReloj, srcsetFoto, toast } from './ui.js';
 import { saludo } from './sesion.js';
 import { WHATSAPP_NUM } from './whatsapp.js';
 import { textoETA } from '../products.js';
@@ -215,11 +215,13 @@ function pintarParecidos(r){
 }
 // abre el reloj parecido en la misma pagina (reemplaza la entrada del historial: "atras" vuelve al catalogo)
 function abrirParecido(id){
-  if(history.state && history.state.modal) history.replaceState({modal:id}, '', '?id='+encodeURIComponent(id));
+  if(history.state && history.state.modal) history.replaceState({modal:id}, '', rutaDe(id));
   abrir(id);
 }
 
-function enlaceReloj(id){ return 'https://aphillipsstore.com/?id=' + encodeURIComponent(id); }
+// direccion del reloj (/reloj-nombre-clave); si no esta en el catalogo, la vieja ?id= (el servidor la redirige)
+function rutaDe(id){ var r = relojes.find(function(x){ return x.id === id; }); return r ? rutaReloj(r) : '/?id=' + encodeURIComponent(id); }
+function enlaceReloj(id){ return 'https://aphillipsstore.com' + rutaDe(id); }
 // Compartir un reloj: en el celular abre el menu de compartir del sistema (WhatsApp, Instagram...);
 // en la computadora copia el enlace
 function compartirReloj(r){
@@ -323,7 +325,7 @@ function abrir(id){
   document.body.classList.add('prod-abierto');
   window.scrollTo(0, 0);   // la ficha se desplaza con la pagina: empieza arriba
   if(navigator.vibrate){ navigator.vibrate(8); }
-  if(!(history.state && history.state.modal===id)) history.pushState({modal:id}, '', '?id='+encodeURIComponent(id));
+  if(!(history.state && history.state.modal===id)) history.pushState({modal:id}, '', rutaDe(id));
   incMetrica(id, 'aperturas');
 }
 // lugar de la pagina donde estaba el cliente al abrir el reloj: al cerrarlo vuelve exactamente ahi

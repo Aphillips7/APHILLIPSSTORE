@@ -110,7 +110,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | Archivo | Responsabilidad |
 |---|---|
 | `main.js` | Punto de entrada (importa los modulos en orden) |
-| `datos.js` | `relojes`: lee `GET /catalogo` de Cloudflare cada minuto (304 si no cambio); guarda la ultima lista en el navegador por si falla; enlace directo `?id=` |
+| `datos.js` | `relojes`: lee `GET /catalogo` de Cloudflare cada minuto (304 si no cambio); guarda la ultima lista en el navegador por si falla; enlace directo `/reloj-<nombre>-<clave>` (y el viejo `?id=`) |
 | `grid.js` | Dibuja la grilla de relojes (`render`), vista 1 o 2 columnas |
 | `vistas.js` | Inicio vs. catalogo, genero (`#hombre`, `#mujer`, `#todos`), marca (`#marca-invicta`, `#marca-bulova`, `#marca-technomarine`: el reloj es de la marca si su nombre o coleccion la mencionan), descripcion |
 | `filtros.js` | Panel de filtros (coleccion, movimiento, tamano, esfera, correa, caja), orden y `coincideBusqueda()` (busca cada palabra en todos los datos publicos, sin acentos) |
@@ -242,7 +242,7 @@ Catalogo: `aphillips_favoritos`, `aphillips_catalogo` (ultima lista de relojes),
 
 ## SEO
 
-- Cada reloj (`/?id=`) lleva datos `Product` (precio, disponibilidad, marca) y la portada datos `Store`/`WebSite`.
+- Cada reloj tiene direccion propia `/reloj-<nombre>-<clave>` (`rutaReloj` en products.js, igual en el worker; `/?id=` redirige 301) y lleva datos `Product` (precio, disponibilidad, marca; sin precio solo migas de pan) y la portada datos `Store`/`WebSite`.
 - Secciones con direccion propia: `/relojes`, `/relojes-hombre`, `/relojes-mujer`, `/invicta`, `/bulova`, `/technomarine` (el Worker de la tienda pone titulo, descripcion y canonica; al abrirse pasan al hash de siempre). Estan en el sitemap y en los enlaces internos.
 - Prueba de color secundario azul glaciar `#A7C4D6`: `css/catalogo/glaciar.css`, solo con `?colores=glaciar` (`?colores=antes` la quita).
 

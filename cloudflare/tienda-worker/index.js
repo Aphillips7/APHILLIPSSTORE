@@ -1,7 +1,8 @@
 // =================== WORKER DE LA TIENDA (aphillipsstore.com) ===================
 // Sirve los archivos del repositorio (catalogo, panel, css, js, img) desde Cloudflare.
-//   /                -> catalogo publico (catalogo.html). Con ?id=<reloj> la vista previa del link
-//                       (WhatsApp, Facebook...) muestra la foto, el nombre y el estado de ese reloj.
+//   /                -> catalogo publico (catalogo.html). El enlace viejo /?id=<reloj> redirige a /reloj-...
+//   /reloj-<nombre>-<clave> -> pagina propia de cada reloj: el catalogo con su titulo, foto, precio y datos para
+//                       Google; la vista previa del link (WhatsApp, Facebook...) muestra ese reloj.
 //   /admin           -> panel privado (index.html)
 //   /guia-de-tamanos -> guia de tamanos con probador (guia-de-tamanos.html; acepta ?mm=42)
 //   /preguntas       -> preguntas frecuentes (preguntas.html; /preguntas.html redirige aqui)
@@ -51,9 +52,22 @@ export default {
     }
 
     if (url.pathname === '/') {
-      const pagina = conCabeceras(await servir(env, request, '/catalogo.html'));
+      // enlace viejo /?id=<reloj>: redirige para siempre a la direccion propia del reloj (Google pasa todo a la nueva)
       const id = url.searchParams.get('id');
-      return id ? await vistaPreviaReloj(pagina, id, url, env) : pagina;
+      if (id) {
+        const r = /^[A-Za-z0-9_-]{1,120}$/.test(id) ? await relojDelCatalogo(id, env) : null;
+        if (r) return Response.redirect('https://' + DOMINIO + rutaReloj(r), 301);
+      }
+      return conCabeceras(await servir(env, request, '/catalogo.html'));
+    }
+    // pagina propia de cada reloj: /reloj-nombre-clave (el catalogo con el titulo, foto y datos de ese reloj)
+    const mReloj = url.pathname.match(/^\/reloj-[a-z0-9-]*-([a-z0-9]{1,40})\/?$/);
+    if (mReloj) {
+      const d = await catalogo(env);
+      const r = d ? (d.relojes || []).find((x) => claveReloj(x.id) === mReloj[1]) || null : null;
+      if (!r) return Response.redirect('https://' + DOMINIO + '/relojes', 302);   // ya no esta publicado
+      if (url.pathname !== rutaReloj(r)) return Response.redirect('https://' + DOMINIO + rutaReloj(r), 301);   // le cambiaron el nombre
+      return vistaPreviaReloj(conCabeceras(await servir(env, request, '/catalogo.html')), r);
     }
     if (url.pathname === '/admin') return conCabeceras(await servir(env, request, '/index.html'), true);
 
@@ -124,7 +138,7 @@ async function sitemap(env) {
   const d = await catalogo(env);
   const urls = ['https://' + DOMINIO + '/', ...Object.keys(SECCIONES).map((r) => 'https://' + DOMINIO + r), 'https://' + DOMINIO + '/legal', 'https://' + DOMINIO + '/preguntas', 'https://' + DOMINIO + '/guia-de-tamanos'];
   for (const r of (d && d.relojes) || []) {
-    if (r.estado !== 'vendido' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id || '')) urls.push('https://' + DOMINIO + '/?id=' + r.id);
+    if (r.estado !== 'vendido' && /^[A-Za-z0-9_-]{1,120}$/.test(r.id || '')) urls.push('https://' + DOMINIO + rutaReloj(r));
   }
   const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map((u) => '  <url><loc>' + u + '</loc></url>').join('\n') + '\n</urlset>\n';
@@ -150,17 +164,26 @@ function imagenCompartir(r) {
   const f = typeof r.foto === 'string' && r.foto.startsWith('https://') ? r.foto : '';
   return f || null;
 }
-async function vistaPreviaReloj(pagina, id, url, env) {
-  if (!/^[A-Za-z0-9_-]{1,120}$/.test(id) || !pagina.ok) return pagina;
-  const r = await relojDelCatalogo(id, env);
-  if (!r) return pagina;
+// Direccion propia de cada reloj: /reloj-technomarine-manta-ray-cstuzqs (nombre sin acentos + clave, la ultima
+// parte del id). Es la misma funcion que js/catalogo/ui.js: si cambias una, cambia la otra.
+function claveReloj(id) {
+  const c = String(id || '').split('_').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return c || String(id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+function rutaReloj(r) {
+  const slug = String((r && r.nombre) || 'reloj').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70).replace(/-+$/, '') || 'reloj';
+  return '/reloj-' + slug + '-' + claveReloj(r && r.id);
+}
+function vistaPreviaReloj(pagina, r) {
+  if (!pagina.ok) return pagina;
   const titulo = (r.nombre || 'Reloj') + ' — APHILLIPS STORE';
   const partes = [ESTADOS[r.estado] || ''];
   if ((r.estado === 'disponible' || r.estado === 'transito') && r.precio > 0) partes.push('$' + r.precio);
   partes.push(r.estado === 'bajopedido' ? 'Cotiza por WhatsApp' : 'Escríbenos por WhatsApp');
   const descripcion = partes.filter(Boolean).join(' · ');
   const imagen = imagenCompartir(r);
-  const enlace = 'https://' + DOMINIO + '/?id=' + encodeURIComponent(id);
+  const enlace = 'https://' + DOMINIO + rutaReloj(r);
   const meta = {
     'og:title': titulo, 'twitter:title': titulo,
     'og:description': descripcion, 'twitter:description': descripcion, description: descripcion
@@ -207,8 +230,10 @@ function productoJsonLd(r, enlace) {
     { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://' + DOMINIO + '/' },
     { '@type': 'ListItem', position: 2, name: marca ? 'Relojes ' + marca : 'Relojes', item: 'https://' + DOMINIO + seccionMarca },
     { '@type': 'ListItem', position: 3, name: r.nombre || 'Reloj', item: enlace }] };
+  // Sin oferta (bajo pedido, sin precio) no se manda el producto: Google lo marca como error critico
+  // ("Debe especificarse offers, review o aggregateRating"). Solo van las migas de pan.
   // "<" escapado para que el texto nunca pueda cerrar la etiqueta <script>
-  return JSON.stringify([p, migas]).replace(/</g, '\\u003c');
+  return JSON.stringify(p.offers ? [p, migas] : [migas]).replace(/</g, '\\u003c');
 }
 
 // Pide un archivo concreto al almacen de archivos manteniendo metodo y cabeceras
