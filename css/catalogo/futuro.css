@@ -5,7 +5,7 @@
      fondo de la seccion. Parte oscura: "Encuentra tu proximo reloj" con dos tarjetas y "Explora todos". */
   body.vista-catalogo #futuro{display:none;}
   /* encima de la portada (que queda fija detras al desplazarse), como las demas secciones */
-  #futuro{position:relative;z-index:1;--fut-claro:#f2f2f3;--fut-oscuro:#0b0b0c;--fut-gl:var(--glaciar,#A7C4D6);--fut-r:26px;}
+  #futuro{position:relative;z-index:1;--fut-claro:#ffffff;--fut-oscuro:#0b0b0c;--fut-gl:var(--glaciar,#A7C4D6);--fut-r:26px;}
 
   /* ---------- parte clara ---------- */
   .fut-claro{background:var(--fut-claro);padding:clamp(28px,4vw,56px) max(16px,4vw);}
