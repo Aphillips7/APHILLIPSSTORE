@@ -302,6 +302,7 @@ async function cambiarEstadoNube(id, estadoEsperado, cambios, quitar){
 }
 
 // ---------- documentos sueltos (codigo de seguridad) ----------
+function esperarDatosNube(){ return _listo; }
 function esperarDatos(ms){
   return Promise.race([_listo, new Promise(function(r){ setTimeout(r, ms || 8000); })]);
 }
@@ -319,4 +320,4 @@ async function escribirDocNube(col, id, datos){
   guardarLocal();
 }
 
-export { borrarDatosLocales, cambiarEstadoNube, detenerNube, enviar, escribirDocNube, iniciarNube, leerDocNube, renderEstadoNube };
+export { borrarDatosLocales, cambiarEstadoNube, detenerNube, enviar, escribirDocNube, esperarDatosNube, iniciarNube, leerDocNube, renderEstadoNube };

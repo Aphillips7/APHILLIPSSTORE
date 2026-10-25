@@ -5,6 +5,7 @@
 // un telefono que ya tiene otro cliente no se puede repetir (se ofrece abrir su ficha); unir clientes
 // mueve ventas, abonos, apartados y la cuenta web antes de borrar el repetido, con confirmacion.
 import { verDetalleCliente } from './cliente-detalle.js';
+import { numerarClienteNuevo, numeroBuscado, numeroCodigo } from './numeros.js';
 import { SEGMENTOS, digitos, duplicados, etiquetaPrincipal, mensajeSugerido, perfil, telDe, waDe } from './segmentos.js';
 import { cerrarModal } from '../inventario/detalle.js';
 import { dinero, esc, estadoHTML, kpiHTML, vacioHTML } from '../componentes.js';
@@ -71,9 +72,11 @@ function registrarCliente(){
     if(i === -1){ alert('Este cliente ya no existe (puede que se haya eliminado en otro dispositivo).'); cancelarEdicionCliente(); return; }
     Object.assign(state.clientes[i], datos, { _ts: Date.now() });
   } else {
-    state.clientes.unshift(Object.assign({ id: idAleatorio('cli'), _ts: Date.now(), fecha: new Date().toLocaleDateString('es-MX') }, datos));
+    var nuevoId = idAleatorio('cli');
+    state.clientes.unshift(Object.assign({ id: nuevoId, _ts: Date.now(), fecha: new Date().toLocaleDateString('es-MX') }, datos));
   }
   save('clientes');
+  if(nuevoId) numerarClienteNuevo(nuevoId);   // numero de cliente (o el de su cuenta de la tienda si ya tenia)
   cancelarEdicionCliente();
   renderClientes();
 }
@@ -118,8 +121,9 @@ function renderClientes(){
   var items = perfiles.filter(function(pf){
     if(_seg !== 'todos' && !pf.seg[_seg]) return false;
     if(!q) return true;
-    var c = pf.c;
-    return digitosOTexto([c.nombre, telDe(c), c.producto, c.notas].join(' ')).indexOf(q) !== -1 || (/^\d+$/.test(q) && digitos(telDe(c)).indexOf(q) !== -1);
+    var c = pf.c, nq = numeroBuscado(q);
+    if(nq && numeroCodigo(c.codigo) === nq) return true;   // por numero de cliente: 12, AP-12, AP-00012
+    return digitosOTexto([c.codigo, c.nombre, telDe(c), c.producto, c.notas].join(' ')).indexOf(q) !== -1 || (/^\d+$/.test(q) && digitos(telDe(c)).indexOf(q) !== -1);
   });
   if(orden === 'alfabetico') items.sort(function(a, b){ return (a.c.nombre || '').localeCompare(b.c.nombre || ''); });
   else if(orden === 'gasto') items.sort(function(a, b){ return b.total - a.total; });
@@ -131,7 +135,7 @@ function renderClientes(){
   lista.innerHTML = items.slice(0, 300).map(function(pf){
     var c = pf.c, et = etiquetaPrincipal(pf), id = esc(c.id);
     var wa = whatsappLink(telDe(c), mensajeSugerido(pf));
-    var sub = [telDe(c), CANALES_CLI[c.canal] || c.canal, pf.compras ? pf.compras + ' compra' + (pf.compras !== 1 ? 's' : '') : (c.producto ? 'busca: ' + c.producto : 'sin compras'),
+    var sub = [c.codigo, telDe(c), CANALES_CLI[c.canal] || c.canal, pf.compras ? pf.compras + ' compra' + (pf.compras !== 1 ? 's' : '') : (c.producto ? 'busca: ' + c.producto : 'sin compras'),
       pf.diasCompra !== null ? 'ultima hace ' + pf.diasCompra + ' d' : (pf.diasContacto !== null ? 'contactado hace ' + pf.diasContacto + ' d' : '')].filter(Boolean).join(' · ');
     return '<div class="cli-fila" onclick="verDetalleCliente(\'' + id + '\')">' +
       '<div class="cli-avatar">' + esc((c.nombre || '?').trim().charAt(0).toUpperCase()) + '</div>' +
@@ -201,6 +205,9 @@ function unirClientes(idA, idB){
   if(!telDe(queda) && telDe(sale)) queda.tel = telDe(sale);
   if(sale.notas) queda.notas = [queda.notas, sale.notas].filter(Boolean).join(' · ');
   if(!queda.producto && sale.producto) queda.producto = sale.producto;
+  // un solo numero de cliente: se queda el mas antiguo de los dos
+  var na = numeroCodigo(queda.codigo), nb = numeroCodigo(sale.codigo);
+  if(nb && (!na || nb < na)) queda.codigo = sale.codigo;
   queda._ts = Date.now();
   var i = idxCliente(sale.id); if(i !== -1) state.clientes.splice(i, 1);
   save('movimientos'); if(cambioInv) save('inventario'); save('clientes');
@@ -246,7 +253,7 @@ function poblarSelectClientes(selectId, valorActual){
   if(!sel) return;
   var actual = valorActual !== undefined ? valorActual : sel.value;
   sel.innerHTML = '<option value="">Sin cliente registrado</option>' + state.clientes.slice().sort(function(a, b){ return (a.nombre || '').localeCompare(b.nombre || ''); }).map(function(c){
-    return '<option value="' + esc(c.id) + '">' + esc(c.nombre) + (telDe(c) ? ' · ' + esc(telDe(c)) : '') + '</option>';
+    return '<option value="' + esc(c.id) + '">' + (c.codigo ? esc(c.codigo) + ' · ' : '') + esc(c.nombre) + (telDe(c) ? ' · ' + esc(telDe(c)) : '') + '</option>';
   }).join('');
   if(actual) sel.value = actual;
 }
