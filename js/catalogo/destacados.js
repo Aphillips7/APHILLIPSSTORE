@@ -45,15 +45,29 @@ var _bolsa = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 var _chevI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
 var _chevD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
 
+// Filtro que vuelve transparente SOLO el blanco del fondo de la foto: el degradado celeste se ve detras y el
+// reloj conserva sus colores reales (antes la mezcla "multiply" tambien le teñia el reloj de celeste).
+// alfa = 6 x (2,94 - (R+G+B)): blanco puro y casi blanco -> transparente; todo lo demas queda opaco.
+// feComposite "in" con la transparencia original: el margen vacio alrededor de la foto sigue transparente.
+(function(){
+  if(document.getElementById('filtro-sin-blanco')) return;
+  var d = document.createElement('div');
+  d.setAttribute('aria-hidden', 'true');
+  d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+  d.innerHTML = '<svg width="0" height="0"><filter id="filtro-sin-blanco" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -6 -6 -6 0 17.64" result="sinblanco"/><feComposite in="sinblanco" in2="SourceAlpha" operator="in"/></filter></svg>';
+  document.body.appendChild(d);
+})();
+
 // Carrusel infinito: la ventana (con las lineas entre tarjetas) queda fija y solo se desliza el contenido.
 // Se dibujan copias a ambos lados y, al terminar de deslizar, se salta sin animacion a la posicion equivalente.
 var _destN = 0, _destIdx = 0, _destC = 0, _destAnim = false, _destT = 0, _destHtml = [];
 function _destMod(i){ return _destN ? ((i % _destN) + _destN) % _destN : 0; }
 function _destPaso(){ var c=document.querySelector('#dest-track .dest-card'); return c ? c.getBoundingClientRect().width : 0; }
 function _destCard(r){
-  var fotos = (r.fotos||[]).map(function(src,i){ return '<img class="g'+(i===0?' on frente':'')+'" src="'+_destEsc(miniatura(src))+'"'+srcsetFoto(src, '(max-width:600px) 85vw, (max-width:1100px) 45vw, 30vw')+' data-completa="'+_destEsc(src)+'" onerror="if(!fotoRespaldo(this))this.remove()" alt="" draggable="false">'; }).join('');
+  // solo la foto de portada (sin galeria ni flechas en el carrusel)
+  var fotos = (r.fotos||[]).slice(0, 1).map(function(src){ return '<img class="g on frente" src="'+_destEsc(miniatura(src))+'"'+srcsetFoto(src, '(max-width:600px) 85vw, (max-width:1100px) 45vw, 30vw')+' data-completa="'+_destEsc(src)+'" onerror="if(!fotoRespaldo(this))this.remove()" alt="" draggable="false">'; }).join('');
   if(!fotos) fotos = '<span class="sinfoto">Sin foto</span>';
-  var gal = (r.fotos||[]).length>1 ? '<button type="button" class="dest-gal izq" aria-label="Imagen anterior" onclick="destGal(this,-1)">'+_chevI+'</button><button type="button" class="dest-gal der" aria-label="Imagen siguiente" onclick="destGal(this,1)">'+_chevD+'</button>' : '';
+  var gal = '';
   return '<div class="dest-card">'+
     '<div class="dest-foto" onclick="destAbrir(\''+_destEsc(r.id)+'\')">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
     '<div class="dest-nombre">'+_destEsc(r.nombre)+'</div>'+
