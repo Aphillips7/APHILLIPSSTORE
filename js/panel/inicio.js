@@ -59,7 +59,7 @@ function renderKpis(actual, anterior){
     kpiHTML({ label: 'Margen promedio', valor: actual.margen + '%', tono: !actual.ingresos ? '' : actual.margen >= 30 ? 'pos' : actual.margen < 15 ? 'neg' : '', actual: actual.margen, anterior: anterior.margen, pie: actual.ventas + ' venta' + (actual.ventas !== 1 ? 's' : '') }),
     kpiHTML({ label: 'Inventario', valor: dinero(valorCosto), pie: 'a costo · a precio ' + dinero(valorPrecio), onclick: "irSeccion('inventario','relojes')" }),
     kpiHTML({ label: 'Pedidos web', valor: String(pedidos.length), pie: porConfirmar ? porConfirmar + ' por confirmar' : 'al dia', onclick: "irSeccion('ventas','pedidos')" }),
-    kpiHTML({ label: 'Saldo de abonos', valor: dinero(porCobrar), pie: reservas.length + ' reserva' + (reservas.length !== 1 ? 's' : '') + ' activa' + (reservas.length !== 1 ? 's' : '') })
+    kpiHTML({ label: 'Por cobrar', valor: dinero(porCobrar), pie: reservas.length + ' reserva' + (reservas.length !== 1 ? 's' : '') + ' activa' + (reservas.length !== 1 ? 's' : '') })
   ].join('');
 }
 
