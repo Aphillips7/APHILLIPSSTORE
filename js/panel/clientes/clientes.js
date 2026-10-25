@@ -159,7 +159,7 @@ function renderStatsClientes(perfiles){
     kpiHTML({ label: 'Vuelven a comprar', valor: compradores.length ? Math.round(recurrentes.length / compradores.length * 100) + '%' : '—', tono: compradores.length && recurrentes.length / compradores.length >= 0.25 ? 'pos' : '', pie: recurrentes.length + ' con 2 compras o mas' }),
     kpiHTML({ label: 'Valor por cliente', valor: dinero(valor), pie: 'lo que compra en promedio' }),
     kpiHTML({ label: 'Inactivos', valor: String(inactivos), tono: inactivos ? 'neg' : '', pie: '+90 dias sin comprar', onclick: "setFiltroCliente(null,'inactivos')" }),
-    kpiHTML({ label: 'Saldo de abonos', valor: dinero(saldo), pie: 'en apartados', onclick: "irSeccion('ventas','apartados')" })
+    kpiHTML({ label: 'Por cobrar', valor: dinero(saldo), pie: 'en apartados', onclick: "irSeccion('ventas','apartados')" })
   ].join('');
 }
 function renderSegmentos(perfiles){
