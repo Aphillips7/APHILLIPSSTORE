@@ -168,6 +168,33 @@
   function texto(x, y, t, opc){ opc = opc || {}; return '<text x="'+n(x)+'" y="'+n(y)+'" text-anchor="'+(opc.ancla||'middle')+'" font-size="'+(opc.tam||13)+'" font-weight="'+(opc.peso||500)+'" fill="'+(opc.color||'#18181b')+'">'+t+'</text>'; }
   function svg(vb, cuerpo){ return '<svg viewBox="'+vb+'" xmlns="http://www.w3.org/2000/svg" font-family="Jost, Arial, sans-serif">'+DEFS+cuerpo+'</svg>'; }
 
+  // ---------- brazo y mano color piel (vista desde arriba: el dorso, con los dedos hacia la derecha) ----------
+  // x0 = donde termina la muneca y empieza la mano; cy = centro; a = ancho de la muneca en px
+  var PIEL_BORDE = '#B47A57', PIEL_LINEA = '#C58C68', UNA = '#F6DCCB';
+  function mano(x0, cy, a){
+    var c = '', k = a / 100;                       // todo se mide en "centesimos de muneca"
+    var X = function(v){ return n(x0 + v * k); }, Y = function(v){ return n(cy + v * k); };
+    // dedo afinado con punta redondeada: t/b = bordes, l = largo desde los nudillos (x = 50)
+    function dedo(t, b, l){
+      var m = (t + b) / 2;
+      return '<path d="M'+X(46)+' '+Y(t)+' C'+X(50 + l*0.55)+' '+Y(t + 0.6)+' '+X(50 + l - 6)+' '+Y(t + 1.6)+' '+X(50 + l - 1)+' '+Y(m - (b - t)*0.22)+' Q'+X(50 + l + 1.2)+' '+Y(m)+' '+X(50 + l - 1)+' '+Y(m + (b - t)*0.22)+' C'+X(50 + l - 6)+' '+Y(b - 1.6)+' '+X(50 + l*0.55)+' '+Y(b - 0.6)+' '+X(46)+' '+Y(b)+' Z" fill="#E8B48F" stroke="'+PIEL_BORDE+'" stroke-width="1.1" stroke-linejoin="round"/>' +
+        '<path d="M'+X(50 + l - 8.5)+' '+Y(t + 3)+' Q'+X(50 + l - 2.4)+' '+Y(m)+' '+X(50 + l - 8.5)+' '+Y(b - 3)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".55" stroke-linecap="round"/>';
+    }
+    // pulgar (arriba), relajado hacia adelante
+    c += '<path d="M'+X(12)+' '+Y(-46)+' C'+X(24)+' '+Y(-62)+' '+X(46)+' '+Y(-68)+' '+X(60)+' '+Y(-62)+' Q'+X(66)+' '+Y(-58)+' '+X(60)+' '+Y(-53)+' C'+X(48)+' '+Y(-50)+' '+X(38)+' '+Y(-46)+' '+X(32)+' '+Y(-40)+' Z" fill="#E8B48F" stroke="'+PIEL_BORDE+'" stroke-width="1.1" stroke-linejoin="round"/>';
+    c += '<path d="M'+X(53)+' '+Y(-62.5)+' Q'+X(60)+' '+Y(-59.5)+' '+X(55)+' '+Y(-55)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".55" stroke-linecap="round"/>';
+    // dedos de abajo hacia arriba (el indice queda encima)
+    c += dedo(18.5, 33, 50) + dedo(-1.5, 17.5, 64) + dedo(-21.5, -1.5, 70) + dedo(-41, -21.5, 63);
+    // dorso: tapa la base de los dedos; borde solo arriba y abajo (se une con la muneca sin costura)
+    var dorso = 'M'+X(-8)+' '+Y(-47)+' C'+X(18)+' '+Y(-49)+' '+X(40)+' '+Y(-46)+' '+X(54)+' '+Y(-40)+' C'+X(60)+' '+Y(-24)+' '+X(60)+' '+Y(18)+' '+X(54)+' '+Y(32)+' C'+X(40)+' '+Y(40)+' '+X(18)+' '+Y(46)+' '+X(-8)+' '+Y(46);
+    c += '<path d="'+dorso+' Z" fill="#E8B48F"/>';
+    c += '<path d="M'+X(-8)+' '+Y(-47)+' C'+X(18)+' '+Y(-49)+' '+X(40)+' '+Y(-46)+' '+X(54)+' '+Y(-40)+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/>';
+    c += '<path d="M'+X(54)+' '+Y(32)+' C'+X(40)+' '+Y(40)+' '+X(18)+' '+Y(46)+' '+X(-8)+' '+Y(46)+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/>';
+    // nudillos apenas marcados
+    [-31, -11, 8, 26].forEach(function(yc){ c += '<path d="M'+X(50)+' '+Y(yc - 3)+' q'+n(2.2*k)+' '+n(3*k)+' 0 '+n(6*k)+'" fill="none" stroke="'+PIEL_LINEA+'" stroke-width=".8" opacity=".45" stroke-linecap="round"/>'; });
+    return c;
+  }
+
   // ---------- A, B, C: las medidas (reloj de 42 mm a 4 px por mm) ----------
   (function(){
     var S = 4, d = 42*S, l2l = 50*S, correa = 22*S, cx = 230, cy = 200, r = d/2, h = l2l/2, c = '';
@@ -227,8 +254,8 @@
 
   // ---------- pasos para medir la muneca ----------
   (function(){
-    var piel = '#ececee', borde = '#b4b4ba';
-    var brazo = '<path d="M10 70 C60 62 120 60 170 66 L178 72 C200 60 224 62 232 80 C238 96 224 112 200 108 L178 104 C120 112 60 112 10 104 Z" fill="'+piel+'" stroke="'+borde+'" stroke-width="1.5"/>';
+    var brazo = '<path d="M-4 64 C60 62 120 64 160.8 68.2 L165.6 68.6 L165.6 105.2 L160.8 105.4 C120 110 60 112 -4 110 Z" fill="#E8B48F"/>' + mano(164, 87, 40) +
+      '<path d="M-4 64 C60 62 120 64 160.8 68.2" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/><path d="M160.8 105.4 C120 110 60 112 -4 110" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.2"/>';
     var p1 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><path d="M144 66 L176 40" stroke="#71717a" stroke-width="10" stroke-linecap="round" opacity=".25"/><path d="M144 66 L176 40" stroke="#fff" stroke-width="8" stroke-linecap="round"/>' + texto(120, 140, 'Tira alrededor de la muñeca', { tam: 12, color: '#52525b' });
     var p2 = brazo + '<rect x="128" y="58" width="16" height="58" rx="3" fill="#fff" stroke="#71717a" stroke-width="1.5"/><line x1="128" y1="86" x2="144" y2="86" stroke="'+ORO+'" stroke-width="2.5"/><path d="M150 84 L196 38 L204 46 L158 92 Z" fill="#d4d4d8" stroke="#a1a1aa"/><path d="M150 84 L146 96 L158 92" fill="#3f3f46"/>' + texto(120, 140, 'Marca donde se junta', { tam: 12, color: '#52525b' });
     var regla = '<rect x="14" y="70" width="212" height="34" rx="3" fill="#f4f4f5" stroke="#a1a1aa"/>';
@@ -252,9 +279,14 @@
     var l2lReal = base ? parseFloat(String(base.l2l || '').replace(',', '.')) : 0;
     var l2lMm = l2lReal > 0 ? l2lReal : mm * 1.2;
     var S = 4.2, ancho = cm * 10 * 0.3 * S, l2l = l2lMm * S, d = mm * S, cy = 175, cx = 300, c = '';
-    var piel = '#ececee', borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
-    // antebrazo (mas ancho hacia la izquierda), muneca y mano
-    c += '<path d="M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' 470 '+n(yTop+2)+' C520 '+n(yTop-6)+' 560 '+n(cy-ancho*0.7)+' 610 '+n(cy-ancho*0.66)+' C650 '+n(cy-ancho*0.62)+' 660 '+n(cy+ancho*0.62)+' 610 '+n(cy+ancho*0.68)+' C560 '+n(cy+ancho*0.72)+' 520 '+n(yBot+6)+' 470 '+n(yBot-2)+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="'+piel+'" stroke="'+borde+'" stroke-width="1.5"/>';
+    var borde = '#b4b4ba', yTop = cy - ancho/2, yBot = cy + ancho/2;
+    // antebrazo (mas ancho hacia la izquierda) y muneca, color piel; despues la mano con sus dedos
+    var xu = n(462 - ancho*0.08), yu1 = n(cy - ancho*0.47), yu2 = n(cy + ancho*0.46);   // union con el dorso de la mano
+    var arr = 'M-10 '+n(cy-ancho*0.68)+' C150 '+n(cy-ancho*0.62)+' 300 '+n(yTop)+' '+xu+' '+yu1, aba = 'M'+xu+' '+yu2+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68);
+    // el relleno del brazo sigue un poco por debajo del dorso: sin linea en la union
+    c += '<path d="'+arr+' L'+n(462 + ancho*0.04)+' '+yu1+' L'+n(462 + ancho*0.04)+' '+yu2+' L'+xu+' '+yu2+' C300 '+n(yBot)+' 150 '+n(cy+ancho*0.62)+' -10 '+n(cy+ancho*0.68)+' Z" fill="#E8B48F"/>';
+    c += mano(462, cy, ancho);
+    c += '<path d="'+arr+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/><path d="'+aba+'" fill="none" stroke="'+PIEL_BORDE+'" stroke-width="1.5"/>';
     // borde de la muneca donde va el reloj (lineas punteadas)
     c += '<line x1="'+(cx-70)+'" y1="'+n(yTop)+'" x2="'+(cx+70)+'" y2="'+n(yTop)+'" stroke="'+borde+'" stroke-dasharray="4 4"/><line x1="'+(cx-70)+'" y1="'+n(yBot)+'" x2="'+(cx+70)+'" y2="'+n(yBot)+'" stroke="'+borde+'" stroke-dasharray="4 4"/>';
     var sobra = l2l > ancho;
@@ -267,7 +299,7 @@
     c += cota(xa, yTop, xa, yBot) + texto(xa - 10, cy + 4, 'Muñeca ' + Math.round(cm * 3) + ' mm', { ancla: 'end', tam: 12, peso: 600, color: ORO });
     var xr = cx + d/2 + 40;
     c += cota(xr, cy - l2l/2, xr, cy + l2l/2) + texto(xr + 8, cy + 4, 'Reloj ' + fmt(l2lMm) + ' mm' + (l2lReal > 0 ? '' : ' aprox.'), { ancla: 'start', tam: 12, peso: 600, color: ORO });
-    $('gu-sim').innerHTML = svg('0 0 660 350', c);
+    $('gu-sim').innerHTML = svg('0 0 '+n(Math.max(660, 470 + ancho * 1.4))+' 350', c);
 
     var razon = l2lMm / (cm * 3), rec = recomendado(cm), v;
     if(razon < 0.82) v = ['discreto', 'Discreto', 'Se ve pequeño y elegante en tu muñeca. Ideal si buscas algo clásico o de vestir.'];
