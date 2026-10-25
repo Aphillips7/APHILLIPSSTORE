@@ -59,7 +59,7 @@ function verDetalleCliente(id){
   document.getElementById('inv-modal-content').innerHTML =
     '<div class="ficha-cli">' +
       '<div class="ficha-cab"><div class="cli-avatar grande">' + esc((c.nombre || '?').trim().charAt(0).toUpperCase()) + '</div>' +
-        '<div class="ficha-nombre"><h3>' + esc(c.nombre) + '</h3><span>' + esc([telDe(c), CANALES_CLI[c.canal] || c.canal, c.fecha ? 'desde ' + c.fecha : ''].filter(Boolean).join(' · ')) + '</span></div>' + estadoHTML(et[0], et[1]) + '</div>' +
+        '<div class="ficha-nombre"><h3>' + esc(c.nombre) + '</h3><span>' + esc([c.codigo ? 'Cliente ' + c.codigo : '', telDe(c), CANALES_CLI[c.canal] || c.canal, c.fecha ? 'desde ' + c.fecha : ''].filter(Boolean).join(' · ')) + '</span></div>' + estadoHTML(et[0], et[1]) + '</div>' +
       '<div class="ficha-datos">' +
         dato('Comprado', dinero(pf.total), pf.total ? 'pos' : '') + dato('Compras', String(pf.compras)) + dato('Ticket', pf.ticket ? dinero(pf.ticket) : '—') +
         dato('Ultima compra', pf.diasCompra === null ? '—' : 'hace ' + pf.diasCompra + ' d') + dato('Debe', dinero(pf.saldo), pf.saldo ? 'neg' : '') +

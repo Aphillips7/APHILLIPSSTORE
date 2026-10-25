@@ -54,6 +54,8 @@
 // Rutas de admin para cuentas:
 //   GET    /admin/cuentas      -> todas las cuentas con sus avisos y cuantos favoritos tienen
 //   POST   /admin/cuentas/vincular  { uid, clienteId|null }
+//   POST   /admin/cuentas/codigo    { uid, codigo }  -> la cuenta toma el numero de cliente (mas antiguo) de su ficha del panel
+//   POST   /admin/clientes/codigos  { n }            -> n numeros de cliente nuevos (AP-00042) para clientes creados en el panel
 //   POST   /admin/avisos/avisado    { uid, tipo, valor, estado, precio }  (marca el WhatsApp como enviado)
 //   GET    /admin/pedidos      -> pedidos con los datos de la cuenta (codigo, nombre, WhatsApp)
 //   POST   /admin/pedidos/estado    { numero, estado, entrega?, tracking?, nota? }  (solo pasos permitidos)
@@ -135,7 +137,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/avisos/avisado' || ruta === '/admin/pedidos/estado') && metodo === 'POST') || (ruta === '/admin/pedidos' && metodo === 'GET');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/cuentas/codigo' || ruta === '/admin/clientes/codigos' || ruta === '/admin/avisos/avisado' || ruta === '/admin/pedidos/estado') && metodo === 'POST') || (ruta === '/admin/pedidos' && metodo === 'GET');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -167,6 +169,8 @@ export default {
     if (ruta === '/admin/avisos/correo') return json(await avisosPorCorreo(env, metodo === 'POST'), 200, cors);
     if (ruta === '/admin/informe/enviar') { try { return json(await enviarInforme(env), 200, cors); } catch (e) { return json({ error: e.message }, 502, cors); } }
     if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
+    if (ruta === '/admin/cuentas/codigo') return adminCodigoCuenta(request, env, cors);
+    if (ruta === '/admin/clientes/codigos') return adminNuevosCodigos(request, env, cors);
     if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
     if (ruta === '/admin/pedidos') return adminPedidos(env, cors);
     if (ruta === '/admin/pedidos/estado') return adminEstadoPedido(request, env, cors);
@@ -488,13 +492,15 @@ async function leerJson(request) { try { return await request.json(); } catch (e
 async function rutaCuenta(ruta, metodo, request, url, env, cors, sesion) {
   const uid = sesion.sub;
   const ahora = Date.now();
-  // la cuenta se crea la primera vez que el cliente entra
-  // y recibe su codigo de cliente (AP-00012) a partir del rowid: unico y nunca se repite
-  await env.DB.batch([
-    env.DB.prepare('INSERT INTO cuentas (uid, email, nombre, telefono, creado, actualizado) VALUES (?1, ?2, ?3, \'\', ?4, ?4) ' +
-      'ON CONFLICT(uid) DO UPDATE SET email = excluded.email').bind(uid, limpiarTexto(sesion.email, 120), limpiarTexto(sesion.name, 60), ahora),
-    env.DB.prepare("UPDATE cuentas SET codigo = 'AP-' || printf('%05d', rowid) WHERE uid = ?1 AND codigo IS NULL").bind(uid)
-  ]);
+  // la cuenta se crea la primera vez que el cliente entra y recibe su numero de cliente (AP-00012) del
+  // contador compartido con los clientes del panel: unico y nunca se repite
+  await env.DB.prepare('INSERT INTO cuentas (uid, email, nombre, telefono, creado, actualizado) VALUES (?1, ?2, ?3, \'\', ?4, ?4) ' +
+    'ON CONFLICT(uid) DO UPDATE SET email = excluded.email').bind(uid, limpiarTexto(sesion.email, 120), limpiarTexto(sesion.name, 60), ahora).run();
+  const sinCodigo = await env.DB.prepare('SELECT codigo FROM cuentas WHERE uid = ?1').bind(uid).first();
+  if (sinCodigo && !sinCodigo.codigo) {
+    const [cod] = await nuevosCodigosCliente(env, 1);
+    await env.DB.prepare('UPDATE cuentas SET codigo = ?2 WHERE uid = ?1 AND codigo IS NULL').bind(uid, cod).run();
+  }
 
   if (ruta === '/cuenta' && metodo === 'GET') {
     const c = await env.DB.prepare('SELECT * FROM cuentas WHERE uid = ?1').bind(uid).first();
@@ -640,6 +646,7 @@ async function guardarPerfilCuenta(uid, request, env, cors) {
     if (/UNIQUE/i.test(String(e && e.message))) return json({ error: 'Ese telefono ya esta registrado en otra cuenta.', campo: 'telefono' }, 409, cors);
     throw e;
   }
+  try { await unirConClientePanel(uid, tel.norm, env); } catch (e) { console.error('unir cliente', e && e.message); }
   const nueva = await env.DB.prepare('SELECT * FROM cuentas WHERE uid = ?1').bind(uid).first();
   return json({ ok: true, perfil: perfilDe(nueva) }, 200, cors);
 }
@@ -759,6 +766,59 @@ async function adminCuentas(env, cors) {
   const porUid = {};
   for (const a of avisos) (porUid[a.uid] || (porUid[a.uid] = [])).push(a);
   return json({ cuentas: cuentas.map((c) => ({ ...c, favoritos: nFav[c.uid] || 0, avisos: porUid[c.uid] || [] })) }, 200, cors);
+}
+// ---------- numero de cliente (AP-00012), uno solo por persona ----------
+// Un solo contador para las cuentas de la tienda y los clientes creados en el panel, asi nunca se repite.
+// Al arrancar se pone por encima del numero mas alto que ya exista (cuentas viejas y clientes del panel).
+const RE_CODIGO = /^AP-(\d{5,9})$/;
+function numeroCodigo(c) { const m = RE_CODIGO.exec(String(c || '')); return m ? Number(m[1]) : 0; }
+function textoCodigo(n) { return 'AP-' + String(n).padStart(5, '0'); }
+async function nuevosCodigosCliente(env, n) {
+  const a = await env.DB.prepare("SELECT MAX(CAST(substr(codigo, 4) AS INTEGER)) AS m FROM cuentas WHERE codigo LIKE 'AP-%'").first();
+  const b = await env.DB.prepare("SELECT MAX(CAST(substr(json_extract(datos, '$.codigo'), 4) AS INTEGER)) AS m FROM docs WHERE col = 'clientes' AND borrado = 0 AND json_extract(datos, '$.codigo') LIKE 'AP-%'").first();
+  const piso = Math.max(Number(a && a.m) || 0, Number(b && b.m) || 0);
+  await env.DB.prepare("INSERT INTO contador (nombre, valor) VALUES ('codigo_cliente', ?1) ON CONFLICT(nombre) DO UPDATE SET valor = MAX(valor, excluded.valor)").bind(piso).run();
+  const r = await env.DB.prepare("UPDATE contador SET valor = valor + ?1 WHERE nombre = 'codigo_cliente' RETURNING valor").bind(n).first();
+  const fin = Number(r.valor), out = [];
+  for (let i = fin - n + 1; i <= fin; i++) out.push(textoCodigo(i));
+  return out;
+}
+async function adminNuevosCodigos(request, env, cors) {
+  const b = await leerJson(request);
+  const n = Math.floor(Number(b && b.n));
+  if (!(n >= 1 && n <= 500)) return json({ error: 'Cantidad invalida' }, 400, cors);
+  return json({ codigos: await nuevosCodigosCliente(env, n) }, 200, cors);
+}
+// La cuenta toma el numero de su ficha del panel cuando ese es mas antiguo (queda un solo numero por persona)
+async function adminCodigoCuenta(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || typeof b.uid !== 'string' || !RE_CODIGO.test(String(b.codigo || ''))) return json({ error: 'Datos invalidos' }, 400, cors);
+  const otra = await env.DB.prepare('SELECT uid FROM cuentas WHERE codigo = ?1 AND uid <> ?2').bind(b.codigo, b.uid).first();
+  if (otra) return json({ error: 'Ese numero ya es de otra cuenta' }, 409, cors);
+  await env.DB.prepare('UPDATE cuentas SET codigo = ?2, actualizado = ?3 WHERE uid = ?1').bind(b.uid, b.codigo, Date.now()).run();
+  return json({ ok: true }, 200, cors);
+}
+// Cuando un cliente guarda su WhatsApp y ese numero ya esta en un cliente del panel, la cuenta se vincula
+// sola (ve sus compras y apartados) y se queda con el numero de cliente mas antiguo de los dos.
+async function unirConClientePanel(uid, telNorm, env) {
+  if (!telNorm) return;
+  const c = await env.DB.prepare('SELECT codigo, cliente_id FROM cuentas WHERE uid = ?1').bind(uid).first();
+  if (!c || c.cliente_id) return;
+  const filas = (await env.DB.prepare("SELECT id, datos FROM docs WHERE col = 'clientes' AND borrado = 0").all()).results;
+  let elegido = null;
+  for (const f of filas) {
+    let cl; try { cl = JSON.parse(f.datos); } catch (e) { continue; }
+    const t = normalizarTelefono(cl.tel || cl.telefono || '');
+    if (!t || t.norm !== telNorm || !RE_ID.test(f.id)) continue;
+    if (!elegido || (Number(cl._ts) || 0) < (Number(elegido.cl._ts) || 0)) elegido = { id: f.id, cl };   // el mas antiguo
+  }
+  if (!elegido) return;
+  await env.DB.prepare('UPDATE cuentas SET cliente_id = ?2, actualizado = ?3 WHERE uid = ?1').bind(uid, elegido.id, Date.now()).run();
+  const suyo = numeroCodigo(elegido.cl.codigo), mio = numeroCodigo(c.codigo);
+  if (suyo && (!mio || suyo < mio)) {
+    const otra = await env.DB.prepare('SELECT uid FROM cuentas WHERE codigo = ?1 AND uid <> ?2').bind(elegido.cl.codigo, uid).first();
+    if (!otra) await env.DB.prepare('UPDATE cuentas SET codigo = ?2 WHERE uid = ?1').bind(uid, elegido.cl.codigo).run();
+  }
 }
 async function adminVincular(request, env, cors) {
   const b = await leerJson(request);

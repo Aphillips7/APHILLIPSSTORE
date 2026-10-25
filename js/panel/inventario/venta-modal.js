@@ -6,6 +6,7 @@
 // minimo pide confirmacion; no se vende dos veces (transaccion en la nube); un apartado se completa desde su
 // ficha; un cliente nuevo no puede repetir el telefono de otro.
 import { telefonoPanama } from '../clientes/clientes.js';
+import { numerarClienteNuevo, numeroBuscado, numeroCodigo } from '../clientes/numeros.js';
 import { registrarCompraSiFalta } from '../finanzas/registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { renderInventario } from './lista.js';
@@ -101,7 +102,7 @@ function elegirCliente(id){
   var c = id && state.clientes.find(function(x){ return x.id === id; });
   var sel = el('vm-cliente-sel');
   if(c){
-    sel.innerHTML = '<span><b>' + esc(c.nombre) + '</b>' + ((c.tel || c.telefono) ? ' · ' + esc(c.tel || c.telefono) : '') + '</span><button type="button" onclick="quitarClienteVenta()">Quitar</button>';
+    sel.innerHTML = '<span>' + (c.codigo ? '<em class="vm-opcional">' + esc(c.codigo) + '</em> ' : '') + '<b>' + esc(c.nombre) + '</b>' + ((c.tel || c.telefono) ? ' · ' + esc(c.tel || c.telefono) : '') + '</span><button type="button" onclick="quitarClienteVenta()">Quitar</button>';
     sel.hidden = false; el('vm-buscador').hidden = true;
   } else { sel.hidden = true; el('vm-buscador').hidden = false; }
   el('vm-resultados').hidden = true;
@@ -112,12 +113,14 @@ function ayudaCliente(t, error){ var a = el('vm-ayuda'); a.textContent = t; a.hi
 function buscarClienteVenta(v){
   var res = el('vm-resultados'), q = sinAcentos(v).trim(), qd = digitos(v);
   if(!q){ res.hidden = true; res.innerHTML = ''; return; }
+  // numero de cliente exacto primero (12, AP-12, AP-00012), despues nombre o telefono
+  var nq = numeroBuscado(v);
   var lista = state.clientes.filter(function(c){
-    return sinAcentos(c.nombre).indexOf(q) !== -1 || (qd.length >= 3 && digitos(c.tel || c.telefono).indexOf(qd) !== -1);
-  }).slice(0, 6);
-  var h = lista.map(function(c){ return '<button type="button" class="vm-res" onclick="elegirCliente(\'' + esc(c.id) + '\')"><b>' + esc(c.nombre) + '</b><span>' + esc(c.tel || c.telefono || '') + '</span></button>'; }).join('');
+    return (nq && numeroCodigo(c.codigo) === nq) || sinAcentos(c.nombre).indexOf(q) !== -1 || (qd.length >= 3 && digitos(c.tel || c.telefono).indexOf(qd) !== -1);
+  }).sort(function(a, b){ return (nq && numeroCodigo(b.codigo) === nq ? 1 : 0) - (nq && numeroCodigo(a.codigo) === nq ? 1 : 0); }).slice(0, 6);
+  var h = lista.map(function(c){ return '<button type="button" class="vm-res" onclick="elegirCliente(\'' + esc(c.id) + '\')"><b>' + esc(c.nombre) + '</b><span>' + esc([c.codigo, c.tel || c.telefono].filter(Boolean).join(' · ')) + '</span></button>'; }).join('');
   // crear cliente nuevo con lo escrito (nombre, o telefono si escribio numeros)
-  if(!/^\+?[\d\s-]+$/.test(v.trim()) && v.trim().length >= 3) h += '<button type="button" class="vm-res nuevo" onclick="nuevoClienteVenta()">+ Crear cliente "' + esc(v.trim()) + '"</button>';
+  if(!/^\+?[\d\s-]+$/.test(v.trim()) && !nq && v.trim().length >= 3) h += '<button type="button" class="vm-res nuevo" onclick="nuevoClienteVenta()">+ Crear cliente "' + esc(v.trim()) + '"</button>';
   res.innerHTML = h || '<div class="vm-res" style="cursor:default;">Nadie con ese dato. Escribe el nombre para crearlo.</div>';
   res.hidden = false;
 }
@@ -170,6 +173,7 @@ async function confirmarVentaModal(){
   if(!cliente && _clienteNuevo){
     cliente = { id: idAleatorio('cli'), _ts: Date.now(), nombre: _clienteNuevo.nombre, tel: _clienteNuevo.tel, canal: canal === 'web' ? 'web' : canal === 'directo' ? 'directo' : canal, producto: p.nombre, notas: '', fecha: hoy };
     state.clientes.unshift(cliente); save('clientes');
+    numerarClienteNuevo(cliente.id);
   }
   state.inventario[i].estado = 'vendido'; state.inventario[i].precioVenta = precio; state.inventario[i].fechaVenta = hoy;
   save('inventario');

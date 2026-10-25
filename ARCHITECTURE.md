@@ -95,6 +95,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `clientes/cliente-detalle.js` | Ficha del cliente: datos clave, mensaje sugerido y linea de tiempo (compras, abonos, apartados, pedidos web, contactos) |
 | `clientes/salud.js` | Tarjeta "Salud de la tienda": errores de la semana (`/admin/errores`), vista previa del informe semanal y de los avisos por correo |
 | `clientes/cuentas-web.js` | Cuentas de clientes del catalogo: avisos pendientes (un toque abre WhatsApp con el mensaje y lo marca enviado) y vincular cada cuenta con un cliente del panel |
+| `clientes/numeros.js` | Numero de cliente unico (AP-00012) para todos: contador compartido en el servidor (`/admin/clientes/codigos`), union automatica por WhatsApp entre clientes del panel y cuentas de la tienda (ficha nueva para cuentas sin cliente), se queda el numero mas antiguo; busqueda por numero |
 | `ventas/pedidos-web.js` | Pedidos web: tablero por estado con buscador; solo muestra el boton del siguiente paso (confirmar envio/retiro, registrar venta, enviado con guia, entregado, cancelar). "Registrar venta" busca o crea el cliente del panel por su WhatsApp, lo vincula a la cuenta, abre la venta con todo puesto y al confirmarla marca el pedido como pagado |
 | `sync/nube.js` | Datos del panel en Cloudflare: carga, cambios cada 10 s, envio de diferencias, cola sin internet (IndexedDB), `cambiarEstadoNube` |
 | `sync/sync.js` | `save()` -> `syncColeccion`/`syncConfig`: envia a Cloudflare |
@@ -145,7 +146,7 @@ Ademas: catalogo publico en R2 (`publico/catalogo.json`, todos leen, admin publi
 D1 (tabla `metricas`: visitantes suman, admin lee). Firestore guarda la copia antigua de todo esto
 (`catalogo_publico`, `metricas_catalogo`...) solo como archivo.
 
-Los pedidos web viven en D1 (tabla `pedidos`, migracion 0008) junto con las cuentas (`cuentas`: codigo AP-00000 unico, `tel_norm` unico, terminos y mayor_edad con fecha).
+Los pedidos web viven en D1 (tabla `pedidos`, migracion 0008) junto con las cuentas (`cuentas`: codigo AP-00000 unico (contador `codigo_cliente` compartido con los clientes del panel, campo `codigo` en `clientes/{id}`; al guardar el WhatsApp se vincula sola con el cliente del panel que tenga ese numero), `tel_norm` unico, terminos y mayor_edad con fecha).
 
 ### `inventario/{id}`
 `nombre, sku, coleccion, genero (hombre|mujer|unisex), mm, materialCaja, materialCorrea,

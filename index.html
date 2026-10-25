@@ -595,7 +595,7 @@ if(location.hostname==='aphillips7.github.io'){
     <div class="vm-cliente-sel" id="vm-cliente-sel" hidden></div>
     <div class="vm-buscador" id="vm-buscador">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="search" id="vm-buscar-cliente" placeholder="Buscar por nombre o telefono..." autocomplete="off" />
+      <input type="search" id="vm-buscar-cliente" placeholder="Numero de cliente, nombre o telefono..." autocomplete="off" />
     </div>
     <div class="vm-resultados" id="vm-resultados" hidden></div>
     <div class="campo-ayuda" id="vm-ayuda" hidden></div>
@@ -900,7 +900,7 @@ if(location.hostname==='aphillips7.github.io'){
     </div>
     <div class="card">
       <div class="cli-barra">
-        <input type="search" id="cli-search" placeholder="Buscar por nombre, telefono o reloj..." oninput="renderClientes()" />
+        <input type="search" id="cli-search" placeholder="Buscar por numero de cliente, nombre, telefono o reloj..." oninput="renderClientes()" />
         <select id="cli-orden" onchange="renderClientes()">
           <option value="reciente">Mas recientes</option>
           <option value="ultima">Ultima compra</option>

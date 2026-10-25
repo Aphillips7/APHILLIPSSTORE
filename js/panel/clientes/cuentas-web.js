@@ -7,6 +7,7 @@
 import { firebase } from '../../firebase.js';
 import { esPublicable, rutaReloj } from '../../products.js';
 import { state } from '../state.js';
+import { revisarNumerosClientes } from './numeros.js';
 
 const API = 'https://api.aphillipsstore.com';
 const TIENDA = 'https://aphillipsstore.com/';
@@ -32,6 +33,7 @@ async function cargarCuentasWeb(){
   try{ _cuentas = (await pedir('/admin/cuentas')).cuentas || []; _error = ''; }
   catch(e){ _error = e.message; }
   renderCuentasWeb();
+  if(!_error) revisarNumerosClientes();   // un solo numero de cliente por persona (ver numeros.js)
 }
 
 // numero para wa.me: solo digitos; los de 8 digitos (Panama) llevan el 507 delante
