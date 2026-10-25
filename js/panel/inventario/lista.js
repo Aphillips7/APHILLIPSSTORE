@@ -61,7 +61,7 @@ function renderKpisInv(){
   cont.innerHTML=[
     kpiHTML({ label:'Disponibles', valor:String(disp.length), pie:dinero(disp.reduce(function(a,p){ return a+(Number(p.precio)||0); },0))+' a precio', onclick:"setFiltroEstado(null,'disponible')" }),
     kpiHTML({ label:'En transito', valor:String(tran.length), pie:dinero(tran.reduce(function(a,p){ return a+costoDe(p); },0))+' pagados', onclick:"setFiltroEstado(null,'transito')" }),
-    kpiHTML({ label:'Apartados', valor:String(res.length), pie:dinero(res.reduce(function(a,p){ return a+saldoPendienteReserva(p); },0))+' por cobrar', onclick:"setFiltroEstado(null,'reservado')" }),
+    kpiHTML({ label:'Apartados', valor:String(res.length), pie:dinero(res.reduce(function(a,p){ return a+saldoPendienteReserva(p); },0))+' de saldo', onclick:"setFiltroEstado(null,'reservado')" }),
     kpiHTML({ label:'Vendidos este mes', valor:String(vendMes), onclick:"irSeccion('ventas','historial')" }),
     kpiHTML({ label:'Capital en relojes', valor:dinero(capital), pie:'valen '+dinero(aPrecio)+' a precio' }),
     kpiHTML({ label:'Margen del stock', valor:margen+'%', tono:!conAmbos.length?'':margen>=30?'pos':margen<15?'neg':'', pie:'promedio de lo disponible' })

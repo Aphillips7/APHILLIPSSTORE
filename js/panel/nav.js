@@ -52,7 +52,7 @@ const SECCIONES = [
   { id: 'finanzas', t: 'Finanzas', subs: [
     { id: 'resumen', t: 'Resumen', page: 'finanzas', inner: 'resumen' },
     { id: 'analisis', t: 'Rentabilidad', page: 'finanzas', inner: 'analisis' },
-    { id: 'cobrar', t: 'Por cobrar', page: 'finanzas', inner: 'cobrar' },
+    { id: 'cobrar', t: 'Abonos', page: 'finanzas', inner: 'cobrar' },
     { id: 'movimientos', t: 'Movimientos', page: 'finanzas', inner: 'historial' },
     { id: 'registrar', t: 'Registrar', page: 'finanzas', inner: 'registrar' },
     { id: 'cierres', t: 'Cierres', page: 'finanzas', inner: 'cierres' }] },

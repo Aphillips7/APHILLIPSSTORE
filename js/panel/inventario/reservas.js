@@ -8,7 +8,7 @@ import { elegirMetodoPago } from '../componentes.js';
 import { idAleatorio, idxInv, invNoExiste, save, state } from '../state.js';
 import { saldoPendienteReserva, totalAbonadoReserva } from '../../products.js';
 
-// Ventas > Apartados y Finanzas > Por cobrar se redibujan solas despues de abonar, completar o cancelar
+// Ventas > Apartados y Finanzas > Abonos se redibujan solas despues de abonar, completar o cancelar
 function refrescarVentas(){ try{ if(window.refrescarVentas) window.refrescarVentas(); }catch(e){} }
 
 var _reservaModalIdx=null;
@@ -45,7 +45,7 @@ async function confirmarReserva(){
   // estadoAnterior: si se cancela el apartado, el reloj vuelve a ese estado (un reloj en transito no debe
   // volver como "disponible")
   if((p.costoTotal||0)>0&&precioAcordado<p.costoTotal&&!confirm('El precio acordado ($'+precioAcordado.toLocaleString()+') es MENOR que el costo ($'+p.costoTotal.toLocaleString()+'). ¿Apartarlo de todas formas?')) return;
-  // plazo para completar el pago (fecha limite): se ve en Ventas > Apartados y en Finanzas > Por cobrar
+  // plazo para completar el pago (fecha limite): se ve en Ventas > Apartados y en Finanzas > Abonos
   var plazo=parseInt((document.getElementById('reserva-plazo')||{}).value,10);
   if(!(plazo>=1&&plazo<=90)) plazo=30;
   var lim=new Date(); lim.setDate(lim.getDate()+plazo);

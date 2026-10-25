@@ -21,7 +21,7 @@ function renderCobrar(){
   var pronto = conSaldo.filter(function(x){ return x.dias !== null && x.dias >= 0 && x.dias <= 7; });
   var k = document.getElementById('fin-kpis-cobrar');
   if(k) k.innerHTML = [
-    kpiHTML({ label: 'Por cobrar', valor: dinero(total), pie: conSaldo.length + ' apartado' + (conSaldo.length !== 1 ? 's' : '') + ' con saldo' }),
+    kpiHTML({ label: 'Falta cobrar', valor: dinero(total), pie: conSaldo.length + ' apartado' + (conSaldo.length !== 1 ? 's' : '') + ' con saldo' }),
     kpiHTML({ label: 'Vencido', valor: dinero(vencidas.reduce(function(a, x){ return a + x.saldo; }, 0)), tono: vencidas.length ? 'neg' : '', pie: vencidas.length + ' fuera de plazo' }),
     kpiHTML({ label: 'Vence esta semana', valor: String(pronto.length), pie: dinero(pronto.reduce(function(a, x){ return a + x.saldo; }, 0)) }),
     kpiHTML({ label: 'Ya abonado', valor: dinero(lista.reduce(function(a, x){ return a + x.abonado; }, 0)), pie: 'en ' + lista.length + ' apartado' + (lista.length !== 1 ? 's' : '') })
@@ -38,7 +38,7 @@ function renderCobrar(){
         (tel && x.saldo > 0 ? ' <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://wa.me/' + tel + '?text=' + encodeURIComponent(msg) + '">Recordar</a>' : '');
       return [esc(r.clienteNombre || 'Sin cliente'), esc(p.nombre), dinero(x.acordado), dinero(x.abonado), '<b>' + dinero(x.saldo) + '</b>',
         est + '<div class="tenue-peq">' + fechaTxt(fechaLimiteReserva(p)) + '</div>', '<div class="acciones-fila">' + acciones + '</div>'];
-    }), { icono: 'listo', titulo: 'No hay apartados por cobrar', texto: 'Cuando apartes un reloj con abono, aqui veras el saldo y su fecha limite.' });
+    }), { icono: 'listo', titulo: 'No hay abonos pendientes', texto: 'Cuando apartes un reloj con abono, aqui veras el saldo y su fecha limite.' });
 }
 
 export { renderCobrar };
