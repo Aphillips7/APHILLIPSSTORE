@@ -298,11 +298,13 @@ function servir(env, request, ruta) {
 // Panel: Firebase Auth (solo correo y contrasena), qrcode (cdnjs) y la fuente Satoshi de
 // Fontshare (css/panel/base.css).
 // Ambos: Cloudflare Web Analytics (Cloudflare inserta el script beacon y envia a cloudflareinsights.com).
+// Carrusel: las fotos se descargan desde fotos.aphillipsstore.com para quitarles el fondo blanco y se muestran
+// como imagen generada en el navegador (blob:), ver js/catalogo/destacados.js.
 const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
-  "img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+  "img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "font-src 'self' https://fonts.gstatic.com; " +
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://static.cloudflareinsights.com; " +
-  "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://cloudflareinsights.com; " +
+  "connect-src 'self' https://api.aphillipsstore.com https://fotos.aphillipsstore.com https://*.googleapis.com https://cloudflareinsights.com; " +
   "frame-src 'self' https://*.firebaseapp.com; form-action 'self'";
 const CSP_PANEL = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
   "img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://api.fontshare.com; " +
