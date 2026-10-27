@@ -4,7 +4,8 @@
 //   cada boton de "El futuro en tu muneca".
 // Fase 3 Promociones: anuncios, ofertas, etiquetas, ventana emergente y mensajes de WhatsApp.
 // Fase 4 Fotos y textos: fotos de la portada, Google y compartir, preguntas frecuentes y notas legales.
-// Todo es un solo "sitio" { tema, portada, promos, contenido } con vista previa en vivo (la tienda real dentro de un marco, en
+// Fase 5 Control: aviso de vacaciones, publicar en una fecha, enlace de vista previa y vistas/toques por seccion.
+// Todo es un solo "sitio" { tema, portada, promos, contenido, control } con vista previa en vivo (la tienda real dentro de un marco, en
 // celular o computadora), un solo boton Publicar, historial y deshacer.
 // POKA-YOKE:
 // - Nada cambia en la tienda hasta tocar "Publicar" (y se confirma). El borrador se guarda en este dispositivo.
@@ -18,6 +19,7 @@ import { ETIQUETAS_LISTAS, MAX, WA_BASE, dinero, hoy, validarPromos } from '../.
 import { FOTOS, MAX as MAXC, SECCIONES_LEGAL, SEO_BASE, TEMAS_FAQ, claveFaq, validarContenido } from '../../sitio/contenido.js';
 import { comprimirImg, leerImagen, subirArchivo } from '../inventario/fotos.js';
 import { prepararFoto } from '../inventario/fondo.js';
+import { MAX_VACACIONES, SECCIONES_CLICS, validarControl } from '../../sitio/control.js';
 import { esPublicable } from '../../products.js';
 import { esc } from '../componentes.js';
 import { state } from '../state.js';
@@ -44,14 +46,14 @@ const FORMAS_TXT = [['original', 'Como están'], ['recta', 'Rectos'], ['suave', 
 var _publicado = null, _meta = { version: 0, fecha: 0 }, _historial = [], _temas = [], _borrador = null, _pila = [];
 var _error = '', _cargado = false, _dispositivo = 'celular', _publicando = false, _nota = '', _vista = 'diseno';
 var _originales = null;   // textos de la tienda tal como estan (para mostrarlos de ejemplo)
-var _fotosOrig = {}, _pagina = 'inicio', _faqOrig = null, _faqAbiertas = {}, _subiendoFoto = {};
+var _programado = null, _clics = null, _enlacePrevia = null, _fotosOrig = {}, _pagina = 'inicio', _faqOrig = null, _faqAbiertas = {}, _subiendoFoto = {};
 
 function el(id){ return document.getElementById(id); }
-function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada), promos: validarPromos(s.promos), contenido: validarContenido(s.contenido) }; }
+function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada), promos: validarPromos(s.promos), contenido: validarContenido(s.contenido), control: validarControl(s.control) }; }
 // cada pestana edita una parte del sitio
-const PARTES = { diseno: 'tema', portada: 'portada', promos: 'promos', fotos: 'contenido' };
+const PARTES = { diseno: 'tema', portada: 'portada', promos: 'promos', fotos: 'contenido', control: 'control' };
 function parteActual(){ return PARTES[_vista] || 'tema'; }
-function original(parte){ return parte === 'tema' ? validarTema(TEMA_BASE) : parte === 'portada' ? validarPortada({}) : parte === 'promos' ? validarPromos({}) : validarContenido({}); }
+function original(parte){ return parte === 'tema' ? validarTema(TEMA_BASE) : parte === 'portada' ? validarPortada({}) : parte === 'promos' ? validarPromos({}) : parte === 'control' ? validarControl({}) : validarContenido({}); }
 // todo lo que impide publicar: contraste (Diseno) y promociones mal puestas
 function problemasSitio(s){
   var out = problemasTema(s.tema).map(function(p){ return { vista: 'Diseño', texto: p.donde + ' (contraste ' + p.ratio + ', mínimo 4.5)' }; });
@@ -78,6 +80,9 @@ function problemasSitio(s){
   });
   if(c.seo.titulo && c.seo.titulo.length < 15) out.push({ vista: 'Contenido', texto: 'El título para Google es muy corto (mínimo 15 letras)' });
   if(c.seo.descripcion && c.seo.descripcion.length < 50) out.push({ vista: 'Contenido', texto: 'La descripción para Google es muy corta (mínimo 50 letras)' });
+  var v = s.control.vacaciones;
+  if(v.activo && !v.texto) out.push({ vista: 'Control', texto: 'El aviso de vacaciones está encendido pero no tiene texto' });
+  if(v.desde && v.hasta && v.hasta < v.desde) out.push({ vista: 'Control', texto: 'Aviso de vacaciones: la fecha de fin es antes que la de inicio' });
   return out;
 }
 function iguales(a, b){ return JSON.stringify(validarSitio(a)) === JSON.stringify(validarSitio(b)); }
@@ -98,7 +103,7 @@ async function cargar(){
   try{
     var a = await pedir('/admin/sitio'), b = await pedir('/admin/sitio/temas');
     _publicado = validarSitio(a.publicado); _meta = { version: a.publicado.version || 0, fecha: a.publicado.fecha || 0 };
-    _historial = a.historial || []; _temas = b.temas || []; _error = '';
+    _historial = a.historial || []; _temas = b.temas || []; _programado = a.programado || null; _error = '';
   }catch(e){ _error = e.message; if(!_publicado) _publicado = validarSitio({}); }
   if(!_borrador){
     // borrador de la fase 1 (solo diseno): se conserva
@@ -163,7 +168,8 @@ function restaurarOriginal(){
   if(JSON.stringify(_borrador[parte]) === JSON.stringify(orig)) return;
   var preguntas = { tema: '¿Volver al diseño original de la tienda (glaciar)?', portada: '¿Volver la portada a como venía (orden, textos y relojes originales)?',
     promos: '¿Quitar todas las promociones (anuncios, ofertas, etiquetas, ventana emergente y mensajes)?',
-    contenido: '¿Volver a las fotos, textos para Google, preguntas y páginas legales originales?' };
+    contenido: '¿Volver a las fotos, textos para Google, preguntas y páginas legales originales?',
+    control: '¿Quitar el aviso de vacaciones?' };
   if(!confirm(preguntas[parte] + ' Puedes deshacerlo antes de publicar.')) return;
   var s = copia(); s[parte] = orig; aplicarCambio(s);
 }
@@ -207,7 +213,8 @@ async function publicarTema(){
   if(_publicando) return;
   if(problemasSitio(_borrador).length){ alert('Corrige primero lo marcado en rojo arriba: hay cosas que no se pueden publicar así.'); return; }
   if(iguales(_borrador, _publicado)) return;
-  if(!confirm('¿Publicar estos cambios en la tienda?\n\nLos clientes los verán en segundos. Si no te gustan, puedes volver a la versión anterior desde el historial.')) return;
+  if(!confirm('¿Publicar estos cambios en la tienda?\n\nLos clientes los verán en segundos. Si no te gustan, puedes volver a la versión anterior desde el historial.' +
+    (_programado ? '\n\nOjo: hay una publicación programada para el ' + fechaCorta(_programado.cuando) + '. Cuando llegue esa hora reemplazará lo que publiques ahora (puedes cancelarla en Tienda > Control).' : ''))) return;
   _publicando = true; pintarBarra();
   try{
     var r = await pedir('/admin/sitio', { sitio: _borrador, nota: _nota.trim() });
@@ -288,7 +295,7 @@ function pintar(){
   var c = el('ed-ctrl'); if(!c || !_borrador) return;
   pintarDispositivo();
   var h = _error ? '<div class="fin-aviso"><span>No se pudo leer la configuración publicada (' + esc(_error) + '). Revisa tu internet; tus cambios quedan guardados en este dispositivo.</span></div>' : '';
-  h += _vista === 'portada' ? htmlPortada() : _vista === 'promos' ? htmlPromos() : _vista === 'fotos' ? htmlContenido() : htmlDiseno();
+  h += _vista === 'portada' ? htmlPortada() : _vista === 'promos' ? htmlPromos() : _vista === 'fotos' ? htmlContenido() : _vista === 'control' ? htmlControl() : htmlDiseno();
   h += htmlHistorial();
   c.innerHTML = h;
   var probs = problemasSitio(_borrador);
@@ -386,7 +393,7 @@ function pintarBarra(){
     '<div class="ed-barra-acc">' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="deshacerTema()"' + (_pila.length ? '' : ' disabled') + '>Deshacer</button>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="descartarTema()"' + (cambios ? '' : ' disabled') + '>Descartar</button>' +
-      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + ({ tema: 'Diseño original', portada: 'Portada original', promos: 'Quitar promociones', contenido: 'Contenido original' })[parte] + '</button>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + ({ tema: 'Diseño original', portada: 'Portada original', promos: 'Quitar promociones', contenido: 'Contenido original', control: 'Quitar aviso' })[parte] + '</button>' +
       '<button type="button" class="btn btn-gold btn-sm" onclick="publicarTema()"' + (cambios && !probs && !_publicando ? '' : ' disabled') + '>' + (_publicando ? 'Publicando…' : 'Publicar') + '</button>' +
     '</div>';
 }
@@ -623,6 +630,81 @@ function htmlContenido(){
 }
 function el_cuenta(id, input, max){ var e = el(id); if(e) e.textContent = input.value.length + '/' + max; }
 
+// ---------- Control (fase 5) ----------
+function cambiarVacaciones(campo, v, vivo){ var x = copia(); x.control.vacaciones[campo] = v; aplicarCambio(x, vivo); }
+function aFechaLocal(ms){ var d = new Date(ms - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
+async function programar(){
+  var input = el('ed-cuando'), cuando = input && input.value ? new Date(input.value).getTime() : NaN;
+  if(!(cuando > Date.now() + 5 * 60000)){ alert('Elige una fecha y hora al menos 5 minutos en el futuro.'); return; }
+  if(cuando > Date.now() + 89 * 86400000){ alert('Solo se puede programar hasta 3 meses adelante.'); return; }
+  if(problemasSitio(_borrador).length){ alert('Corrige primero lo marcado en rojo arriba.'); return; }
+  if(iguales(_borrador, _publicado)){ alert('No hay cambios para programar: lo que tienes es igual a lo que se ve hoy.'); return; }
+  if(!confirm('¿Publicar estos cambios automáticamente el ' + fechaCorta(cuando) + '?' + (_programado ? '\n\nReemplaza la publicación programada para el ' + fechaCorta(_programado.cuando) + '.' : ''))) return;
+  try{
+    var r = await pedir('/admin/sitio/programar', { sitio: _borrador, cuando: cuando, nota: _nota.trim() || 'Programada' });
+    _programado = r.programado; pintar();
+    if(window.toastPanel) window.toastPanel('Listo: se publicará solo el ' + fechaCorta(cuando) + '.');
+  }catch(e){ alert('No se pudo programar: ' + e.message); }
+}
+async function cancelarProgramado(){
+  if(!_programado || !confirm('¿Cancelar la publicación programada para el ' + fechaCorta(_programado.cuando) + '?')) return;
+  try{ await pedir('/admin/sitio/programar', { cancelar: true }); _programado = null; pintar(); }catch(e){ alert('No se pudo cancelar: ' + e.message); }
+}
+function verProgramado(){ if(_programado && confirm('¿Cargar en el editor los cambios programados? Reemplaza lo que tienes sin publicar (puedes deshacerlo).')) aplicarCambio(validarSitio(_programado.sitio)); }
+async function crearEnlacePrevia(){
+  if(problemasSitio(_borrador).length){ alert('Corrige primero lo marcado en rojo arriba.'); return; }
+  try{
+    var r = await pedir('/admin/sitio/previa', { sitio: _borrador });
+    _enlacePrevia = { url: 'https://aphillipsstore.com/?vista=' + r.codigo, vence: r.vence }; pintar();
+  }catch(e){ alert('No se pudo crear el enlace: ' + e.message); }
+}
+function copiarEnlacePrevia(){
+  if(!_enlacePrevia) return;
+  var ok = function(){ if(window.toastPanel) window.toastPanel('Enlace copiado.'); };
+  if(navigator.clipboard) navigator.clipboard.writeText(_enlacePrevia.url).then(ok, function(){ var i = el('ed-enlace'); if(i){ i.select(); } });
+  else { var i = el('ed-enlace'); if(i) i.select(); }
+}
+async function cargarClics(){
+  try{ _clics = (await pedir('/admin/sitio/clics')).secciones || {}; }catch(e){ _clics = { _error: e.message }; }
+  if(_vista === 'control') pintar();
+}
+function htmlControl(){
+  var v = _borrador.control.vacaciones, h = '';
+  // vacaciones
+  h += '<div class="card"><div class="card-title">Aviso de vacaciones</div><p class="ed-ayuda">Una franja arriba en todas las páginas y una nota junto al botón de WhatsApp de cada reloj. Con fechas, se prende y se apaga sola.</p>' +
+    '<label class="ed-switch" style="margin-bottom:6px;"><input type="checkbox"' + (v.activo ? ' checked' : '') + ' onchange="cambiarVacaciones(\'activo\',this.checked)"><span></span>' + (v.activo ? 'Encendido' : 'Apagado') + '</label>' +
+    '<label class="ed-campo"><span>Texto ' + contador('ed-c-vac', v.texto, MAX_VACACIONES) + '</span><textarea rows="2" maxlength="' + MAX_VACACIONES + '" placeholder="Ej: Estamos de vacaciones hasta el 5 de enero. Puedes escribirnos y te respondemos al volver." oninput="cambiarVacaciones(\'texto\',this.value,1);el_cuenta(\'ed-c-vac\',this,' + MAX_VACACIONES + ')" onchange="cambiarVacaciones(\'texto\',this.value)">' + esc(v.texto) + '</textarea></label>' +
+    '<div class="ed-fechas"><label>Desde <input type="date" value="' + v.desde + '" onchange="cambiarVacaciones(\'desde\',this.value)"></label><label>Hasta <input type="date" value="' + v.hasta + '" onchange="cambiarVacaciones(\'hasta\',this.value)"></label></div>' +
+    '<p class="ed-ayuda" style="margin:8px 0 0;">Se publica con el botón Publicar, como lo demás.</p></div>';
+  // programar
+  var cambios = !iguales(_borrador, _publicado), probs = problemasSitio(_borrador).length;
+  h += '<div class="card"><div class="card-title">Publicar en una fecha</div><p class="ed-ayuda">Deja listos tus cambios (de todas las pestañas) y elige cuándo salen. Por ejemplo, el tema de Navidad el 1 de diciembre a las 6:00 a. m.</p>' +
+    (_programado ? '<div class="ed-prog"><span><b>Programada:</b> ' + esc(fechaCorta(_programado.cuando)) + (_programado.nota ? ' · ' + esc(_programado.nota) : '') + '</span>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="verProgramadoTienda()">Ver en el editor</button><button type="button" class="btn btn-outline btn-sm" onclick="cancelarProgramadoTienda()">Cancelar</button></div>' : '') +
+    '<div class="ed-guardar"><input type="datetime-local" id="ed-cuando" min="' + aFechaLocal(Date.now() + 6 * 60000) + '" max="' + aFechaLocal(Date.now() + 89 * 86400000) + '">' +
+    '<button type="button" class="btn btn-outline btn-sm" onclick="programarTienda()"' + (cambios && !probs ? '' : ' disabled') + '>' + (_programado ? 'Reprogramar con estos cambios' : 'Programar estos cambios') + '</button></div>' +
+    (!cambios ? '<p class="ed-ayuda" style="margin:6px 0 0;">Haz algún cambio en las otras pestañas para poder programarlo.</p>' : '') + '</div>';
+  // enlace de vista previa
+  h += '<div class="card"><div class="card-title">Enlace de vista previa</div><p class="ed-ayuda">Un enlace para que otra persona vea tus cambios en su celular antes de publicarlos. Dura 7 días y los clientes no lo ven.</p>' +
+    (_enlacePrevia ? '<div class="ed-guardar"><input id="ed-enlace" readonly value="' + esc(_enlacePrevia.url) + '" onclick="this.select()"><button type="button" class="btn btn-outline btn-sm" onclick="copiarEnlacePrevia()">Copiar</button></div>' +
+      '<p class="ed-ayuda" style="margin:6px 0 10px;">Vence el ' + esc(fechaCorta(_enlacePrevia.vence)) + '. Si sigues cambiando cosas, crea otro.</p>' : '') +
+    '<button type="button" class="btn btn-outline btn-sm" onclick="crearEnlacePrevia()"' + (probs ? ' disabled' : '') + '>' + (_enlacePrevia ? 'Crear otro enlace' : 'Crear enlace') + '</button></div>';
+  // clics por seccion
+  if(_clics === null){ _clics = {}; cargarClics(); }
+  var filas = Object.keys(SECCIONES_CLICS).map(function(k){ var x = _clics[k] || { vistas: 0, clics: 0 }; return { k: k, n: SECCIONES_CLICS[k], v: x.vistas || 0, c: x.clics || 0 }; });
+  var maxV = Math.max(1, Math.max.apply(null, filas.map(function(f){ return f.v; })));
+  h += '<div class="card"><div class="card-title">Qué miran y qué tocan</div><p class="ed-ayuda">Cuántas visitas vieron cada sección de la portada y cuántas tocaron algo dentro. Sirve para saber qué ordenar arriba (en Portada).</p>' +
+    (_clics._error ? '<p class="ed-ayuda">No se pudo leer (' + esc(_clics._error) + ').</p>' :
+      '<div class="ed-clics">' + filas.map(function(f){
+        var pct = f.v ? Math.round(f.c / f.v * 100) : 0;
+        return '<div class="ed-clic"><b>' + esc(f.n) + '</b><span class="ed-clic-barra"><i style="width:' + Math.round(f.v / maxV * 100) + '%"></i></span><span>' + f.v.toLocaleString('es-PA') + ' vistas</span><span>' + f.c.toLocaleString('es-PA') + ' toques</span><em>' + (f.v ? pct + ' %' : '—') + '</em></div>';
+      }).join('') + '</div>') +
+    '<button type="button" class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="actualizarClics()">Actualizar</button>' +
+    '<p class="ed-ayuda" style="margin:6px 0 0;">Empieza a contar desde que se publica esta función. Tus visitas desde el panel no cuentan.</p></div>';
+  return h;
+}
+function actualizarClics(){ _clics = {}; cargarClics(); }
+
 export { renderTienda };
 // usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { agregarDestacadoTienda: agregarDestacado, borrarTemaGuardado: borrarTema, cambiarEnlaceTienda: cambiarEnlace, cambiarHex, cambiarTema, cambiarTextoTienda: cambiarTexto,
@@ -632,4 +714,5 @@ Object.assign(window, { agregarDestacadoTienda: agregarDestacado, borrarTemaGuar
   agregarAnuncio, agregarEtiqueta, agregarOferta, cambiarAnuncio, cambiarEtiqueta, cambiarOferta, cambiarPopup, cambiarWa, insertarWa, moverAnuncio,
   quitarAnuncio, quitarEtiqueta, quitarOferta, verPopupTienda: verPopup,
   agregarPreguntaTienda: agregarPregunta, cambiarFaqTienda: cambiarFaq, cambiarLegalTienda: cambiarLegal, cambiarPreguntaTienda: cambiarPregunta, cambiarSeo,
-  el_cuenta, faqAbiertaTienda: faqAbierta, quitarFotoSitio, quitarPreguntaTienda: quitarPregunta, subirFotoSitio, verPaginaTienda: verPagina });
+  el_cuenta, faqAbiertaTienda: faqAbierta, quitarFotoSitio, quitarPreguntaTienda: quitarPregunta, subirFotoSitio, verPaginaTienda: verPagina,
+  actualizarClics, cambiarVacaciones, cancelarProgramadoTienda: cancelarProgramado, copiarEnlacePrevia, crearEnlacePrevia, programarTienda: programar, verProgramadoTienda: verProgramado });
