@@ -912,6 +912,42 @@ function validarSitioPromos(p) {
   for (const k of ['comprar', 'cotizar']) { const t = promoTxt(w[k], 300); if (t) out.wa[k] = t; }
   return out;
 }
+// Contenido (fase 4): misma validacion que js/sitio/contenido.js (si cambias una, cambia la otra)
+const RE_FOTO_SITIO = /^https:\/\/fotos\.aphillipsstore\.com\/relojes\/sitio\/[A-Za-z0-9._-]+$/;
+const FOTOS_SITIO = ['hero', 'heroMovil', 'genHombre', 'genMujer', 'futPortada', 'futMini', 'futFicha', 'futCard1', 'futCard2', 'marcaInvicta', 'marcaBulova', 'marcaTechno'];
+const TEMAS_FAQ = ['comprar', 'pagos', 'apartados', 'pedidos', 'envios', 'garantia', 'devoluciones', 'relojes', 'cuenta', 'boletin'];
+const SECCIONES_LEGAL = ['terminos', 'apartados', 'envios', 'garantia', 'devoluciones', 'privacidad', 'cookies'];
+function sitioParrafos(v, max) {
+  return String(v == null ? '' : v).replace(/\r/g, '').replace(/[\u0000-\u0009\u000b-\u001f<>]/g, ' ').split('\n')
+    .map((l) => l.replace(/\s+/g, ' ').trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, max);
+}
+function validarSitioContenido(c) {
+  c = c && typeof c === 'object' ? c : {};
+  const out = { fotos: {}, seo: {}, faq: { cambios: {}, nuevas: [] }, legal: {} };
+  const f = c.fotos && typeof c.fotos === 'object' ? c.fotos : {};
+  for (const k of FOTOS_SITIO) if (typeof f[k] === 'string' && RE_FOTO_SITIO.test(f[k])) out.fotos[k] = f[k];
+  const s = c.seo && typeof c.seo === 'object' ? c.seo : {};
+  const t = promoTxt(s.titulo, 65), d = promoTxt(s.descripcion, 160);
+  if (t) out.seo.titulo = t;
+  if (d) out.seo.descripcion = d;
+  if (typeof s.imagen === 'string' && RE_FOTO_SITIO.test(s.imagen)) out.seo.imagen = s.imagen;
+  const q = c.faq && typeof c.faq === 'object' ? c.faq : {}, cam = q.cambios && typeof q.cambios === 'object' ? q.cambios : {};
+  for (const k of Object.keys(cam).slice(0, 80)) {
+    if (!/^[a-z0-9-]{1,60}$/.test(k) || !cam[k] || typeof cam[k] !== 'object') continue;
+    const x = {}, r = sitioParrafos(cam[k].r, 600);
+    if (cam[k].oculta === true) x.oculta = true;
+    if (r) x.r = r;
+    if (x.oculta || x.r) out.faq.cambios[k] = x;
+  }
+  for (const n of Array.isArray(q.nuevas) ? q.nuevas : []) {
+    if (!n || out.faq.nuevas.length >= 30) continue;
+    const p = promoTxt(n.p, 120), r = sitioParrafos(n.r, 600);
+    if (p && r) out.faq.nuevas.push({ tema: TEMAS_FAQ.includes(n.tema) ? n.tema : 'comprar', p, r });
+  }
+  const l = c.legal && typeof c.legal === 'object' ? c.legal : {};
+  for (const k of SECCIONES_LEGAL) { const n = sitioParrafos(l[k], 800); if (n) out.legal[k] = n; }
+  return out;
+}
 async function leerAjuste(env, nombre, porDefecto) {
   const f = await env.DB.prepare('SELECT valor FROM ajustes WHERE nombre = ?1').bind(nombre).first();
   if (!f) return porDefecto;
@@ -922,12 +958,12 @@ function guardarAjuste(env, nombre, valor) {
 }
 async function sitioPublico(env, cors) {
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
-  return json({ version: p.version || 0, tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
+  return json({ version: p.version || 0, tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos), contenido: validarSitioContenido(p.contenido) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
 }
 async function adminSitio(env, cors) {
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
   const h = await leerAjuste(env, 'sitio_historial', []);
-  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
+  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos), contenido: validarSitioContenido(p.contenido) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
 }
 async function publicarSitio(request, env, cors) {
   const b = await leerJson(request);
@@ -937,12 +973,13 @@ async function publicarSitio(request, env, cors) {
   const tema = validarSitioTema(sitio.tema);
   const portada = validarSitioPortada(sitio.portada);
   const promos = validarSitioPromos(sitio.promos);
+  const contenido = validarSitioContenido(sitio.contenido);
   if (sitioProblemas(tema)) return json({ error: 'Hay textos que no se leerian bien sobre su fondo. Corrige los colores marcados.' }, 400, cors);
   const antes = await leerAjuste(env, 'sitio_publicado', null);
   let hist = await leerAjuste(env, 'sitio_historial', []); if (!Array.isArray(hist)) hist = [];
   if (antes && antes.tema) hist.unshift(antes);
   hist = hist.slice(0, 30);
-  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema, portada, promos };
+  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema, portada, promos, contenido };
   await env.DB.batch([guardarAjuste(env, 'sitio_publicado', nuevo), guardarAjuste(env, 'sitio_historial', hist)]);
   return json({ ok: true, publicado: nuevo }, 200, cors);
 }
@@ -1471,7 +1508,7 @@ async function limpiarFotos(env) {
   }
   const limite = Date.now() - DIAS_FOTO_HUERFANA * DIA_MS;
   const objetos = await listarTodo(env.FOTOS, 'relojes/');
-  const borrar = objetos.filter((o) => !usadas.has(o.key) && o.uploaded.getTime() < limite).map((o) => o.key).slice(0, MAX_BORRAR_FOTOS);
+  const borrar = objetos.filter((o) => !o.key.startsWith('relojes/sitio/') && !usadas.has(o.key) && o.uploaded.getTime() < limite).map((o) => o.key).slice(0, MAX_BORRAR_FOTOS);
   if (borrar.length) await env.FOTOS.delete(borrar);
   // miniaturas cuya foto original ya no existe
   const existentes = new Set(objetos.map((o) => o.key).filter((k) => !borrar.includes(k)));

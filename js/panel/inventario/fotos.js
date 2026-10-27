@@ -297,6 +297,7 @@ async function migrarFotosAntiguas(){
 // Compatibilidad con el nombre anterior (onchange del HTML viejo)
 function subirFotoLocal(input){ return subirFotos(input); }
 
+export { _comprimirImg as comprimirImg, _leerImagen as leerImagen, _subir as subirArchivo };
 export { arreglarFotos, fotoCompartirFormulario, fotosFormulario, fotosSubiendo, jpgsFormulario, migrarFotosAntiguas, moverFoto, previewFoto, quitarFoto, renderFotos, renderFotosAntiguas, setFotosFormulario, subirFotoLocal, subirFotos };
 // Usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { arreglarFotos, migrarFotosAntiguas, moverFoto, quitarFoto, subirFotoLocal, subirFotos });
