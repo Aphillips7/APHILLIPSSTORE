@@ -39,3 +39,6 @@
   @keyframes fqAbre{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
   @media (prefers-reduced-motion:reduce){ .fq[open] > div{animation:none;} .fq summary::after{transition:none;} }
   .lg-sec .fq ul{margin:8px 0;}
+  /* nota agregada desde el panel (Tienda > Contenido) */
+  .lg-nota{margin-top:14px;padding:12px 14px;border-left:3px solid var(--glaciar,#a7c4d6);background:#f6f9fb;}
+  .lg-nota p + p{margin-top:8px;}

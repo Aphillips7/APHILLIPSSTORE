@@ -60,7 +60,10 @@ export default {
         const r = /^[A-Za-z0-9_-]{1,120}$/.test(id) ? await relojDelCatalogo(id, env) : null;
         if (r) return Response.redirect('https://' + DOMINIO + rutaReloj(r), 301);
       }
-      return conCabeceras(await servir(env, request, '/catalogo.html'));
+      const pagina = await servir(env, request, '/catalogo.html');
+      // la vista previa del panel pone su propio borrador: se le sirve la portada tal cual
+      if (url.searchParams.has('vista-previa') || !pagina.ok) return conCabeceras(pagina);
+      return conCabeceras(portadaPublicada(pagina, await sitioPublicado(env)));
     }
     // pagina propia de cada reloj: /reloj-nombre-clave (el catalogo con el titulo, foto y datos de ese reloj)
     const mReloj = url.pathname.match(/^\/reloj-[a-z0-9-]*-([a-z0-9]{1,40})\/?$/);
@@ -156,12 +159,52 @@ function xmlEsc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, (c) =
 // La tienda muestra el precio de oferta: Google (ficha y Merchant Center) recibe el mismo precio para que
 // coincidan. Una oferta vale solo si es menor al precio normal, el reloj no esta vendido y no vencio.
 function diaPanama() { return new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10); }
-async function promosSitio(env) {
+// configuracion publicada desde el editor de la tienda del panel (api /sitio); null si no responde
+async function sitioPublicado(env) {
   try {
     const pedido = new Request('https://api.aphillipsstore.com/sitio');
     const r = env.API ? await env.API.fetch(pedido) : await fetch(pedido);
-    return r.ok ? ((await r.json()).promos || null) : null;
+    return r.ok ? await r.json() : null;
   } catch (e) { return null; }
+}
+async function promosSitio(env) { const d = await sitioPublicado(env); return d ? d.promos || null : null; }
+
+// ---------- portada con lo publicado en Tienda > Contenido ----------
+// Fotos del banner y de las secciones, titulo, descripcion e imagen para compartir: se ponen en el HTML
+// (Google y WhatsApp no ejecutan el JS de la tienda). js/sitio/contenido.js hace lo mismo en el navegador.
+const RE_FOTO_SITIO = /^https:\/\/fotos\.aphillipsstore\.com\/relojes\/sitio\/[A-Za-z0-9._-]+$/;
+const FOTOS_PORTADA = {
+  hero: '#hero img', heroMovil: '#hero source', genHombre: '.gen-hombre img', genMujer: '.gen-mujer img',
+  futPortada: '.fut-hero img', futMini: '.fut-mini-foto img', futFicha: '.fut-ficha img', futCard1: '.fut-card-a img', futCard2: '.fut-card-b img',
+  marcaInvicta: '.marcas-grid a[href="/invicta"] .marca-foto img', marcaBulova: '.marcas-grid a[href="/bulova"] .marca-foto img',
+  marcaTechno: '.marcas-grid a[href="/technomarine"] .marca-foto img'
+};
+function portadaPublicada(pagina, sitio) {
+  const c = sitio && sitio.contenido;
+  if (!c) return pagina;
+  const fotos = {};
+  for (const k of Object.keys(FOTOS_PORTADA)) if (c.fotos && RE_FOTO_SITIO.test(c.fotos[k] || '')) fotos[k] = c.fotos[k];
+  if (fotos.hero && !fotos.heroMovil) fotos.heroMovil = fotos.hero;
+  const seo = c.seo || {}, meta = {};
+  if (seo.titulo) { meta['og:title'] = seo.titulo; meta['twitter:title'] = seo.titulo; }
+  if (seo.descripcion) { meta.description = seo.descripcion; meta['og:description'] = seo.descripcion; meta['twitter:description'] = seo.descripcion; }
+  if (RE_FOTO_SITIO.test(seo.imagen || '')) { meta['og:image'] = seo.imagen; meta['twitter:image'] = seo.imagen; }
+  if (!Object.keys(fotos).length && !Object.keys(meta).length) return pagina;
+  let rw = new HTMLRewriter();
+  if (seo.titulo) rw = rw.on('title', { element(e) { e.setInnerContent(seo.titulo); } });
+  if (Object.keys(meta).length) rw = rw.on('meta', { element(e) {
+    const clave = e.getAttribute('property') || e.getAttribute('name');
+    if (clave && meta[clave] !== undefined) e.setAttribute('content', meta[clave]);
+  } });
+  for (const k of Object.keys(fotos)) {
+    rw = rw.on(FOTOS_PORTADA[k], { element(e) {
+      const attr = k === 'heroMovil' ? 'srcset' : 'src';
+      // la tienda guarda la foto original para la vista previa del panel
+      e.setAttribute('data-orig', e.getAttribute(attr) || '');
+      e.setAttribute(attr, fotos[k]);
+    } });
+  }
+  return rw.transform(pagina);
 }
 function ofertaActiva(promos, r) {
   if (!promos || !Array.isArray(promos.ofertas) || !(Number(r.precio) > 0) || r.estado === 'vendido') return null;

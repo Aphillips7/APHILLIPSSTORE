@@ -2,7 +2,9 @@
 // Fase 1 Diseno: colores, botones, esquinas de las fotos y tamano de los titulos.
 // Fase 2 Portada: orden y visibilidad de las secciones, textos, relojes de "Mas vendidos" y a que reloj lleva
 //   cada boton de "El futuro en tu muneca".
-// Todo es un solo "sitio" { tema, portada } con vista previa en vivo (la tienda real dentro de un marco, en
+// Fase 3 Promociones: anuncios, ofertas, etiquetas, ventana emergente y mensajes de WhatsApp.
+// Fase 4 Fotos y textos: fotos de la portada, Google y compartir, preguntas frecuentes y notas legales.
+// Todo es un solo "sitio" { tema, portada, promos, contenido } con vista previa en vivo (la tienda real dentro de un marco, en
 // celular o computadora), un solo boton Publicar, historial y deshacer.
 // POKA-YOKE:
 // - Nada cambia en la tienda hasta tocar "Publicar" (y se confirma). El borrador se guarda en este dispositivo.
@@ -13,6 +15,9 @@ import { firebase } from '../../firebase.js';
 import { COLORES, TEMA_BASE, TEMAS_LISTOS, problemasTema, validarTema } from '../../sitio/tema.js';
 import { ENLACES, MAX_DESTACADOS, SECCIONES, TEXTOS, validarPortada } from '../../sitio/portada.js';
 import { ETIQUETAS_LISTAS, MAX, WA_BASE, dinero, hoy, validarPromos } from '../../sitio/promos.js';
+import { FOTOS, MAX as MAXC, SECCIONES_LEGAL, SEO_BASE, TEMAS_FAQ, claveFaq, validarContenido } from '../../sitio/contenido.js';
+import { comprimirImg, leerImagen, subirArchivo } from '../inventario/fotos.js';
+import { prepararFoto } from '../inventario/fondo.js';
 import { esPublicable } from '../../products.js';
 import { esc } from '../componentes.js';
 import { state } from '../state.js';
@@ -20,7 +25,11 @@ import { state } from '../state.js';
 const API = 'https://api.aphillipsstore.com';
 const CLAVE_BORRADOR = 'aph_editor_sitio';
 // la tienda vive en / (en el servidor local de pruebas, en /catalogo.html)
-const TIENDA = /^(localhost|127\.)/.test(location.hostname) ? '/catalogo.html' : '/';
+const LOCAL = /^(localhost|127\.)/.test(location.hostname);
+const TIENDA = LOCAL ? '/catalogo.html' : '/';
+// paginas que se pueden ver en la vista previa (Contenido edita tambien Preguntas y Legal)
+const PAGINAS = { inicio: TIENDA, preguntas: LOCAL ? '/preguntas.html' : '/preguntas', legal: LOCAL ? '/legal.html' : '/legal' };
+const TEXTO_NUEVA = { p: 'Nueva pregunta', r: 'Escribe aquí la respuesta.' };
 const CAMPOS = {
   acento: ['Color de acento (glaciar)', 'Etiquetas, flechas, detalles y botones claros. El texto encima va en negro.'],
   barraFondo: ['Barra de arriba: fondo', 'La franja "Envíos a todo Panamá".'],
@@ -35,13 +44,14 @@ const FORMAS_TXT = [['original', 'Como están'], ['recta', 'Rectos'], ['suave', 
 var _publicado = null, _meta = { version: 0, fecha: 0 }, _historial = [], _temas = [], _borrador = null, _pila = [];
 var _error = '', _cargado = false, _dispositivo = 'celular', _publicando = false, _nota = '', _vista = 'diseno';
 var _originales = null;   // textos de la tienda tal como estan (para mostrarlos de ejemplo)
+var _fotosOrig = {}, _pagina = 'inicio', _faqOrig = null, _faqAbiertas = {}, _subiendoFoto = {};
 
 function el(id){ return document.getElementById(id); }
-function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada), promos: validarPromos(s.promos) }; }
+function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada), promos: validarPromos(s.promos), contenido: validarContenido(s.contenido) }; }
 // cada pestana edita una parte del sitio
-const PARTES = { diseno: 'tema', portada: 'portada', promos: 'promos' };
+const PARTES = { diseno: 'tema', portada: 'portada', promos: 'promos', fotos: 'contenido' };
 function parteActual(){ return PARTES[_vista] || 'tema'; }
-function original(parte){ return parte === 'tema' ? validarTema(TEMA_BASE) : parte === 'portada' ? validarPortada({}) : validarPromos({}); }
+function original(parte){ return parte === 'tema' ? validarTema(TEMA_BASE) : parte === 'portada' ? validarPortada({}) : parte === 'promos' ? validarPromos({}) : validarContenido({}); }
 // todo lo que impide publicar: contraste (Diseno) y promociones mal puestas
 function problemasSitio(s){
   var out = problemasTema(s.tema).map(function(p){ return { vista: 'Diseño', texto: p.donde + ' (contraste ' + p.ratio + ', mínimo 4.5)' }; });
@@ -60,6 +70,14 @@ function problemasSitio(s){
     if(q.destino === 'reloj' && !q.reloj) out.push({ vista: 'Promociones', texto: 'La ventana emergente lleva a un reloj, pero no elegiste cuál' });
     if(q.desde && q.hasta && q.hasta < q.desde) out.push({ vista: 'Promociones', texto: 'Ventana emergente: la fecha de fin es antes que la de inicio' });
   }
+  // contenido: preguntas nuevas sin terminar y textos para Google
+  var c = s.contenido;
+  c.faq.nuevas.forEach(function(n){
+    if(n.p === TEXTO_NUEVA.p || n.r === TEXTO_NUEVA.r) out.push({ vista: 'Contenido', texto: 'Hay una pregunta nueva sin terminar (escribe la pregunta y su respuesta)' });
+    else if(n.p.length < 8) out.push({ vista: 'Contenido', texto: 'La pregunta "' + n.p + '" es muy corta' });
+  });
+  if(c.seo.titulo && c.seo.titulo.length < 15) out.push({ vista: 'Contenido', texto: 'El título para Google es muy corto (mínimo 15 letras)' });
+  if(c.seo.descripcion && c.seo.descripcion.length < 50) out.push({ vista: 'Contenido', texto: 'La descripción para Google es muy corta (mínimo 50 letras)' });
   return out;
 }
 function iguales(a, b){ return JSON.stringify(validarSitio(a)) === JSON.stringify(validarSitio(b)); }
@@ -101,7 +119,13 @@ function cargarOriginales(){
       var t = e.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**').replace(/<[^>]+>/g, '');
       var x = document.createElement('textarea'); x.innerHTML = t; o[k] = x.value.replace(/[ \t]+/g, ' ').trim();
     });
-    _originales = o; if(_vista === 'portada') pintar();
+    // fotos de siempre (en la tienda publicada, la original queda en data-orig)
+    Object.keys(FOTOS).forEach(function(k){
+      var e = d.querySelector(FOTOS[k][0]); if(!e) return;
+      var src = e.getAttribute('data-orig') || e.getAttribute(e.tagName === 'SOURCE' ? 'srcset' : 'src') || '';
+      if(src) _fotosOrig[k] = /^https:/.test(src) ? src : '/' + src.replace(/^\.?\//, '');
+    });
+    _originales = o; if(_vista === 'portada' || _vista === 'fotos') pintar();
   }).catch(function(){ _originales = {}; });
 }
 
@@ -138,7 +162,8 @@ function restaurarOriginal(){
   var parte = parteActual(), orig = original(parte);
   if(JSON.stringify(_borrador[parte]) === JSON.stringify(orig)) return;
   var preguntas = { tema: '¿Volver al diseño original de la tienda (glaciar)?', portada: '¿Volver la portada a como venía (orden, textos y relojes originales)?',
-    promos: '¿Quitar todas las promociones (anuncios, ofertas, etiquetas, ventana emergente y mensajes)?' };
+    promos: '¿Quitar todas las promociones (anuncios, ofertas, etiquetas, ventana emergente y mensajes)?',
+    contenido: '¿Volver a las fotos, textos para Google, preguntas y páginas legales originales?' };
   if(!confirm(preguntas[parte] + ' Puedes deshacerlo antes de publicar.')) return;
   var s = copia(); s[parte] = orig; aplicarCambio(s);
 }
@@ -186,7 +211,7 @@ async function publicarTema(){
   _publicando = true; pintarBarra();
   try{
     var r = await pedir('/admin/sitio', { sitio: _borrador, nota: _nota.trim() });
-    if(_meta.version) _historial.unshift({ version: _meta.version, fecha: _meta.fecha, tema: _publicado.tema, portada: _publicado.portada });
+    if(_meta.version) _historial.unshift(Object.assign({ version: _meta.version, fecha: _meta.fecha }, _publicado));
     _publicado = validarSitio(r.publicado); _meta = { version: r.publicado.version, fecha: r.publicado.fecha };
     _pila = []; _nota = '';
     try{ localStorage.removeItem(CLAVE_BORRADOR); }catch(e){}
@@ -227,12 +252,15 @@ function ajustarVista(){
   caja.style.height = Math.round(alto * k) + 'px';
 }
 window.addEventListener('resize', function(){ if(el('ed-vista')) ajustarVista(); });
-function recargarVista(){ var f = el('ed-vista'); if(f) f.src = TIENDA + '?vista-previa=1&t=' + Date.now(); }
+function recargarVista(){ var f = el('ed-vista'); if(f) f.src = PAGINAS[_pagina] + '?vista-previa=1&t=' + Date.now(); }
+function verPagina(p){ if(!PAGINAS[p] || p === _pagina) return; _pagina = p; recargarVista(); pintar(); }
 
 // ---------- pintar ----------
 function fechaCorta(ms){ if(!ms) return ''; var d = new Date(ms); return d.toLocaleDateString('es-PA', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('es-PA', { hour: '2-digit', minute: '2-digit' }); }
 function renderTienda(vista){
   if(vista) _vista = vista;
+  // fuera de Contenido la vista previa vuelve a la portada
+  if(_vista !== 'fotos' && _pagina !== 'inicio'){ _pagina = 'inicio'; recargarVista(); }
   var raiz = el('tienda-editor'); if(!raiz) return;
   if(!raiz.dataset.armado){
     raiz.dataset.armado = '1';
@@ -260,7 +288,7 @@ function pintar(){
   var c = el('ed-ctrl'); if(!c || !_borrador) return;
   pintarDispositivo();
   var h = _error ? '<div class="fin-aviso"><span>No se pudo leer la configuración publicada (' + esc(_error) + '). Revisa tu internet; tus cambios quedan guardados en este dispositivo.</span></div>' : '';
-  h += _vista === 'portada' ? htmlPortada() : _vista === 'promos' ? htmlPromos() : htmlDiseno();
+  h += _vista === 'portada' ? htmlPortada() : _vista === 'promos' ? htmlPromos() : _vista === 'fotos' ? htmlContenido() : htmlDiseno();
   h += htmlHistorial();
   c.innerHTML = h;
   var probs = problemasSitio(_borrador);
@@ -358,7 +386,7 @@ function pintarBarra(){
     '<div class="ed-barra-acc">' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="deshacerTema()"' + (_pila.length ? '' : ' disabled') + '>Deshacer</button>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="descartarTema()"' + (cambios ? '' : ' disabled') + '>Descartar</button>' +
-      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + ({ tema: 'Diseño original', portada: 'Portada original', promos: 'Quitar promociones' })[parte] + '</button>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + ({ tema: 'Diseño original', portada: 'Portada original', promos: 'Quitar promociones', contenido: 'Contenido original' })[parte] + '</button>' +
       '<button type="button" class="btn btn-gold btn-sm" onclick="publicarTema()"' + (cambios && !probs && !_publicando ? '' : ' disabled') + '>' + (_publicando ? 'Publicando…' : 'Publicar') + '</button>' +
     '</div>';
 }
@@ -464,6 +492,137 @@ function htmlPromos(){
   return h;
 }
 
+// ---------- Contenido (fase 4) ----------
+function contenido(f){ var s = copia(); f(s.contenido); return s; }
+// sube una foto a fotos.aphillipsstore.com/relojes/sitio/ (la limpieza nocturna no la borra)
+async function subirFotoSitio(k, input){
+  var archivo = input.files && input.files[0]; input.value = '';
+  if(!archivo) return;
+  if(!navigator.onLine){ alert('Necesitas internet para subir fotos.'); return; }
+  _subiendoFoto[k] = true; pintar();
+  try{
+    var img = await leerImagen(archivo), w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    var minimo = k === 'hero' || k === 'futPortada' || k === 'seo' ? 1000 : 600;
+    if(Math.max(w, h) < minimo) throw new Error('La foto es muy pequeña (' + w + '×' + h + ' px); se vería borrosa. Usa una de al menos ' + minimo + ' px de lado.');
+    var sinFondo = k === 'futFicha' && (el('ed-sinfondo') || {}).checked;
+    if(sinFondo) img = prepararFoto(img).canvas;
+    var blob = k === 'seo' ? await jpegCompartir(img) : await comprimirImg(img, sinFondo);
+    var url = await subirArchivo(blob, 'sitio');
+    _subiendoFoto[k] = false;
+    aplicarCambio(contenido(function(c){ if(k === 'seo') c.seo.imagen = url; else c.fotos[k] = url; }));
+  }catch(e){ _subiendoFoto[k] = false; pintar(); alert('No se pudo subir la foto: ' + e.message); }
+}
+// imagen para compartir: JPEG de 1200 px (WhatsApp no siempre muestra WebP)
+function jpegCompartir(img){
+  var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height, k = Math.min(1, 1200 / w);
+  var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(function(ok, mal){ c.toBlob(function(b){ b ? ok(b) : mal(new Error('No se pudo convertir la imagen')); }, 'image/jpeg', 0.85); });
+}
+function quitarFotoSitio(k){ aplicarCambio(contenido(function(c){ if(k === 'seo') delete c.seo.imagen; else delete c.fotos[k]; })); }
+function cambiarSeo(k, v, vivo){ aplicarCambio(contenido(function(c){ if(v) c.seo[k] = v; else delete c.seo[k]; }), vivo); }
+function cambiarFaq(clave, campo, v, vivo){
+  aplicarCambio(contenido(function(c){
+    var x = c.faq.cambios[clave] || {};
+    if(campo === 'oculta'){ if(v) x.oculta = true; else delete x.oculta; } else { if(v) x.r = v; else delete x.r; }
+    if(x.oculta || x.r) c.faq.cambios[clave] = x; else delete c.faq.cambios[clave];
+  }), vivo);
+}
+function agregarPregunta(tema){
+  if(_borrador.contenido.faq.nuevas.length >= MAXC.nuevas){ alert('Puedes agregar hasta ' + MAXC.nuevas + ' preguntas.'); return; }
+  _faqAbiertas['nueva-' + _borrador.contenido.faq.nuevas.length] = true;
+  aplicarCambio(contenido(function(c){ c.faq.nuevas.push({ tema: tema || 'comprar', p: TEXTO_NUEVA.p, r: TEXTO_NUEVA.r }); }));
+}
+function cambiarPregunta(i, campo, v, vivo){
+  // vacio no se acepta (la pregunta se borraria sola): se vuelve al texto de ejemplo
+  aplicarCambio(contenido(function(c){ if(c.faq.nuevas[i]) c.faq.nuevas[i][campo] = v || TEXTO_NUEVA[campo] || v; }), vivo);
+}
+function quitarPregunta(i){ if(!confirm('¿Quitar esta pregunta?')) return; aplicarCambio(contenido(function(c){ c.faq.nuevas.splice(i, 1); })); }
+function faqAbierta(k, abierta){ if(abierta) _faqAbiertas[k] = true; else delete _faqAbiertas[k]; }
+function cambiarLegal(k, v, vivo){ aplicarCambio(contenido(function(c){ if(v) c.legal[k] = v; else delete c.legal[k]; }), vivo); }
+
+// preguntas tal como estan en la pagina (para editarlas, ocultarlas y mostrar la respuesta original)
+function cargarFaq(){
+  if(_faqOrig) return;
+  _faqOrig = [];
+  fetch(PAGINAS.preguntas, { cache: 'no-cache' }).then(function(r){ return r.text(); }).then(function(html){
+    var d = new DOMParser().parseFromString(html, 'text/html');
+    _faqOrig = Object.keys(TEMAS_FAQ).map(function(t){
+      var sec = d.getElementById(t);
+      return { tema: t, items: sec ? Array.prototype.map.call(sec.querySelectorAll('details.fq'), function(x){
+        var p = x.querySelector('summary').textContent.trim(), div = x.querySelector('div');
+        return { p: p, clave: claveFaq(p), r: div.textContent.replace(/[ \t]+/g, ' ').replace(/\n\s*/g, '\n').trim(), enlaces: !!div.querySelector('a') };
+      }) : [] };
+    });
+    if(_vista === 'fotos') pintar();
+  }).catch(function(){});
+}
+function cajaFoto(k, nombre, ayuda, actual, extra){
+  var cargando = _subiendoFoto[k];
+  return '<div class="ed-foto">' +
+    '<div class="ed-foto-img">' + (actual ? '<img src="' + esc(actual) + '" alt="">' : _fotosOrig[k] ? '<img src="' + esc(_fotosOrig[k]) + '" alt=""><em>Original</em>' : '<span>Original</span>') + '</div>' +
+    '<div class="ed-foto-txt"><b>' + esc(nombre) + '</b><span>' + esc(ayuda) + '</span>' + (extra || '') +
+      '<div class="ed-chips">' +
+        '<label class="btn btn-outline btn-sm' + (cargando ? ' disabled' : '') + '">' + (cargando ? 'Subiendo…' : actual ? 'Cambiar' : 'Subir foto') +
+          '<input type="file" accept="image/jpeg,image/png,image/webp" hidden' + (cargando ? ' disabled' : '') + ' onchange="subirFotoSitio(\'' + k + '\',this)"></label>' +
+        (actual ? '<button type="button" class="btn btn-outline btn-sm" onclick="quitarFotoSitio(\'' + k + '\')">Usar la original</button>' : '') +
+      '</div></div></div>';
+}
+function contador(id, v, max){ return '<span class="ed-cuenta" id="' + id + '">' + String(v || '').length + '/' + max + '</span>'; }
+function htmlContenido(){
+  var c = _borrador.contenido, h = '';
+  cargarFaq();
+  h += '<div class="card"><div class="card-title">Ver en la vista previa</div><div class="ed-chips">' +
+    [['inicio', 'Portada'], ['preguntas', 'Preguntas frecuentes'], ['legal', 'Información legal']].map(function(x){
+      return '<button type="button" class="fin-mes-btn' + (_pagina === x[0] ? ' active' : '') + '" onclick="verPaginaTienda(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div></div>';
+  // fotos
+  h += '<div class="card"><div class="card-title">Fotos de la portada</div><p class="ed-ayuda">Sube JPG, PNG o WebP. Se achican solas para que la tienda cargue rápido. "Usar la original" vuelve a la foto de siempre.</p>' +
+    Object.keys(FOTOS).map(function(k){
+      var extra = k === 'futFicha' ? '<label class="ed-check" style="margin:6px 0 0;"><input type="checkbox" id="ed-sinfondo" checked> Quitar el fondo blanco al subir</label>' : '';
+      return cajaFoto(k, FOTOS[k][1], FOTOS[k][2], c.fotos[k], extra);
+    }).join('') + '</div>';
+  // google y compartir
+  var titulo = c.seo.titulo || SEO_BASE.titulo, desc = c.seo.descripcion || SEO_BASE.descripcion;
+  h += '<div class="card"><div class="card-title">Google y al compartir</div><p class="ed-ayuda">Cómo aparece la tienda en Google y cuando alguien manda el enlace por WhatsApp o Facebook. Vacío = el texto de siempre.</p>' +
+    '<label class="ed-campo"><span>Título ' + contador('ed-c-titulo', c.seo.titulo, MAXC.titulo) + '</span><input maxlength="' + MAXC.titulo + '" value="' + esc(c.seo.titulo || '') + '" placeholder="' + esc(SEO_BASE.titulo) + '" oninput="cambiarSeo(\'titulo\',this.value,1);el_cuenta(\'ed-c-titulo\',this,' + MAXC.titulo + ')" onchange="cambiarSeo(\'titulo\',this.value)"></label>' +
+    '<label class="ed-campo"><span>Descripción ' + contador('ed-c-desc', c.seo.descripcion, MAXC.descripcion) + '</span><textarea rows="3" maxlength="' + MAXC.descripcion + '" placeholder="' + esc(SEO_BASE.descripcion) + '" oninput="cambiarSeo(\'descripcion\',this.value,1);el_cuenta(\'ed-c-desc\',this,' + MAXC.descripcion + ')" onchange="cambiarSeo(\'descripcion\',this.value)">' + esc(c.seo.descripcion || '') + '</textarea></label>' +
+    cajaFoto('seo', 'Imagen al compartir', 'Horizontal (1200 × 630 se ve mejor). Sale en WhatsApp, Facebook e Instagram.', c.seo.imagen) +
+    '<div class="ed-google"><span>aphillipsstore.com</span><b>' + esc(titulo) + '</b><p>' + esc(desc) + '</p></div>' +
+    '<p class="ed-ayuda" style="margin:8px 0 0;">Google tarda unos días en mostrar el texto nuevo.</p></div>';
+  // preguntas frecuentes
+  h += '<div class="card"><div class="card-title">Preguntas frecuentes</div><p class="ed-ayuda">Toca una pregunta para cambiar su respuesta u ocultarla. Usa **texto** para negrita. Respuesta vacía = la original.</p>';
+  if(!_faqOrig || !_faqOrig.length) h += '<p class="ed-ayuda">Cargando las preguntas…</p>';
+  else _faqOrig.forEach(function(g){
+    var nuevas = c.faq.nuevas.map(function(n, i){ return { n: n, i: i }; }).filter(function(x){ return x.n.tema === g.tema; });
+    h += '<div class="ed-faq-tema"><b>' + esc(TEMAS_FAQ[g.tema]) + '</b>' +
+      g.items.map(function(q){
+        var cam = c.faq.cambios[q.clave] || {}, k = 'f-' + q.clave;
+        return '<details class="ed-faq' + (cam.oculta ? ' apagada' : '') + (cam.r ? ' editada' : '') + '"' + (_faqAbiertas[k] ? ' open' : '') + ' ontoggle="faqAbiertaTienda(\'' + k + '\',this.open)"><summary>' + esc(q.p) +
+          (cam.oculta ? ' <i>Oculta</i>' : cam.r ? ' <i>Cambiada</i>' : '') + '</summary>' +
+          '<label class="ed-check"><input type="checkbox"' + (cam.oculta ? ' checked' : '') + ' onchange="cambiarFaqTienda(\'' + q.clave + '\',\'oculta\',this.checked)"> Ocultar esta pregunta</label>' +
+          '<textarea rows="4" maxlength="' + MAXC.respuesta + '" placeholder="' + esc(q.r) + '" oninput="cambiarFaqTienda(\'' + q.clave + '\',\'r\',this.value,1)" onchange="cambiarFaqTienda(\'' + q.clave + '\',\'r\',this.value)">' + esc(cam.r || '') + '</textarea>' +
+          (q.enlaces ? '<p class="ed-ayuda" style="margin:4px 0 0;">La respuesta original tiene enlaces; si la cambias, quedan como texto.</p>' : '') + '</details>';
+      }).join('') +
+      nuevas.map(function(x){
+        var k = 'nueva-' + x.i;
+        return '<details class="ed-faq nueva"' + (_faqAbiertas[k] ? ' open' : '') + ' ontoggle="faqAbiertaTienda(\'' + k + '\',this.open)"><summary>' + esc(x.n.p) + ' <i>Nueva</i></summary>' +
+          '<label class="ed-campo"><span>Pregunta</span><input maxlength="' + MAXC.pregunta + '" value="' + esc(x.n.p === TEXTO_NUEVA.p ? '' : x.n.p) + '" placeholder="Ej: ¿Hacen envíos el mismo día?" onchange="cambiarPreguntaTienda(' + x.i + ',\'p\',this.value)"></label>' +
+          '<label class="ed-campo"><span>Respuesta</span><textarea rows="4" maxlength="' + MAXC.respuesta + '" placeholder="Escribe la respuesta" oninput="if(this.value)cambiarPreguntaTienda(' + x.i + ',\'r\',this.value,1)" onchange="cambiarPreguntaTienda(' + x.i + ',\'r\',this.value)">' + esc(x.n.r === TEXTO_NUEVA.r ? '' : x.n.r) + '</textarea></label>' +
+          '<label class="ed-campo"><span>Tema</span><select onchange="cambiarPreguntaTienda(' + x.i + ',\'tema\',this.value)">' + Object.keys(TEMAS_FAQ).map(function(t){ return '<option value="' + t + '"' + (t === x.n.tema ? ' selected' : '') + '>' + esc(TEMAS_FAQ[t]) + '</option>'; }).join('') + '</select></label>' +
+          '<button type="button" class="btn btn-outline btn-sm" onclick="quitarPreguntaTienda(' + x.i + ')">Quitar pregunta</button></details>';
+      }).join('') +
+      '<button type="button" class="ed-mas" onclick="agregarPreguntaTienda(\'' + g.tema + '\')">+ Agregar pregunta en ' + esc(TEMAS_FAQ[g.tema]) + '</button></div>';
+  });
+  h += '</div>';
+  // legal
+  h += '<div class="card"><div class="card-title">Información legal</div><p class="ed-ayuda">Agrega una nota al final de cualquier sección (por ejemplo, un cambio en la garantía). El texto legal de siempre no se toca.</p>' +
+    Object.keys(SECCIONES_LEGAL).map(function(k){
+      return '<label class="ed-campo"><span>' + esc(SECCIONES_LEGAL[k]) + '</span><textarea rows="2" maxlength="' + MAXC.nota + '" placeholder="Sin nota" oninput="cambiarLegalTienda(\'' + k + '\',this.value,1)" onchange="cambiarLegalTienda(\'' + k + '\',this.value)">' + esc(c.legal[k] || '') + '</textarea></label>';
+    }).join('') + '</div>';
+  return h;
+}
+function el_cuenta(id, input, max){ var e = el(id); if(e) e.textContent = input.value.length + '/' + max; }
+
 export { renderTienda };
 // usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { agregarDestacadoTienda: agregarDestacado, borrarTemaGuardado: borrarTema, cambiarEnlaceTienda: cambiarEnlace, cambiarHex, cambiarTema, cambiarTextoTienda: cambiarTexto,
@@ -471,4 +630,6 @@ Object.assign(window, { agregarDestacadoTienda: agregarDestacado, borrarTemaGuar
   notaTema, publicarTema, quitarDestacadoTienda: quitarDestacado, recargarVista, renderTienda, restaurarOriginal, usarTemaGuardado: usarGuardado, usarTemaListo: usarListo,
   usarVersionTema: usarVersion, verEnTienda: verEn, verSeccionTienda: verSeccion,
   agregarAnuncio, agregarEtiqueta, agregarOferta, cambiarAnuncio, cambiarEtiqueta, cambiarOferta, cambiarPopup, cambiarWa, insertarWa, moverAnuncio,
-  quitarAnuncio, quitarEtiqueta, quitarOferta, verPopupTienda: verPopup });
+  quitarAnuncio, quitarEtiqueta, quitarOferta, verPopupTienda: verPopup,
+  agregarPreguntaTienda: agregarPregunta, cambiarFaqTienda: cambiarFaq, cambiarLegalTienda: cambiarLegal, cambiarPreguntaTienda: cambiarPregunta, cambiarSeo,
+  el_cuenta, faqAbiertaTienda: faqAbierta, quitarFotoSitio, quitarPreguntaTienda: quitarPregunta, subirFotoSitio, verPaginaTienda: verPagina });
