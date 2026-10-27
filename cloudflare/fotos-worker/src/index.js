@@ -56,6 +56,10 @@
 //   POST   /admin/cuentas/vincular  { uid, clienteId|null }
 //   POST   /admin/cuentas/codigo    { uid, codigo }  -> la cuenta toma el numero de cliente (mas antiguo) de su ficha del panel
 //   POST   /admin/clientes/codigos  { n }            -> n numeros de cliente nuevos (AP-00042) para clientes creados en el panel
+//   GET    /sitio                    -> diseno publicado de la tienda (publica; la usa js/sitio/aplicar.js)
+//   GET    /admin/sitio              -> diseno publicado + historial (ultimas 30 versiones)
+//   POST   /admin/sitio  { tema, nota } -> publica un diseno (validado y con contraste suficiente)
+//   GET/POST /admin/sitio/temas  { temas: [{ nombre, tema }] } -> temas guardados por el dueno (max. 20)
 //   POST   /admin/avisos/avisado    { uid, tipo, valor, estado, precio }  (marca el WhatsApp como enviado)
 //   GET    /admin/pedidos      -> pedidos con los datos de la cuenta (codigo, nombre, WhatsApp)
 //   POST   /admin/pedidos/estado    { numero, estado, entrega?, tracking?, nota? }  (solo pasos permitidos)
@@ -95,15 +99,16 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const ruta = url.pathname, metodo = request.method;
-    const publica = ((ruta === '/catalogo' || ruta === '/destacados') && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST' || ruta === '/boletin' || ruta === '/errores';
+    const publica = ((ruta === '/catalogo' || ruta === '/destacados' || ruta === '/sitio') && metodo === 'GET') || ruta === '/metricas' && metodo === 'POST' || ruta === '/boletin' || ruta === '/errores';
     const cors = encabezadosCors(request, env, publica);
 
-    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/destacados' || ruta === '/metricas' || ruta === '/boletin' || ruta === '/errores') });
+    if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: encabezadosCors(request, env, ruta === '/catalogo' || ruta === '/destacados' || ruta === '/sitio' || ruta === '/metricas' || ruta === '/boletin' || ruta === '/errores') });
     if (ruta === '/salud') return json({ ok: true }, 200, cors);
 
     // ---------- publicas ----------
     if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
     if (ruta === '/destacados' && metodo === 'GET') return destacadosPublicos(env, cors);
+    if (ruta === '/sitio' && metodo === 'GET') return sitioPublico(env, cors);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
     if (ruta === '/errores' && metodo === 'POST') return registrarError(request, env, cors);
 
@@ -137,7 +142,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/cuentas/codigo' || ruta === '/admin/clientes/codigos' || ruta === '/admin/avisos/avisado' || ruta === '/admin/pedidos/estado') && metodo === 'POST') || (ruta === '/admin/pedidos' && metodo === 'GET');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/cuentas/codigo' || ruta === '/admin/clientes/codigos' || ruta === '/admin/sitio' || ruta === '/admin/sitio/temas' || ruta === '/admin/avisos/avisado' || ruta === '/admin/pedidos/estado') && metodo === 'POST') || (ruta === '/admin/pedidos' && metodo === 'GET') || ((ruta === '/admin/sitio' || ruta === '/admin/sitio/temas') && metodo === 'GET');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -171,6 +176,8 @@ export default {
     if (ruta === '/admin/cuentas/vincular') return adminVincular(request, env, cors);
     if (ruta === '/admin/cuentas/codigo') return adminCodigoCuenta(request, env, cors);
     if (ruta === '/admin/clientes/codigos') return adminNuevosCodigos(request, env, cors);
+    if (ruta === '/admin/sitio') return metodo === 'GET' ? adminSitio(env, cors) : publicarSitio(request, env, cors);
+    if (ruta === '/admin/sitio/temas') return metodo === 'GET' ? adminTemas(env, cors) : guardarTemas(request, env, cors);
     if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
     if (ruta === '/admin/pedidos') return adminPedidos(env, cors);
     if (ruta === '/admin/pedidos/estado') return adminEstadoPedido(request, env, cors);
@@ -819,6 +826,78 @@ async function unirConClientePanel(uid, telNorm, env) {
     const otra = await env.DB.prepare('SELECT uid FROM cuentas WHERE codigo = ?1 AND uid <> ?2').bind(elegido.cl.codigo, uid).first();
     if (!otra) await env.DB.prepare('UPDATE cuentas SET codigo = ?2 WHERE uid = ?1').bind(uid, elegido.cl.codigo).run();
   }
+}
+
+// ---------- diseno de la tienda (editor del panel) ----------
+// Misma validacion que js/sitio/tema.js (si cambias una, cambia la otra). Se guarda en la tabla "ajustes":
+// sitio_publicado = { version, fecha, nota, tema } y sitio_historial = [ las 30 versiones anteriores ].
+const SITIO_BASE = { acento: '#a7c4d6', barraFondo: '#a7c4d6', barraTexto: '#09090b', botonFondo: '#09090b', botonTexto: '#ffffff',
+  oscuro: '#0b0b0c', carrusel: '#c3d6e3', formaBotones: 'original', esquinasFotos: -1, escalaTitulos: 100 };
+const SITIO_COLORES = ['acento', 'barraFondo', 'barraTexto', 'botonFondo', 'botonTexto', 'oscuro', 'carrusel'];
+const SITIO_FORMAS = ['original', 'recta', 'suave', 'pildora'];
+function sitioHex(v) {
+  let t = String(v == null ? '' : v).trim().toLowerCase();
+  if (/^#[0-9a-f]{3}$/.test(t)) t = '#' + t[1] + t[1] + t[2] + t[2] + t[3] + t[3];
+  return /^#[0-9a-f]{6}$/.test(t) ? t : null;
+}
+function validarSitioTema(t) {
+  t = t && typeof t === 'object' ? t : {};
+  const out = {};
+  for (const k of SITIO_COLORES) out[k] = sitioHex(t[k]) || SITIO_BASE[k];
+  out.formaBotones = SITIO_FORMAS.includes(t.formaBotones) ? t.formaBotones : 'original';
+  const e = Math.round(Number(t.esquinasFotos)); out.esquinasFotos = isFinite(e) && e >= 0 && e <= 24 ? e : -1;
+  const z = Math.round(Number(t.escalaTitulos)); out.escalaTitulos = isFinite(z) && z >= 85 && z <= 125 ? z : 100;
+  return out;
+}
+function sitioLum(h) {
+  return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)))
+    .reduce((a, c, i) => a + c * [0.2126, 0.7152, 0.0722][i], 0);
+}
+function sitioContraste(a, b) { const x = sitioLum(a), y = sitioLum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function sitioProblemas(t) {
+  return [[t.barraTexto, t.barraFondo], [t.botonTexto, t.botonFondo], ['#09090b', t.acento], ['#ffffff', t.oscuro]]
+    .filter(([a, b]) => sitioContraste(a, b) < 4.5).length;
+}
+async function leerAjuste(env, nombre, porDefecto) {
+  const f = await env.DB.prepare('SELECT valor FROM ajustes WHERE nombre = ?1').bind(nombre).first();
+  if (!f) return porDefecto;
+  try { return JSON.parse(f.valor); } catch (e) { return porDefecto; }
+}
+function guardarAjuste(env, nombre, valor) {
+  return env.DB.prepare('INSERT INTO ajustes (nombre, valor) VALUES (?1, ?2) ON CONFLICT(nombre) DO UPDATE SET valor = excluded.valor').bind(nombre, JSON.stringify(valor));
+}
+async function sitioPublico(env, cors) {
+  const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
+  return json({ version: p.version || 0, tema: validarSitioTema(p.tema) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
+}
+async function adminSitio(env, cors) {
+  const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
+  const h = await leerAjuste(env, 'sitio_historial', []);
+  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
+}
+async function publicarSitio(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || !b.tema) return json({ error: 'Falta el diseno' }, 400, cors);
+  const tema = validarSitioTema(b.tema);
+  if (sitioProblemas(tema)) return json({ error: 'Hay textos que no se leerian bien sobre su fondo. Corrige los colores marcados.' }, 400, cors);
+  const antes = await leerAjuste(env, 'sitio_publicado', null);
+  let hist = await leerAjuste(env, 'sitio_historial', []); if (!Array.isArray(hist)) hist = [];
+  if (antes && antes.tema) hist.unshift(antes);
+  hist = hist.slice(0, 30);
+  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema };
+  await env.DB.batch([guardarAjuste(env, 'sitio_publicado', nuevo), guardarAjuste(env, 'sitio_historial', hist)]);
+  return json({ ok: true, publicado: nuevo }, 200, cors);
+}
+async function adminTemas(env, cors) {
+  const t = await leerAjuste(env, 'sitio_temas', []);
+  return json({ temas: Array.isArray(t) ? t : [] }, 200, cors);
+}
+async function guardarTemas(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || !Array.isArray(b.temas)) return json({ error: 'Datos invalidos' }, 400, cors);
+  const temas = b.temas.slice(0, 20).map((x) => ({ nombre: limpiarTexto(x && x.nombre, 40) || 'Mi tema', tema: validarSitioTema(x && x.tema) }));
+  await guardarAjuste(env, 'sitio_temas', temas).run();
+  return json({ ok: true, temas }, 200, cors);
 }
 async function adminVincular(request, env, cors) {
   const b = await leerJson(request);
