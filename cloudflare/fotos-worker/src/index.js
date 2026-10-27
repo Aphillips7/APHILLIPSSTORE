@@ -88,6 +88,8 @@ const MAX_ENVIOS_METRICAS = 200;   // por IP cada 10 minutos (ver sumarMetricas)
 export default {
   async scheduled(evento, env, ctx) {
     ctx.waitUntil(mantenimiento(env, 'automatico'));
+    // publicacion programada del editor de la tienda (por si nadie entro a la tienda despues de la hora)
+    ctx.waitUntil(aplicarProgramado(env).catch((e) => console.log('programado', e.message)));
     // avisos a clientes por correo (reloj disponible, bajo de precio o marca con nuevos), si esta activado
     if (env.AVISOS_CORREO === '1') ctx.waitUntil(avisosPorCorreo(env, true).catch((e) => console.log('avisos por correo', e.message)));
     // informe semanal: solo los lunes y solo si esta activado (INFORME_SEMANAL = "1")
@@ -108,7 +110,7 @@ export default {
     // ---------- publicas ----------
     if (ruta === '/catalogo' && metodo === 'GET') return leerCatalogo(request, env, cors);
     if (ruta === '/destacados' && metodo === 'GET') return destacadosPublicos(env, cors);
-    if (ruta === '/sitio' && metodo === 'GET') return sitioPublico(env, cors);
+    if (ruta === '/sitio' && metodo === 'GET') return sitioPublico(env, cors, url);
     if (ruta === '/metricas' && metodo === 'POST') return sumarMetricas(request, env, cors);
     if (ruta === '/errores' && metodo === 'POST') return registrarError(request, env, cors);
 
@@ -142,7 +144,7 @@ export default {
       (ruta === '/fotos' && (metodo === 'POST' || metodo === 'DELETE')) ||
       ((ruta === '/datos' || ruta === '/datos/resumen') && metodo === 'GET') || ((ruta === '/datos/lote' || ruta === '/datos/estado' || ruta === '/mantenimiento') && metodo === 'POST') ||
       ((ruta === '/respaldos' || ruta === '/respaldos/archivo') && metodo === 'GET') ||
-      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/cuentas/codigo' || ruta === '/admin/clientes/codigos' || ruta === '/admin/sitio' || ruta === '/admin/sitio/temas' || ruta === '/admin/avisos/avisado' || ruta === '/admin/pedidos/estado') && metodo === 'POST') || (ruta === '/admin/pedidos' && metodo === 'GET') || ((ruta === '/admin/sitio' || ruta === '/admin/sitio/temas') && metodo === 'GET');
+      ((ruta === '/admin/cuentas' || ruta === '/admin/boletin' || ruta === '/admin/informe') && metodo === 'GET') || (ruta === '/admin/informe/enviar' && metodo === 'POST') || (ruta === '/admin/avisos/correo' && (metodo === 'GET' || metodo === 'POST')) || (ruta === '/admin/errores' && metodo === 'GET') || (ruta === '/admin/boletin/enviar' && metodo === 'POST') || ((ruta === '/admin/cuentas/vincular' || ruta === '/admin/cuentas/codigo' || ruta === '/admin/clientes/codigos' || ruta === '/admin/sitio' || ruta === '/admin/sitio/temas' || ruta === '/admin/avisos/avisado' || ruta === '/admin/pedidos/estado') && metodo === 'POST') || (ruta === '/admin/pedidos' && metodo === 'GET') || ((ruta === '/admin/sitio' || ruta === '/admin/sitio/temas' || ruta === '/admin/sitio/clics') && metodo === 'GET') || ((ruta === '/admin/sitio/programar' || ruta === '/admin/sitio/previa') && metodo === 'POST');
     if (!conocida) return json({ error: 'No encontrado' }, 404, cors);
 
     // ---------- solo el admin ----------
@@ -178,6 +180,9 @@ export default {
     if (ruta === '/admin/clientes/codigos') return adminNuevosCodigos(request, env, cors);
     if (ruta === '/admin/sitio') return metodo === 'GET' ? adminSitio(env, cors) : publicarSitio(request, env, cors);
     if (ruta === '/admin/sitio/temas') return metodo === 'GET' ? adminTemas(env, cors) : guardarTemas(request, env, cors);
+    if (ruta === '/admin/sitio/clics') return clicsSecciones(env, cors);
+    if (ruta === '/admin/sitio/programar') return programarSitio(request, env, cors);
+    if (ruta === '/admin/sitio/previa') return crearPrevia(request, env, cors);
     if (ruta === '/admin/avisos/avisado') return adminAvisado(request, env, cors);
     if (ruta === '/admin/pedidos') return adminPedidos(env, cors);
     if (ruta === '/admin/pedidos/estado') return adminEstadoPedido(request, env, cors);
@@ -304,7 +309,7 @@ async function sumarMetricas(request, env, cors) {
   for (const ev of eventos.slice(0, 300)) {
     if (!Array.isArray(ev)) continue;
     const [id, campo] = ev;
-    if (typeof id !== 'string' || !CAMPOS_METRICA.includes(campo) || !validos.has(id)) continue;
+    if (typeof id !== 'string' || !CAMPOS_METRICA.includes(campo) || !(validos.has(id) || SECCIONES_CLICS.includes(id))) continue;
     const s = suma.get(id) || { vistas: 0, aperturas: 0, clics: 0 };
     s[campo] = 1;
     suma.set(id, s);
@@ -327,7 +332,7 @@ async function sumarMetricas(request, env, cors) {
 async function leerMetricas(env, cors) {
   const { results } = await env.DB.prepare('SELECT id, vistas, aperturas, clics, ultima FROM metricas').all();
   const metricas = {};
-  for (const r of results) metricas[r.id] = { vistas: r.vistas, aperturas: r.aperturas, clics: r.clics, _ultima: r.ultima };
+  for (const r of results) if (!r.id.startsWith('sec:')) metricas[r.id] = { vistas: r.vistas, aperturas: r.aperturas, clics: r.clics, _ultima: r.ultima };
   const marca = await env.DB.prepare("SELECT valor FROM ajustes WHERE nombre = 'metricas_importadas'").first();
   return json({ metricas, importado: !!marca }, 200, cors);
 }
@@ -956,31 +961,96 @@ async function leerAjuste(env, nombre, porDefecto) {
 function guardarAjuste(env, nombre, valor) {
   return env.DB.prepare('INSERT INTO ajustes (nombre, valor) VALUES (?1, ?2) ON CONFLICT(nombre) DO UPDATE SET valor = excluded.valor').bind(nombre, JSON.stringify(valor));
 }
-async function sitioPublico(env, cors) {
+// Control (fase 5): misma validacion que js/sitio/control.js (si cambias una, cambia la otra)
+function validarSitioControl(c) {
+  c = c && typeof c === 'object' ? c : {};
+  const v = c.vacaciones && typeof c.vacaciones === 'object' ? c.vacaciones : {};
+  return { vacaciones: { activo: v.activo === true, texto: promoTxt(v.texto, 160), desde: promoFecha(v.desde), hasta: promoFecha(v.hasta) } };
+}
+const SECCIONES_CLICS = ['hero', 'destacados', 'generos', 'futuro', 'marcas', 'catalogo', 'popup'].map((s) => 'sec:' + s);
+// todo el sitio validado (para publicar, programar y vistas previas)
+function validarSitioCompleto(s) {
+  s = s && typeof s === 'object' ? s : {};
+  return { tema: validarSitioTema(s.tema), portada: validarSitioPortada(s.portada), promos: validarSitioPromos(s.promos), contenido: validarSitioContenido(s.contenido), control: validarSitioControl(s.control) };
+}
+// publica (lo usan Publicar y la publicacion programada): guarda la anterior en el historial
+async function guardarPublicado(env, sitio, nota) {
+  const antes = await leerAjuste(env, 'sitio_publicado', null);
+  let hist = await leerAjuste(env, 'sitio_historial', []); if (!Array.isArray(hist)) hist = [];
+  if (antes && antes.tema) hist.unshift(antes);
+  hist = hist.slice(0, 30);
+  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(nota, 80), ...sitio };
+  await env.DB.batch([guardarAjuste(env, 'sitio_publicado', nuevo), guardarAjuste(env, 'sitio_historial', hist)]);
+  return nuevo;
+}
+// Publicacion programada: se aplica en la primera lectura de /sitio despues de la hora (y en el
+// mantenimiento diario por si nadie entra). Se borra antes de publicar: si dos lecturas llegan juntas,
+// solo una la publica.
+async function aplicarProgramado(env) {
+  const f = await env.DB.prepare("SELECT valor FROM ajustes WHERE nombre = 'sitio_programado'").first();
+  if (!f) return;
+  let p; try { p = JSON.parse(f.valor); } catch (e) { p = null; }
+  if (p && Number(p.cuando) > Date.now()) return;
+  const r = await env.DB.prepare("DELETE FROM ajustes WHERE nombre = 'sitio_programado' AND valor = ?1").bind(f.valor).run();
+  if (!p || !r.meta || r.meta.changes !== 1) return;
+  await guardarPublicado(env, validarSitioCompleto(p.sitio), p.nota || 'Programada');
+}
+async function sitioPublico(env, cors, url) {
+  // enlace de vista previa (?vista=<codigo>): el borrador guardado con ese codigo, sin cache
+  const codigo = url ? url.searchParams.get('vista') || '' : '';
+  if (codigo) {
+    const previas = await leerAjuste(env, 'sitio_previas', []);
+    const x = /^[a-f0-9]{32}$/.test(codigo) && Array.isArray(previas) ? previas.find((p) => p.codigo === codigo && p.vence > Date.now()) : null;
+    if (!x) return json({ error: 'Este enlace de vista previa ya vencio' }, 404, { ...cors, 'Cache-Control': 'no-store' });
+    return json({ version: 0, ...validarSitioCompleto(x.sitio) }, 200, { ...cors, 'Cache-Control': 'no-store' });
+  }
+  try { await aplicarProgramado(env); } catch (e) { console.log('programado', e.message); }
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
-  return json({ version: p.version || 0, tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos), contenido: validarSitioContenido(p.contenido) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
+  return json({ version: p.version || 0, ...validarSitioCompleto(p) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
+}
+async function programarSitio(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b) return json({ error: 'Datos invalidos' }, 400, cors);
+  if (b.cancelar) { await env.DB.prepare("DELETE FROM ajustes WHERE nombre = 'sitio_programado'").run(); return json({ ok: true, programado: null }, 200, cors); }
+  const cuando = Number(b.cuando);
+  if (!(cuando > Date.now() + 4 * MINUTO && cuando < Date.now() + 90 * DIA_MS)) return json({ error: 'Elige una fecha entre 5 minutos y 90 dias desde ahora' }, 400, cors);
+  const sitio = validarSitioCompleto(b.sitio);
+  if (sitioProblemas(sitio.tema)) return json({ error: 'Hay textos que no se leerian bien sobre su fondo. Corrige los colores marcados.' }, 400, cors);
+  const programado = { cuando, nota: limpiarTexto(b.nota, 80), sitio, creado: Date.now() };
+  await guardarAjuste(env, 'sitio_programado', programado).run();
+  return json({ ok: true, programado }, 200, cors);
+}
+async function crearPrevia(request, env, cors) {
+  const b = await leerJson(request);
+  if (!b || !b.sitio) return json({ error: 'Datos invalidos' }, 400, cors);
+  let previas = await leerAjuste(env, 'sitio_previas', []); if (!Array.isArray(previas)) previas = [];
+  const codigo = crypto.randomUUID().replace(/-/g, '');
+  previas = [{ codigo, vence: Date.now() + 7 * DIA_MS, sitio: validarSitioCompleto(b.sitio) }, ...previas.filter((p) => p.vence > Date.now())].slice(0, 10);
+  await guardarAjuste(env, 'sitio_previas', previas).run();
+  return json({ ok: true, codigo, vence: previas[0].vence }, 200, cors);
+}
+async function clicsSecciones(env, cors) {
+  const { results } = await env.DB.prepare("SELECT id, vistas, clics, ultima FROM metricas WHERE id LIKE 'sec:%'").all();
+  const secciones = {};
+  for (const r of results) secciones[r.id.slice(4)] = { vistas: r.vistas, clics: r.clics, ultima: r.ultima };
+  return json({ secciones }, 200, cors);
 }
 async function adminSitio(env, cors) {
+  try { await aplicarProgramado(env); } catch (e) { console.log('programado', e.message); }
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
   const h = await leerAjuste(env, 'sitio_historial', []);
-  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos), contenido: validarSitioContenido(p.contenido) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
+  const prog = await leerAjuste(env, 'sitio_programado', null);
+  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', ...validarSitioCompleto(p) }, historial: Array.isArray(h) ? h : [],
+    programado: prog ? { cuando: prog.cuando, nota: prog.nota || '', sitio: validarSitioCompleto(prog.sitio) } : null }, 200, cors);
 }
 async function publicarSitio(request, env, cors) {
   const b = await leerJson(request);
   // { sitio: { tema, portada } } (o { tema } de la fase 1)
   const sitio = b && b.sitio && typeof b.sitio === 'object' ? b.sitio : b;
   if (!sitio || !sitio.tema) return json({ error: 'Falta el diseno' }, 400, cors);
-  const tema = validarSitioTema(sitio.tema);
-  const portada = validarSitioPortada(sitio.portada);
-  const promos = validarSitioPromos(sitio.promos);
-  const contenido = validarSitioContenido(sitio.contenido);
-  if (sitioProblemas(tema)) return json({ error: 'Hay textos que no se leerian bien sobre su fondo. Corrige los colores marcados.' }, 400, cors);
-  const antes = await leerAjuste(env, 'sitio_publicado', null);
-  let hist = await leerAjuste(env, 'sitio_historial', []); if (!Array.isArray(hist)) hist = [];
-  if (antes && antes.tema) hist.unshift(antes);
-  hist = hist.slice(0, 30);
-  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema, portada, promos, contenido };
-  await env.DB.batch([guardarAjuste(env, 'sitio_publicado', nuevo), guardarAjuste(env, 'sitio_historial', hist)]);
+  const completo = validarSitioCompleto(sitio);
+  if (sitioProblemas(completo.tema)) return json({ error: 'Hay textos que no se leerian bien sobre su fondo. Corrige los colores marcados.' }, 400, cors);
+  const nuevo = await guardarPublicado(env, completo, b.nota);
   return json({ ok: true, publicado: nuevo }, 200, cors);
 }
 async function adminTemas(env, cors) {

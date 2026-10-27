@@ -98,3 +98,8 @@
   /* Rendimiento al deslizar (sobre todo en iPhone): las fotos usan mix-blend-mode para fundirse con el gris;
      "isolation" hace que esa mezcla se calcule solo dentro de su recuadro y no contra toda la pagina. */
   .card-foto,.dest-foto,.prod-foto,.par-foto,.bs-card,.bs-marco,.mc-marco,.fav-fila-marco{isolation:isolate;}
+
+  /* Tienda > Control: aviso de vacaciones y franja del enlace de vista previa */
+  .aviso-vacaciones{padding:10px 16px;background:#fff4e5;color:#7a4b00;font-size:13px;line-height:1.45;text-align:center;border-bottom:1px solid #f5d9a8;}
+  .vac-nota{margin:0 0 10px;padding:8px 12px;background:#fff4e5;color:#7a4b00;font-size:12.5px;line-height:1.45;border-radius:8px;}
+  .franja-vista-previa{position:fixed;left:0;right:0;bottom:0;z-index:500;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:#09090b;color:#fff;font-size:12.5px;text-align:center;letter-spacing:.02em;}
