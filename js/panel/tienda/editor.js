@@ -12,6 +12,7 @@
 import { firebase } from '../../firebase.js';
 import { COLORES, TEMA_BASE, TEMAS_LISTOS, problemasTema, validarTema } from '../../sitio/tema.js';
 import { ENLACES, MAX_DESTACADOS, SECCIONES, TEXTOS, validarPortada } from '../../sitio/portada.js';
+import { ETIQUETAS_LISTAS, MAX, WA_BASE, dinero, hoy, validarPromos } from '../../sitio/promos.js';
 import { esPublicable } from '../../products.js';
 import { esc } from '../componentes.js';
 import { state } from '../state.js';
@@ -36,7 +37,31 @@ var _error = '', _cargado = false, _dispositivo = 'celular', _publicando = false
 var _originales = null;   // textos de la tienda tal como estan (para mostrarlos de ejemplo)
 
 function el(id){ return document.getElementById(id); }
-function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada) }; }
+function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada), promos: validarPromos(s.promos) }; }
+// cada pestana edita una parte del sitio
+const PARTES = { diseno: 'tema', portada: 'portada', promos: 'promos' };
+function parteActual(){ return PARTES[_vista] || 'tema'; }
+function original(parte){ return parte === 'tema' ? validarTema(TEMA_BASE) : parte === 'portada' ? validarPortada({}) : validarPromos({}); }
+// todo lo que impide publicar: contraste (Diseno) y promociones mal puestas
+function problemasSitio(s){
+  var out = problemasTema(s.tema).map(function(p){ return { vista: 'Diseño', texto: p.donde + ' (contraste ' + p.ratio + ', mínimo 4.5)' }; });
+  var pr = s.promos;
+  pr.ofertas.forEach(function(o){
+    var r = state.inventario.find(function(x){ return x.id === o.id; });
+    if(!r) out.push({ vista: 'Promociones', texto: 'Oferta de un reloj que ya no existe (quítala)' });
+    else if(!(Number(r.precio) > 0)) out.push({ vista: 'Promociones', texto: 'Oferta en "' + r.nombre + '", que no tiene precio normal' });
+    else if(!(o.precio < Number(r.precio))) out.push({ vista: 'Promociones', texto: 'La oferta de "' + r.nombre + '" (' + dinero(o.precio) + ') no es menor que su precio (' + dinero(r.precio) + ')' });
+    if(o.hasta && o.hasta < hoy()) out.push({ vista: 'Promociones', texto: 'La oferta de "' + (r ? r.nombre : 'un reloj') + '" ya venció el ' + o.hasta });
+  });
+  pr.anuncios.forEach(function(a){ if(a.desde && a.hasta && a.hasta < a.desde) out.push({ vista: 'Promociones', texto: 'Anuncio "' + a.texto + '": la fecha de fin es antes que la de inicio' }); });
+  var q = pr.popup;
+  if(q.activo){
+    if(!q.titulo && !q.texto) out.push({ vista: 'Promociones', texto: 'La ventana emergente está activa pero no tiene título ni texto' });
+    if(q.destino === 'reloj' && !q.reloj) out.push({ vista: 'Promociones', texto: 'La ventana emergente lleva a un reloj, pero no elegiste cuál' });
+    if(q.desde && q.hasta && q.hasta < q.desde) out.push({ vista: 'Promociones', texto: 'Ventana emergente: la fecha de fin es antes que la de inicio' });
+  }
+  return out;
+}
 function iguales(a, b){ return JSON.stringify(validarSitio(a)) === JSON.stringify(validarSitio(b)); }
 function leerBorrador(){ try{ var t = JSON.parse(localStorage.getItem(CLAVE_BORRADOR) || 'null'); return t ? validarSitio(t) : null; }catch(e){ return null; } }
 function guardarBorrador(){ try{ localStorage.setItem(CLAVE_BORRADOR, JSON.stringify(_borrador)); }catch(e){} }
@@ -110,12 +135,12 @@ function descartarTema(){
   aplicarCambio(validarSitio(_publicado));
 }
 function restaurarOriginal(){
-  var parte = _vista === 'portada' ? 'portada' : 'tema';
-  var original = parte === 'tema' ? validarTema(TEMA_BASE) : validarPortada({});
-  if(JSON.stringify(_borrador[parte]) === JSON.stringify(original)) return;
-  if(!confirm(parte === 'tema' ? '¿Volver al diseño original de la tienda (glaciar)? Puedes deshacerlo antes de publicar.' :
-    '¿Volver la portada a como venía (orden, textos y relojes originales)? Puedes deshacerlo antes de publicar.')) return;
-  var s = copia(); s[parte] = original; aplicarCambio(s);
+  var parte = parteActual(), orig = original(parte);
+  if(JSON.stringify(_borrador[parte]) === JSON.stringify(orig)) return;
+  var preguntas = { tema: '¿Volver al diseño original de la tienda (glaciar)?', portada: '¿Volver la portada a como venía (orden, textos y relojes originales)?',
+    promos: '¿Quitar todas las promociones (anuncios, ofertas, etiquetas, ventana emergente y mensajes)?' };
+  if(!confirm(preguntas[parte] + ' Puedes deshacerlo antes de publicar.')) return;
+  var s = copia(); s[parte] = orig; aplicarCambio(s);
 }
 // portada
 function cambiarTexto(k, valor, vivo){ var s = copia(); if(valor) s.portada.textos[k] = valor; else delete s.portada.textos[k]; aplicarCambio(s, vivo); }
@@ -155,7 +180,7 @@ function nombreReloj(id){ var p = state.inventario.find(function(x){ return x.id
 // ---------- publicar ----------
 async function publicarTema(){
   if(_publicando) return;
-  if(problemasTema(_borrador.tema).length){ alert('Corrige primero los colores marcados en rojo: hay textos que no se leerían.'); return; }
+  if(problemasSitio(_borrador).length){ alert('Corrige primero lo marcado en rojo arriba: hay cosas que no se pueden publicar así.'); return; }
   if(iguales(_borrador, _publicado)) return;
   if(!confirm('¿Publicar estos cambios en la tienda?\n\nLos clientes los verán en segundos. Si no te gustan, puedes volver a la versión anterior desde el historial.')) return;
   _publicando = true; pintarBarra();
@@ -235,11 +260,11 @@ function pintar(){
   var c = el('ed-ctrl'); if(!c || !_borrador) return;
   pintarDispositivo();
   var h = _error ? '<div class="fin-aviso"><span>No se pudo leer la configuración publicada (' + esc(_error) + '). Revisa tu internet; tus cambios quedan guardados en este dispositivo.</span></div>' : '';
-  h += _vista === 'portada' ? htmlPortada() : htmlDiseno();
+  h += _vista === 'portada' ? htmlPortada() : _vista === 'promos' ? htmlPromos() : htmlDiseno();
   h += htmlHistorial();
   c.innerHTML = h;
-  var probs = problemasTema(_borrador.tema);
-  if(probs.length) c.insertAdjacentHTML('afterbegin', '<div class="fin-aviso ed-alerta"><span><b>No se puede publicar todavía:</b> ' + probs.map(function(p){ return esc(p.donde) + ' (contraste ' + p.ratio + ', mínimo 4.5)'; }).join(' · ') + '. Elige colores con más diferencia entre el fondo y las letras (en Diseño).</span></div>');
+  var probs = problemasSitio(_borrador);
+  if(probs.length) c.insertAdjacentHTML('afterbegin', '<div class="fin-aviso ed-alerta"><span><b>No se puede publicar todavía:</b> ' + probs.map(function(p){ return '<b>' + esc(p.vista) + ':</b> ' + esc(p.texto); }).join(' · ') + '.</span></div>');
   pintarBarra();
 }
 // ---- Diseno ----
@@ -324,16 +349,16 @@ function htmlHistorial(){
 }
 function pintarBarra(){
   var b = el('ed-barra'); if(!b || !_borrador) return;
-  var cambios = !iguales(_borrador, _publicado), probs = problemasTema(_borrador.tema).length;
-  var estado = probs ? '<span class="ed-estado mal">Hay colores que no se leen</span>' : cambios ? '<span class="ed-estado pend">Cambios sin publicar</span>' : '<span class="ed-estado ok">Igual a la tienda</span>';
-  var parte = _vista === 'portada' ? 'portada' : 'tema';
-  var esOriginal = JSON.stringify(_borrador[parte]) === JSON.stringify(parte === 'tema' ? validarTema(TEMA_BASE) : validarPortada({}));
+  var cambios = !iguales(_borrador, _publicado), probs = problemasSitio(_borrador).length;
+  var estado = probs ? '<span class="ed-estado mal">Hay cosas por corregir</span>' : cambios ? '<span class="ed-estado pend">Cambios sin publicar</span>' : '<span class="ed-estado ok">Igual a la tienda</span>';
+  var parte = parteActual();
+  var esOriginal = JSON.stringify(_borrador[parte]) === JSON.stringify(original(parte));
   b.innerHTML = estado +
     '<input id="ed-nota" class="ed-nota" maxlength="80" placeholder="Nota (opcional): ej. colores de Navidad" value="' + esc(_nota) + '" oninput="notaTema(this.value)"' + (cambios ? '' : ' hidden') + '>' +
     '<div class="ed-barra-acc">' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="deshacerTema()"' + (_pila.length ? '' : ' disabled') + '>Deshacer</button>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="descartarTema()"' + (cambios ? '' : ' disabled') + '>Descartar</button>' +
-      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + (parte === 'tema' ? 'Diseño original' : 'Portada original') + '</button>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + ({ tema: 'Diseño original', portada: 'Portada original', promos: 'Quitar promociones' })[parte] + '</button>' +
       '<button type="button" class="btn btn-gold btn-sm" onclick="publicarTema()"' + (cambios && !probs && !_publicando ? '' : ' disabled') + '>' + (_publicando ? 'Publicando…' : 'Publicar') + '</button>' +
     '</div>';
 }
@@ -345,9 +370,105 @@ function cambiarHex(k, input){
 }
 function notaTema(v){ _nota = String(v || '').slice(0, 80); }
 
+// ---------- Promociones (fase 3) ----------
+function promo(f){ var s = copia(); f(s.promos); return s; }
+function agregarAnuncio(){ if(_borrador.promos.anuncios.length >= MAX.anuncios){ alert('Puedes tener hasta ' + MAX.anuncios + ' anuncios.'); return; } aplicarCambio(promo(function(p){ p.anuncios.push({ texto: 'Nuevo anuncio', desde: '', hasta: '' }); })); }
+function cambiarAnuncio(i, campo, v, vivo){ aplicarCambio(promo(function(p){ if(p.anuncios[i]) p.anuncios[i][campo] = v; }), vivo); }
+function quitarAnuncio(i){ aplicarCambio(promo(function(p){ p.anuncios.splice(i, 1); })); }
+function moverAnuncio(i, d){ aplicarCambio(promo(function(p){ var j = i + d; if(j < 0 || j >= p.anuncios.length) return; var x = p.anuncios[i]; p.anuncios[i] = p.anuncios[j]; p.anuncios[j] = x; })); }
+function agregarOferta(id){
+  if(!id) return; var r = state.inventario.find(function(x){ return x.id === id; }); if(!r) return;
+  if(_borrador.promos.ofertas.length >= MAX.ofertas){ alert('Puedes tener hasta ' + MAX.ofertas + ' ofertas.'); pintar(); return; }
+  // propuesta: 10 % menos, redondeado a dolares
+  aplicarCambio(promo(function(p){ p.ofertas.push({ id: id, precio: Math.max(1, Math.floor(Number(r.precio) * 0.9)), hasta: '' }); }));
+}
+function cambiarOferta(i, campo, v, vivo){ aplicarCambio(promo(function(p){ if(p.ofertas[i]) p.ofertas[i][campo] = campo === 'precio' ? Number(String(v).replace(',', '.')) : v; }), vivo); }
+function quitarOferta(i){ aplicarCambio(promo(function(p){ p.ofertas.splice(i, 1); })); }
+function agregarEtiqueta(id){
+  if(!id) return;
+  if(_borrador.promos.etiquetas.length >= MAX.etiquetas){ alert('Puedes tener hasta ' + MAX.etiquetas + ' etiquetas.'); pintar(); return; }
+  aplicarCambio(promo(function(p){ p.etiquetas.push({ id: id, texto: ETIQUETAS_LISTAS[0] }); }));
+}
+function cambiarEtiqueta(i, v, vivo){ aplicarCambio(promo(function(p){ if(p.etiquetas[i]) p.etiquetas[i].texto = v; }), vivo); }
+function quitarEtiqueta(i){ aplicarCambio(promo(function(p){ p.etiquetas.splice(i, 1); })); }
+function cambiarPopup(campo, v, vivo){ aplicarCambio(promo(function(p){ p.popup[campo] = v; }), vivo); }
+function verPopup(){
+  var q = _borrador.promos.popup;
+  if(!q.titulo && !q.texto){ alert('Escribe primero el título o el texto de la ventana.'); return; }
+  var f = el('ed-vista'); if(f && f.contentWindow) try{ f.contentWindow.postMessage({ tipo: 'aph-popup', promos: _borrador.promos }, location.origin); }catch(e){}
+}
+function cambiarWa(k, v, vivo){ aplicarCambio(promo(function(p){ if(v) p.wa[k] = v; else delete p.wa[k]; }), vivo); }
+function insertarWa(k, marca){
+  var t = el('ed-wa-' + k); if(!t) return;
+  var a = t.selectionStart || t.value.length; t.value = t.value.slice(0, a) + marca + t.value.slice(t.selectionEnd || a);
+  cambiarWa(k, t.value); setTimeout(function(){ var n = el('ed-wa-' + k); if(n){ n.focus(); n.selectionStart = n.selectionEnd = a + marca.length; } }, 30);
+}
+function opcionesRelojes(excluir, actual, conPrecio){
+  return relojesElegibles().filter(function(x){ return (!excluir || excluir.indexOf(x.id) === -1) && (!conPrecio || Number(x.precio) > 0); })
+    .map(function(x){ return '<option value="' + esc(x.id) + '"' + (x.id === actual ? ' selected' : '') + '>' + esc(etiquetaReloj(x)) + (conPrecio ? ' · ' + dinero(x.precio) : '') + '</option>'; }).join('');
+}
+function htmlPromos(){
+  var p = _borrador.promos, h = '';
+  // anuncios
+  h += '<div class="card"><div class="card-title">Barra de anuncios</div><p class="ed-ayuda">Mensajes que van rotando cada 5 segundos en la barra de arriba. Con fechas, se muestran solo en esos días. Sin anuncios, la barra muestra su texto normal.</p>' +
+    p.anuncios.map(function(a, i){
+      return '<div class="ed-promo"><div class="ed-promo-cab"><span class="ed-num">' + (i + 1) + '</span>' +
+        '<input maxlength="70" value="' + esc(a.texto) + '" oninput="cambiarAnuncio(' + i + ',\'texto\',this.value,1)" onchange="cambiarAnuncio(' + i + ',\'texto\',this.value)" aria-label="Texto del anuncio">' +
+        '<button type="button" class="ed-mini-btn" onclick="moverAnuncio(' + i + ',-1)"' + (i ? '' : ' disabled') + ' aria-label="Subir">↑</button>' +
+        '<button type="button" class="ed-mini-btn quitar" onclick="quitarAnuncio(' + i + ')" aria-label="Quitar">×</button></div>' +
+        '<div class="ed-fechas"><label>Desde <input type="date" value="' + a.desde + '" onchange="cambiarAnuncio(' + i + ',\'desde\',this.value)"></label><label>Hasta <input type="date" value="' + a.hasta + '" onchange="cambiarAnuncio(' + i + ',\'hasta\',this.value)"></label></div></div>';
+    }).join('') + (p.anuncios.length < MAX.anuncios ? '<button type="button" class="btn btn-outline btn-sm" onclick="agregarAnuncio()">+ Agregar anuncio</button>' : '') + '</div>';
+  // ofertas
+  var conOferta = p.ofertas.map(function(o){ return o.id; });
+  h += '<div class="card"><div class="card-title">Ofertas</div><p class="ed-ayuda">El precio normal sale tachado, con el de oferta y el % de descuento, en el catálogo, el carrusel y la ficha. Google recibe el mismo precio. Con fecha de fin, se apaga sola.</p>' +
+    p.ofertas.map(function(o, i){
+      var r = state.inventario.find(function(x){ return x.id === o.id; }), normal = r ? Number(r.precio) || 0 : 0;
+      var ok = r && normal > 0 && o.precio < normal, pct = ok ? Math.round((1 - o.precio / normal) * 100) : 0;
+      return '<div class="ed-promo' + (ok ? '' : ' mal') + '"><div class="ed-promo-cab"><b>' + esc(r ? etiquetaReloj(r) : 'Reloj que ya no está') + '</b><button type="button" class="ed-mini-btn quitar" onclick="quitarOferta(' + i + ')" aria-label="Quitar">×</button></div>' +
+        '<div class="ed-oferta"><span>Normal <b>' + (normal ? dinero(normal) : '—') + '</b></span>' +
+        '<label>Oferta $ <input type="number" min="1" step="1" inputmode="decimal" value="' + o.precio + '" oninput="cambiarOferta(' + i + ',\'precio\',this.value,1)" onchange="cambiarOferta(' + i + ',\'precio\',this.value)"></label>' +
+        '<span class="ed-pct' + (ok ? '' : ' mal') + '">' + (ok ? '-' + pct + '%' : 'Debe ser menor') + '</span>' +
+        '<label>Hasta <input type="date" value="' + o.hasta + '" min="' + hoy() + '" onchange="cambiarOferta(' + i + ',\'hasta\',this.value)"></label></div></div>';
+    }).join('') + '<select class="ed-agregar" onchange="agregarOferta(this.value)"><option value="">+ Poner en oferta un reloj…</option>' + opcionesRelojes(conOferta, '', true) + '</select></div>';
+  // etiquetas
+  var conEtq = p.etiquetas.map(function(e){ return e.id; });
+  h += '<div class="card"><div class="card-title">Etiquetas en las tarjetas</div><p class="ed-ayuda">Una etiqueta sobre la foto del reloj (como "Nuevo"). Elige una de la lista o escribe la tuya.</p>' +
+    p.etiquetas.map(function(e, i){
+      var r = state.inventario.find(function(x){ return x.id === e.id; });
+      return '<div class="ed-fila"><b>' + esc(r ? etiquetaReloj(r) : 'Reloj que ya no está') + '</b>' +
+        '<input class="ed-etq" list="ed-etq-lista" maxlength="22" value="' + esc(e.texto) + '" oninput="cambiarEtiqueta(' + i + ',this.value,1)" onchange="cambiarEtiqueta(' + i + ',this.value)" aria-label="Texto de la etiqueta">' +
+        '<button type="button" class="ed-mini-btn quitar" onclick="quitarEtiqueta(' + i + ')" aria-label="Quitar">×</button></div>';
+    }).join('') + '<datalist id="ed-etq-lista">' + ETIQUETAS_LISTAS.map(function(t){ return '<option value="' + esc(t) + '">'; }).join('') + '</datalist>' +
+    '<select class="ed-agregar" onchange="agregarEtiqueta(this.value)"><option value="">+ Poner etiqueta a un reloj…</option>' + opcionesRelojes(conEtq, '') + '</select></div>';
+  // ventana emergente
+  var q = p.popup;
+  h += '<div class="card"><div class="card-title">Ventana emergente</div><p class="ed-ayuda">Un aviso que aparece una sola vez a cada visitante (por ejemplo, una oferta o el boletín). Si cambias el texto, vuelve a salir una vez.</p>' +
+    '<label class="ed-switch" style="margin-bottom:6px;"><input type="checkbox"' + (q.activo ? ' checked' : '') + ' onchange="cambiarPopup(\'activo\',this.checked)"><span></span>' + (q.activo ? 'Activa' : 'Apagada') + '</label>' +
+    '<label class="ed-campo"><span>Título</span><input maxlength="50" value="' + esc(q.titulo) + '" placeholder="Ej: 10 % de descuento este fin de semana" oninput="cambiarPopup(\'titulo\',this.value,1)" onchange="cambiarPopup(\'titulo\',this.value)"></label>' +
+    '<label class="ed-campo"><span>Texto</span><textarea rows="2" maxlength="220" placeholder="Ej: En todos los Invicta disponibles hasta el domingo." oninput="cambiarPopup(\'texto\',this.value,1)" onchange="cambiarPopup(\'texto\',this.value)">' + esc(q.texto) + '</textarea></label>' +
+    '<label class="ed-campo"><span>Botón</span><input maxlength="24" value="' + esc(q.boton) + '" placeholder="Ej: Ver relojes" oninput="cambiarPopup(\'boton\',this.value,1)" onchange="cambiarPopup(\'boton\',this.value)"></label>' +
+    '<label class="ed-campo"><span>El botón lleva a</span><select onchange="cambiarPopup(\'destino\',this.value)">' +
+      [['catalogo', 'Todos los relojes'], ['reloj', 'Un reloj'], ['boletin', 'El boletín (suscribirse)'], ['ninguno', 'Sin botón']].map(function(o){ return '<option value="' + o[0] + '"' + (q.destino === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+    (q.destino === 'reloj' ? '<label class="ed-campo"><span>Reloj</span><select onchange="cambiarPopup(\'reloj\',this.value)"><option value="">Elige un reloj…</option>' + opcionesRelojes(null, q.reloj) + '</select></label>' : '') +
+    '<label class="ed-campo"><span>Cuándo aparece</span><select onchange="cambiarPopup(\'momento\',this.value)"><option value="entrada"' + (q.momento === 'entrada' ? ' selected' : '') + '>Al entrar, después de unos segundos</option><option value="salida"' + (q.momento === 'salida' ? ' selected' : '') + '>Al intentar salir (en celular, después de un rato)</option></select></label>' +
+    '<label class="ed-campo"><span>Segundos de espera: ' + q.segundos + '</span><input type="range" min="2" max="60" value="' + q.segundos + '" onchange="cambiarPopup(\'segundos\',this.value)"></label>' +
+    '<div class="ed-fechas"><label>Desde <input type="date" value="' + q.desde + '" onchange="cambiarPopup(\'desde\',this.value)"></label><label>Hasta <input type="date" value="' + q.hasta + '" onchange="cambiarPopup(\'hasta\',this.value)"></label></div>' +
+    '<button type="button" class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="verPopupTienda()">Ver la ventana en la vista previa</button></div>';
+  // mensajes de WhatsApp
+  h += '<div class="card"><div class="card-title">Mensajes de WhatsApp</div><p class="ed-ayuda">Lo que se escribe solo cuando un cliente toca el botón. Antes va el saludo ("¡Hola, Ana!") y después el enlace del reloj. Deja vacío para usar el mensaje de siempre.</p>' +
+    [['comprar', 'Al tocar "Comprar por WhatsApp" (relojes disponibles)'], ['cotizar', 'Al tocar "Cotizar" (relojes bajo pedido)']].map(function(x){
+      var k = x[0], v = p.wa[k] || '';
+      return '<label class="ed-campo"><span>' + esc(x[1]) + '</span><textarea id="ed-wa-' + k + '" rows="3" maxlength="300" placeholder="' + esc(WA_BASE[k]) + '" oninput="cambiarWa(\'' + k + '\',this.value,1)" onchange="cambiarWa(\'' + k + '\',this.value)">' + esc(v) + '</textarea></label>' +
+        '<div class="ed-chips" style="margin-top:6px;"><button type="button" class="fin-mes-btn" onclick="insertarWa(\'' + k + '\',\'{reloj}\')">+ nombre del reloj</button>' + (k === 'comprar' ? '<button type="button" class="fin-mes-btn" onclick="insertarWa(\'' + k + '\',\'{precio}\')">+ precio</button>' : '') + '</div>';
+    }).join('') + '</div>';
+  return h;
+}
+
 export { renderTienda };
 // usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { agregarDestacadoTienda: agregarDestacado, borrarTemaGuardado: borrarTema, cambiarEnlaceTienda: cambiarEnlace, cambiarHex, cambiarTema, cambiarTextoTienda: cambiarTexto,
   contarTexto, descartarTema, deshacerTema, guardarComoTema, modoDestacadosTienda: modoDestacados, moverDestacadoTienda: moverDestacado, moverSeccionTienda: moverSeccion,
   notaTema, publicarTema, quitarDestacadoTienda: quitarDestacado, recargarVista, renderTienda, restaurarOriginal, usarTemaGuardado: usarGuardado, usarTemaListo: usarListo,
-  usarVersionTema: usarVersion, verEnTienda: verEn, verSeccionTienda: verSeccion });
+  usarVersionTema: usarVersion, verEnTienda: verEn, verSeccionTienda: verSeccion,
+  agregarAnuncio, agregarEtiqueta, agregarOferta, cambiarAnuncio, cambiarEtiqueta, cambiarOferta, cambiarPopup, cambiarWa, insertarWa, moverAnuncio,
+  quitarAnuncio, quitarEtiqueta, quitarOferta, verPopupTienda: verPopup });

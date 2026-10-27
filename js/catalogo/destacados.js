@@ -5,6 +5,7 @@
 import { relojes } from './datos.js';
 import { abrir } from './modal.js';
 import { _destEsc, miniatura, srcsetFoto } from './ui.js';
+import { dinero, etiquetaDe, ofertaDe } from '../sitio/promos.js';
 
 const API_DEST = 'https://api.aphillipsstore.com/destacados';
 var DEST_LOCAL = [];
@@ -13,7 +14,10 @@ var _destIds = null, _destMovido = 0;
 function _destItem(r){
   var partes = String(r.nombre || 'Reloj').split(' ');
   var fotos = [r.foto].concat(r.fotos || []).filter(function(u, k, a){ return u && a.indexOf(u) === k; }).slice(0, 4);
-  return { id: r.id, nombre: partes[0], detalle: partes.slice(1).join(' '), precio: r.precio ? '$' + Number(r.precio).toLocaleString() : '', etiqueta: '', fotos: fotos };
+  var of = ofertaDe(r);
+  // precio ya en HTML seguro (con oferta: el normal tachado)
+  var precio = of ? '<s>' + dinero(of.antes) + '</s> ' + dinero(of.precio) : r.precio ? '$' + Number(r.precio).toLocaleString() : '';
+  return { id: r.id, nombre: partes[0], detalle: partes.slice(1).join(' '), precio: precio, etiqueta: etiquetaDe(r) || (of ? '-' + of.pct + '%' : ''), fotos: fotos };
 }
 // lista elegida a mano en el panel (Tienda > Portada); vacia = automatico (los mas pedidos)
 function _destManual(){ var p = window.__sitioPortada; return p && Array.isArray(p.destacados) && p.destacados.length ? p.destacados : null; }
@@ -30,6 +34,8 @@ function _destArmar(){
   renderDestacados();
   return true;
 }
+// promociones nuevas: se rearma con sus precios y etiquetas
+document.addEventListener('sitio-promos', function(){ if(_destIds !== null) _destArmar(); });
 // si cambia la lista elegida en el panel (al publicar o en la vista previa), el carrusel se rearma
 var _destUltimaManual = '';
 document.addEventListener('sitio-portada', function(){
@@ -152,7 +158,7 @@ function _destCard(r){
     '<div class="dest-foto" onclick="destAbrir(\''+_destEsc(r.id)+'\')">'+(r.etiqueta?'<span class="dest-badge">'+_destEsc(r.etiqueta)+'</span>':'')+fotos+gal+'</div>'+
     '<div class="dest-nombre">'+_destEsc(r.nombre)+'</div>'+
     '<div class="dest-sub">'+_destEsc(r.detalle||'')+'</div>'+   // siempre: todas las tarjetas del carrusel miden lo mismo
-    '<div class="dest-precio">'+_destEsc(r.precio||'')+'</div>'+
+    '<div class="dest-precio">'+(r.precio||'')+'</div>'+   // ya viene armado y seguro (_destItem)
     '<div class="dest-comprar"><button type="button" onclick="destAbrir(\''+_destEsc(r.id)+'\')"><span>'+_bolsa+'Comprar ahora</span></button></div>'+
   '</div>';
 }

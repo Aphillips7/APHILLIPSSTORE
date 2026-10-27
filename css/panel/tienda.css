@@ -87,3 +87,22 @@
   .ed-grupo{padding:12px 0 4px;border-top:1px solid var(--border);}
   .ed-grupo:first-of-type{border-top:none;padding-top:0;}
   .ed-grupo-t{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+
+  /* Tienda > Promociones */
+  .ed-promo{border:1px solid var(--border2);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--white);}
+  .ed-promo.mal{border-color:var(--red);}
+  .ed-promo-cab{display:flex;align-items:center;gap:8px;}
+  .ed-promo-cab input{flex:1;min-width:0;}
+  .ed-promo-cab b{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ed-fechas{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted);}
+  .ed-fechas label{display:flex;align-items:center;gap:6px;flex:1 1 150px;margin:0;}
+  .ed-fechas input{flex:1;}
+  .ed-fechas input,.ed-oferta input{width:auto;min-width:0;}
+  .ed-oferta{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--muted);}
+  .ed-oferta label{display:flex;align-items:center;gap:6px;}
+  .ed-oferta input[type=number]{width:96px;}
+  .ed-pct{font-weight:700;color:#b42318;}
+  .ed-pct.mal{color:var(--red);font-weight:600;}
+  .ed-agregar{width:100%;margin-top:6px;}
+  .ed-etq{width:150px;flex-shrink:0;}
+  .ed-fila b{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
