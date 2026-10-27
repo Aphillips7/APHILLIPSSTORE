@@ -59,7 +59,8 @@ const SECCIONES = [
     { id: 'registrar', t: 'Registrar', page: 'finanzas', inner: 'registrar' },
     { id: 'cierres', t: 'Cierres', page: 'finanzas', inner: 'cierres' }] },
   { id: 'tienda', t: 'Tienda', subs: [
-    { id: 'diseno', t: 'Diseño', page: 'tienda', vista: 'diseno' }] },
+    { id: 'diseno', t: 'Diseño', page: 'tienda' },
+    { id: 'portada', t: 'Portada', page: 'tienda' }] },
   { id: 'ajustes', t: 'Ajustes', subs: [
     { id: 'general', t: 'General', page: 'ajustes', contador: 'salud-badge' },
     { id: 'contenido', t: 'Contenido', page: 'contenido' },
@@ -134,14 +135,14 @@ function mostrarInner(prefix, name){
   if(name === 'cobrar') renderCobrar();
   if(name === 'cierres') renderCierres();
 }
-function renderPagina(page){
+function renderPagina(page, x){
   if(page === 'inicio') renderInicio();
   if(page === 'finanzas') renderFinanzas();
   if(page === 'inventario') renderInventario();
   if(page === 'catalogo') renderCatalogoAdmin();
   if(page === 'contenido') renderContenido();
   if(page === 'clientes') renderClientes();
-  if(page === 'tienda') renderTienda();
+  if(page === 'tienda') renderTienda(x && x.id);
 }
 // Cambia la pantalla sin pedir el codigo (lo usa tambien auth-overlay al validar el TOTP)
 function mostrarVista(secId, subId){
@@ -149,7 +150,7 @@ function mostrarVista(secId, subId){
   _actual = { sec: sec.id, sub: x.id };
   _ultimaSub[sec.id] = x.id;
   document.querySelectorAll('.page').forEach(function(p){ p.classList.toggle('active', p.id === 'page-' + x.page); });
-  try{ renderPagina(x.page); }catch(e){ console.error(e); }
+  try{ renderPagina(x.page, x); }catch(e){ console.error(e); }
   if(x.inner){ try{ mostrarInner('fin', x.inner); }catch(e){ console.error(e); } }
   // sub-vistas dentro de una misma pagina (secciones con data-vista)
   if(x.vista){

@@ -1,13 +1,15 @@
-// =================== APLICAR EL DISENO PUBLICADO EN LA TIENDA ===================
+// =================== APLICAR LO PUBLICADO DESDE EL EDITOR EN LA TIENDA ===================
 // 1) Un script corto en el <head> de cada pagina pone el ultimo diseno guardado en este navegador antes de
 //    pintar (sin parpadeo de colores viejos).
-// 2) Este modulo pide el diseno publicado (api /sitio), lo aplica y lo guarda para la proxima visita.
+// 2) Este modulo aplica de inmediato la ultima configuracion guardada (textos y orden de la portada), pide la
+//    publicada (api /sitio), la aplica y la guarda para la proxima visita.
 // 3) Vista previa del panel: con ?vista-previa=1 dentro del panel, aplica lo que el editor manda por mensaje
 //    (sin guardarlo y sin contar visitas ni clics).
 import { cssDeTema } from './tema.js';
+import { aplicarPortada } from './portada.js';
 
 const API = 'https://api.aphillipsstore.com/sitio';
-const CLAVE = 'aph_tema_css';
+const CLAVE_CSS = 'aph_tema_css', CLAVE_SITIO = 'aph_sitio';
 const VISTA_PREVIA = new URLSearchParams(location.search).has('vista-previa') && window.parent !== window;
 
 function poner(css){
@@ -15,20 +17,30 @@ function poner(css){
   if(!s){ s = document.createElement('style'); s.id = 'tema-sitio'; document.head.appendChild(s); }
   if(s.textContent !== css) s.textContent = css;
 }
+function aplicar(sitio){
+  sitio = sitio || {};
+  poner(cssDeTema(sitio.tema || {}));
+  try{ aplicarPortada(sitio.portada || {}); }catch(e){}
+}
 
 if(VISTA_PREVIA){
   // en la vista previa del panel no se muestra el aviso de cookies (taparia la tienda)
   var sc = document.createElement('style'); sc.textContent = '#aviso-cookies,.aviso-cookies,.cookies{display:none !important;}'; document.head.appendChild(sc);
   window.addEventListener('message', function(e){
-    if(e.origin !== location.origin || !e.data || e.data.tipo !== 'aph-tema') return;
-    poner(cssDeTema(e.data.tema));
+    if(e.origin !== location.origin || !e.data) return;
+    if(e.data.tipo === 'aph-sitio') aplicar(e.data.sitio);
+    if(e.data.tipo === 'aph-tema') poner(cssDeTema(e.data.tema));   // compatibilidad con la fase 1
   });
   try{ window.parent.postMessage({ tipo: 'aph-vista-lista' }, location.origin); }catch(e){}
 } else {
+  try{ var guardado = JSON.parse(localStorage.getItem(CLAVE_SITIO) || 'null'); if(guardado) aplicarPortada(guardado.portada || {}); }catch(e){}
   fetch(API, { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
     if(!d) return;
+    aplicar(d);
     var css = cssDeTema(d.tema || {});
-    poner(css);
-    try{ if(css) localStorage.setItem(CLAVE, css); else localStorage.removeItem(CLAVE); }catch(e){}
-  }).catch(function(){ /* sin internet: queda el ultimo diseno guardado */ });
+    try{
+      if(css) localStorage.setItem(CLAVE_CSS, css); else localStorage.removeItem(CLAVE_CSS);
+      localStorage.setItem(CLAVE_SITIO, JSON.stringify({ portada: d.portada || {} }));
+    }catch(e){}
+  }).catch(function(){ /* sin internet: queda lo ultimo guardado */ });
 }
