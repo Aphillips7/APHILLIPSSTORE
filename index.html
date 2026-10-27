@@ -25,6 +25,7 @@ document.documentElement.setAttribute('data-theme','light');   /* el panel siemp
 <link rel="stylesheet" href="css/panel/auth.css">
 <link rel="stylesheet" href="css/panel/modales.css">
 <link rel="stylesheet" href="css/panel/navegacion.css">
+<link rel="stylesheet" href="css/panel/tienda.css">
 <link rel="stylesheet" href="css/panel/dashboard.css">
 <link rel="stylesheet" href="css/panel/movil.css">
 </head>
@@ -676,6 +677,11 @@ if(location.hostname==='aphillips7.github.io'){
 </div>
 
 <!-- CONTENIDO -->
+<!-- TIENDA: editor de la tienda (js/panel/tienda/). Cada fase agrega su vista (data-vista). -->
+<div id="page-tienda" class="page">
+  <div data-vista="diseno" id="tienda-diseno"></div>
+</div>
+
 <div id="page-contenido" class="page">
   <div class="section-title">Contenido</div>
   <div class="section-sub">Tu plan semanal de Instagram. Consistencia es la clave.</div>

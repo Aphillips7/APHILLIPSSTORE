@@ -10,6 +10,7 @@ function incMetrica(id, campo){
   if(!id) return;
   // el dueno puede pedir que sus visitas no cuenten (opciones de desarrollador en Mi cuenta)
   try{ if(localStorage.getItem('aphillips_no_contar') === '1') return; }catch(e){}
+  if(window.__vistaPrevia) return;   // la vista previa del editor del panel no cuenta
   _cola.push([id, campo]);
   if(_cola.length >= 100) enviarMetricas();
 }

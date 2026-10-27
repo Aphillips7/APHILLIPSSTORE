@@ -300,7 +300,9 @@ function servir(env, request, ruta) {
 // Ambos: Cloudflare Web Analytics (Cloudflare inserta el script beacon y envia a cloudflareinsights.com).
 // Carrusel: las fotos se descargan desde fotos.aphillipsstore.com para quitarles el fondo blanco y se muestran
 // como imagen generada en el navegador (blob:), ver js/catalogo/destacados.js.
-const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
+// frame-ancestors 'self': la tienda solo puede verse dentro de una pagina del mismo sitio (la vista previa del
+// editor de diseno del panel); cualquier otro sitio sigue sin poder meterla en un marco.
+const CSP_CATALOGO = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; " +
   "img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "font-src 'self' https://fonts.gstatic.com; " +
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://static.cloudflareinsights.com; " +
