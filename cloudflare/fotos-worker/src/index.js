@@ -58,7 +58,7 @@
 //   POST   /admin/clientes/codigos  { n }            -> n numeros de cliente nuevos (AP-00042) para clientes creados en el panel
 //   GET    /sitio                    -> diseno publicado de la tienda (publica; la usa js/sitio/aplicar.js)
 //   GET    /admin/sitio              -> diseno publicado + historial (ultimas 30 versiones)
-//   POST   /admin/sitio  { tema, nota } -> publica un diseno (validado y con contraste suficiente)
+//   POST   /admin/sitio  { sitio: { tema, portada }, nota } -> publica (validado y con contraste suficiente)
 //   GET/POST /admin/sitio/temas  { temas: [{ nombre, tema }] } -> temas guardados por el dueno (max. 20)
 //   POST   /admin/avisos/avisado    { uid, tipo, valor, estado, precio }  (marca el WhatsApp como enviado)
 //   GET    /admin/pedidos      -> pedidos con los datos de la cuenta (codigo, nombre, WhatsApp)
@@ -858,6 +858,32 @@ function sitioProblemas(t) {
   return [[t.barraTexto, t.barraFondo], [t.botonTexto, t.botonFondo], ['#09090b', t.acento], ['#ffffff', t.oscuro]]
     .filter(([a, b]) => sitioContraste(a, b) < 4.5).length;
 }
+// Portada (fase 2): misma validacion que js/sitio/portada.js (si cambias una, cambia la otra)
+const PORTADA_SECCIONES = ['destacados', 'generos', 'futuro', 'marcas'];
+const PORTADA_TEXTOS = { barra: [60, 0], heroEti: [60, 0], heroTitulo: [70, 1], heroBoton: [24, 0], destTitulo: [40, 0], genHombre: [40, 1], genMujer: [40, 1],
+  genBoton: [24, 0], futEti: [40, 0], futTitulo: [60, 1], futDesc: [260, 1], futComprar: [24, 0], fichaNombre: [40, 0], fichaDesc: [120, 0], fut2Eti: [40, 0],
+  fut2Titulo: [60, 0], card1Nombre: [40, 0], card1Desc: [120, 0], card2Nombre: [40, 0], card2Desc: [120, 0], marcasTitulo: [40, 0], marcasSub: [160, 0] };
+const PORTADA_ENLACES = ['futComprar', 'futCard1', 'futCard2'];
+function portadaTexto(v, max, multi) {
+  let t = String(v == null ? '' : v).replace(/[\u0000-\u0009\u000b-\u001f<>]/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, max);
+  if (!multi) t = t.replace(/\n/g, ' ');
+  return t;
+}
+function validarSitioPortada(p) {
+  p = p && typeof p === 'object' ? p : {};
+  const out = { secciones: [], textos: {}, destacados: [], enlaces: {} };
+  const vistas = new Set();
+  for (const x of Array.isArray(p.secciones) ? p.secciones : []) {
+    if (x && PORTADA_SECCIONES.includes(x.id) && !vistas.has(x.id)) { vistas.add(x.id); out.secciones.push({ id: x.id, visible: x.visible !== false }); }
+  }
+  for (const id of PORTADA_SECCIONES) if (!vistas.has(id)) out.secciones.push({ id, visible: true });
+  const t = p.textos && typeof p.textos === 'object' ? p.textos : {};
+  for (const [k, [max, multi]] of Object.entries(PORTADA_TEXTOS)) { const v = portadaTexto(t[k], max, multi); if (v) out.textos[k] = v; }
+  for (const id of Array.isArray(p.destacados) ? p.destacados : []) if (RE_ID.test(String(id)) && !out.destacados.includes(String(id)) && out.destacados.length < 12) out.destacados.push(String(id));
+  const e = p.enlaces && typeof p.enlaces === 'object' ? p.enlaces : {};
+  for (const k of PORTADA_ENLACES) if (RE_ID.test(String(e[k] || ''))) out.enlaces[k] = String(e[k]);
+  return out;
+}
 async function leerAjuste(env, nombre, porDefecto) {
   const f = await env.DB.prepare('SELECT valor FROM ajustes WHERE nombre = ?1').bind(nombre).first();
   if (!f) return porDefecto;
@@ -868,23 +894,26 @@ function guardarAjuste(env, nombre, valor) {
 }
 async function sitioPublico(env, cors) {
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
-  return json({ version: p.version || 0, tema: validarSitioTema(p.tema) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
+  return json({ version: p.version || 0, tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
 }
 async function adminSitio(env, cors) {
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
   const h = await leerAjuste(env, 'sitio_historial', []);
-  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
+  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
 }
 async function publicarSitio(request, env, cors) {
   const b = await leerJson(request);
-  if (!b || !b.tema) return json({ error: 'Falta el diseno' }, 400, cors);
-  const tema = validarSitioTema(b.tema);
+  // { sitio: { tema, portada } } (o { tema } de la fase 1)
+  const sitio = b && b.sitio && typeof b.sitio === 'object' ? b.sitio : b;
+  if (!sitio || !sitio.tema) return json({ error: 'Falta el diseno' }, 400, cors);
+  const tema = validarSitioTema(sitio.tema);
+  const portada = validarSitioPortada(sitio.portada);
   if (sitioProblemas(tema)) return json({ error: 'Hay textos que no se leerian bien sobre su fondo. Corrige los colores marcados.' }, 400, cors);
   const antes = await leerAjuste(env, 'sitio_publicado', null);
   let hist = await leerAjuste(env, 'sitio_historial', []); if (!Array.isArray(hist)) hist = [];
   if (antes && antes.tema) hist.unshift(antes);
   hist = hist.slice(0, 30);
-  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema };
+  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema, portada };
   await env.DB.batch([guardarAjuste(env, 'sitio_publicado', nuevo), guardarAjuste(env, 'sitio_historial', hist)]);
   return json({ ok: true, publicado: nuevo }, 200, cors);
 }

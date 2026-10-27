@@ -15,11 +15,14 @@ function _destItem(r){
   var fotos = [r.foto].concat(r.fotos || []).filter(function(u, k, a){ return u && a.indexOf(u) === k; }).slice(0, 4);
   return { id: r.id, nombre: partes[0], detalle: partes.slice(1).join(' '), precio: r.precio ? '$' + Number(r.precio).toLocaleString() : '', etiqueta: '', fotos: fotos };
 }
+// lista elegida a mano en el panel (Tienda > Portada); vacia = automatico (los mas pedidos)
+function _destManual(){ var p = window.__sitioPortada; return p && Array.isArray(p.destacados) && p.destacados.length ? p.destacados : null; }
 function _destArmar(){
   if(!relojes.length) return false;
   var porId = {}; relojes.forEach(function(r){ porId[r.id] = r; });
-  var lista = (_destIds || []).map(function(id){ return porId[id]; }).filter(Boolean);
-  if(lista.length < 3){   // sin suficientes clics todavia: se completa con los ultimos disponibles
+  var manual = _destManual();
+  var lista = (manual || _destIds || []).map(function(id){ return porId[id]; }).filter(function(r){ return r && r.estado !== 'vendido'; });
+  if(!manual && lista.length < 3){   // sin suficientes clics todavia: se completa con los ultimos disponibles
     relojes.forEach(function(r){ if(lista.length < 6 && r.estado === 'disponible' && lista.indexOf(r) === -1) lista.push(r); });
   }
   DEST_LOCAL = lista.map(_destItem);
@@ -27,6 +30,14 @@ function _destArmar(){
   renderDestacados();
   return true;
 }
+// si cambia la lista elegida en el panel (al publicar o en la vista previa), el carrusel se rearma
+var _destUltimaManual = '';
+document.addEventListener('sitio-portada', function(){
+  var m = JSON.stringify(_destManual() || []);
+  if(m === _destUltimaManual) return;
+  _destUltimaManual = m;
+  if(_destIds !== null) _destArmar();
+});
 function cargarDestacados(){
   fetch(API_DEST).then(function(r){ return r.ok ? r.json() : { ids: [] }; }).catch(function(){ return { ids: [] }; }).then(function(d){
     _destIds = Array.isArray(d.ids) ? d.ids : [];
