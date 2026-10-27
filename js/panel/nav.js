@@ -60,7 +60,8 @@ const SECCIONES = [
     { id: 'cierres', t: 'Cierres', page: 'finanzas', inner: 'cierres' }] },
   { id: 'tienda', t: 'Tienda', subs: [
     { id: 'diseno', t: 'Diseño', page: 'tienda' },
-    { id: 'portada', t: 'Portada', page: 'tienda' }] },
+    { id: 'portada', t: 'Portada', page: 'tienda' },
+    { id: 'promos', t: 'Promociones', page: 'tienda' }] },
   { id: 'ajustes', t: 'Ajustes', subs: [
     { id: 'general', t: 'General', page: 'ajustes', contador: 'salud-badge' },
     { id: 'contenido', t: 'Contenido', page: 'contenido' },

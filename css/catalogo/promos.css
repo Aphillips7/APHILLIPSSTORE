@@ -1,0 +1,23 @@
+  /* === PROMOCIONES (Tienda > Promociones en el panel) === */
+  /* precio con oferta: el normal tachado en gris, el de oferta en negro y el % en rojo */
+  .ci-con-oferta s,.dest-precio s,.prod-precio.con-oferta s{color:var(--gris-texto,#71717a);font-weight:400;text-decoration-thickness:1px;}
+  .ci-con-oferta b{font-weight:600;}
+  .ci-pct,.prod-pct{color:#b42318;font-weight:600;}
+  .prod-precio.con-oferta{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;}
+  .prod-precio.con-oferta s{font-size:.75em;}
+  .prod-pct{font-size:.7em;letter-spacing:.02em;}
+  .prod-oferta-fin{flex-basis:100%;font-size:12px;font-weight:500;letter-spacing:.02em;color:#b42318;}
+  /* etiquetas propias en la foto de la tarjeta (mismo estilo que "Nuevo") */
+  .card-etq{max-width:calc(100% - 20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* ventana emergente */
+  .aph-popup{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(9,9,11,.5);opacity:0;transition:opacity .25s ease;}
+  .aph-popup.abierta{opacity:1;}
+  .aph-popup-caja{position:relative;width:min(420px,100%);background:#fff;padding:34px 28px 28px;text-align:center;box-shadow:0 20px 60px -20px rgba(0,0,0,.45);transform:translateY(10px);transition:transform .25s ease;border-top:4px solid var(--glaciar,#a7c4d6);}
+  .aph-popup.abierta .aph-popup-caja{transform:none;}
+  .aph-popup-caja h2{font-family:var(--font-titulo);font-weight:800;text-transform:uppercase;font-size:22px;line-height:1.15;margin:0 0 10px;color:var(--black);text-wrap:balance;}
+  .aph-popup-caja p{font-size:var(--fs-texto,13px);line-height:1.6;color:#3f3f46;margin:0 0 20px;}
+  .aph-popup-btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 28px;border:none;background:var(--black);color:#fff;font-family:inherit;font-size:var(--fs-etiqueta,12px);font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;}
+  .aph-popup-btn:active{transform:scale(.97);}
+  .aph-popup-x{position:absolute;top:8px;right:10px;width:36px;height:36px;border:none;background:none;font-size:26px;line-height:1;color:#71717a;cursor:pointer;}
+  .aph-popup-x:hover{color:var(--black);}

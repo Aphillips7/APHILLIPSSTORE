@@ -7,6 +7,7 @@
 //    (sin guardarlo y sin contar visitas ni clics).
 import { cssDeTema } from './tema.js';
 import { aplicarPortada } from './portada.js';
+import { aplicarPromos } from './promos-tienda.js';
 
 const API = 'https://api.aphillipsstore.com/sitio';
 const CLAVE_CSS = 'aph_tema_css', CLAVE_SITIO = 'aph_sitio';
@@ -21,6 +22,7 @@ function aplicar(sitio){
   sitio = sitio || {};
   poner(cssDeTema(sitio.tema || {}));
   try{ aplicarPortada(sitio.portada || {}); }catch(e){}
+  try{ aplicarPromos(sitio.promos || {}); }catch(e){}
 }
 
 if(VISTA_PREVIA){
@@ -30,17 +32,18 @@ if(VISTA_PREVIA){
     if(e.origin !== location.origin || !e.data) return;
     if(e.data.tipo === 'aph-sitio') aplicar(e.data.sitio);
     if(e.data.tipo === 'aph-tema') poner(cssDeTema(e.data.tema));   // compatibilidad con la fase 1
+    if(e.data.tipo === 'aph-popup') aplicarPromos(e.data.promos, { forzarPopup: true });   // "Ver la ventana" del editor
   });
   try{ window.parent.postMessage({ tipo: 'aph-vista-lista' }, location.origin); }catch(e){}
 } else {
-  try{ var guardado = JSON.parse(localStorage.getItem(CLAVE_SITIO) || 'null'); if(guardado) aplicarPortada(guardado.portada || {}); }catch(e){}
+  try{ var guardado = JSON.parse(localStorage.getItem(CLAVE_SITIO) || 'null'); if(guardado){ aplicarPortada(guardado.portada || {}); aplicarPromos(guardado.promos || {}); } }catch(e){}
   fetch(API, { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
     if(!d) return;
     aplicar(d);
     var css = cssDeTema(d.tema || {});
     try{
       if(css) localStorage.setItem(CLAVE_CSS, css); else localStorage.removeItem(CLAVE_CSS);
-      localStorage.setItem(CLAVE_SITIO, JSON.stringify({ portada: d.portada || {} }));
+      localStorage.setItem(CLAVE_SITIO, JSON.stringify({ portada: d.portada || {}, promos: d.promos || {} }));
     }catch(e){}
   }).catch(function(){ /* sin internet: queda lo ultimo guardado */ });
 }

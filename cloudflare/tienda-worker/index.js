@@ -69,7 +69,7 @@ export default {
       const r = d ? (d.relojes || []).find((x) => claveReloj(x.id) === mReloj[1]) || null : null;
       if (!r) return Response.redirect('https://' + DOMINIO + '/relojes', 302);   // ya no esta publicado
       if (url.pathname !== rutaReloj(r)) return Response.redirect('https://' + DOMINIO + rutaReloj(r), 301);   // le cambiaron el nombre
-      return vistaPreviaReloj(conCabeceras(await servir(env, request, '/catalogo.html')), r);
+      return vistaPreviaReloj(conCabeceras(await servir(env, request, '/catalogo.html')), r, ofertaActiva(await promosSitio(env), r));
     }
     if (url.pathname === '/admin') return conCabeceras(await servir(env, request, '/index.html'), true);
 
@@ -152,9 +152,29 @@ async function sitemap(env) {
 // para los que estan en camino); todo sale del catalogo publico, nunca de datos privados.
 const XML_ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
 function xmlEsc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, (c) => XML_ESC[c]); }
+// ---------- ofertas (Tienda > Promociones del panel) ----------
+// La tienda muestra el precio de oferta: Google (ficha y Merchant Center) recibe el mismo precio para que
+// coincidan. Una oferta vale solo si es menor al precio normal, el reloj no esta vendido y no vencio.
+function diaPanama() { return new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10); }
+async function promosSitio(env) {
+  try {
+    const pedido = new Request('https://api.aphillipsstore.com/sitio');
+    const r = env.API ? await env.API.fetch(pedido) : await fetch(pedido);
+    return r.ok ? ((await r.json()).promos || null) : null;
+  } catch (e) { return null; }
+}
+function ofertaActiva(promos, r) {
+  if (!promos || !Array.isArray(promos.ofertas) || !(Number(r.precio) > 0) || r.estado === 'vendido') return null;
+  const o = promos.ofertas.find((x) => x.id === r.id);
+  if (!o || !(Number(o.precio) > 0 && Number(o.precio) < Number(r.precio))) return null;
+  if (o.hasta && o.hasta < diaPanama()) return null;
+  return { precio: Number(o.precio), hasta: o.hasta || '' };
+}
+
 async function feedMerchant(env) {
   const d = await catalogo(env);
   if (!d) return new Response('Catalogo no disponible', { status: 503 });
+  const promos = await promosSitio(env);
   const GENERO = { hombre: 'male', mujer: 'female', unisex: 'unisex' };
   const items = (d.relojes || []).filter((r) => r.estado === 'disponible' && Number(r.precio) > 0).map((r) => {
     const fotos = (Array.isArray(r.fotos) && r.fotos.length ? r.fotos : [r.foto]).filter((f) => typeof f === 'string' && f.startsWith('https://'));
@@ -173,6 +193,10 @@ async function feedMerchant(env) {
       ['g:link', 'https://' + DOMINIO + rutaReloj(r)], ['g:image_link', fotos[0]],
       ...fotos.slice(1, 10).map((f) => ['g:additional_image_link', f]),
       ['g:availability', 'in_stock'], ['g:price', Number(r.precio).toFixed(2) + ' USD'], ['g:condition', 'new'],
+      ...(() => { const of = ofertaActiva(promos, r); if (!of) return [];
+        const c = [['g:sale_price', of.precio.toFixed(2) + ' USD']];
+        if (of.hasta) c.push(['g:sale_price_effective_date', diaPanama() + 'T00:00-05:00/' + of.hasta + 'T23:59-05:00']);
+        return c; })(),
       ['g:google_product_category', '201'], ['g:product_type', 'Relojes > ' + (marca || 'Otras marcas')], ['g:age_group', 'adult']
     ];
     if (marca) campos.push(['g:brand', marca]);
@@ -218,11 +242,11 @@ function rutaReloj(r) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70).replace(/-+$/, '') || 'reloj';
   return '/reloj-' + slug + '-' + claveReloj(r && r.id);
 }
-function vistaPreviaReloj(pagina, r) {
+function vistaPreviaReloj(pagina, r, oferta) {
   if (!pagina.ok) return pagina;
   const titulo = (r.nombre || 'Reloj') + ' — APHILLIPS STORE';
   const partes = [ESTADOS[r.estado] || ''];
-  if ((r.estado === 'disponible' || r.estado === 'transito') && r.precio > 0) partes.push('$' + r.precio);
+  if ((r.estado === 'disponible' || r.estado === 'transito') && r.precio > 0) partes.push(oferta ? 'En oferta: $' + oferta.precio + ' (antes $' + r.precio + ')' : '$' + r.precio);
   partes.push(r.estado === 'bajopedido' ? 'Cotiza por WhatsApp' : 'Escríbenos por WhatsApp');
   const descripcion = partes.filter(Boolean).join(' · ');
   const imagen = imagenCompartir(r);
@@ -232,7 +256,7 @@ function vistaPreviaReloj(pagina, r) {
     'og:description': descripcion, 'twitter:description': descripcion, description: descripcion
   };
   if (imagen) { meta['og:image'] = imagen; meta['twitter:image'] = imagen; }
-  const datosGoogle = productoJsonLd(r, enlace);
+  const datosGoogle = productoJsonLd(r, enlace, oferta);
   return new HTMLRewriter()
     .on('title', { element(e) { e.setInnerContent(titulo); } })
     // datos estructurados del producto: Google puede mostrar precio y disponibilidad en los resultados
@@ -251,7 +275,7 @@ function vistaPreviaReloj(pagina, r) {
 // (bajo pedido) no se pone oferta: Google la exige con precio.
 const DISPONIBILIDAD = { disponible: 'InStock', transito: 'PreOrder', vendido: 'SoldOut' };
 const MARCAS_TIENDA = ['Invicta', 'Bulova', 'TechnoMarine'];
-function productoJsonLd(r, enlace) {
+function productoJsonLd(r, enlace, oferta) {
   const texto = (r.nombre || '') + ' ' + (r.coleccion || '');
   const marca = MARCAS_TIENDA.find((m) => texto.toLowerCase().includes(m.toLowerCase()));
   const fotos = (Array.isArray(r.fotos) && r.fotos.length ? r.fotos : [r.foto]).filter((f) => typeof f === 'string' && f.startsWith('https://')).slice(0, 6);
@@ -263,7 +287,8 @@ function productoJsonLd(r, enlace) {
   if (marca) p.brand = { '@type': 'Brand', name: marca };
   if (r.coleccion) p.model = String(r.coleccion);
   if (Number(r.precio) > 0 && DISPONIBILIDAD[r.estado]) {
-    p.offers = { '@type': 'Offer', url: enlace, priceCurrency: 'USD', price: Number(r.precio).toFixed(2),
+    p.offers = { '@type': 'Offer', url: enlace, priceCurrency: 'USD', price: (oferta ? oferta.precio : Number(r.precio)).toFixed(2),
+      ...(oferta && oferta.hasta ? { priceValidUntil: oferta.hasta } : {}),
       availability: 'https://schema.org/' + DISPONIBILIDAD[r.estado], itemCondition: 'https://schema.org/NewCondition',
       seller: { '@type': 'Organization', name: 'APHILLIPS STORE' } };
   }

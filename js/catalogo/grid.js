@@ -6,6 +6,7 @@ import { abrir, etiquetaEstado } from './modal.js';
 import { _filtroMarca, _genOk, _MARCAS } from './vistas.js';
 import { ordenPeso } from '../products.js';
 import { _destEsc as esc, miniatura, srcsetFoto } from './ui.js';
+import { dinero, etiquetaDe, ofertaDe, precioVisible } from '../sitio/promos.js';
 
 let _vistaCompacta = false;
 var _nItems = 0; // cuantos relojes quedan visibles tras filtros (lo usa el panel de filtros)
@@ -22,8 +23,8 @@ function render(){
   items.sort(function(a,b){
     var av = ordenPeso(a.estado), bv = ordenPeso(b.estado);
     if(av!==bv) return av-bv;
-    if(_orden==='precio_asc') return (a.precio||0)-(b.precio||0);
-    if(_orden==='precio_desc') return (b.precio||0)-(a.precio||0);
+    if(_orden==='precio_asc') return precioVisible(a)-precioVisible(b);   // con la oferta, si tiene
+    if(_orden==='precio_desc') return precioVisible(b)-precioVisible(a);
     return 0;
   });
   _nItems = items.length;
@@ -50,11 +51,17 @@ function render(){
     var spec = [r.movimiento, r.mm ? r.mm+' mm' : '', r.materialCaja].filter(Boolean).join(', ');
     if(!spec) spec = (r.sku?'Ref. '+r.sku:'')+(r.coleccion?(r.sku?' · ':'')+r.coleccion:'');
     // bajo pedido sin precio: no se muestra precio (la consulta se hace desde la ficha del reloj)
-    var precioHtml = (pedido && !r.precio) ? '<div class="ci-precio ci-cotiza">Precio a cotizar</div>' : '<div class="ci-precio">$'+(r.precio||0).toLocaleString()+'</div>';   // bajo pedido sin precio: misma linea, asi la tarjeta mide igual
+    // oferta (Tienda > Promociones): precio normal tachado, precio de oferta y el % de descuento
+    var of = ofertaDe(r);
+    var precioHtml = (pedido && !r.precio) ? '<div class="ci-precio ci-cotiza">Precio a cotizar</div>' :
+      of ? '<div class="ci-precio ci-con-oferta"><s>'+dinero(of.antes)+'</s> <b>'+dinero(of.precio)+'</b> <span class="ci-pct">-'+of.pct+'%</span></div>' :
+      '<div class="ci-precio">$'+(r.precio||0).toLocaleString()+'</div>';   // bajo pedido sin precio: misma linea, asi la tarjeta mide igual
     // "Nuevo": relojes agregados en los ultimos 14 dias (fecha de alta = _ts)
     var nuevo = !agotado && r._ts && (Date.now() - r._ts) < 14 * 86400000;
+    // etiqueta puesta en el panel (Ultimas unidades, Edicion limitada...); si no hay y esta en oferta: Oferta
+    var etq = !agotado ? (etiquetaDe(r) || (of ? 'Oferta' : '')) : '';
     return '<div class="card'+(agotado?' card-agotado':'')+'" data-id="'+r.id+'" onclick="abrir(\''+r.id+'\')" role="link" tabindex="0" aria-label="'+esc(r.nombre||'Reloj')+'">'+
-      '<div class="card-foto'+(agotado?' agotada':'')+'">'+foto+(nuevo?'<span class="card-nuevo">Nuevo</span>':'')+'</div>'+
+      '<div class="card-foto'+(agotado?' agotada':'')+'">'+foto+(etq?'<span class="card-nuevo card-etq">'+esc(etq)+'</span>':nuevo?'<span class="card-nuevo">Nuevo</span>':'')+'</div>'+
       '<div class="card-info ci-tag">'+
         favBtn+
         '<div class="ci-txt">'+
@@ -70,6 +77,9 @@ function render(){
   cards.forEach(function(c){ if(_io){ _io.observe(c); } else { c.classList.add('visible'); } });
   actualizarFltUI();
 }
+
+// cuando llegan (o cambian) las promociones, las tarjetas se vuelven a pintar con sus precios y etiquetas
+document.addEventListener('sitio-promos', function(){ if(relojes.length && document.getElementById('grid')) render(); });
 
 // las tarjetas se abren tambien con el teclado (Tab hasta la tarjeta y Enter o espacio)
 document.addEventListener('keydown', function(e){

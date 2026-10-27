@@ -5,6 +5,7 @@ import { _destEsc as esc, miniatura, rutaReloj, srcsetFoto, toast } from './ui.j
 import { saludo } from './sesion.js';
 import { WHATSAPP_NUM } from './whatsapp.js';
 import { textoETA } from '../products.js';
+import { dinero, mensajeWa, ofertaDe, precioVisible } from '../sitio/promos.js';
 
 let _idAbierto = null;
 
@@ -203,7 +204,7 @@ function pintarParecidos(r){
   sec.hidden = false;
   sec.querySelector('.par-fila').innerHTML = lista.map(function(x){
     var foto = typeof x.foto === 'string' && x.foto ? '<img src="'+esc(miniatura(x.foto))+'"'+srcsetFoto(x.foto, '(max-width:600px) 45vw, 22vw')+' data-completa="'+esc(x.foto)+'" alt="" loading="lazy" decoding="async" onerror="fotoRespaldo(this)">' : '<span class="sinfoto">Sin foto</span>';
-    var precio = x.estado === 'bajopedido' ? 'Bajo cotización' : x.precio ? '$'+Number(x.precio).toLocaleString() : '';
+    var precio = x.estado === 'bajopedido' ? 'Bajo cotización' : x.precio ? dinero(precioVisible(x)) : '';   // con la oferta, si tiene
     return '<button type="button" class="par-card" onclick="abrirParecido(\''+esc(x.id)+'\')" aria-label="'+esc(x.nombre||'Reloj')+'">'+
       '<span class="par-foto">'+foto+'</span>'+
       '<span class="par-nombre">'+esc(x.nombre||'')+'</span>'+
@@ -264,7 +265,16 @@ function abrir(id){
 
   var precioEl = document.getElementById('modal-precio');
   if(r.estado==='bajopedido'){ precioEl.textContent = 'Precio bajo cotización'; precioEl.className = 'prod-precio cotizar'; }
-  else { precioEl.textContent = '$'+(r.precio||0).toLocaleString(); precioEl.className = 'prod-precio'; }
+  else {
+    // oferta (Tienda > Promociones): normal tachado, precio de oferta, % y, si tiene fecha, cuanto falta
+    var of = ofertaDe(r);
+    if(of){
+      var fin = of.hasta ? new Date(of.hasta + 'T23:59:59') : null, dias = fin ? Math.ceil((fin - Date.now()) / 86400000) : 0;
+      precioEl.innerHTML = '<s>' + dinero(of.antes) + '</s> ' + dinero(of.precio) + ' <span class="prod-pct">-' + of.pct + '%</span>' +
+        (fin && dias >= 1 ? '<span class="prod-oferta-fin">' + (dias === 1 ? 'La oferta termina hoy' : 'Oferta por ' + dias + ' días más') + '</span>' : '');
+      precioEl.className = 'prod-precio con-oferta';
+    } else { precioEl.textContent = '$'+(r.precio||0).toLocaleString(); precioEl.className = 'prod-precio'; }
+  }
 
   // Nota debajo del boton: estado del reloj y notas extra
   var nota = '';
@@ -301,10 +311,11 @@ function abrir(id){
     msg = saludo()+' Vi el '+nombreRef+' en el catálogo pero ya está vendido, ¿tienen algo similar o se puede conseguir de nuevo?';
   } else if(r.estado==='bajopedido'){
     waTexto.textContent = 'Cotizar por WhatsApp';
-    msg = saludo()+' Quiero cotizar el modelo '+nombreRef+' que vi en el catálogo bajo pedido.';
+    msg = saludo()+' '+mensajeWa('cotizar', { reloj: nombreRef, precio: '' });   // texto editable en Tienda > Promociones
   } else {
     waTexto.textContent = 'Comprar por WhatsApp';
-    msg = saludo()+' Me interesa el '+nombreRef+' que vi en el catálogo, ¿sigue disponible?';
+    var ofW = ofertaDe(r);
+    msg = saludo()+' '+mensajeWa('comprar', { reloj: nombreRef, precio: dinero(precioVisible(r)), oferta: ofW ? dinero(ofW.precio) : '' });   // texto editable en Tienda > Promociones
   }
   // el enlace del reloj va al final: en WhatsApp sale con su foto y sabes exactamente cual es
   msg += '\n' + enlaceReloj(id);

@@ -1,7 +1,7 @@
 ﻿// Service Worker de APHILLIPS STORE â€” version del cache
 // Cada vez que publiques cambios en HTML, CSS o JS, sube este numero
 // (ej: 'aphillips-v3'). Al activarse la version nueva se borra el cache viejo.
-const CACHE_NAME = 'aphillips-v160';
+const CACHE_NAME = 'aphillips-v161';
 
 // Solo el "cascaron" de la app: nunca datos, nunca Firebase, nunca fuentes externas.
 // Si agregas o renombras un archivo en /css o /js, agregalo tambien aqui.
@@ -39,6 +39,7 @@ const SHELL_FILES = [
   './css/catalogo/filtros.css',
   './css/catalogo/marcas.css',
   './css/catalogo/futuro.css',
+  './css/catalogo/promos.css',
   './css/catalogo/pie.css',
   './css/catalogo/hora.css',
   './css/catalogo/glaciar.css',
@@ -109,6 +110,8 @@ const SHELL_FILES = [
   './js/sitio/tema.js',
   './js/sitio/aplicar.js',
   './js/sitio/portada.js',
+  './js/sitio/promos.js',
+  './js/sitio/promos-tienda.js',
   './js/catalogo/ui.js',
   './js/catalogo/whatsapp.js',
   './js/catalogo/favoritos.js',

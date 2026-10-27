@@ -3,6 +3,7 @@ import { _favoritos } from './favoritos.js';
 import { incMetrica } from './metricas.js';
 import { saludo, sesion } from './sesion.js';
 import { rutaReloj, vibrar } from './ui.js';
+import { mensajeWa } from '../sitio/promos.js';
 
 const WHATSAPP_NUM = '50762615442';
 
@@ -71,7 +72,8 @@ function cotizarDirecto(id){
   var r = relojes.find(function(x){ return x.id === id; });
   if(!r) return;
   vibrar(10);
-  var msg = encodeURIComponent(saludo()+' Quiero cotizar el modelo '+(r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':'')+' que vi en el catálogo bajo pedido.\n' + 'https://aphillipsstore.com' + rutaReloj(r));
+  // texto editable en Tienda > Promociones (mensaje para cotizar)
+  var msg = encodeURIComponent(saludo()+' '+mensajeWa('cotizar', { reloj: (r.nombre||'reloj')+(r.sku?' (Ref. '+r.sku+')':''), precio: '' })+'\n' + 'https://aphillipsstore.com' + rutaReloj(r));
   incMetrica(id, 'clics');
   window.open('https://wa.me/'+WHATSAPP_NUM+'?text='+msg, '_blank');
 }

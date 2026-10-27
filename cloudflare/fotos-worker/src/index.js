@@ -884,6 +884,34 @@ function validarSitioPortada(p) {
   for (const k of PORTADA_ENLACES) if (RE_ID.test(String(e[k] || ''))) out.enlaces[k] = String(e[k]);
   return out;
 }
+// Promociones (fase 3): misma validacion que js/sitio/promos.js (si cambias una, cambia la otra)
+function promoTxt(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u001f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max); }
+function promoFecha(v) { v = String(v || '').trim(); return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : ''; }
+function validarSitioPromos(p) {
+  p = p && typeof p === 'object' ? p : {};
+  const out = { anuncios: [], ofertas: [], etiquetas: [], popup: {}, wa: {} };
+  for (const a of Array.isArray(p.anuncios) ? p.anuncios : []) { const t = promoTxt(a && a.texto, 70); if (t && out.anuncios.length < 6) out.anuncios.push({ texto: t, desde: promoFecha(a.desde), hasta: promoFecha(a.hasta) }); }
+  const vo = new Set();
+  for (const o of Array.isArray(p.ofertas) ? p.ofertas : []) {
+    if (!o || !RE_ID.test(String(o.id || '')) || vo.has(o.id) || out.ofertas.length >= 60) continue;
+    const pr = Math.round(Number(o.precio) * 100) / 100; if (!(pr > 0 && pr < 1000000)) continue;
+    vo.add(o.id); out.ofertas.push({ id: String(o.id), precio: pr, hasta: promoFecha(o.hasta) });
+  }
+  const ve = new Set();
+  for (const e of Array.isArray(p.etiquetas) ? p.etiquetas : []) {
+    const t = promoTxt(e && e.texto, 22);
+    if (!e || !RE_ID.test(String(e.id || '')) || !t || ve.has(e.id) || out.etiquetas.length >= 100) continue;
+    ve.add(e.id); out.etiquetas.push({ id: String(e.id), texto: t });
+  }
+  const q = p.popup && typeof p.popup === 'object' ? p.popup : {};
+  out.popup = { activo: q.activo === true, titulo: promoTxt(q.titulo, 50), texto: promoTxt(q.texto, 220), boton: promoTxt(q.boton, 24),
+    destino: ['catalogo', 'boletin', 'reloj', 'ninguno'].includes(q.destino) ? q.destino : 'catalogo', reloj: RE_ID.test(String(q.reloj || '')) ? String(q.reloj) : '',
+    momento: q.momento === 'salida' ? 'salida' : 'entrada', segundos: Math.min(60, Math.max(2, Math.round(Number(q.segundos)) || 6)),
+    desde: promoFecha(q.desde), hasta: promoFecha(q.hasta) };
+  const w = p.wa && typeof p.wa === 'object' ? p.wa : {};
+  for (const k of ['comprar', 'cotizar']) { const t = promoTxt(w[k], 300); if (t) out.wa[k] = t; }
+  return out;
+}
 async function leerAjuste(env, nombre, porDefecto) {
   const f = await env.DB.prepare('SELECT valor FROM ajustes WHERE nombre = ?1').bind(nombre).first();
   if (!f) return porDefecto;
@@ -894,12 +922,12 @@ function guardarAjuste(env, nombre, valor) {
 }
 async function sitioPublico(env, cors) {
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
-  return json({ version: p.version || 0, tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
+  return json({ version: p.version || 0, tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos) }, 200, { ...cors, 'Cache-Control': 'public, max-age=30' });
 }
 async function adminSitio(env, cors) {
   const p = await leerAjuste(env, 'sitio_publicado', { version: 0, tema: {} });
   const h = await leerAjuste(env, 'sitio_historial', []);
-  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
+  return json({ publicado: { version: p.version || 0, fecha: p.fecha || 0, nota: p.nota || '', tema: validarSitioTema(p.tema), portada: validarSitioPortada(p.portada), promos: validarSitioPromos(p.promos) }, historial: Array.isArray(h) ? h : [] }, 200, cors);
 }
 async function publicarSitio(request, env, cors) {
   const b = await leerJson(request);
@@ -908,12 +936,13 @@ async function publicarSitio(request, env, cors) {
   if (!sitio || !sitio.tema) return json({ error: 'Falta el diseno' }, 400, cors);
   const tema = validarSitioTema(sitio.tema);
   const portada = validarSitioPortada(sitio.portada);
+  const promos = validarSitioPromos(sitio.promos);
   if (sitioProblemas(tema)) return json({ error: 'Hay textos que no se leerian bien sobre su fondo. Corrige los colores marcados.' }, 400, cors);
   const antes = await leerAjuste(env, 'sitio_publicado', null);
   let hist = await leerAjuste(env, 'sitio_historial', []); if (!Array.isArray(hist)) hist = [];
   if (antes && antes.tema) hist.unshift(antes);
   hist = hist.slice(0, 30);
-  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema, portada };
+  const nuevo = { version: ((antes && antes.version) || 0) + 1, fecha: Date.now(), nota: limpiarTexto(b.nota, 80), tema, portada, promos };
   await env.DB.batch([guardarAjuste(env, 'sitio_publicado', nuevo), guardarAjuste(env, 'sitio_historial', hist)]);
   return json({ ok: true, publicado: nuevo }, 200, cors);
 }
