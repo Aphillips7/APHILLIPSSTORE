@@ -232,8 +232,16 @@ function compartirReloj(r){
     return;
   }
   var listo = function(){ toast('Enlace copiado. Pégalo donde quieras compartirlo.'); };
-  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(listo, function(){ prompt('Copia el enlace:', url); });
-  else prompt('Copia el enlace:', url);
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(listo, function(){ copiarRespaldo(url, listo); });
+  else copiarRespaldo(url, listo);
+}
+// sin portapapeles moderno: se copia con un campo temporal (algunos navegadores bloquean prompt() y daba error)
+function copiarRespaldo(url, listo){
+  var t = document.createElement('textarea'); t.value = url; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+  document.body.appendChild(t); t.select();
+  var ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+  t.remove();
+  if(ok) listo(); else toast('Copia este enlace: ' + url);
 }
 function copiarSku(e, sku){
   e.stopPropagation();
