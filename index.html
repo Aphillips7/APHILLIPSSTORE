@@ -249,8 +249,15 @@ if(location.hostname==='aphillips7.github.io'){
       <div class="field"><label>Metodo de pago</label>
         <select id="fin-metodo"><option value="" selected>Elige como pago…</option><option value="efectivo">Efectivo</option><option value="yappy">Yappy</option><option value="transferencia">Transferencia bancaria</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select>
       </div>
-      <div class="field"><label>Cliente (opcional)</label>
-        <select id="fin-cliente"><option value="">Sin cliente registrado</option></select>
+      <div class="field"><label for="fin-buscar-cliente">Cliente <span class="vm-opcional">opcional</span></label>
+        <!-- se busca con la lupa (js/panel/finanzas/cliente-lupa.js); el select oculto guarda el elegido -->
+        <select id="fin-cliente" hidden aria-hidden="true" tabindex="-1"><option value="">Sin cliente registrado</option></select>
+        <div class="vm-cliente-sel" id="fin-cli-sel" hidden></div>
+        <div class="vm-buscador" id="fin-cli-buscador">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="search" id="fin-buscar-cliente" placeholder="Numero de cliente, nombre o telefono..." autocomplete="off" oninput="buscarClienteFin(this.value)" />
+        </div>
+        <div class="vm-resultados" id="fin-cli-resultados" hidden></div>
       </div>
       <input type="hidden" id="fin-costo" value="0" />
       <input type="hidden" id="fin-inv-index" value="" />
