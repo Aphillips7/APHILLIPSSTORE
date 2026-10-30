@@ -342,7 +342,6 @@ if(location.hostname==='aphillips7.github.io'){
           <option value="compra">Compras</option><option value="gasto">Gastos</option><option value="retiro">Retiros</option><option value="aporte">Aportes</option><option value="traspaso">Traspasos</option><option value="sinmetodo">Sin metodo de pago</option>
         </select>
         <input type="search" id="fil-buscar" placeholder="Buscar movimiento..." oninput="renderHistorial()" style="flex:1;min-width:160px;" />
-        <button type="button" class="btn btn-gold btn-sm" onclick="exportarHistorialCSV()">Exportar</button>
         <div id="fil-balance" class="fil-balance"></div>
       </div>
     </div>
@@ -353,7 +352,6 @@ if(location.hostname==='aphillips7.github.io'){
   <div id="fin-resumen" class="inner-page">
     <div class="fin-barra">
       <div class="fin-periodos" id="fin-periodos"></div>
-      <button type="button" class="btn btn-gold btn-sm" onclick="exportarPeriodoCSV()">Exportar a Excel</button>
     </div>
     <div id="fin-kpis" class="kpi-grid"></div>
     <div id="fin-alertas" class="fin-avisos"></div>
@@ -398,7 +396,6 @@ if(location.hostname==='aphillips7.github.io'){
   <div id="fin-cierres" class="inner-page">
     <div class="fin-barra">
       <p class="fin-intro">Cierra cada mes cuando revises sus numeros: queda guardado su resumen y ya no se pueden borrar movimientos de ese mes por accidente.</p>
-      <button type="button" class="btn btn-gold btn-sm" onclick="exportarCierresCSV()">Estado de resultados por mes (Excel)</button>
     </div>
     <div id="fin-kpis-cierres" class="kpi-grid"></div>
     <div class="card"><div id="fin-tabla-cierres"></div></div>
@@ -409,7 +406,6 @@ if(location.hostname==='aphillips7.github.io'){
 <div id="page-inventario" class="page">
   <div class="acciones-pagina">
     <button class="btn btn-gold" onclick="abrirFormularioNuevo()" id="btn-registrar">+ Registrar reloj</button>
-    <button class="btn btn-gold" onclick="exportarInventarioCSV()">Exportar a Excel</button>
   </div>
   <div id="inv-kpis" class="kpi-grid"></div>
   <div class="inv-calidad" id="inv-calidad"></div>
@@ -791,14 +787,6 @@ if(location.hostname==='aphillips7.github.io'){
       <button class="btn btn-outline" style="color:var(--red);border-color:var(--red);" onclick="borrarYRecargarDesdeNube()">Borrar datos locales y recargar desde la nube</button>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title">Exportar a Excel</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Descarga tu inventario o tus movimientos en un archivo CSV que se abre en Excel o Google Sheets (para contabilidad o un conteo del inventario).</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-gold" onclick="exportarInventarioCSV()">Inventario (CSV)</button>
-      <button class="btn btn-gold" onclick="exportarMovimientosCSV()">Movimientos (CSV)</button>
-    </div>
-  </div>
 </div>
 
 <!-- VENTAS (fase 2: pedidos web; la fase 5 suma tablero, KPIs y reservas) -->
@@ -840,7 +828,6 @@ if(location.hostname==='aphillips7.github.io'){
   <section data-vista="historial" hidden>
     <div class="fin-barra">
       <div class="fin-periodos" id="ven-periodos-hist"></div>
-      <button type="button" class="btn btn-gold btn-sm" onclick="exportarVentasCSV()">Exportar a Excel</button>
     </div>
     <div class="card ven-filtros">
       <input type="search" id="ven-f-buscar" placeholder="Buscar reloj, cliente o fecha..." oninput="renderHistorialVentas()" />
