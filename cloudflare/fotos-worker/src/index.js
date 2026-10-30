@@ -976,6 +976,44 @@ async function leerAjuste(env, nombre, porDefecto) {
 function guardarAjuste(env, nombre, valor) {
   return env.DB.prepare('INSERT INTO ajustes (nombre, valor) VALUES (?1, ?2) ON CONFLICT(nombre) DO UPDATE SET valor = excluded.valor').bind(nombre, JSON.stringify(valor));
 }
+// Cambios puntuales (Tienda > Editar): misma validacion que js/sitio/estilos.js (si cambias una, cambia la otra)
+const RE_SEL_ESTILO = /^[A-Za-z0-9_\-#.\s>:()]{1,300}$/;
+const RE_COLOR_ESTILO = /^#[0-9a-f]{6}$/;
+const FUENTES_ESTILO = ['titulo', 'texto', 'sistema', 'serif'];
+const PAGINAS_ESTILO = ['inicio', 'preguntas', 'legal', 'guia'];
+function numEstilo(v, min, max, paso) { let n = Number(v); if (!isFinite(n)) return null; n = Math.round(n / paso) * paso; return n < min || n > max ? null : Math.round(n * 100) / 100; }
+function propsEstilo(p) {
+  p = p && typeof p === 'object' ? p : {};
+  const o = {}; let c;
+  if (typeof p.color === 'string' && RE_COLOR_ESTILO.test(c = p.color.toLowerCase())) o.color = c;
+  if (typeof p.fondo === 'string' && RE_COLOR_ESTILO.test(c = p.fondo.toLowerCase())) o.fondo = c;
+  if ((c = numEstilo(p.tam, 8, 120, 1)) !== null) o.tam = c;
+  if ((c = numEstilo(p.peso, 300, 900, 100)) !== null) o.peso = c;
+  if (FUENTES_ESTILO.includes(p.fuente)) o.fuente = p.fuente;
+  if (p.may === 'mayus' || p.may === 'normal') o.may = p.may;
+  if (['left', 'center', 'right'].includes(p.alin)) o.alin = p.alin;
+  if ((c = numEstilo(p.esp, -0.05, 0.4, 0.01)) !== null) o.esp = c;
+  if ((c = numEstilo(p.radio, 0, 60, 1)) !== null) o.radio = c;
+  if ((c = numEstilo(p.relleno, 0, 80, 1)) !== null) o.relleno = c;
+  if (p.oculto === true) o.oculto = true;
+  return o;
+}
+function validarSitioEstilos(lista) {
+  const out = [], vistos = new Set();
+  for (const r of Array.isArray(lista) ? lista : []) {
+    if (!r || out.length >= 200 || !PAGINAS_ESTILO.includes(r.pg) || typeof r.sel !== 'string') continue;
+    const sel = r.sel.replace(/\s+/g, ' ').trim();
+    if (!RE_SEL_ESTILO.test(sel) || vistos.has(r.pg + '|' + sel)) continue;
+    const x = { pg: r.pg, sel, p: propsEstilo(r.p) };
+    const t = typeof r.t === 'string' ? sitioParrafos(r.t, 300) : '';
+    if (t) x.t = t;
+    if (typeof r.img === 'string' && RE_FOTO_SITIO.test(r.img)) x.img = r.img;
+    if (!Object.keys(x.p).length && !x.t && !x.img) continue;
+    vistos.add(r.pg + '|' + sel);
+    out.push(x);
+  }
+  return out;
+}
 // Control (fase 5): misma validacion que js/sitio/control.js (si cambias una, cambia la otra)
 function validarSitioControl(c) {
   c = c && typeof c === 'object' ? c : {};
@@ -986,7 +1024,7 @@ const SECCIONES_CLICS = ['hero', 'destacados', 'generos', 'futuro', 'marcas', 'c
 // todo el sitio validado (para publicar, programar y vistas previas)
 function validarSitioCompleto(s) {
   s = s && typeof s === 'object' ? s : {};
-  return { tema: validarSitioTema(s.tema), portada: validarSitioPortada(s.portada), promos: validarSitioPromos(s.promos), contenido: validarSitioContenido(s.contenido), control: validarSitioControl(s.control) };
+  return { tema: validarSitioTema(s.tema), portada: validarSitioPortada(s.portada), promos: validarSitioPromos(s.promos), contenido: validarSitioContenido(s.contenido), control: validarSitioControl(s.control), estilos: validarSitioEstilos(s.estilos) };
 }
 // publica (lo usan Publicar y la publicacion programada): guarda la anterior en el historial
 async function guardarPublicado(env, sitio, nota) {
