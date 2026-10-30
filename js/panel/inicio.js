@@ -51,6 +51,7 @@ function renderKpis(actual, anterior){
   var valorPrecio = enStock.reduce(function(a, p){ return a + (Number(p.precio) || 0); }, 0);
   var pedidos = pedidosAbiertos();
   var porConfirmar = pedidos.filter(function(p){ return p.estado === 'solicitado'; }).length;
+  var enCurso = pedidos.length - porConfirmar;   // las consultas no son pedidos todavia
   var reservas = state.inventario.filter(function(p){ return p.estado === 'reservado' && p.reserva; });
   var porCobrar = reservas.reduce(function(a, p){ return a + saldoPendienteReserva(p); }, 0);
   cont.innerHTML = [
@@ -58,7 +59,7 @@ function renderKpis(actual, anterior){
     kpiHTML({ label: 'Ganancia neta', valor: dinero(actual.ganancia), tono: actual.ganancia < 0 ? 'neg' : 'pos', actual: actual.ganancia, anterior: anterior.ganancia, pie: 'tras ' + dinero(actual.gastos) + ' de gastos', onclick: "irSeccion('finanzas','resumen')" }),
     kpiHTML({ label: 'Margen promedio', valor: actual.margen + '%', tono: !actual.ingresos ? '' : actual.margen >= 30 ? 'pos' : actual.margen < 15 ? 'neg' : '', actual: actual.margen, anterior: anterior.margen, pie: actual.ventas + ' venta' + (actual.ventas !== 1 ? 's' : '') }),
     kpiHTML({ label: 'Inventario', valor: dinero(valorCosto), pie: 'a costo · a precio ' + dinero(valorPrecio), onclick: "irSeccion('inventario','relojes')" }),
-    kpiHTML({ label: 'Pedidos web', valor: String(pedidos.length), pie: porConfirmar ? porConfirmar + ' por confirmar' : 'al dia', onclick: "irSeccion('ventas','pedidos')" }),
+    kpiHTML({ label: 'Pedidos web', valor: String(enCurso), pie: porConfirmar ? porConfirmar + ' consulta' + (porConfirmar !== 1 ? 's' : '') + ' por responder' : 'sin consultas nuevas', onclick: "irSeccion('ventas','pedidos')" }),
     kpiHTML({ label: 'Por cobrar', valor: dinero(porCobrar), pie: reservas.length + ' reserva' + (reservas.length !== 1 ? 's' : '') + ' activa' + (reservas.length !== 1 ? 's' : '') })
   ].join('');
 }
@@ -112,8 +113,8 @@ function renderPendientesInicio(){
   var cont = document.getElementById('pendientes-container'); if(!cont) return;
   var items = [];
   var porConfirmar = pedidosAbiertos().filter(function(p){ return p.estado === 'solicitado'; });
-  if(porConfirmar.length) items.push(aviso(0, 'vencido', 'Pedido web', porConfirmar.length + ' pedido' + (porConfirmar.length !== 1 ? 's' : '') + ' por confirmar',
-    porConfirmar.slice(0, 3).map(function(p){ return p.numero + ' · ' + p.reloj; }).join(' / '), 'Confirmar', "irSeccion('ventas','pedidos')"));
+  if(porConfirmar.length) items.push(aviso(3, 'pendiente', 'Consulta web', porConfirmar.length + ' consulta' + (porConfirmar.length !== 1 ? 's' : '') + ' por responder',
+    porConfirmar.slice(0, 3).map(function(p){ return p.reloj + ((p.cuenta || {}).nombre ? ' · ' + p.cuenta.nombre : ''); }).join(' / '), 'Ver', "irSeccion('ventas','pedidos')"));
   state.inventario.forEach(function(p){
     var id = esc(p.id), nombre = p.nombre || 'Sin nombre';
     if(p.estado === 'reservado' && p.reserva){

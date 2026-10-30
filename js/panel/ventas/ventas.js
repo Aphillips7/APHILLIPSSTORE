@@ -11,7 +11,7 @@ import { exportarMovimientosCSV } from '../exportar.js';
 import { save, state } from '../state.js';
 
 const PASOS = ['solicitado', 'confirmado', 'pagado', 'enviado', 'entregado'];
-const NOMBRE_PASO = { solicitado: 'Solicitados', confirmado: 'Confirmados', pagado: 'Pagados', enviado: 'Enviados', entregado: 'Entregados', cancelado: 'Cancelados' };
+const NOMBRE_PASO = { solicitado: 'Consultas', confirmado: 'Confirmados', pagado: 'Pagados', enviado: 'Enviados', entregado: 'Entregados', cancelado: 'Cancelados' };
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 const PLAZO_MAX = 90;   // un apartado no puede extenderse mas alla de 90 dias desde que se aparto
 var _per = 'mes', _perHist = 'mes', _vista = 'resumen';
@@ -56,7 +56,7 @@ function renderResumenVentas(){
     vs({ label: 'Vendido', valor: dinero(r.vendido), pie: 'ventas y abonos' }, 'vendido'),
     vs({ label: 'Relojes vendidos', valor: String(r.nVentas) }, 'nVentas'),
     vs({ label: 'Ticket promedio', valor: dinero(r.ticket) }, 'ticket'),
-    kpiHTML({ label: 'Conversion web', valor: ped.length ? Math.round(ganados.length / ped.length * 100) + '%' : '—', pie: ganados.length + ' de ' + ped.length + ' pedidos pagados' }),
+    kpiHTML({ label: 'Conversion web', valor: ped.length ? Math.round(ganados.length / ped.length * 100) + '%' : '—', pie: ganados.length + ' de ' + ped.length + ' consultas terminaron en venta' }),
     kpiHTML({ label: 'Pedido a entrega', valor: tiempos.length ? (Math.round(tiempos.reduce(function(a, b){ return a + b; }, 0) / tiempos.length * 10) / 10) + ' d' : '—', pie: tiempos.length ? 'promedio de ' + tiempos.length + ' entregas' : 'sin entregas web' }),
     kpiHTML({ label: 'Cancelados', valor: ped.length ? Math.round(cancel.length / ped.length * 100) + '%' : '—', tono: ped.length && cancel.length / ped.length > 0.25 ? 'neg' : '', pie: cancel.length + ' pedido' + (cancel.length !== 1 ? 's' : '') + ' web' })
   ].join('');
