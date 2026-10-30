@@ -150,3 +150,26 @@
   .ed-clic-barra i{display:block;height:100%;background:var(--glaciar,#a7c4d6);border-radius:99px;}
   .ed-clic em{font-style:normal;font-weight:600;color:var(--text);text-align:right;}
   @media (max-width:520px){ .ed-clic{grid-template-columns:1fr auto 44px;} .ed-clic-barra,.ed-clic span:nth-of-type(2){display:none;} }
+
+  /* Tienda > Editar (seleccionar en la vista previa, como Inspeccionar de Chrome) */
+  .ed-sel-btn{display:inline-flex;align-items:center;gap:6px;}
+  .ed-sel-btn.activo{background:#1a73e8;border-color:#1a73e8;color:#fff;}
+  .card .btn svg{vertical-align:-2px;margin-right:6px;}
+  .ed-sub{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;}
+  .ed-sub .ed-rest{width:24px;height:24px;font-size:12px;text-transform:none;}
+  .ed-elem{border:2px solid #e8710a;}
+  .ed-elem-cab{display:flex;align-items:flex-start;gap:8px;}
+  .ed-elem-cab > div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .ed-elem-cab b{font-size:15px;}
+  .ed-elem-cab code{font-size:12px;color:#9334e6;background:var(--bg2);padding:1px 6px;border-radius:6px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ed-elem-cab span{font-size:12px;color:var(--muted);}
+  .ed-elem-texto{width:100%;font-size:14px;}
+  .ed-colores{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .ed-color-mini{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;color:var(--text);}
+  .ed-color-mini .ed-muestra{width:34px;height:34px;}
+  .ed-contraste{font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;}
+  .ed-contraste.ok{background:var(--green-bg,#e7f6ec);color:var(--green,#137333);}
+  .ed-contraste.mal{background:var(--red-bg);color:var(--red);}
+  .ed-pista{font-size:13px;color:var(--muted);background:rgba(167,196,214,.18);}
+  .ed-pista b{color:var(--text);}
+  .ed-cambio{font-style:normal;font-weight:400;font-size:11.5px;color:var(--muted);margin-left:4px;}

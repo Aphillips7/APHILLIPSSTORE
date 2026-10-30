@@ -12,6 +12,7 @@ import { aplicarPortada } from './portada.js';
 import { aplicarPromos } from './promos-tienda.js';
 import { aplicarContenido } from './contenido.js';
 import { aplicarControl, contarSecciones } from './control.js';
+import { aplicarEstilos, paginaActual } from './estilos.js';
 
 const API = 'https://api.aphillipsstore.com/sitio';
 const CLAVE_CSS = 'aph_tema_css', CLAVE_SITIO = 'aph_sitio';
@@ -30,6 +31,9 @@ function aplicar(sitio){
   try{ aplicarPromos(sitio.promos || {}); }catch(e){}
   try{ aplicarContenido(sitio.contenido || {}); }catch(e){}
   try{ aplicarControl(sitio.control || {}); }catch(e){}
+  // al final: los cambios puntuales (Tienda > Editar) mandan sobre todo lo demas
+  var cssE = ''; try{ cssE = aplicarEstilos(sitio.estilos || []); }catch(e){}
+  return cssE;
 }
 
 if(VISTA_PREVIA){
@@ -51,14 +55,15 @@ if(VISTA_PREVIA){
     if(x.ok) aplicar(x.d);
   }).catch(function(){});
 } else {
-  try{ var guardado = JSON.parse(localStorage.getItem(CLAVE_SITIO) || 'null'); if(guardado){ aplicarPortada(guardado.portada || {}); aplicarPromos(guardado.promos || {}); aplicarContenido(guardado.contenido || {}); aplicarControl(guardado.control || {}); } }catch(e){}
+  try{ var guardado = JSON.parse(localStorage.getItem(CLAVE_SITIO) || 'null'); if(guardado){ aplicarPortada(guardado.portada || {}); aplicarPromos(guardado.promos || {}); aplicarContenido(guardado.contenido || {}); aplicarControl(guardado.control || {}); aplicarEstilos(guardado.estilos || []); } }catch(e){}
   fetch(API, { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
     if(!d) return;
-    aplicar(d);
+    var cssE = aplicar(d);
     var css = cssDeTema(d.tema || {});
     try{
       if(css) localStorage.setItem(CLAVE_CSS, css); else localStorage.removeItem(CLAVE_CSS);
-      localStorage.setItem(CLAVE_SITIO, JSON.stringify({ portada: d.portada || {}, promos: d.promos || {}, contenido: d.contenido || {}, control: d.control || {} }));
+      if(cssE) localStorage.setItem('aph_estilos_css_' + paginaActual(), cssE); else localStorage.removeItem('aph_estilos_css_' + paginaActual());
+      localStorage.setItem(CLAVE_SITIO, JSON.stringify({ portada: d.portada || {}, promos: d.promos || {}, contenido: d.contenido || {}, control: d.control || {}, estilos: d.estilos || [] }));
     }catch(e){}
   }).catch(function(){ /* sin internet: queda lo ultimo guardado */ });
   contarSecciones();
