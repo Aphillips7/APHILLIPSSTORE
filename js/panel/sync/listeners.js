@@ -46,7 +46,7 @@ function refrescarVista(key){
     try{ renderClientes(); }catch(e){}
     try{ renderCuentasWeb(); }catch(e){}
     try{ renderPedidosWeb(); }catch(e){}
-    try{ poblarSelectClientes('fin-cliente'); }catch(e){}
+    try{ poblarSelectClientes('fin-cliente'); if(window.elegirClienteFin) window.elegirClienteFin((document.getElementById('fin-cliente') || {}).value || ''); }catch(e){}
     try{ poblarSelectClientes('reserva-cliente'); }catch(e){}
   }else if(key==='config'){
     try{ renderResumen(); }catch(e){}

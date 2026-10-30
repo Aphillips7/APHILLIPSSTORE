@@ -1,5 +1,6 @@
 // =================== FINANZAS TIPO CHIPS ===================
 import { poblarSelectClientes } from '../clientes/clientes.js';
+import { sincronizarClienteFin } from './cliente-lupa.js';
 import { registrarCompraSiFalta, renderPickerCompra } from './registrar-compra.js';
 import { renderInicio } from '../inicio.js';
 import { avisarError, cambiarEstadoSeguro } from '../inventario/transacciones.js';
@@ -55,6 +56,7 @@ function selTipo(tipo, btn) {
 var _pickerIdx = null;
 function renderPicker() {
   poblarSelectClientes('fin-cliente');
+  sincronizarClienteFin();
   var grid = document.getElementById('inv-picker-grid');
   if (!grid) return;
   var q = (document.getElementById('picker-search') ? document.getElementById('picker-search').value.toLowerCase() : '');
