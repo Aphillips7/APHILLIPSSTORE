@@ -1,7 +1,10 @@
 // =================== PEDIDOS WEB (hechos por WhatsApp desde la tienda) ===================
-// Cuando un cliente con cuenta toca "Comprar por WhatsApp", se crea un pedido (P-XXXXX) que llega aqui.
-// El dueno lo avanza paso a paso; el cliente ve cada cambio en "Mis pedidos" de la tienda.
-//   solicitado -> confirmado (envio o retiro) -> pagado -> enviado -> entregado   (o cancelado)
+// Cuando un cliente con cuenta toca "Comprar por WhatsApp" se crea una CONSULTA (P-XXXXX, estado "solicitado"):
+// tocar el boton no significa que vaya a comprar (muchos solo preguntan). Se vuelve pedido cuando el dueno
+// confirma que compra; si no compra, se archiva ("descartado", sin motivo y sin que el cliente lo vea como cancelado).
+// Las consultas sin avanzar se archivan solas a los 14 dias (mantenimiento de la API).
+//   consulta -> confirmado (envio o retiro) -> pagado -> enviado -> entregado   (o cancelado)
+//   consulta -> descartado (no compro)
 // POKA-YOKE:
 // - Solo aparecen los botones del siguiente paso permitido (el servidor tambien lo bloquea).
 // - Cancelar exige un motivo (lo ve el cliente) y "enviado" exige la guia.
@@ -15,8 +18,9 @@ import { idAleatorio, save, state } from '../state.js';
 import { renderClientes } from '../clientes/clientes.js';
 
 const API = 'https://api.aphillipsstore.com';
-const ESTADOS = { solicitado: 'Solicitado', confirmado: 'Confirmado', pagado: 'Pagado', enviado: 'Enviado', entregado: 'Entregado', cancelado: 'Cancelado' };
+const ESTADOS = { solicitado: 'Consulta', confirmado: 'Confirmado', pagado: 'Pagado', enviado: 'Enviado', entregado: 'Entregado', cancelado: 'Cancelado', descartado: 'No compró' };
 const ABIERTOS = ['solicitado', 'confirmado', 'pagado', 'enviado'];
+const TABLERO = ['confirmado', 'pagado', 'enviado'];   // pedidos de verdad (las consultas van aparte, arriba)
 let _pedidos = null, _error = '', _verCerrados = false, _filtro = '';
 
 function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -59,14 +63,19 @@ function renderPedidosWeb(){
   if(badge){ badge.textContent = nuevos; badge.style.display = nuevos ? '' : 'none'; }
   var h = '<div class="pw-barra">' +
     '<input type="search" placeholder="Buscar: P-…, AP-…, nombre, WhatsApp, reloj" value="' + esc(_filtro) + '" oninput="filtrarPedidosWeb(this.value)">' +
-    '<label class="pw-check"><input type="checkbox" ' + (_verCerrados ? 'checked' : '') + ' onchange="verCerradosPedidosWeb(this.checked)"> Ver entregados y cancelados</label></div>';
+    '<label class="pw-check"><input type="checkbox" ' + (_verCerrados ? 'checked' : '') + ' onchange="verCerradosPedidosWeb(this.checked)"> Ver entregados, cancelados y archivados</label></div>';
   if(_verCerrados){
     var cerrados = _pedidos.filter(function(p){ return ABIERTOS.indexOf(p.estado) === -1 && coincideFiltro(p); });
-    h += cerrados.length ? '<div class="pw-lista">' + cerrados.map(htmlPedido).join('') + '</div>' : '<div class="campo-ayuda">' + (_filtro ? 'Ningun pedido cerrado coincide.' : 'Todavia no hay pedidos entregados ni cancelados.') + '</div>';
+    h += cerrados.length ? '<div class="pw-lista">' + cerrados.map(htmlPedido).join('') + '</div>' : '<div class="campo-ayuda">' + (_filtro ? 'Ningun pedido cerrado coincide.' : 'Todavia no hay pedidos entregados, cancelados ni consultas archivadas.') + '</div>';
   } else {
-    var abiertos = _pedidos.filter(function(p){ return ABIERTOS.indexOf(p.estado) !== -1 && coincideFiltro(p); });
-    if(!abiertos.length) h += '<div class="vacio"><div class="vacio-titulo">' + (_filtro ? 'Ningun pedido coincide' : 'No hay pedidos abiertos') + '</div><div class="vacio-texto">Aqui llegan los pedidos de los clientes con cuenta que tocan "Comprar por WhatsApp" en la tienda.</div></div>';
-    else h += '<div class="tablero">' + ABIERTOS.map(function(est){
+    // consultas: alguien toco "Comprar por WhatsApp"; todavia no es una venta
+    var consultas = _pedidos.filter(function(p){ return p.estado === 'solicitado' && coincideFiltro(p); });
+    h += '<div class="pw-consultas"><div class="pw-sub"><b>Consultas</b><span>' + consultas.length + '</span><em>Tocaron "Comprar por WhatsApp". Si compra, confírmala y pasa a pedido; si no, márcala "No compró". Se archivan solas a los 14 días.</em></div>' +
+      (consultas.length ? '<div class="pw-lista">' + consultas.map(htmlPedido).join('') + '</div>' : '<div class="tablero-nada">' + (_filtro ? 'Ninguna consulta coincide' : 'No hay consultas nuevas') + '</div>') + '</div>';
+    var abiertos = _pedidos.filter(function(p){ return TABLERO.indexOf(p.estado) !== -1 && coincideFiltro(p); });
+    h += '<div class="pw-sub"><b>Pedidos</b><span>' + abiertos.length + '</span><em>Clientes que confirmaron que compran.</em></div>';
+    if(!abiertos.length) h += '<div class="tablero-nada">' + (_filtro ? 'Ningún pedido coincide' : 'No hay pedidos en curso') + '</div>';
+    else h += '<div class="tablero">' + TABLERO.map(function(est){
       var col = abiertos.filter(function(p){ return p.estado === est; });
       return '<div class="tablero-col' + (col.length ? '' : ' vacia') + '"><div class="tablero-cab"><span class="pw-punto pw-' + est + '"></span>' + ESTADOS[est] + '<b>' + col.length + '</b></div>' +
         (col.length ? col.map(htmlPedido).join('') : '<div class="tablero-nada">Nada aqui</div>') + '</div>';
@@ -83,17 +92,18 @@ function htmlPedido(p){
   var b = function(txt, fn, cls){ return '<button type="button" class="btn btn-sm ' + (cls || 'btn-outline') + '" onclick="' + fn + '">' + txt + '</button>'; };
   var n = esc(p.numero);
   var acciones = '';
-  if(p.estado === 'solicitado') acciones = b('Confirmar · envío', "avanzarPedidoWeb('" + n + "','confirmado','envio')", 'btn-gold') + b('Confirmar · retiro', "avanzarPedidoWeb('" + n + "','confirmado','retiro')") + b('Cancelar', "avanzarPedidoWeb('" + n + "','cancelado')", 'btn-danger');
+  if(p.estado === 'solicitado') acciones = b('Compra · envío', "avanzarPedidoWeb('" + n + "','confirmado','envio')", 'btn-gold') + b('Compra · retiro', "avanzarPedidoWeb('" + n + "','confirmado','retiro')") + b('No compró', "avanzarPedidoWeb('" + n + "','descartado')");
   else if(p.estado === 'confirmado') acciones = b('Registrar venta', "venderPedidoWeb('" + n + "')", 'btn-gold') + b('Ya está pagado', "avanzarPedidoWeb('" + n + "','pagado')") + b('Cancelar', "avanzarPedidoWeb('" + n + "','cancelado')", 'btn-danger');
   else if(p.estado === 'pagado') acciones = p.entrega === 'retiro' ? b('Marcar retirado', "avanzarPedidoWeb('" + n + "','entregado')", 'btn-gold') : b('Marcar enviado', "avanzarPedidoWeb('" + n + "','enviado')", 'btn-gold') + b('Entregado en mano', "avanzarPedidoWeb('" + n + "','entregado')");
   else if(p.estado === 'enviado') acciones = b('Marcar entregado', "avanzarPedidoWeb('" + n + "','entregado')", 'btn-gold');
-  var msg = '¡Hola' + (c.nombre ? ' ' + c.nombre : '') + '! Te escribo de APHILLIPS STORE por tu pedido ' + p.numero + ' (' + p.reloj + ').';
+  var msg = '¡Hola' + (c.nombre ? ' ' + c.nombre : '') + '! Te escribo de APHILLIPS STORE ' + (p.estado === 'solicitado' ? 'por el ' + p.reloj + ' que te interesó.' : 'por tu pedido ' + p.numero + ' (' + p.reloj + ').');
   var horas = (Date.now() - (p.actualizado || p.creado || Date.now())) / 3600000;
-  var espera = ['solicitado', 'confirmado', 'pagado'].indexOf(p.estado) !== -1 && horas >= 24 ? '<span class="pw-espera' + (horas >= 48 ? ' tarde' : '') + '">' + (horas >= 48 ? Math.floor(horas / 24) + ' d' : Math.floor(horas) + ' h') + ' sin avanzar</span>' : '';
+  var espera = p.estado === 'solicitado' ? '<span class="pw-est">' + (horas < 1 ? 'recién' : horas < 24 ? 'hace ' + Math.floor(horas) + ' h' : 'hace ' + Math.floor(horas / 24) + ' d') + '</span>' :
+    ['confirmado', 'pagado'].indexOf(p.estado) !== -1 && horas >= 24 ? '<span class="pw-espera' + (horas >= 48 ? ' tarde' : '') + '">' + (horas >= 48 ? Math.floor(horas / 24) + ' d' : Math.floor(horas) + ' h') + ' sin avanzar</span>' : '';
   return '<div class="pw-card">' +
     '<div class="pw-cab"><b>' + n + '</b>' + (ABIERTOS.indexOf(p.estado) === -1 ? '<span class="pw-est pw-' + p.estado + '">' + ESTADOS[p.estado] + '</span>' : '') + (p.entrega ? '<span class="pw-ent">' + (p.entrega === 'retiro' ? 'Retiro' : 'Envío') + '</span>' : '') + espera + '</div>' +
     '<div class="pw-reloj">' + esc(p.reloj) + (p.sku ? ' <span>Ref. ' + esc(p.sku) + '</span>' : '') + '</div>' +
-    '<div class="pw-dato">' + dinero(p.precio) + ' · ' + fecha(p.creado) + (inv ? '' : ' · <span class="neg">ya no esta en el inventario</span>') + '</div>' +
+    '<div class="pw-dato">' + (Number(p.precio) > 0 ? dinero(p.precio) : 'Precio por confirmar') + ' · ' + fecha(p.creado) + (inv ? '' : ' · <span class="neg">ya no esta en el inventario</span>') + '</div>' +
     '<div class="pw-dato">' + (p.cuenta ? '<b>' + esc(c.codigo) + '</b> · ' + esc(((c.nombre || '') + ' ' + (c.apellido || '')).trim()) + ' · ' + esc(c.telefono || 'sin WhatsApp') + (c.clienteId ? ' · <span class="pos">vinculado</span>' : '') : '(la cuenta se eliminó)') + '</div>' +
     (dir ? '<div class="pw-dato">Dirección: ' + esc(dir) + '</div>' : '') +
     (p.tracking ? '<div class="pw-dato">Guía: ' + esc(p.tracking) + '</div>' : '') +
@@ -127,7 +137,11 @@ async function avanzarPedidoWeb(numero, estado, entrega){
       if(guia === null) return;
     } while(guia.trim().length < 4);
     cuerpo.tracking = guia.trim();
-  }else if(!confirm('¿Pasar el pedido ' + numero + ' a "' + ESTADOS[estado] + (entrega ? ' · ' + (entrega === 'retiro' ? 'retiro en tienda' : 'envío') : '') + '"?')) return;
+  }else if(estado === 'descartado'){
+    if(!confirm('¿Archivar la consulta ' + numero + ' (' + p.reloj + ') como "No compró"?\n\nEl cliente no ve ningún aviso; si vuelve a tocar el botón se crea una consulta nueva.')) return;
+    cuerpo.nota = 'No compró';
+  }else if(!confirm(estado === 'confirmado' ? '¿El cliente confirmó que compra el ' + p.reloj + '?\n\nPasa a Pedidos (' + (entrega === 'retiro' ? 'retiro en tienda' : 'envío') + ') y el cliente verá los pasos en "Mis pedidos".' :
+    '¿Pasar el pedido ' + numero + ' a "' + ESTADOS[estado] + (entrega ? ' · ' + (entrega === 'retiro' ? 'retiro en tienda' : 'envío') : '') + '"?')) return;
   try{ await pedir('/admin/pedidos/estado', { method: 'POST', body: cuerpo }); }
   catch(e){ alert('No se pudo cambiar: ' + e.message); }
   cargarPedidosWeb();

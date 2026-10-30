@@ -106,7 +106,7 @@
   .pw-barra input[type=search]{flex:1;min-width:200px;width:auto;}
   .pw-check{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap;text-transform:none;letter-spacing:0;font-weight:500;margin:0;}
   .pw-check input{width:auto;margin:0;}
-  .tablero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;}
+  .tablero{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;}
   .tablero-col{background:var(--bg2);border-radius:var(--r-lg);padding:10px;display:flex;flex-direction:column;gap:10px;min-width:0;}
   .tablero-cab{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);padding:2px 4px;}
   .tablero-cab b{margin-left:auto;font-size:12px;color:var(--black);background:var(--card);border-radius:var(--r-pill);padding:1px 8px;}
@@ -369,3 +369,10 @@
     .col-cifras{grid-column:1 / -1;}
   }
   .col-fichas[hidden]{display:none;}
+  /* consultas (tocaron "Comprar por WhatsApp") separadas de los pedidos confirmados */
+  .pw-sub{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin:18px 0 10px;}
+  .pw-sub b{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+  .pw-sub span{font-size:11px;font-weight:600;border-radius:var(--r-pill);padding:1px 8px;background:var(--bg2);color:var(--muted);}
+  .pw-sub em{flex-basis:100%;font-style:normal;font-size:12px;color:var(--muted);}
+  .pw-consultas{padding-bottom:6px;border-bottom:1px solid var(--border);}
+  .pw-consultas .pw-sub{margin-top:6px;}

@@ -530,7 +530,7 @@ async function rutaCuenta(ruta, metodo, request, url, env, cors, sesion) {
     await env.DB.batch([
       env.DB.prepare('DELETE FROM favoritos WHERE uid = ?1').bind(uid),
       env.DB.prepare('DELETE FROM avisos WHERE uid = ?1').bind(uid),
-      env.DB.prepare("DELETE FROM pedidos WHERE uid = ?1 AND estado IN ('solicitado', 'cancelado')").bind(uid),
+      env.DB.prepare("DELETE FROM pedidos WHERE uid = ?1 AND estado IN ('solicitado', 'cancelado', 'descartado')").bind(uid),
       env.DB.prepare('DELETE FROM cuentas WHERE uid = ?1').bind(uid)
     ]);
     return json({ ok: true }, 200, cors);
@@ -664,7 +664,10 @@ async function guardarPerfilCuenta(uid, request, env, cors) {
 }
 
 const RE_PEDIDO = /^P-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{5}$/;
-const PASOS_PEDIDO = { solicitado: ['confirmado', 'cancelado'], confirmado: ['pagado', 'cancelado'], pagado: ['enviado', 'entregado'], enviado: ['entregado'], entregado: [], cancelado: [] };
+// "solicitado" es una CONSULTA (el cliente toco Comprar por WhatsApp; puede ser solo curiosidad): pasa a pedido
+// cuando el dueno la confirma, o se archiva ("descartado": no compro). Las descartadas no las ve el cliente.
+const DIAS_CONSULTA = 14;
+const PASOS_PEDIDO = { solicitado: ['confirmado', 'descartado'], descartado: [], confirmado: ['pagado', 'cancelado'], pagado: ['enviado', 'entregado'], enviado: ['entregado'], entregado: [], cancelado: [] };
 const MAX_PEDIDOS_ABIERTOS = 10;
 function pedidoDe(f) {
   let h = []; try { h = JSON.parse(f.historial || '[]'); } catch (e) {}
@@ -672,7 +675,7 @@ function pedidoDe(f) {
     entrega: f.entrega, direccion: leerDireccion(f.direccion), tracking: f.tracking, nota: f.nota, historial: h, creado: f.creado, actualizado: f.actualizado };
 }
 async function pedidosCliente(uid, env, cors) {
-  const r = await env.DB.prepare('SELECT * FROM pedidos WHERE uid = ?1 ORDER BY creado DESC LIMIT 100').bind(uid).all();
+  const r = await env.DB.prepare("SELECT * FROM pedidos WHERE uid = ?1 AND estado != 'descartado' ORDER BY creado DESC LIMIT 100").bind(uid).all();
   return json({ pedidos: r.results.map(pedidoDe) }, 200, cors);
 }
 async function crearPedido(uid, request, env, cors) {
@@ -708,8 +711,8 @@ async function cancelarPedidoCliente(uid, request, env, cors) {
   const f = await env.DB.prepare('SELECT * FROM pedidos WHERE numero = ?1 AND uid = ?2').bind(b.numero, uid).first();
   if (!f) return json({ error: 'No encontrado' }, 404, cors);
   if (f.estado !== 'solicitado') return json({ error: 'Este pedido ya fue confirmado; para cambiarlo escribenos por WhatsApp.' }, 409, cors);
-  const h = pedidoDe(f).historial; h.push({ estado: 'cancelado', fecha: Date.now(), nota: 'Cancelado por el cliente' });
-  await env.DB.prepare("UPDATE pedidos SET estado = 'cancelado', historial = ?2, actualizado = ?3 WHERE numero = ?1").bind(b.numero, JSON.stringify(h), Date.now()).run();
+  const h = pedidoDe(f).historial; h.push({ estado: 'descartado', fecha: Date.now(), nota: 'Ya no le interesa (lo quito el cliente)' });
+  await env.DB.prepare("UPDATE pedidos SET estado = 'descartado', historial = ?2, actualizado = ?3 WHERE numero = ?1").bind(b.numero, JSON.stringify(h), Date.now()).run();
   return json({ ok: true }, 200, cors);
 }
 async function adminPedidos(env, cors) {
@@ -737,6 +740,18 @@ async function adminEstadoPedido(request, env, cors) {
 }
 
 
+// Consultas sin respuesta por DIAS_CONSULTA dias: se archivan solas (el cliente puede volver a tocar el boton)
+async function archivarConsultasViejas(env) {
+  const { results } = await env.DB.prepare("SELECT numero, historial FROM pedidos WHERE estado = 'solicitado' AND actualizado < ?1").bind(Date.now() - DIAS_CONSULTA * DIA_MS).all();
+  const ahora = Date.now();
+  const sentencias = results.map((f) => {
+    let h = []; try { h = JSON.parse(f.historial || '[]'); } catch (e) {}
+    h.push({ estado: 'descartado', fecha: ahora, nota: 'Archivada sola: ' + DIAS_CONSULTA + ' dias sin avanzar' });
+    return env.DB.prepare("UPDATE pedidos SET estado = 'descartado', historial = ?2, actualizado = ?3 WHERE numero = ?1 AND estado = 'solicitado'").bind(f.numero, JSON.stringify(h), ahora);
+  });
+  if (sentencias.length) await env.DB.batch(sentencias);
+  return sentencias.length;
+}
 async function relojPublico(id, env) {
   if (!RE_ID.test(id)) return null;
   const obj = await env.FOTOS.get(CLAVE_CATALOGO);
@@ -1508,6 +1523,7 @@ async function mantenimiento(env, tipo) {
   try { informe.fotos = await limpiarFotos(env); } catch (e) { informe.fotos = { error: e.message }; }
   try { await env.DB.prepare('DELETE FROM envios WHERE ts < ?1').bind(Date.now() - 2 * DIA_MS).run(); } catch (e) { /* tabla aun no creada */ }
   try { await env.DB.prepare('DELETE FROM errores WHERE ts < ?1').bind(Date.now() - 30 * DIA_MS).run(); } catch (e) { /* tabla aun no creada */ }
+  try { informe.consultasArchivadas = await archivarConsultasViejas(env); } catch (e) { informe.consultasArchivadas = { error: e.message }; }
   console.log('mantenimiento', JSON.stringify(informe));
   return informe;
 }

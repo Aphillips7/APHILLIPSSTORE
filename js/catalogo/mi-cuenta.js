@@ -256,7 +256,7 @@ async function guardarDatosCuenta(ev){
 
 // ---------- Mis pedidos ----------
 const PASOS = [['solicitado', 'Solicitado'], ['confirmado', 'Confirmado'], ['pagado', 'Pagado'], ['enviado', 'Enviado'], ['entregado', 'Entregado']];
-const TEXTO_ESTADO = { solicitado: 'Recibimos tu pedido. Te escribiremos por WhatsApp para confirmarlo.', confirmado: 'Confirmamos tu pedido. Te indicamos cómo pagar por WhatsApp.',
+const TEXTO_ESTADO = { solicitado: 'Nos escribiste por este reloj. Si decides comprarlo, lo confirmamos contigo por WhatsApp y aquí verás cada paso.', confirmado: 'Confirmamos tu pedido. Te indicamos cómo pagar por WhatsApp.',
   pagado: 'Pago recibido. Estamos preparando tu reloj.', enviado: 'Tu reloj va en camino.', entregado: '¡Entregado! Gracias por tu compra.', cancelado: 'Este pedido fue cancelado.' };
 async function cargarPedidos(){
   try{ _pedidos = (await _pedir('/cuenta/pedidos')).pedidos || []; }catch(e){ _pedidos = { error: e.message }; }
@@ -294,23 +294,24 @@ function htmlPedido(x){
     var cls = cancelado ? '' : (k < i ? ' hecho' : k === i ? ' actual' : '');
     return '<li class="mc-paso' + cls + '"><span>' + (p[0] === 'entregado' && x.entrega === 'retiro' ? 'Retirado' : p[1]) + '</span>' + (hist[p[0]] && !cancelado ? '<em>' + fechaCorta(hist[p[0]]) + '</em>' : '') + '</li>';
   }).join('');
-  var msg = '¡Hola! Soy ' + ((sesion.perfil || {}).nombre || '') + '. Te escribo por mi pedido ' + x.numero + ' (' + x.reloj + ').';
+  var consulta = x.estado === 'solicitado';   // todavia no es pedido: el cliente solo pregunto
+  var msg = '¡Hola! Soy ' + ((sesion.perfil || {}).nombre || '') + '. Te escribo por ' + (consulta ? 'el ' + x.reloj + ' (ref. ' + x.numero + ').' : 'mi pedido ' + x.numero + ' (' + x.reloj + ').');
   return '<article class="mc-pedido' + (cancelado ? ' cancelado' : '') + '">' +
     '<div class="mc-ped-cab">' + (x.foto ? '<span class="mc-marco"><img src="' + esc(miniatura(x.foto)) + '" alt="" onerror="this.remove()"></span>' : '<span class="mc-marco"></span>') +
-      '<div><b>' + esc(x.reloj) + '</b><span>Pedido <strong>' + esc(x.numero) + '</strong> · ' + fechaCorta(x.creado) + '</span><span>$' + Number(x.precio || 0).toLocaleString() + '</span></div></div>' +
-    (cancelado ? '' : '<ol class="mc-pasos">' + pasos + '</ol>') +
+      '<div><b>' + esc(x.reloj) + '</b><span>' + (consulta ? 'Consulta' : 'Pedido') + ' <strong>' + esc(x.numero) + '</strong> · ' + fechaCorta(x.creado) + '</span><span>' + (Number(x.precio) > 0 ? '$' + Number(x.precio).toLocaleString() : 'Precio por confirmar') + '</span></div></div>' +
+    (cancelado || consulta ? '' : '<ol class="mc-pasos">' + pasos + '</ol>') +
     '<p class="mc-ped-estado">' + esc(TEXTO_ESTADO[x.estado] || '') + '</p>' +
     (x.tracking ? '<p class="mc-ped-dato">Número de guía: <b>' + esc(x.tracking) + '</b></p>' : '') +
     (x.nota ? '<p class="mc-ped-dato">' + esc(x.nota) + '</p>' : '') +
-    '<div class="cta-fila"><a class="cta-link" href="https://wa.me/' + WHATSAPP_NUM + '?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener">Escribir sobre este pedido</a>' +
+    '<div class="cta-fila"><a class="cta-link" href="https://wa.me/' + WHATSAPP_NUM + '?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener">' + (consulta ? 'Escribir por WhatsApp' : 'Escribir sobre este pedido') + '</a>' +
       '<button type="button" class="cta-link" onclick="cerrarCuenta();abrir(\'' + esc(x.relojId) + '\')">Ver el reloj</button>' +
-      (x.estado === 'solicitado' ? '<button type="button" class="cta-link cta-peligro" onclick="cancelarPedido(\'' + esc(x.numero) + '\')">Cancelar pedido</button>' : '') +
+      (consulta ? '<button type="button" class="cta-link cta-peligro" onclick="cancelarPedido(\'' + esc(x.numero) + '\')">Ya no me interesa</button>' : '') +
     '</div></article>';
 }
 function recargarPedidos(){ _pedidos = null; _render(); }
 async function cancelarPedido(numero){
-  if(!confirm('¿Cancelar el pedido ' + numero + '?')) return;
-  try{ await _pedir('/cuenta/pedidos/cancelar', { method: 'POST', body: { numero: numero } }); toast('Pedido cancelado'); }
+  if(!confirm('¿Quitar esta consulta de tu lista?')) return;
+  try{ await _pedir('/cuenta/pedidos/cancelar', { method: 'POST', body: { numero: numero } }); toast('Listo, la quitamos'); }
   catch(e){ toast(e.message); }
   _pedidos = null; _render();
 }
