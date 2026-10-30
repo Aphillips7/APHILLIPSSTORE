@@ -5,7 +5,9 @@
 // Fase 3 Promociones: anuncios, ofertas, etiquetas, ventana emergente y mensajes de WhatsApp.
 // Fase 4 Fotos y textos: fotos de la portada, Google y compartir, preguntas frecuentes y notas legales.
 // Fase 5 Control: aviso de vacaciones, publicar en una fecha, enlace de vista previa y vistas/toques por seccion.
-// Todo es un solo "sitio" { tema, portada, promos, contenido, control } con vista previa en vivo (la tienda real dentro de un marco, en
+// Editar (por seleccion): como "Inspeccionar" de Chrome, se elige cualquier cosa en la vista previa y se le cambia
+//   color, fondo, letra, tamano, esquinas, relleno, texto, foto u ocultarla (sitio.estilos, ver js/sitio/estilos.js).
+// Todo es un solo "sitio" { tema, portada, promos, contenido, control, estilos } con vista previa en vivo (la tienda real dentro de un marco, en
 // celular o computadora), un solo boton Publicar, historial y deshacer.
 // POKA-YOKE:
 // - Nada cambia en la tienda hasta tocar "Publicar" (y se confirma). El borrador se guarda en este dispositivo.
@@ -20,6 +22,8 @@ import { FOTOS, MAX as MAXC, SECCIONES_LEGAL, SEO_BASE, TEMAS_FAQ, claveFaq, val
 import { comprimirImg, leerImagen, subirArchivo } from '../inventario/fotos.js';
 import { prepararFoto } from '../inventario/fondo.js';
 import { MAX_VACACIONES, SECCIONES_CLICS, validarControl } from '../../sitio/control.js';
+import { MAX_REGLAS, NOMBRES_FUENTE, validarEstilos } from '../../sitio/estilos.js';
+import * as ins from './inspector.js';
 import { esPublicable } from '../../products.js';
 import { esc } from '../componentes.js';
 import { state } from '../state.js';
@@ -30,7 +34,8 @@ const CLAVE_BORRADOR = 'aph_editor_sitio';
 const LOCAL = /^(localhost|127\.)/.test(location.hostname);
 const TIENDA = LOCAL ? '/catalogo.html' : '/';
 // paginas que se pueden ver en la vista previa (Contenido edita tambien Preguntas y Legal)
-const PAGINAS = { inicio: TIENDA, preguntas: LOCAL ? '/preguntas.html' : '/preguntas', legal: LOCAL ? '/legal.html' : '/legal' };
+const PAGINAS = { inicio: TIENDA, preguntas: LOCAL ? '/preguntas.html' : '/preguntas', legal: LOCAL ? '/legal.html' : '/legal', guia: LOCAL ? '/guia-de-tamanos.html' : '/guia-de-tamanos' };
+const NOMBRE_PAGINA = { inicio: 'Portada y catálogo', preguntas: 'Preguntas frecuentes', legal: 'Información legal', guia: 'Guía de tamaños' };
 const TEXTO_NUEVA = { p: 'Nueva pregunta', r: 'Escribe aquí la respuesta.' };
 const CAMPOS = {
   acento: ['Color de acento (glaciar)', 'Etiquetas, flechas, detalles y botones claros. El texto encima va en negro.'],
@@ -46,14 +51,15 @@ const FORMAS_TXT = [['original', 'Como están'], ['recta', 'Rectos'], ['suave', 
 var _publicado = null, _meta = { version: 0, fecha: 0 }, _historial = [], _temas = [], _borrador = null, _pila = [];
 var _error = '', _cargado = false, _dispositivo = 'celular', _publicando = false, _nota = '', _vista = 'diseno';
 var _originales = null;   // textos de la tienda tal como estan (para mostrarlos de ejemplo)
+var _sel = null, _alcance = 'unico', _pendSel = null, _subiendoElem = false;   // Editar: elemento elegido en la vista previa
 var _programado = null, _clics = null, _enlacePrevia = null, _fotosOrig = {}, _pagina = 'inicio', _faqOrig = null, _faqAbiertas = {}, _subiendoFoto = {};
 
 function el(id){ return document.getElementById(id); }
-function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada), promos: validarPromos(s.promos), contenido: validarContenido(s.contenido), control: validarControl(s.control) }; }
+function validarSitio(s){ s = s || {}; return { tema: validarTema(s.tema), portada: validarPortada(s.portada), promos: validarPromos(s.promos), contenido: validarContenido(s.contenido), control: validarControl(s.control), estilos: validarEstilos(s.estilos) }; }
 // cada pestana edita una parte del sitio
-const PARTES = { diseno: 'tema', portada: 'portada', promos: 'promos', fotos: 'contenido', control: 'control' };
+const PARTES = { diseno: 'tema', portada: 'portada', promos: 'promos', fotos: 'contenido', control: 'control', editar: 'estilos' };
 function parteActual(){ return PARTES[_vista] || 'tema'; }
-function original(parte){ return parte === 'tema' ? validarTema(TEMA_BASE) : parte === 'portada' ? validarPortada({}) : parte === 'promos' ? validarPromos({}) : parte === 'control' ? validarControl({}) : validarContenido({}); }
+function original(parte){ return parte === 'tema' ? validarTema(TEMA_BASE) : parte === 'portada' ? validarPortada({}) : parte === 'promos' ? validarPromos({}) : parte === 'control' ? validarControl({}) : parte === 'estilos' ? [] : validarContenido({}); }
 // todo lo que impide publicar: contraste (Diseno) y promociones mal puestas
 function problemasSitio(s){
   var out = problemasTema(s.tema).map(function(p){ return { vista: 'Diseño', texto: p.donde + ' (contraste ' + p.ratio + ', mínimo 4.5)' }; });
@@ -83,6 +89,12 @@ function problemasSitio(s){
   var v = s.control.vacaciones;
   if(v.activo && !v.texto) out.push({ vista: 'Control', texto: 'El aviso de vacaciones está encendido pero no tiene texto' });
   if(v.desde && v.hasta && v.hasta < v.desde) out.push({ vista: 'Control', texto: 'Aviso de vacaciones: la fecha de fin es antes que la de inicio' });
+  // cambios puntuales: letras que no se leerian sobre su fondo (se mide en la pagina que muestra la vista previa)
+  (s.estilos || []).forEach(function(r){
+    if(r.pg !== _pagina || !(r.p.color || r.p.fondo)) return;
+    var d = ins.datosDe(r.sel);
+    if(d && d.conTexto && d.ratio !== null && d.ratio < d.minimo) out.push({ vista: 'Editar', texto: d.nombre + ' (' + d.codigo + '): las letras casi no se leen (contraste ' + d.ratio + ', mínimo ' + d.minimo + ')' });
+  });
   return out;
 }
 function iguales(a, b){ return JSON.stringify(validarSitio(a)) === JSON.stringify(validarSitio(b)); }
@@ -142,14 +154,18 @@ function aplicarCambio(nuevo, vivo){
   nuevo = validarSitio(nuevo);
   if(vivo){
     if(!_antesDeVivo) _antesDeVivo = _borrador;
-    _borrador = nuevo; guardarBorrador(); enviarVista(); pintarBarra();
+    _borrador = nuevo; guardarBorrador(); enviarVista(); pintarBarra(); despuesDeAplicar();
     return;
   }
   var antes = _antesDeVivo || _borrador; _antesDeVivo = null;
   if(iguales(nuevo, antes)){ _borrador = nuevo; pintar(); return; }
   _pila.push(antes); if(_pila.length > 60) _pila.shift();
   _borrador = nuevo; guardarBorrador(); pintar(); enviarVista();
+  despuesDeAplicar(true);
 }
+// la vista previa aplica el cambio un instante despues: entonces se revisa el contraste y, en Editar, se repintan
+// los datos del elemento (texto, medidas, colores ya aplicados). Mientras se escribe o se arrastra no se repinta.
+function despuesDeAplicar(repintar){ ins.refrescar(); clearTimeout(despuesDeAplicar._t); despuesDeAplicar._t = setTimeout(function(){ if(repintar && _vista === 'editar' && _sel) pintar(); else { pintarAlerta(); pintarBarra(); } }, 180); }
 function copia(){ return JSON.parse(JSON.stringify(_borrador)); }
 function cambiarTema(campo, valor, vivo){
   var s = copia(); s.tema[campo] = valor;
@@ -169,7 +185,8 @@ function restaurarOriginal(){
   var preguntas = { tema: '¿Volver al diseño original de la tienda (glaciar)?', portada: '¿Volver la portada a como venía (orden, textos y relojes originales)?',
     promos: '¿Quitar todas las promociones (anuncios, ofertas, etiquetas, ventana emergente y mensajes)?',
     contenido: '¿Volver a las fotos, textos para Google, preguntas y páginas legales originales?',
-    control: '¿Quitar el aviso de vacaciones?' };
+    control: '¿Quitar el aviso de vacaciones?',
+    estilos: '¿Quitar todos los cambios puntuales (los que hiciste eligiendo elementos)?' };
   if(!confirm(preguntas[parte] + ' Puedes deshacerlo antes de publicar.')) return;
   var s = copia(); s[parte] = orig; aplicarCambio(s);
 }
@@ -256,6 +273,7 @@ function ajustarVista(){
   var ancho = _dispositivo === 'celular' ? 390 : 1280, alto = _dispositivo === 'celular' ? 760 : 820;
   var k = Math.min(1, caja.clientWidth / ancho);
   f.style.width = ancho + 'px'; f.style.height = alto + 'px'; f.style.transform = 'scale(' + k + ')';
+  f.dataset.escala = k;   // la etiqueta de Seleccionar se agranda para que se lea igual con la vista achicada
   caja.style.height = Math.round(alto * k) + 'px';
 }
 window.addEventListener('resize', function(){ if(el('ed-vista')) ajustarVista(); });
@@ -267,13 +285,14 @@ function fechaCorta(ms){ if(!ms) return ''; var d = new Date(ms); return d.toLoc
 function renderTienda(vista){
   if(vista) _vista = vista;
   // fuera de Contenido la vista previa vuelve a la portada
-  if(_vista !== 'fotos' && _pagina !== 'inicio'){ _pagina = 'inicio'; recargarVista(); }
+  if(_vista !== 'fotos' && _vista !== 'editar' && _pagina !== 'inicio'){ _pagina = 'inicio'; recargarVista(); }
   var raiz = el('tienda-editor'); if(!raiz) return;
   if(!raiz.dataset.armado){
     raiz.dataset.armado = '1';
     raiz.innerHTML =
       '<div class="ed-grid">' +
         '<div class="ed-vista-col"><div class="ed-vista-cab"><b>Vista previa</b><div class="ed-chips" id="ed-disp"></div>' +
+          '<button type="button" class="btn btn-outline btn-sm ed-sel-btn" id="ed-sel-btn" onclick="seleccionarTienda()" title="Elegir un elemento de la tienda para cambiarlo (Esc para salir)">' + ICONO_SEL + 'Seleccionar</button>' +
           '<button type="button" class="btn btn-outline btn-sm" onclick="recargarVista()" title="Volver a cargar la tienda">Recargar</button></div>' +
           '<div class="ed-vista-caja" id="ed-vista-caja"><iframe id="ed-vista" title="Vista previa de la tienda" src="' + TIENDA + '?vista-previa=1"></iframe></div>' +
           '<p class="tenue-peq">Es la tienda real con tus cambios. Puedes navegar dentro. Los clientes no ven nada hasta que publiques.</p></div>' +
@@ -295,12 +314,17 @@ function pintar(){
   var c = el('ed-ctrl'); if(!c || !_borrador) return;
   pintarDispositivo();
   var h = _error ? '<div class="fin-aviso"><span>No se pudo leer la configuración publicada (' + esc(_error) + '). Revisa tu internet; tus cambios quedan guardados en este dispositivo.</span></div>' : '';
-  h += _vista === 'portada' ? htmlPortada() : _vista === 'promos' ? htmlPromos() : _vista === 'fotos' ? htmlContenido() : _vista === 'control' ? htmlControl() : htmlDiseno();
+  h += _vista === 'portada' ? htmlPortada() : _vista === 'promos' ? htmlPromos() : _vista === 'fotos' ? htmlContenido() : _vista === 'control' ? htmlControl() : _vista === 'editar' ? htmlEditar() : htmlDiseno();
   h += htmlHistorial();
   c.innerHTML = h;
+  pintarAlerta();
+  pintarBarra();
+}
+function pintarAlerta(){
+  var c = el('ed-ctrl'); if(!c || !_borrador) return;
+  var vieja = c.querySelector('.ed-alerta'); if(vieja) vieja.remove();
   var probs = problemasSitio(_borrador);
   if(probs.length) c.insertAdjacentHTML('afterbegin', '<div class="fin-aviso ed-alerta"><span><b>No se puede publicar todavía:</b> ' + probs.map(function(p){ return '<b>' + esc(p.vista) + ':</b> ' + esc(p.texto); }).join(' · ') + '.</span></div>');
-  pintarBarra();
 }
 // ---- Diseno ----
 function filaColor(k){
@@ -360,7 +384,9 @@ function htmlPortada(){
       return '<label class="ed-campo"><span>' + esc(ENLACES[k][1]) + '</span><select onchange="cambiarEnlaceTienda(\'' + k + '\',this.value)"><option value="">Como está ahora</option>' +
         elegibles.map(function(x){ return '<option value="' + esc(x.id) + '"' + (x.id === actual ? ' selected' : '') + '>' + esc(etiquetaReloj(x)) + '</option>'; }).join('') + '</select></label>';
     }).join('') + '</div>';
-  // textos por grupo
+  h += '<div class="card ed-pista"><b>¿Textos y fotos?</b> Cámbialos directo en la tienda: pestaña <b>Editar</b>, toca <b>Seleccionar</b> y haz clic sobre el texto o la foto.</div>';
+  return h;
+  // (los textos de la portada se editan desde Editar; sus datos siguen en portada.textos)
   var grupos = {};
   Object.keys(TEXTOS).forEach(function(k){ (grupos[TEXTOS[k][3]] = grupos[TEXTOS[k][3]] || []).push(k); });
   h += '<div class="card"><div class="card-title">Textos</div><p class="ed-ayuda">Deja un campo vacío para usar el texto original (se ve en gris). En los campos de varias líneas, Enter hace un salto de línea; **texto** se ve en negrita.</p>' +
@@ -393,7 +419,7 @@ function pintarBarra(){
     '<div class="ed-barra-acc">' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="deshacerTema()"' + (_pila.length ? '' : ' disabled') + '>Deshacer</button>' +
       '<button type="button" class="btn btn-outline btn-sm" onclick="descartarTema()"' + (cambios ? '' : ' disabled') + '>Descartar</button>' +
-      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + ({ tema: 'Diseño original', portada: 'Portada original', promos: 'Quitar promociones', contenido: 'Contenido original', control: 'Quitar aviso' })[parte] + '</button>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="restaurarOriginal()"' + (esOriginal ? ' disabled' : '') + '>' + ({ tema: 'Diseño original', portada: 'Portada original', promos: 'Quitar promociones', contenido: 'Contenido original', control: 'Quitar aviso', estilos: 'Quitar cambios puntuales' })[parte] + '</button>' +
       '<button type="button" class="btn btn-gold btn-sm" onclick="publicarTema()"' + (cambios && !probs && !_publicando ? '' : ' disabled') + '>' + (_publicando ? 'Publicando…' : 'Publicar') + '</button>' +
     '</div>';
 }
@@ -582,8 +608,9 @@ function htmlContenido(){
   h += '<div class="card"><div class="card-title">Ver en la vista previa</div><div class="ed-chips">' +
     [['inicio', 'Portada'], ['preguntas', 'Preguntas frecuentes'], ['legal', 'Información legal']].map(function(x){
       return '<button type="button" class="fin-mes-btn' + (_pagina === x[0] ? ' active' : '') + '" onclick="verPaginaTienda(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div></div>';
-  // fotos
-  h += '<div class="card"><div class="card-title">Fotos de la portada</div><p class="ed-ayuda">Sube JPG, PNG o WebP. Se achican solas para que la tienda cargue rápido. "Usar la original" vuelve a la foto de siempre.</p>' +
+  // fotos: se cambian desde Editar (tocando la foto); aqui solo la pista
+  h += '<div class="card ed-pista"><b>¿Fotos de la portada?</b> Ve a <b>Editar</b>, toca <b>Seleccionar</b> y haz clic sobre la foto que quieras cambiar.</div>';
+  if(false) h += '<div class="card"><div class="card-title">Fotos de la portada</div><p class="ed-ayuda">Sube JPG, PNG o WebP. Se achican solas para que la tienda cargue rápido. "Usar la original" vuelve a la foto de siempre.</p>' +
     Object.keys(FOTOS).map(function(k){
       var extra = k === 'futFicha' ? '<label class="ed-check" style="margin:6px 0 0;"><input type="checkbox" id="ed-sinfondo" checked> Quitar el fondo blanco al subir</label>' : '';
       return cajaFoto(k, FOTOS[k][1], FOTOS[k][2], c.fotos[k], extra);
@@ -705,6 +732,179 @@ function htmlControl(){
 }
 function actualizarClics(){ _clics = {}; cargarClics(); }
 
+// ---------- Editar por seleccion ----------
+const ICONO_SEL = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l7 17 2.5-7.5L21 11z"/></svg>';
+const NOMBRE_PROP = { color: 'color', fondo: 'fondo', tam: 'tamaño', peso: 'grosor', fuente: 'tipo de letra', may: 'mayúsculas', alin: 'alineación', esp: 'espaciado', radio: 'esquinas', relleno: 'relleno', oculto: 'oculto' };
+ins.alCambiarModo(pintarBotonSel);
+window.addEventListener('message', function(e){
+  if(e.origin !== location.origin || !e.data || e.data.tipo !== 'aph-vista-lista') return;
+  ins.marcoListo(); pintarBotonSel();
+  setTimeout(function(){
+    if(_pendSel){ var p = _pendSel; _pendSel = null; ins.elegirPorSelector(p, true); }
+    else if(_sel && !ins.elegirPorSelector(selActual(), false)){ _sel = null; if(_vista === 'editar') pintar(); }
+    pintarAlerta(); pintarBarra();
+  }, 350);
+});
+function pintarBotonSel(){ var b = el('ed-sel-btn'); if(b) b.classList.toggle('activo', ins.activo()); }
+function seleccionar(){
+  if(ins.activo()){ ins.desactivar(); pintarBotonSel(); return; }
+  if(!ins.activar(alElegir)){ alert('La vista previa todavía está cargando. Intenta en un momento.'); return; }
+  pintarBotonSel();
+  if(window.toastPanel) window.toastPanel('Pasa el cursor por la tienda y haz clic en lo que quieras cambiar (Esc para salir).');
+}
+function alElegir(d){
+  _sel = d; _alcance = d.selUnico ? 'unico' : 'iguales';
+  pintarBotonSel();
+  if(_vista !== 'editar' && window.irSeccion) window.irSeccion('tienda', 'editar'); else pintar();
+}
+function selActual(){ return _sel ? (_alcance === 'iguales' && _sel.selIguales ? _sel.selIguales : _sel.selUnico || _sel.selIguales) : ''; }
+function reglaDe(s, sel){ return (s.estilos || []).find(function(r){ return r.pg === _pagina && r.sel === sel; }) || null; }
+function cambiarEstilo(prop, v, vivo){
+  var sel = selActual(); if(!sel) return;
+  var s = copia(), r = reglaDe(s, sel), vacio = v === null || v === '' || v === undefined || v === false;
+  if(!r){
+    if(vacio) return;
+    if(s.estilos.length >= MAX_REGLAS){ alert('Llegaste al máximo de ' + MAX_REGLAS + ' cambios puntuales. Quita alguno de la lista de abajo.'); return; }
+    r = { pg: _pagina, sel: sel, p: {} }; s.estilos.push(r);
+  }
+  if(prop === 't' || prop === 'img'){ if(vacio) delete r[prop]; else r[prop] = v; }
+  else if(vacio) delete r.p[prop];
+  else r.p[prop] = ['tam', 'peso', 'radio', 'relleno', 'esp'].indexOf(prop) !== -1 ? Number(v) : v;
+  if(!Object.keys(r.p).length && !r.t && !r.img) s.estilos = s.estilos.filter(function(x){ return x !== r; });
+  aplicarCambio(s, vivo);
+}
+// texto: si es uno de los textos de la portada que ya tenian su campo, se guarda ahi (mismo dato de siempre)
+function claveTexto(){ return Object.keys(TEXTOS).find(function(k){ return ins.coincide(TEXTOS[k][0]); }) || ''; }
+function claveFoto(){ return Object.keys(FOTOS).find(function(k){ return ins.coincide(FOTOS[k][0]); }) || ''; }
+function cambiarTextoElemento(v, vivo){
+  var k = claveTexto();
+  if(!k){ cambiarEstilo('t', v, vivo); return; }
+  var cfg = TEXTOS[k], t = String(v || '');
+  if(!cfg[2]) t = t.replace(/\n/g, ' ');
+  t = t.slice(0, cfg[1]);
+  var s = copia(); if(t.trim()) s.portada.textos[k] = t; else delete s.portada.textos[k];
+  aplicarCambio(s, vivo);
+}
+async function subirFotoElemento(input){
+  var archivo = input.files && input.files[0]; input.value = '';
+  if(!archivo || !_sel) return;
+  if(!navigator.onLine){ alert('Necesitas internet para subir fotos.'); return; }
+  var k = claveFoto(), sel = selActual();
+  _subiendoElem = true; pintar();
+  try{
+    var img = await leerImagen(archivo), w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    var minimo = Math.max(400, Math.min(1200, (_sel.ancho || 400) * 1.5));
+    if(Math.max(w, h) < minimo) throw new Error('La foto es muy pequeña (' + w + '×' + h + ' px) para ese espacio; se vería borrosa. Usa una de al menos ' + Math.round(minimo) + ' px de lado.');
+    var sinFondo = (el('ed-elem-sinfondo') || {}).checked;
+    if(sinFondo) img = prepararFoto(img).canvas;
+    var url = await subirArchivo(await comprimirImg(img, sinFondo), 'sitio');
+    _subiendoElem = false;
+    if(k) aplicarCambio(contenido(function(c){ c.fotos[k] = url; }));
+    else { _alcance = sel === _sel.selIguales ? 'iguales' : 'unico'; cambiarEstilo('img', url); }
+  }catch(e){ _subiendoElem = false; pintar(); alert('No se pudo subir la foto: ' + e.message); }
+}
+function fotoOriginalElemento(){ var k = claveFoto(); if(k) aplicarCambio(contenido(function(c){ delete c.fotos[k]; })); else cambiarEstilo('img', null); }
+function quitarCambiosElemento(){
+  var sel = selActual(), k = claveTexto(), f = claveFoto();
+  if(!confirm('¿Quitar todo lo que le cambiaste a este elemento?')) return;
+  var s = copia();
+  s.estilos = s.estilos.filter(function(r){ return !(r.pg === _pagina && r.sel === sel); });
+  if(k) delete s.portada.textos[k];
+  if(f) delete s.contenido.fotos[f];
+  aplicarCambio(s);
+}
+function alcanceElemento(a){ _alcance = a; pintar(); }
+function padreElemento(){ ins.elegirPadre(); }
+function soltarElemento(){ _sel = null; ins.soltar(); pintar(); }
+function verCambio(i){
+  var r = _borrador.estilos[i]; if(!r) return;
+  _alcance = 'unico';
+  if(r.pg === _pagina){ if(!ins.elegirPorSelector(r.sel, true)) alert('Ese elemento no está en la vista previa ahora (puede estar en otra parte de la página, como la ficha de un reloj).'); }
+  else { _pendSel = r.sel; verPagina(r.pg); }
+}
+function quitarCambio(i){ var s = copia(); s.estilos.splice(i, 1); aplicarCambio(s); }
+function filaChips(prop, opciones, actual){
+  return '<div class="ed-chips">' + opciones.map(function(o){
+    var v = o[0] === null ? 'null' : "'" + o[0] + "'";
+    return '<button type="button" class="fin-mes-btn' + (String(actual) === String(o[0]) ? ' active' : '') + '" onclick="cambiarEstiloTienda(\'' + prop + '\',' + v + ')">' + o[1] + '</button>';
+  }).join('') + '</div>';
+}
+function rango(prop, min, max, paso, valor, unidad, mostrar){
+  return '<div class="ed-rango"><input type="range" min="' + min + '" max="' + max + '" step="' + paso + '" value="' + valor + '" oninput="cambiarEstiloTienda(\'' + prop + '\',this.value,1);this.nextElementSibling.textContent=' + (mostrar || 'this.value') + '+\'' + unidad + '\'" onchange="cambiarEstiloTienda(\'' + prop + '\',this.value)"><b>' + (mostrar ? (prop === 'esp' ? (valor / 100) : valor) : valor) + unidad + '</b></div>';
+}
+function deshacerProp(prop, r){ return r && r.p[prop] !== undefined ? '<button type="button" class="ed-rest" onclick="cambiarEstiloTienda(\'' + prop + '\',null)" title="Como estaba">↺</button>' : ''; }
+function htmlElemento(){
+  var d = ins.elegido() || _sel; _sel = d;
+  var sel = selActual(), r = reglaDe(_borrador, sel) || { p: {} }, p = r.p, h = '';
+  var kT = claveTexto(), kF = claveFoto();
+  h += '<div class="card ed-elem"><div class="ed-elem-cab"><div><b>' + esc(d.nombre) + '</b><code>' + esc(d.codigo) + '</code><span>' + d.ancho + ' × ' + d.alto + ' px</span></div>' +
+    (d.tienePadre ? '<button type="button" class="btn btn-outline btn-sm" onclick="padreElementoTienda()" title="Elegir el bloque que lo contiene">↑ Contenedor</button>' : '') +
+    '<button type="button" class="ed-mini-btn" onclick="soltarElementoTienda()" aria-label="Dejar de editar">×</button></div>';
+  // a que se aplica
+  if(d.selUnico && d.selIguales) h += '<div class="ed-sub">Aplicar a</div>' + '<div class="ed-chips">' +
+    '<button type="button" class="fin-mes-btn' + (_alcance === 'unico' ? ' active' : '') + '" onclick="alcanceElementoTienda(\'unico\')">Solo este</button>' +
+    '<button type="button" class="fin-mes-btn' + (_alcance === 'iguales' ? ' active' : '') + '" onclick="alcanceElementoTienda(\'iguales\')">Todos los iguales (' + d.cuantos + ')</button></div>';
+  else if(d.dinamico) h += '<p class="ed-ayuda" style="margin:6px 0 0;">Está en las tarjetas de los relojes: el cambio se aplica a <b>todas</b> (' + d.cuantos + '). Su texto y su foto vienen del inventario.</p>';
+  if(!sel){ return h + '<p class="ed-ayuda">Este elemento no se puede editar. Prueba con "↑ Contenedor" o con otro.</p></div>'; }
+  // texto
+  if(d.texto !== null && !d.dinamico){
+    var max = kT ? TEXTOS[kT][1] : 300;
+    h += '<div class="ed-sub">Texto</div><textarea class="ed-elem-texto" rows="' + Math.min(5, Math.max(2, d.texto.split('\n').length + 1)) + '" maxlength="' + max + '" oninput="cambiarTextoElementoTienda(this.value,1)" onchange="cambiarTextoElementoTienda(this.value)">' + esc(d.texto) + '</textarea>' +
+      '<p class="ed-ayuda" style="margin:4px 0 0;">Enter hace un salto de línea; **texto** se ve en negrita. Vacío = el texto original.</p>';
+  }
+  // foto
+  if(d.esImagen && !d.dinamico){
+    var cambiada = kF ? !!_borrador.contenido.fotos[kF] : !!(reglaDe(_borrador, sel) || {}).img;
+    h += '<div class="ed-sub">Foto</div><div class="ed-foto"><div class="ed-foto-img"><img src="' + esc(d.imagen) + '" alt=""></div><div class="ed-foto-txt">' +
+      '<label class="ed-check" style="margin:0;"><input type="checkbox" id="ed-elem-sinfondo"> Quitar el fondo blanco al subir</label><div class="ed-chips">' +
+      '<label class="btn btn-outline btn-sm' + (_subiendoElem ? ' disabled' : '') + '">' + (_subiendoElem ? 'Subiendo…' : 'Cambiar foto') + '<input type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="subirFotoElementoTienda(this)"></label>' +
+      (cambiada ? '<button type="button" class="btn btn-outline btn-sm" onclick="fotoOriginalElementoTienda()">Usar la original</button>' : '') + '</div></div></div>';
+  }
+  // letra
+  if(d.conTexto){
+    h += '<div class="ed-sub">Letra ' + deshacerProp('tam', r) + '</div>' + rango('tam', 8, 96, 1, p.tam || d.tam, ' px') +
+      '<div class="ed-sub">Grosor ' + deshacerProp('peso', r) + '</div>' + filaChips('peso', [[300, 'Fina'], [400, 'Normal'], [500, 'Media'], [600, 'Semi'], [700, 'Negrita'], [800, 'Extra']], p.peso || d.peso) +
+      '<div class="ed-sub">Tipo de letra ' + deshacerProp('fuente', r) + '</div>' + filaChips('fuente', Object.keys(NOMBRES_FUENTE).map(function(k){ return [k, NOMBRES_FUENTE[k]]; }), p.fuente || '') +
+      '<div class="ed-sub">Mayúsculas y alineación</div>' + filaChips('may', [[null, 'Como está'], ['mayus', 'MAYÚSCULAS'], ['normal', 'Normal']], p.may || null) +
+      filaChips('alin', [[null, 'Como está'], ['left', 'Izquierda'], ['center', 'Centro'], ['right', 'Derecha']], p.alin || null) +
+      '<div class="ed-sub">Espacio entre letras ' + deshacerProp('esp', r) + '</div>' + rango('esp', -5, 40, 1, Math.round((p.esp !== undefined ? p.esp : d.esp) * 100), ' em', '(this.value/100)');
+  }
+  // colores
+  var cLetra = p.color || d.color, cFondo = p.fondo || d.fondoPropio || d.fondo || '#ffffff';
+  var ratio = d.conTexto && (p.fondo || d.fondo) ? ins.contraste(cLetra, p.fondo || d.fondo) : null;
+  h += '<div class="ed-sub">Colores</div><div class="ed-colores">' +
+    (d.conTexto ? '<label class="ed-color-mini"><span class="ed-muestra" style="background:' + cLetra + '"><input type="color" value="' + cLetra + '" oninput="cambiarEstiloTienda(\'color\',this.value,1);this.parentNode.style.background=this.value" onchange="cambiarEstiloTienda(\'color\',this.value)"></span>Letras ' + deshacerProp('color', r) + '</label>' : '') +
+    '<label class="ed-color-mini"><span class="ed-muestra" style="background:' + cFondo + '"><input type="color" value="' + cFondo + '" oninput="cambiarEstiloTienda(\'fondo\',this.value,1);this.parentNode.style.background=this.value" onchange="cambiarEstiloTienda(\'fondo\',this.value)"></span>Fondo ' + deshacerProp('fondo', r) + '</label>' +
+    (ratio !== null ? '<span class="ed-contraste ' + (ratio >= d.minimo ? 'ok' : 'mal') + '">Aa ' + ratio + (ratio >= d.minimo ? ' se lee bien' : ' casi no se lee') + '</span>' : '') + '</div>';
+  // forma
+  h += '<div class="ed-sub">Esquinas ' + deshacerProp('radio', r) + '</div>' + rango('radio', 0, 60, 1, p.radio !== undefined ? p.radio : Math.round(d.radio), ' px');
+  if(!d.esImagen) h += '<div class="ed-sub">Relleno (espacio por dentro) ' + deshacerProp('relleno', r) + '</div>' + rango('relleno', 0, 80, 1, p.relleno !== undefined ? p.relleno : Math.round(d.relleno), ' px');
+  h += '<label class="ed-switch" style="margin-top:12px;"><input type="checkbox"' + (p.oculto ? ' checked' : '') + ' onchange="cambiarEstiloTienda(\'oculto\',this.checked)"><span></span>Ocultar ' + (_alcance === 'iguales' || d.dinamico ? 'estos elementos' : 'este elemento') + '</label>';
+  var algo = Object.keys(p).length || r.t || r.img || (kT && _borrador.portada.textos[kT]) || (kF && _borrador.contenido.fotos[kF]);
+  if(algo) h += '<button type="button" class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="quitarCambiosElementoTienda()">Quitar mis cambios de este elemento</button>';
+  return h + '</div>';
+}
+function htmlEditar(){
+  var h = '';
+  h += '<div class="card"><div class="card-title">Cambia cualquier cosa de la tienda</div>' +
+    '<p class="ed-ayuda">Toca <b>Seleccionar</b>, pasa el cursor por la vista previa (verás qué es, su color y su letra) y haz clic en lo que quieras cambiar. Como "Inspeccionar" de Chrome.</p>' +
+    '<button type="button" class="btn btn-gold btn-sm" onclick="seleccionarTienda()">' + ICONO_SEL + (ins.activo() ? 'Seleccionando… (Esc para salir)' : 'Seleccionar en la vista previa') + '</button>' +
+    '<div class="ed-sub">Página</div><div class="ed-chips">' + Object.keys(PAGINAS).map(function(k){
+      return '<button type="button" class="fin-mes-btn' + (_pagina === k ? ' active' : '') + '" onclick="verPaginaTienda(\'' + k + '\')">' + NOMBRE_PAGINA[k] + '</button>'; }).join('') + '</div></div>';
+  if(_sel) h += htmlElemento();
+  // lista de cambios puntuales
+  var lista = _borrador.estilos, nT = Object.keys(_borrador.portada.textos).length, nF = Object.keys(_borrador.contenido.fotos).length;
+  h += '<div class="card"><div class="card-title">Tus cambios (' + lista.length + ')</div>' +
+    (lista.length ? lista.map(function(r, i){
+      var que = Object.keys(r.p).map(function(k){ return NOMBRE_PROP[k]; }).concat(r.t ? ['texto'] : [], r.img ? ['foto'] : []).join(', ');
+      var nombre = r.sel.split(' > ').pop().replace(/:nth-of-type\(\d+\)/g, '').replace(/^#/, '');
+      return '<div class="ed-fila"><span class="ed-num">' + (i + 1) + '</span><b title="' + esc(r.sel) + '">' + esc(nombre) + ' <em class="ed-cambio">' + esc(que) + ' · ' + esc(NOMBRE_PAGINA[r.pg]) + '</em></b>' +
+        '<button type="button" class="btn btn-outline btn-sm" onclick="verCambioTienda(' + i + ')">Ver</button><button type="button" class="ed-mini-btn quitar" onclick="quitarCambioTienda(' + i + ')" aria-label="Quitar">×</button></div>';
+    }).join('') : '<p class="ed-ayuda" style="margin:0;">Todavía no has cambiado nada así.</p>') +
+    (nT || nF ? '<p class="ed-ayuda" style="margin:8px 0 0;">Además: ' + [nT ? nT + ' texto' + (nT !== 1 ? 's' : '') : '', nF ? nF + ' foto' + (nF !== 1 ? 's' : '') : ''].filter(Boolean).join(' y ') + ' de la portada cambiados.</p>' : '') + '</div>';
+  return h;
+}
+
 export { renderTienda };
 // usadas desde atributos onclick/oninput del HTML
 Object.assign(window, { agregarDestacadoTienda: agregarDestacado, borrarTemaGuardado: borrarTema, cambiarEnlaceTienda: cambiarEnlace, cambiarHex, cambiarTema, cambiarTextoTienda: cambiarTexto,
@@ -715,4 +915,7 @@ Object.assign(window, { agregarDestacadoTienda: agregarDestacado, borrarTemaGuar
   quitarAnuncio, quitarEtiqueta, quitarOferta, verPopupTienda: verPopup,
   agregarPreguntaTienda: agregarPregunta, cambiarFaqTienda: cambiarFaq, cambiarLegalTienda: cambiarLegal, cambiarPreguntaTienda: cambiarPregunta, cambiarSeo,
   el_cuenta, faqAbiertaTienda: faqAbierta, quitarFotoSitio, quitarPreguntaTienda: quitarPregunta, subirFotoSitio, verPaginaTienda: verPagina,
-  actualizarClics, cambiarVacaciones, cancelarProgramadoTienda: cancelarProgramado, copiarEnlacePrevia, crearEnlacePrevia, programarTienda: programar, verProgramadoTienda: verProgramado });
+  actualizarClics, cambiarVacaciones, cancelarProgramadoTienda: cancelarProgramado, copiarEnlacePrevia, crearEnlacePrevia, programarTienda: programar, verProgramadoTienda: verProgramado,
+  alcanceElementoTienda: alcanceElemento, cambiarEstiloTienda: cambiarEstilo, cambiarTextoElementoTienda: cambiarTextoElemento, fotoOriginalElementoTienda: fotoOriginalElemento,
+  padreElementoTienda: padreElemento, quitarCambioTienda: quitarCambio, quitarCambiosElementoTienda: quitarCambiosElemento, seleccionarTienda: seleccionar,
+  soltarElementoTienda: soltarElemento, subirFotoElementoTienda: subirFotoElemento, verCambioTienda: verCambio });

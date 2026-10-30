@@ -60,10 +60,11 @@ const SECCIONES = [
     { id: 'registrar', t: 'Registrar', page: 'finanzas', inner: 'registrar' },
     { id: 'cierres', t: 'Cierres', page: 'finanzas', inner: 'cierres' }] },
   { id: 'tienda', t: 'Tienda', subs: [
+    { id: 'editar', t: 'Editar', page: 'tienda' },
     { id: 'diseno', t: 'Diseño', page: 'tienda' },
     { id: 'portada', t: 'Portada', page: 'tienda' },
     { id: 'promos', t: 'Promociones', page: 'tienda' },
-    { id: 'fotos', t: 'Fotos y textos', page: 'tienda' },
+    { id: 'fotos', t: 'Google y páginas', page: 'tienda' },
     { id: 'control', t: 'Control', page: 'tienda' }] },
   // plan de contenido para redes (reels, fotos, historias): seccion propia
   { id: 'contenido', t: 'Contenido', subs: [{ id: 'plan', t: 'Plan de contenido', page: 'contenido' }] },
