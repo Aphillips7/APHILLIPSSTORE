@@ -160,6 +160,13 @@ function mostrarVista(secId, subId){
     document.querySelectorAll('#page-' + x.page + ' [data-vista]').forEach(function(el){ el.hidden = el.getAttribute('data-vista') !== x.vista; });
     if(x.page === 'ventas'){ try{ mostrarVistaVentas(x.vista); }catch(e){ console.error(e); } }
   }
+  // Registrar: en Ventas solo la venta; en Finanzas los demas movimientos (compra, gasto, retiro, traspaso, aporte)
+  if(x.inner === 'registrar'){
+    var reg = document.getElementById('fin-registrar');
+    if(reg) reg.setAttribute('data-modo', sec.id === 'ventas' ? 'venta' : 'finanzas');
+    var tipoActual = (document.getElementById('fin-tipo') || {}).value;
+    if(sec.id !== 'ventas' && !x.tipo && (!tipoActual || tipoActual === 'venta')){ try{ elegirTipo('compra'); }catch(e){ console.error(e); } }
+  }
   if(x.tipo){ try{ elegirTipo(x.tipo); }catch(e){ console.error(e); } }
   marcarActivos();
   if(!x.auth) guardar(CLAVE_VISTA, sec.id + '/' + x.id);

@@ -47,3 +47,18 @@
   .vm-cliente-sel button{background:none;border:none;font:inherit;font-size:12.5px;color:var(--red);cursor:pointer;}
   .vm-confirmar{width:100%;margin-top:18px;padding:13px;font-size:15px;}
   @media (max-width:480px){ .vm-resultado{grid-template-columns:repeat(2,minmax(0,1fr));} #venta-overlay{padding:12px;} }
+  /* Registrar venta en pantallas grandes: ventana ancha en dos columnas, sin tener que bajar */
+  @media (min-width:900px){
+    #venta-overlay{align-items:center;}
+    #venta-overlay .vm-caja{max-width:min(920px,calc(100vw - 80px));padding:26px 30px;}
+    .vm-cuerpo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:0 32px;align-items:start;}
+    .vm-col > label:first-child{margin-top:14px;}
+    .vm-precio input{font-size:26px;padding-top:12px;padding-bottom:12px;}
+    .vm-resultado{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+    .vm-resultado div{padding:10px 12px;}
+    .vm-resultado span{font-size:12px;}
+    .vm-resultado b{font-size:18px;}
+    .vm-resultados{max-height:170px;}
+    .vm-confirmar{margin-top:22px;}
+  }
+  @media (min-width:1300px){ #venta-overlay .vm-caja{max-width:1000px;} }

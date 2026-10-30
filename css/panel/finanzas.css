@@ -376,3 +376,6 @@
   .pw-sub em{flex-basis:100%;font-style:normal;font-size:12px;color:var(--muted);}
   .pw-consultas{padding-bottom:6px;border-bottom:1px solid var(--border);}
   .pw-consultas .pw-sub{margin-top:6px;}
+  /* Registrar: Ventas > Registrar venta solo muestra la venta; Finanzas > Registrar, el resto de movimientos */
+  #fin-registrar[data-modo="venta"] .fin-tipos{display:none;}
+  #fin-registrar[data-modo="finanzas"] .fin-tipo-chip[onclick^="selTipo('venta'"]{display:none;}

@@ -208,7 +208,7 @@ if(location.hostname==='aphillips7.github.io'){
 
   <!-- REGISTRAR -->
   <div id="fin-registrar" class="inner-page active">
-    <div class="card" style="padding:14px 20px;margin-bottom:0;">
+    <div class="card fin-tipos" style="padding:14px 20px;margin-bottom:0;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button type="button" class="fin-tipo-chip sel-venta" onclick="selTipo('venta',this)">Venta</button>
         <button type="button" class="fin-tipo-chip" onclick="selTipo('compra',this)">Compra</button>
@@ -576,6 +576,8 @@ if(location.hostname==='aphillips7.github.io'){
       <div class="vm-cab-txt"><div class="vm-titulo" id="vm-titulo">Registrar venta</div><div class="vm-sub" id="venta-modal-nombre"></div></div>
       <button type="button" class="vm-x" onclick="cerrarVentaModal()" aria-label="Cerrar">&times;</button>
     </div>
+    <!-- en laptop: dos columnas (precio y resultado | canal, pago y cliente); en celular, una -->
+    <div class="vm-cuerpo"><div class="vm-col">
     <div class="vm-fila-costo"><span>Costo del reloj</span><b id="venta-modal-costo"></b></div>
     <label for="venta-modal-precio">Precio de venta</label>
     <div class="currency-wrap vm-precio"><input type="number" id="venta-modal-precio" min="0" step="0.01" inputmode="decimal" placeholder="0.00" /></div>
@@ -585,6 +587,7 @@ if(location.hostname==='aphillips7.github.io'){
       <div><span>Reinversion 40 %</span><b id="vm-reinv">$0</b></div>
       <div><span>Para ti 30 %</span><b id="vm-personal">$0</b></div>
     </div>
+    </div><div class="vm-col">
     <label>¿Por donde se vendio?</label>
     <div class="vm-chips" id="vm-canales" data-campo="venta-modal-canal"></div>
     <input type="hidden" id="venta-modal-canal" value="" />
@@ -600,6 +603,7 @@ if(location.hostname==='aphillips7.github.io'){
     </div>
     <div class="vm-resultados" id="vm-resultados" hidden></div>
     <div class="campo-ayuda" id="vm-ayuda" hidden></div>
+    </div></div>
     <button type="button" class="btn btn-gold vm-confirmar" id="vm-confirmar" onclick="confirmarVentaModal()" disabled>Confirmar venta</button>
     <button type="button" class="metodo-cancelar" onclick="cerrarVentaModal()">Cancelar</button>
   </div>
