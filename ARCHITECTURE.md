@@ -119,7 +119,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `modal.js` | Pagina de un reloj (estilo TAG Heuer): barras desplegables con icono, garantias y boton de WhatsApp. Usa `descripcion` si existe; si no, `notas` o una descripcion armada con los datos (incluye "Tambien te puede gustar": relojes parecidos por marca, coleccion, genero, precio, tamano y movimiento) |
 | `favoritos.js` | Favoritos (en el navegador) y consulta multiple por WhatsApp |
 | `whatsapp.js` | Numero, confirmaciones, cotizar |
-| `mascota.js` | Asistente flotante (reloj con caja glaciar): mini ventana con asesoria por WhatsApp, buscador y guia de tamanos; reemplaza al boton flotante de WhatsApp |
+| `mascota.js` | Asistente flotante (reloj 3D con caja glaciar y bigote de agujas; poses en `img/mascota/*.webp`, la normal es `recepcion`): mini ventana con asesoria por WhatsApp, buscador y guia de tamanos; reemplaza al boton flotante de WhatsApp |
 | `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
 | `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
 | `aviso-cookies.js` | Aviso pequeno de cookies la primera vez (localStorage `aphillips_aviso_cookies`); enlaza a `/legal#cookies` |
