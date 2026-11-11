@@ -1,33 +1,39 @@
   /* === MASCOTA: asistente flotante (reemplaza al boton de WhatsApp) === */
-  .mascota{--masc-glaciar:#A7C4D6;position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:145;display:flex;flex-direction:column;align-items:flex-end;pointer-events:none;}
+  .mascota{--masc-glaciar:#A7C4D6;--masc-metal:linear-gradient(180deg,#DCE8F0 0%,#B9D0DF 42%,#A0BDD0 100%);--masc-relieve:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -2px 4px rgba(60,90,112,.22);position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:145;display:flex;flex-direction:column;align-items:flex-end;pointer-events:none;}
   .mascota > *{pointer-events:auto;}
   .masc-boton{position:relative;width:78px;height:108px;padding:0;border:none;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
   .masc-boton:focus-visible{outline:2px solid var(--black);outline-offset:2px;border-radius:12px;}
   .masc-flota{position:absolute;left:0;right:0;top:0;bottom:8px;display:block;animation:mascFlota 3.4s ease-in-out infinite;will-change:transform;}
-  .masc-svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 0 1.2px rgba(255,255,255,.95)) drop-shadow(0 5px 7px rgba(9,9,11,.22));}
+  /* poses 3D apiladas: solo se ve la activa (data-pose); el cambio es directo (fundirlas dejaba ver las dos a medias); mas anchas que el boton para que quepan los brazos */
+  .masc-poses{position:absolute;left:50%;bottom:0;width:116%;aspect-ratio:1;transform:translateX(-50%);display:block;pointer-events:none;}
+  .masc-pose{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;opacity:0;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 5px 6px rgba(9,9,11,.18));}
+  .mascota[data-pose="recepcion"] .masc-pose[data-p="recepcion"],.mascota[data-pose="saludo"] .masc-pose[data-p="saludo"],.mascota[data-pose="pulgar"] .masc-pose[data-p="pulgar"],
+  .mascota[data-pose="pensativo"] .masc-pose[data-p="pensativo"],.mascota[data-pose="sorpresa"] .masc-pose[data-p="sorpresa"],
+  .mascota[data-pose="enamorado"] .masc-pose[data-p="enamorado"],.mascota[data-pose="dormido"] .masc-pose[data-p="dormido"],
+  .mascota[data-pose="tapa"] .masc-pose[data-p="tapa"]{opacity:1;animation:mascPose .35s cubic-bezier(.3,1.4,.5,1) both;}
+  /* la pose que aparece entra con un pequeno rebote */
+  .masc-pose{transform-origin:50% 95%;}
+  @keyframes mascPose{from{transform:scale(.92);}to{transform:none;}}
   .masc-sombra{position:absolute;left:50%;bottom:0;width:38px;height:7px;margin-left:-19px;border-radius:50%;background:rgba(9,9,11,.16);animation:mascSombra 3.4s ease-in-out infinite;}
   @keyframes mascFlota{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
   @keyframes mascSombra{0%,100%{transform:scaleX(1);opacity:1;}50%{transform:scaleX(.78);opacity:.6;}}
 
-  /* saludo con la mano cada tanto, y parpadeo */
-  .masc-saludo{transform-box:view-box;transform-origin:28px 82px;animation:mascSaluda 7s ease-in-out infinite;}
-  @keyframes mascSaluda{0%,70%,100%{transform:rotate(0);}74%{transform:rotate(14deg);}78%{transform:rotate(-6deg);}82%{transform:rotate(14deg);}86%{transform:rotate(-4deg);}90%{transform:rotate(0);}}
-  .masc-ojos{transform-box:view-box;transform-origin:60px 64px;animation:mascParpadeo 5.5s infinite;}
-  @keyframes mascParpadeo{0%,93%,100%{transform:scaleY(1);}95%{transform:scaleY(.12);}}
   @media (hover:hover) and (pointer:fine){
     .masc-boton:hover .masc-flota{animation-play-state:paused;transform:translateY(-4px) rotate(-4deg);transition:transform .25s var(--ease);}
   }
   .masc-boton:active .masc-flota{transform:scale(.94);}
-  .mascota.abierta .masc-saludo{animation:none;transform:rotate(14deg);}
 
   /* globito "¿Te ayudo a elegir?" */
-  .masc-burbuja{position:relative;margin:0 10px 4px 0;padding:9px 13px;background:var(--masc-glaciar);color:var(--black);font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.02em;border-radius:12px 12px 2px 12px;box-shadow:0 6px 18px rgba(9,9,11,.14);white-space:nowrap;opacity:0;transform:translateY(6px) scale(.96);transform-origin:bottom right;transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
-  .masc-burbuja.on{opacity:1;transform:none;}
+  .masc-burbuja{position:relative;margin:0 14px 12px 0;padding:10px 15px 11px;background:var(--masc-metal);color:var(--black);font-size:var(--fs-etiqueta);font-weight:700;letter-spacing:.02em;border:1.5px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:var(--masc-relieve),0 10px 22px -6px rgba(9,9,11,.30),0 2px 5px rgba(9,9,11,.10);white-space:nowrap;opacity:0;transform:translateY(8px) scale(.9);transform-origin:85% 100%;transition:opacity .2s var(--ease),transform .2s var(--ease);pointer-events:none;}
+  /* colita redondeada que apunta a la mascota (mismo metal y borde blanco) */
+  .masc-burbuja::after{content:"";position:absolute;right:22px;bottom:-8px;width:14px;height:14px;background:#A3BFD1;border-right:1.5px solid rgba(255,255,255,.9);border-bottom:1.5px solid rgba(255,255,255,.9);border-bottom-right-radius:4px;transform:rotate(45deg);box-shadow:3px 3px 6px -2px rgba(9,9,11,.18);}
+  .masc-burbuja.on{opacity:1;transform:none;animation:mascBurbuja .45s cubic-bezier(.3,1.5,.5,1) both;}
+  @keyframes mascBurbuja{0%{transform:translateY(8px) scale(.8);}60%{transform:translateY(-2px) scale(1.04);}100%{transform:none;}}
 
   /* mini ventana de opciones */
-  .masc-panel{width:min(330px,calc(100vw - 24px));margin-bottom:8px;background:#fff;border:1px solid var(--border2);border-radius:14px;box-shadow:0 18px 44px -10px rgba(9,9,11,.28),0 4px 12px rgba(9,9,11,.08);overflow:hidden;opacity:0;transform:translateY(10px) scale(.97);transform-origin:bottom right;transition:opacity .2s var(--ease),transform .22s var(--ease);}
+  .masc-panel{width:min(330px,calc(100vw - 24px));margin-bottom:8px;background:#fff;border:1.5px solid rgba(255,255,255,.95);border-radius:18px;box-shadow:0 22px 48px -12px rgba(9,9,11,.32),0 4px 12px rgba(9,9,11,.10),0 0 0 1px rgba(60,90,112,.12);overflow:hidden;opacity:0;transform:translateY(10px) scale(.97);transform-origin:bottom right;transition:opacity .2s var(--ease),transform .22s var(--ease);}
   .masc-panel.on{opacity:1;transform:none;}
-  .masc-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 16px 12px 18px;background:var(--masc-glaciar);color:var(--black);}
+  .masc-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 16px 13px 18px;background:var(--masc-metal);box-shadow:var(--masc-relieve);color:var(--black);}
   .masc-cab b{display:block;font-family:var(--font-titulo);font-size:16px;font-weight:800;letter-spacing:.01em;text-transform:uppercase;line-height:1.2;}
   .masc-cab span{display:block;margin-top:3px;font-size:var(--fs-etiqueta);color:#2c3a44;}
   .masc-x{flex:none;width:30px;height:30px;margin:-4px -6px 0 0;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--black);cursor:pointer;border-radius:50%;}
@@ -36,7 +42,7 @@
   .masc-ops{display:flex;flex-direction:column;padding:6px 0;}
   .masc-op{display:flex;align-items:center;gap:14px;width:100%;padding:13px 16px 13px 18px;border:none;background:none;font-family:inherit;text-align:left;color:var(--black);cursor:pointer;transition:background var(--fast) var(--ease);}
   .masc-op + .masc-op{border-top:1px solid var(--border);}
-  .masc-op-ico{flex:none;width:38px;height:38px;border-radius:50%;background:var(--masc-glaciar);display:flex;align-items:center;justify-content:center;}
+  .masc-op-ico{flex:none;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#EEF4F8 0%,#BFD4E2 45%,#97B6CA 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -2px 3px rgba(60,90,112,.25),0 2px 5px rgba(9,9,11,.14);display:flex;align-items:center;justify-content:center;}
   .masc-op-ico svg{width:19px;height:19px;fill:none;stroke:var(--black);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
   .masc-op-txt{flex:1;min-width:0;}
   .masc-op-txt b{display:block;font-size:13px;font-weight:600;letter-spacing:.01em;}
@@ -47,51 +53,8 @@
   .masc-op:focus-visible{outline:2px solid var(--black);outline-offset:-2px;}
   .masc-op{-webkit-tap-highlight-color:transparent;}
 
-  /* caras: la normal por defecto; data-cara en .mascota muestra otra por unos segundos */
-  .masc-cara{display:none;}
-  .mascota:not([data-cara]) .masc-cara-normal,
-  .mascota[data-cara="guino"] .masc-cara-guino,
-  .mascota[data-cara="feliz"] .masc-cara-feliz,
-  .mascota[data-cara="sorpresa"] .masc-cara-sorpresa,
-  .mascota[data-cara="pensativo"] .masc-cara-pensativo,
-  .mascota[data-cara="emocionado"] .masc-cara-emocionado,
-  .mascota[data-cara="dormido"] .masc-cara-dormido,
-  .mascota[data-cara="enamorado"] .masc-cara-enamorado,
-  .mascota[data-cara="timido"] .masc-cara-timido,
-  .mascota[data-cara="arriba"] .masc-cara-arriba{display:inline;}
-
-  /* cejas: se mueven segun la cara (y de vez en cuando suben solas) */
-  .masc-cejas path{transform-box:fill-box;transform-origin:50% 50%;transition:transform .25s var(--ease);}
-  .mascota:not([data-cara]) .masc-cejas{animation:mascCejas 9s ease-in-out infinite;}
-  @keyframes mascCejas{0%,86%,100%{transform:none;}89%,94%{transform:translateY(-1.6px);}}
-  .mascota[data-cara="sorpresa"] .masc-cejas path,.mascota[data-cara="emocionado"] .masc-cejas path{transform:translateY(-2.4px);}
-  .mascota[data-cara="feliz"] .masc-cejas path{transform:translateY(-1.2px);}
-  .mascota[data-cara="guino"] .masc-ceja-d{transform:translateY(1.4px) rotate(8deg);}
-  .mascota[data-cara="pensativo"] .masc-ceja-i{transform:translateY(-2px) rotate(-12deg);}
-  .mascota[data-cara="pensativo"] .masc-ceja-d{transform:translateY(.8px) rotate(6deg);}
-  .mascota[data-cara="dormido"] .masc-cejas path{transform:translateY(1.4px);}
-  .mascota[data-cara="enamorado"] .masc-cejas path,.mascota[data-cara="arriba"] .masc-cejas path{transform:translateY(-2px);}
-  .mascota[data-cara="timido"] .masc-ceja-i{transform:translateY(.6px) rotate(6deg);}
-  .mascota[data-cara="timido"] .masc-ceja-d{transform:translateY(.6px) rotate(-6deg);}
-  /* mirada */
-  .masc-mira{transition:transform .35s var(--ease);}
-  /* gestos de los brazos */
-  .masc-gesto{display:none;}
-  .mascota[data-gesto="pulgar"] .masc-g-pulgar,.mascota[data-gesto="menton"] .masc-g-menton,.mascota[data-gesto="senala"] .masc-g-senala{display:inline;}
-  .mascota[data-gesto="pulgar"] .masc-saludo,.mascota[data-gesto="menton"] .masc-saludo,.mascota[data-gesto="senala"] .masc-der-normal{display:none;}
-  .masc-g-pulgar,.masc-g-senala{transform-box:view-box;animation:mascGesto .5s cubic-bezier(.3,1.5,.5,1) both;}
-  .masc-g-pulgar{transform-origin:28px 82px;}
-  .masc-g-senala{transform-origin:92px 84px;}
-  @keyframes mascGesto{from{transform:rotate(-18deg) scale(.85);}to{transform:none;}}
-  /* siesta: zzz que suben y flota mas lento */
-  .masc-zzz{display:none;}
-  .mascota[data-cara="dormido"] .masc-zzz{display:inline;}
-  .masc-zzz text{animation:mascZ 2.4s ease-in-out infinite;opacity:0;}
-  .masc-zzz text:nth-child(2){animation-delay:.6s;}
-  .masc-zzz text:nth-child(3){animation-delay:1.2s;}
-  @keyframes mascZ{0%{opacity:0;transform:translateY(4px);}30%{opacity:1;}100%{opacity:0;transform:translateY(-6px);}}
+  /* siesta: flota mas lento */
   .mascota.durmiendo .masc-flota{animation-duration:6s;}
-  .mascota.durmiendo .masc-saludo{animation:none;}
 
   /* entrada al cambiar de seccion: saltito con rebote, o un giro al abrir un reloj */
   .masc-entra{display:block;width:100%;height:100%;transform-origin:50% 90%;}
@@ -102,39 +65,23 @@
   .mascota.entra-giro .masc-entra{animation:mascEntraGiro .9s var(--ease) both;}
   @keyframes mascEntraSalto{0%{transform:translateY(46px) scale(.45) rotate(-16deg);opacity:0;}55%{transform:translateY(-12px) scale(1.06) rotate(6deg);opacity:1;}78%{transform:translateY(2px) scale(.97) rotate(-3deg);}100%{transform:none;opacity:1;}}
   @keyframes mascEntraGiro{0%{transform:translateY(0) rotateY(0);}40%{transform:translateY(-16px) rotateY(180deg);}80%{transform:translateY(-4px) rotateY(360deg);}100%{transform:none;}}
-  .mascota.saluda .masc-saludo{animation:mascSaludaRapido 1.3s ease-in-out;}
-  @keyframes mascSaludaRapido{0%,100%{transform:rotate(0);}15%,45%,75%{transform:rotate(18deg);}30%,60%,90%{transform:rotate(-8deg);}}
 
   @media (min-width:640px){ .mascota{right:22px;bottom:18px;} .masc-boton{width:94px;height:130px;} }
   @media (prefers-reduced-motion:reduce){
-    .masc-flota,.masc-sombra,.masc-saludo,.masc-ojos,.masc-entra,.masc-cejas,.masc-g-pulgar,.masc-g-senala{animation:none !important;}
-    .masc-zzz text{animation:none !important;opacity:1;}
+    .masc-flota,.masc-sombra,.masc-entra,.masc-pose{animation:none !important;}
     .masc-panel,.masc-burbuja{transition:none;}
+    .masc-burbuja.on{animation:none;}
   }
   /* con el buscador abierto (encabezado en la capa 150) la mascota se queda visible encima */
   .mascota.sobre-buscador{z-index:155;}
 
   /* con "Mi cuenta" abierta (capa 149) la mascota queda encima */
   .mascota.sobre-cuenta{z-index:152;}
-  /* contrasena: se tapa los ojos con las dos manos; al mostrarla, baja la mano izquierda y espia */
-  .mascota[data-gesto="tapa"] .masc-g-tapa,.mascota[data-gesto="espia"] .masc-g-tapa{display:inline;}
-  .mascota[data-gesto="tapa"] .masc-saludo,.mascota[data-gesto="espia"] .masc-saludo,
-  .mascota[data-gesto="tapa"] .masc-der-normal,.mascota[data-gesto="espia"] .masc-der-normal{display:none;}
-  .masc-g-tapa{transform-box:view-box;transform-origin:60px 90px;animation:mascTapa .35s cubic-bezier(.3,1.4,.5,1) both;}
-  @keyframes mascTapa{from{transform:translateY(10px) scale(.9);opacity:.4;}to{transform:none;opacity:1;}}
-  .masc-tapa-i{transform-box:view-box;transition:transform .3s cubic-bezier(.3,1.4,.5,1);}
-  .mascota[data-gesto="espia"] .masc-tapa-i{transform:translate(-2px,10px);}
-  .mascota[data-gesto="tapa"] .masc-ojos,.mascota[data-gesto="espia"] .masc-ojos{animation:none;}
 
-  /* tic, tac: el minutero da la vuelta a saltitos y el reloj se balancea */
-  .masc-minutero,.masc-horario{transform-box:view-box;transform-origin:60px 70px;}
-  .mascota.tictac .masc-minutero{animation:mascTic 4.8s steps(12) 1;}
-  .mascota.tictac .masc-horario{animation:mascTac 4.8s linear 1;}
+  /* tic, tac: el reloj se balancea mientras comenta */
   .mascota.tictac .masc-entra{animation:mascBalanceo .4s ease-in-out 12 alternate;transform-origin:50% 95%;}
-  @keyframes mascTic{to{transform:rotate(360deg);}}
-  @keyframes mascTac{to{transform:rotate(30deg);}}
   @keyframes mascBalanceo{from{transform:rotate(-4deg);}to{transform:rotate(4deg);}}
-  @media (prefers-reduced-motion:reduce){ .mascota.tictac .masc-minutero,.mascota.tictac .masc-horario,.mascota.tictac .masc-entra{animation:none;} }
+  @media (prefers-reduced-motion:reduce){ .mascota.tictac .masc-entra{animation:none;} }
 
   /* mientras se desliza la pagina la mascota pausa sus animaciones (vuelve sola al detenerse) */
   .mascota.deslizando,.mascota.deslizando *{animation-play-state:paused !important;}
