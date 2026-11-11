@@ -75,6 +75,8 @@ export default {
       return vistaPreviaReloj(conCabeceras(await servir(env, request, '/catalogo.html')), r, ofertaActiva(await promosSitio(env), r));
     }
     if (url.pathname === '/admin') return conCabeceras(await servir(env, request, '/index.html'), true);
+    // herramienta aislada de recorte con IA (la abre el panel en un iframe sandbox): su propia CSP, ver CSP_RECORTE
+    if (url.pathname === '/herramientas/recorte-ia.html') return conCabecerasRecorte(await env.ASSETS.fetch(request));
 
     // secciones con direccion propia para Google (/relojes-hombre, /invicta...): es el catalogo con su
     // titulo, descripcion y canonica; al abrirse pasa a la vista de siempre (/#hombre, /#marca-invicta)
@@ -382,6 +384,23 @@ const CSP_PANEL = "default-src 'self'; base-uri 'self'; object-src 'none'; frame
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://apis.google.com https://static.cloudflareinsights.com; " +
   "connect-src 'self' https://api.aphillipsstore.com https://*.googleapis.com https://cloudflareinsights.com; " +
   "frame-src 'self' https://*.firebaseapp.com; form-action 'self'";
+
+// Recorte con IA (herramientas/recorte-ia.html): la libreria @imgly/background-removal necesita 'unsafe-eval'
+// (ndarray genera codigo al vuelo). Por eso no corre en el panel: corre en esta pagina, que el panel abre en un
+// <iframe sandbox="allow-scripts"> (origen opaco: no ve la sesion, el almacenamiento ni el DOM del panel) y que
+// solo puede cargar la libreria (esm.sh) y el modelo (staticimgly.com). Solo el panel puede enmarcarla.
+const CSP_RECORTE = "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'; " +
+  "script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://esm.sh; " +
+  "connect-src blob: data: https://esm.sh https://staticimgly.com; img-src blob: data:; worker-src blob:";
+function conCabecerasRecorte(res) {
+  const h = new Headers(res.headers);
+  h.set('X-Content-Type-Options', 'nosniff');
+  h.set('Referrer-Policy', 'no-referrer');
+  h.set('Cache-Control', 'no-cache');
+  h.set('X-Robots-Tag', 'noindex, nofollow');
+  h.set('Content-Security-Policy', CSP_RECORTE);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+}
 
 // Cabeceras de seguridad para las paginas; el panel ademas no se deja meter en iframes ni indexar
 function conCabeceras(res, esPanel) {

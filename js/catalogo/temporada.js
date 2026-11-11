@@ -1,6 +1,6 @@
 // =================== TEMPORADAS (Panama) ===================
 // Una sola fuente de fechas para todo lo que cambia solo por temporada: la pose y el saludo de la mascota
-// (mascota.js) y la linea pequena sobre "Mas vendidos" (destacados.js). Devuelve '' fuera de temporada.
+// (mascota.js). Devuelve '' fuera de temporada.
 //   madre:       1 al 8 de diciembre (Dia de la Madre: 8 de diciembre)
 //   navidad:     9 al 31 de diciembre
 //   sanvalentin: 7 al 14 de febrero

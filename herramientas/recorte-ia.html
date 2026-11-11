@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://esm.sh; connect-src blob: data: https://esm.sh https://staticimgly.com; img-src blob: data:; worker-src blob:"><title>Recorte IA</title><meta name="robots" content="noindex,nofollow"></head>
+<body>
+<!--
+  HERRAMIENTA AISLADA DE RECORTE CON IA (la usa el panel: js/panel/inventario/sinfondo.js)
+  - El panel la abre dentro de un <iframe sandbox="allow-scripts">: sin el mismo origen, asi que esta pagina NO
+    puede ver la sesion, las cookies, el almacenamiento ni el DOM del panel. Solo recibe una imagen PNG por
+    postMessage y devuelve el PNG recortado.
+  - La libreria de IA (@imgly/background-removal) necesita 'unsafe-eval' (ndarray genera codigo al vuelo); por eso
+    corre aqui, con su propia CSP (CSP_RECORTE en cloudflare/tienda-worker/index.js), y no en el panel.
+  - La libreria y el modelo se descargan solo cuando llega la primera foto (unos 40 MB, una vez por navegador).
+-->
+<script type="module">
+const IA_URL = 'https://esm.sh/@imgly/background-removal@1.7.0?bundle';
+let ia = null;
+const padre = window.parent;
+function avisar(m, trans){ padre.postMessage(m, '*', trans || []); }   // el padre comprueba que el mensaje venga de este iframe
+window.addEventListener('message', async function(e){
+  if(e.source !== padre) return;
+  const m = e.data || {};
+  if(typeof m.id !== 'number' || !(m.png instanceof ArrayBuffer)) return;
+  try{
+    if(!ia) ia = import(IA_URL);
+    const lib = await ia;
+    const res = await lib.removeBackground(new Blob([m.png], { type: 'image/png' }), {
+      model: 'isnet_fp16', output: { format: 'image/png' },
+      progress: function(clave, hecho, total){ if(/fetch/.test(clave) && total) avisar({ tipo: 'avance', texto: 'Descargando la IA (solo la primera vez)… ' + Math.round(hecho / total * 100) + ' %' }); }
+    });
+    const buf = await res.arrayBuffer();
+    avisar({ id: m.id, ok: true, png: buf }, [buf]);
+  }catch(err){
+    ia = null;
+    avisar({ id: m.id, ok: false, error: String(err && err.message || err).slice(0, 300) });
+  }
+});
+avisar({ tipo: 'listo' });
+</script>
+</body></html>

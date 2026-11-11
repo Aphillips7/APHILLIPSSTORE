@@ -19,6 +19,7 @@
 //   POST   /metricas/importar  cuerpo { metricas: {...} } suma las metricas antiguas de Firestore (solo una vez)
 //   POST   /fotos?reloj=<id>   cuerpo = la imagen (WebP/JPEG/PNG, max 4 MB) -> { url, clave }
 //   POST   /fotos?reloj=<id>&mini=<clave>  guarda la miniatura de esa foto en miniaturas/<clave> (tarjetas del catalogo)
+//   POST   /fotos?reloj=<id>&sf=<clave>    guarda la version sin fondo (recorte IA, WebP/PNG) en sinfondo/<clave> (carrusel)
 //   DELETE /fotos?clave=<clave>  borra una foto (solo claves "relojes/...")
 //   GET    /datos/resumen      -> { version, hashes: { col: { id: hash } } }   (datos del panel, etapa 3)
 //   GET    /datos?desde=<n>    -> { version, docs: [{col, id, datos, borrado, version}] }  (cambios desde n)
@@ -206,6 +207,15 @@ export default {
         if (!RE_CLAVE_FOTO.test(mini) || !mini.startsWith('relojes/' + reloj + '/')) return json({ error: 'Clave invalida' }, 400, cors);
         await env.FOTOS.put('miniaturas/' + mini, datos, { httpMetadata: { contentType: tipo, cacheControl: 'public, max-age=31536000, immutable' } });
         return json({ url: env.FOTOS_URL_BASE + '/miniaturas/' + mini }, 201, cors);
+      }
+      // ?sf=<clave de una foto>: su version sin fondo recortada con IA en el panel (carrusel de la portada);
+      // va en sinfondo/<clave>. Solo WebP o PNG (necesita transparencia). No es immutable: se puede rehacer.
+      const sf = url.searchParams.get('sf');
+      if (sf !== null) {
+        if (!RE_CLAVE_FOTO.test(sf) || !sf.startsWith('relojes/' + reloj + '/')) return json({ error: 'Clave invalida' }, 400, cors);
+        if (tipo !== 'image/webp' && tipo !== 'image/png') return json({ error: 'La version sin fondo debe ser WebP o PNG' }, 415, cors);
+        await env.FOTOS.put('sinfondo/' + sf, datos, { httpMetadata: { contentType: tipo, cacheControl: 'public, max-age=86400' } });
+        return json({ url: env.FOTOS_URL_BASE + '/sinfondo/' + sf }, 201, cors);
       }
       const clave = 'relojes/' + reloj + '/' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + '.' + ext;
       await env.FOTOS.put(clave, datos, {
@@ -1639,7 +1649,11 @@ async function limpiarFotos(env) {
   const minis = await listarTodo(env.FOTOS, 'miniaturas/');
   const borrarMinis = minis.filter((o) => !existentes.has(o.key.slice('miniaturas/'.length))).map((o) => o.key).slice(0, MAX_BORRAR_FOTOS);
   if (borrarMinis.length) await env.FOTOS.delete(borrarMinis);
-  return { revisadas: objetos.length, usadas: usadas.size, borradas: borrar.length, miniaturasBorradas: borrarMinis.length };
+  // versiones sin fondo (carrusel) cuya foto original ya no existe
+  const sfs = await listarTodo(env.FOTOS, 'sinfondo/');
+  const borrarSf = sfs.filter((o) => !existentes.has(o.key.slice('sinfondo/'.length))).map((o) => o.key).slice(0, MAX_BORRAR_FOTOS);
+  if (borrarSf.length) await env.FOTOS.delete(borrarSf);
+  return { revisadas: objetos.length, usadas: usadas.size, borradas: borrar.length, miniaturasBorradas: borrarMinis.length, sinFondoBorradas: borrarSf.length };
 }
 
 async function listarRespaldos(env, cors) {
