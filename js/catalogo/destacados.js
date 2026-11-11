@@ -6,11 +6,7 @@ import { relojes } from './datos.js';
 import { abrir } from './modal.js';
 import { _destEsc, miniatura, srcsetFoto } from './ui.js';
 import { dinero, etiquetaDe, ofertaDe } from '../sitio/promos.js';
-import { temporada } from './temporada.js';
 
-// linea pequena sobre el titulo: cambia sola por temporada (mismas fechas que la mascota, ver temporada.js)
-const ETI_TEMPORADA = { madre: 'Regalos para mamá', navidad: 'Para estas fiestas', sanvalentin: 'Para San Valentín', padre: 'Regalos para papá' };
-(function(){ var e = document.getElementById('dest-eti'), t = temporada(); if(e && ETI_TEMPORADA[t]) e.textContent = ETI_TEMPORADA[t]; })();
 
 const API_DEST = 'https://api.aphillipsstore.com/destacados';
 var DEST_LOCAL = [];
