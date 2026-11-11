@@ -85,8 +85,9 @@ function cssDeTema(t){
   if(t.oscuro !== b.oscuro) c.push('#futuro{--fut-oscuro:' + t.oscuro + ';}.hora{background:' + t.oscuro + ';}');
   if(t.carrusel !== b.carrusel){
     var g = t.carrusel;
-    c.push('html.glaciar #destacados,#destacados{--dgrad:linear-gradient(180deg,' + g + ' 0%,' + mezclar(g, '#ffffff', 0.25) + ' 25%,' +
-      mezclar(g, '#ffffff', 0.5) + ' 50%,' + mezclar(g, '#ffffff', 0.75) + ' 75%,#fff 100%);}');
+    // el carrusel es negro (sigue al hero): el color elegido se oscurece de arriba hacia el negro de abajo
+    c.push('html.glaciar #destacados,#destacados{--dnoche:linear-gradient(180deg,' + mezclar(g, '#000000', 0.45) + ' 0%,' + mezclar(g, '#000000', 0.6) + ' 24%,' +
+      mezclar(g, '#000000', 0.74) + ' 48%,' + mezclar(g, '#000000', 0.86) + ' 72%,' + mezclar(g, '#000000', 0.96) + ' 90%,#000 100%);}');
   }
   if(t.esquinasFotos >= 0) c.push('.card-foto,.dest-foto,.gen-tile,.marca-foto,.par-foto{border-radius:' + t.esquinasFotos + 'px;overflow:hidden;}');
   if(t.escalaTitulos !== 100)
