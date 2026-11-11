@@ -179,6 +179,7 @@ function crearCuenta(ev){
     try{ await enviarVerificacion(cred.user, d.nombre); }catch(e){ /* puede pedir otro correo desde la vista de verificar */ }
     _porVerificar = d.email;
     render();
+    document.dispatchEvent(new CustomEvent('cuenta-creada'));   // la mascota celebra
   });
   return false;
 }

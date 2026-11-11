@@ -4,13 +4,10 @@
   .masc-boton{position:relative;width:78px;height:108px;padding:0;border:none;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
   .masc-boton:focus-visible{outline:2px solid var(--black);outline-offset:2px;border-radius:12px;}
   .masc-flota{position:absolute;left:0;right:0;top:0;bottom:8px;display:block;animation:mascFlota 3.4s ease-in-out infinite;will-change:transform;}
-  /* poses 3D apiladas: solo se ve la activa (data-pose); el cambio es directo (fundirlas dejaba ver las dos a medias); mas anchas que el boton para que quepan los brazos */
+  /* poses 3D apiladas: solo se ve la activa (.activa, la pone mascota.js); el cambio es directo (fundirlas dejaba ver las dos a medias); mas anchas que el boton para que quepan los brazos */
   .masc-poses{position:absolute;left:50%;bottom:0;width:116%;aspect-ratio:1;transform:translateX(-50%);display:block;pointer-events:none;}
   .masc-pose{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;opacity:0;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 5px 6px rgba(9,9,11,.18));}
-  .mascota[data-pose="recepcion"] .masc-pose[data-p="recepcion"],.mascota[data-pose="saludo"] .masc-pose[data-p="saludo"],.mascota[data-pose="pulgar"] .masc-pose[data-p="pulgar"],
-  .mascota[data-pose="pensativo"] .masc-pose[data-p="pensativo"],.mascota[data-pose="sorpresa"] .masc-pose[data-p="sorpresa"],
-  .mascota[data-pose="enamorado"] .masc-pose[data-p="enamorado"],.mascota[data-pose="dormido"] .masc-pose[data-p="dormido"],
-  .mascota[data-pose="tapa"] .masc-pose[data-p="tapa"]{opacity:1;animation:mascPose .35s cubic-bezier(.3,1.4,.5,1) both;}
+  .masc-pose.activa{opacity:1;animation:mascPose .35s cubic-bezier(.3,1.4,.5,1) both;}
   /* la pose que aparece entra con un pequeno rebote */
   .masc-pose{transform-origin:50% 95%;}
   @keyframes mascPose{from{transform:scale(.92);}to{transform:none;}}
@@ -24,10 +21,14 @@
   .masc-boton:active .masc-flota{transform:scale(.94);}
 
   /* globito "¿Te ayudo a elegir?" */
-  .masc-burbuja{position:relative;margin:0 14px 12px 0;padding:10px 15px 11px;background:var(--masc-metal);color:var(--black);font-size:var(--fs-etiqueta);font-weight:700;letter-spacing:.02em;border:1.5px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:var(--masc-relieve),0 10px 22px -6px rgba(9,9,11,.30),0 2px 5px rgba(9,9,11,.10);white-space:nowrap;opacity:0;transform:translateY(8px) scale(.9);transform-origin:85% 100%;transition:opacity .2s var(--ease),transform .2s var(--ease);pointer-events:none;}
+  .masc-burbuja{position:relative;margin:0 14px 12px 0;padding:10px 15px 11px;background:var(--masc-metal);color:var(--black);font-size:var(--fs-etiqueta);font-weight:700;letter-spacing:.02em;border:1.5px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:var(--masc-relieve),0 10px 22px -6px rgba(9,9,11,.30),0 2px 5px rgba(9,9,11,.10);width:max-content;max-width:min(250px,calc(100vw - 48px));line-height:1.35;text-align:left;text-wrap:balance;opacity:0;transform:translateY(8px) scale(.9);transform-origin:85% 100%;transition:opacity .2s var(--ease),transform .2s var(--ease);pointer-events:none;}
   /* colita redondeada que apunta a la mascota (mismo metal y borde blanco) */
   .masc-burbuja::after{content:"";position:absolute;right:22px;bottom:-8px;width:14px;height:14px;background:#A3BFD1;border-right:1.5px solid rgba(255,255,255,.9);border-bottom:1.5px solid rgba(255,255,255,.9);border-bottom-right-radius:4px;transform:rotate(45deg);box-shadow:3px 3px 6px -2px rgba(9,9,11,.18);}
   .masc-burbuja.on{opacity:1;transform:none;animation:mascBurbuja .45s cubic-bezier(.3,1.5,.5,1) both;}
+  /* globito que se puede tocar (volver arriba, escribir por WhatsApp): recibe el clic y muestra una flechita */
+  .masc-burbuja.on.con-accion{pointer-events:auto;cursor:pointer;}
+  .masc-burbuja.con-accion::before{content:"›";margin-left:6px;font-weight:800;float:right;}
+  .masc-burbuja.on.con-accion:focus-visible{outline:2px solid var(--black);outline-offset:2px;}
   @keyframes mascBurbuja{0%{transform:translateY(8px) scale(.8);}60%{transform:translateY(-2px) scale(1.04);}100%{transform:none;}}
 
   /* mini ventana de opciones */
