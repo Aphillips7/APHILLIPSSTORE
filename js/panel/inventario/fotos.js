@@ -14,6 +14,8 @@
    - Con "Quitar fondo y centrar" (marcado por defecto) se borra el
      fondo liso y el reloj queda centrado y del mismo tamano en todas
      (ver fondo.js). "Arreglar fotos" hace lo mismo con las ya subidas.
+   - De la foto principal se crea en segundo plano su version sin fondo con IA
+     (sinfondo.js) para el carrusel negro de la portada.
    - De cada foto se sube tambien una copia JPEG (1200 px) para la
      vista previa al compartir el link por WhatsApp (WhatsApp no
      garantiza WebP). La de la foto principal queda en fotoCompartir.
@@ -21,6 +23,7 @@
 import { firebase } from '../../firebase.js';
 import { save, state } from '../state.js';
 import { prepararFoto } from './fondo.js';
+import { asegurarSinFondo } from './sinfondo.js';
 
 const API_FOTOS = 'https://api.aphillipsstore.com/fotos';
 const MAX_DIM = 1600;
@@ -80,6 +83,16 @@ function moverFoto(i, dir){
   var j=i+dir; if(j<0||j>=_fotos.length) return;
   var t=_fotos[i]; _fotos[i]=_fotos[j]; _fotos[j]=t;
   renderFotos();
+  if(i===0||j===0) _sinFondoPrincipal();   // cambio la foto principal
+}
+// version sin fondo (IA) de la foto principal para el carrusel: en segundo plano, sin frenar el guardado;
+// si falla, el carrusel recorta como antes y "Ajustes > Fotos del carrusel" la puede rehacer
+var _originales={};   // URL subida -> imagen original (antes de quitar el fondo por color), solo en esta sesion
+function _sinFondoPrincipal(){
+  var u=_fotos[0]; if(typeof u!=='string' || u.indexOf('https://')!==0) return;
+  asegurarSinFondo(u, function(m){ _estado('Versión para el carrusel: '+m,'var(--muted)'); }, !!_originales[u], _originales[u])
+    .then(function(r){ if(r==='creada') _estado('Listo: la foto principal ya tiene su versión sin fondo para el carrusel.','var(--green)'); })
+    .catch(function(e){ console.warn('Version sin fondo no creada:', e); });
 }
 function quitarFoto(i){
   _fotos.splice(i,1);
@@ -188,12 +201,13 @@ async function subirFotos(input){
   for(var k=0;k<archivos.length;k++){
     _estado('Subiendo foto '+(k+1)+' de '+archivos.length+'...');
     try{
-      var img=await _leerImagen(archivos[k]);
+      var img=await _leerImagen(archivos[k]), original=img;
       var prep=_quitarFondo()?prepararFoto(img):null;
       if(prep) img=prep.canvas;
       var blob=await _comprimirImg(img, prep&&prep.sinFondo);
       var url=await _subir(blob);
       _fotos.push(url); ok++;
+      _originales[url]=original;
       renderFotos();
       // la copia para compartir es un extra: si falla, la foto queda igual
       try{ var jpg=await _jpegCompartir(img); if(jpg) _jpg[url]=await _subir(jpg); }catch(e){ console.warn('Copia JPEG no subida:', e); }
@@ -203,6 +217,7 @@ async function subirFotos(input){
   }
   _bloquearGuardar(false);
   if(!fallos) _estado(ok===1?'Foto subida.':ok+' fotos subidas.','var(--green)');
+  if(ok && !fallos) _sinFondoPrincipal();
   else if(ok) _estado(ok+' subidas, '+fallos+' con error. Intenta de nuevo con las que faltan.','var(--amber)');
 }
 function _quitarFondo(){ var c=document.getElementById('inv-quitar-fondo'); return !c || c.checked; }
@@ -238,6 +253,7 @@ async function arreglarFotos(){
     }catch(err){ fallos++; console.warn('Foto no arreglada:', err); }
   }
   _subiendo--; _bloquearGuardar(false);
+  if(ok) _sinFondoPrincipal();
   var msg=(ok?ok+(ok===1?' foto arreglada':' fotos arregladas'):'Ninguna foto cambio')+(sinCambio?', '+sinCambio+' sin fondo liso (se dejaron igual)':'')+(fallos?', '+fallos+' con error':'')+'.';
   _estado(msg+(ok?' Toca "Guardar cambios" para que quede.':''), fallos?'var(--amber)':ok?'var(--green)':'var(--muted)');
 }

@@ -168,6 +168,31 @@ function _destSinFondo(){
   var px = tarjeta ? tarjeta.getBoundingClientRect().width * (window.devicePixelRatio || 1) : 9999;
   document.querySelectorAll('#dest-track img.g.esperando').forEach(function(img){
     var completa = img.getAttribute('data-completa'); if(!completa) return;
+    // 1) version recortada con IA en el panel (sinfondo/<clave>): perfecta y lista para usar
+    var sf = _urlSinFondo(completa);
+    if(sf && _sfFalta[sf] !== true){
+      var prueba = new Image();
+      prueba.onload = function(){
+        img.removeAttribute('srcset'); img.removeAttribute('sizes');
+        img.classList.remove('con-filtro', 'fondo-propio'); img.classList.add('ia');
+        img.onload = function(){ img.classList.remove('esperando'); };
+        img.src = sf;
+      };
+      prueba.onerror = function(){ _sfFalta[sf] = true; _destRecortarAqui(img, completa, px); };
+      prueba.src = sf;
+      return;
+    }
+    _destRecortarAqui(img, completa, px);
+  });
+}
+// version sin fondo hecha en el panel (si la foto es de la nube); si no existe, se recorta aqui como antes
+var _sfFalta = {};
+function _urlSinFondo(u){
+  var base = 'https://fotos.aphillipsstore.com/';
+  return typeof u === 'string' && u.indexOf(base + 'relojes/') === 0 ? base + 'sinfondo/' + u.slice(base.length).split('?')[0] : null;
+}
+// 2) respaldo: recorte en el navegador (borra el fondo desde las orillas)
+function _destRecortarAqui(img, completa, px){
     var url = px <= 560 ? miniatura(completa) : completa;
     var listo = false;
     var mostrar = function(){ img.classList.remove('esperando'); };
@@ -180,7 +205,6 @@ function _destSinFondo(){
       img.onload = function(){ img.classList.remove('con-filtro'); mostrar(); };
       img.src = blob;
     }).catch(function(){ listo = true; clearTimeout(t); img.classList.add('con-filtro'); mostrar(); });
-  });
 }
 
 // Carrusel infinito: la ventana (con las lineas entre tarjetas) queda fija y solo se desliza el contenido.

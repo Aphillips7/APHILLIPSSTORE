@@ -86,6 +86,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `inventario/ficha.js` | "Pegar especificaciones": ordena la tabla de la marca en grupos (`p.ficha`), rellena los campos de siempre; el catalogo la muestra agrupada |
 | `inventario/fotos.js` | Varias fotos por unidad: se reducen a 1600 px (WebP/JPEG) y se suben a R2 por el Worker con el ID token de Firebase; orden y foto principal. De cada una sube ademas una copia JPEG (1200 px, < 600 KB) para la vista previa en WhatsApp (`fotosJpg`, y la de la principal en `fotoCompartir`) |
 | `inventario/fondo.js` | Quita el fondo liso (relleno desde los bordes), recorta y centra el reloj en un cuadrado de 1400 px al 86 %, para que todas las fotos se vean del mismo tamano. "Arreglar fotos ya subidas" lo aplica a las existentes (el bucket de fotos tiene CORS GET para el dominio) |
+| `inventario/sinfondo.js` | Version sin fondo con IA de la foto principal (para el carrusel negro): recorte IA (`@imgly/background-removal`, en `herramientas/recorte-ia.html` dentro de un iframe sandbox con su propia CSP, porque necesita `unsafe-eval`) unido a un relleno por color; las fotos ya recortadas solo se suavizan. Se guarda en R2 en `sinfondo/<clave>` (`POST /fotos?reloj=&sf=`). Se crea sola al subir fotos y desde Ajustes > Fotos del carrusel para todo el catalogo |
 | `inventario/detalle.js` | Modal de detalle de una unidad |
 | `inventario/llegada.js` | Boton "Ya llego" (lista, fotos, ficha y Dashboard): pide la importacion y su metodo, la suma al costo (margen recalculado), la registra como compra en Movimientos y pasa el reloj a Disponible con `fechaLlegada` |
 | `inventario/venta-modal.js` | Modal "vender" desde el inventario |
@@ -121,7 +122,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `whatsapp.js` | Numero, confirmaciones, cotizar |
 | `mascota.js` | Asistente flotante (reloj 3D con caja glaciar y bigote de agujas; poses en `img/mascota/*.webp`, la normal es `recepcion`): mini ventana con asesoria por WhatsApp, buscador y guia de tamanos; reemplaza al boton flotante de WhatsApp |
 | `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
-| `destacados.js` | Carrusel de destacados (modelos fijos en `DEST_LOCAL`, imagenes en `img/`) |
+| `destacados.js` | Carrusel "Mas vendidos" (fondo negro y tarjetas glaciar, sigue al hero). Usa la version sin fondo `sinfondo/<clave>` de cada foto si existe; si no, recorta en el navegador (blanco o color de la orilla) |
 | `aviso-cookies.js` | Aviso pequeno de cookies la primera vez (localStorage `aphillips_aviso_cookies`); enlaza a `/legal#cookies` |
 | `boletin.js` | "Suscribete al boletin" del pie: ventana con el correo -> POST /boletin (D1, correo de bienvenida con baja) |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |

@@ -856,6 +856,15 @@ if(location.hostname==='aphillips7.github.io'){
       </div>
     </div>
   </div>
+  <div class="card">
+    <div class="card-title">Fotos del carrusel (sin fondo)</div>
+    <div class="ajuste-texto" style="margin-bottom:12px;">El carrusel "Más vendidos" de la portada es oscuro: usa una versión de la foto principal de cada reloj recortada con IA, sin restos de fondo ni bordes ásperos. Las fotos nuevas la crean solas al subirlas. Con este botón se crean las que faltan de todo el catálogo. La primera vez descarga la IA (unos 40 MB, una sola vez) y luego tarda unos segundos por reloj: deja esta pestaña abierta hasta que termine.</div>
+    <div class="acciones-fila" style="justify-content:flex-start;">
+      <button class="btn btn-gold btn-sm" id="sf-btn" onclick="crearSinFondoCatalogo(false)">Crear las que faltan</button>
+      <button class="btn btn-outline btn-sm" id="sf-btn-rehacer" onclick="crearSinFondoCatalogo(true)">Rehacer todas</button>
+    </div>
+    <div id="sf-estado" class="ajuste-texto" style="margin-top:10px;" aria-live="polite"></div>
+  </div>
   <div class="card" id="card-instalar-pwa" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div><div class="card-title" style="margin-bottom:4px;">Instalar como app</div><div style="font-size:13px;color:var(--muted);">La agregas a tu pantalla de inicio, se abre sin barra de navegador.</div></div>
     <button class="btn btn-gold btn-sm" id="btn-instalar-pwa" onclick="instalarPWA()">Instalar</button>

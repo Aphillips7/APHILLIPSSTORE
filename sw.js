@@ -95,6 +95,7 @@ const SHELL_FILES = [
   './js/panel/inventario/ficha.js',
   './js/panel/inventario/fotos.js',
   './js/panel/inventario/fondo.js',
+  './js/panel/inventario/sinfondo.js',
   './js/panel/inventario/colecciones.js',
   './js/panel/inventario/detalle.js',
   './js/panel/inventario/venta-modal.js',
