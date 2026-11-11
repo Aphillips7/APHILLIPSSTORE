@@ -192,8 +192,11 @@ async function crearVersionSinFondo(fuente, alAvanzar){
   var e = LADO * OCUPA / Math.max(b.w, b.h), dw = b.w * e, dh = b.h * e;
   o.drawImage(c, b.x, b.y, b.w, b.h, (LADO - dw) / 2, (LADO - dh) / 2, dw, dh);
   var blob = await aBlob(out, 'image/webp', 0.9);
-  if(!blob || blob.type !== 'image/webp') blob = await aBlob(out, 'image/png');
-  return blob;
+  if(blob && blob.type === 'image/webp') return blob;
+  // Safari no sabe crear WebP: PNG mas chico (640 px) para que no pese de mas en el carrusel del celular
+  var chico = lienzo(640, 640), cx = chico.getContext('2d');
+  cx.imageSmoothingQuality = 'high'; cx.drawImage(out, 0, 0, 640, 640);
+  return await aBlob(chico, 'image/png');
 }
 
 // ---------- guardar y revisar versiones sin fondo ----------
@@ -248,20 +251,20 @@ async function crearSinFondoCatalogo(rehacer){
   if(bA) bA.disabled = true; if(bR) bR.disabled = true;
   // la pantalla no se apaga mientras trabaja (si el navegador lo permite)
   var cerrojo = null; try{ cerrojo = await navigator.wakeLock.request('screen'); }catch(e){}
-  var creadas = 0, ya = 0, fallos = 0, t0 = Date.now();
+  var creadas = 0, ya = 0, fallos = 0, t0 = Date.now(), primerError = '';
   for(var k = 0; k < lista.length; k++){
     var pref = 'Foto ' + (k + 1) + ' de ' + lista.length + ' (' + lista[k].nombre + ')';
     _estadoSf(pref + '…');
     try{
       var r = await asegurarSinFondo(lista[k].url, function(m){ _estadoSf(pref + ': ' + m); }, rehacer);
       if(r === 'creada') creadas++; else ya++;
-    }catch(e){ fallos++; console.warn('Sin fondo no creada:', lista[k].url, e); }
+    }catch(e){ fallos++; if(!primerError) primerError = String(e && e.message || e).slice(0, 160); console.warn('Sin fondo no creada:', lista[k].url, e); }
   }
   try{ if(cerrojo) await cerrojo.release(); }catch(e){}
   _procesando = false;
   if(bA) bA.disabled = false; if(bR) bR.disabled = false;
   var min = Math.max(1, Math.round((Date.now() - t0) / 60000));
-  _estadoSf('Listo en ' + min + ' min: ' + creadas + ' creadas, ' + ya + ' ya estaban' + (fallos ? ', ' + fallos + ' con error (vuelve a tocar el boton para reintentarlas)' : '') + '.', fallos ? 'var(--amber)' : 'var(--green)');
+  _estadoSf('Listo en ' + min + ' min: ' + creadas + ' creadas, ' + ya + ' ya estaban' + (fallos ? ', ' + fallos + ' con error. Error: "' + primerError + '". Prueba desde una computadora (Chrome o Edge) y vuelve a tocar el botón' : '') + '.', fallos ? 'var(--amber)' : 'var(--green)');
 }
 // el panel no se cierra a medias sin avisar
 window.addEventListener('beforeunload', function(e){ if(_procesando){ e.preventDefault(); e.returnValue = ''; } });
