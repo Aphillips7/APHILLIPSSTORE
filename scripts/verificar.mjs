@@ -108,6 +108,13 @@ for(const f of [...htmls, ...jsTienda]){
 for(const [n, donde] of usadas) if(!expuestas.has(n) && !new RegExp('function\\s+' + n + '\\b').test(htmls.map(leer).join('\n')))
   errores.push('"' + n + '()" se usa en un onclick/oninput (' + donde + ') pero no esta en Object.assign(window, {...}).');
 
+// mascota: cada pose de POSES (js/catalogo/mascota.js) debe tener su imagen en img/mascota/
+const masc = leer(join(RAIZ, 'js/catalogo/mascota.js'));
+const poses = ((masc.match(/const POSES = \[([\s\S]*?)\];/) || [])[1] || '').match(/'([a-z0-9-]+)'/g) || [];
+if(!poses.length) errores.push('No pude leer POSES en js/catalogo/mascota.js.');
+for(const p of poses.map(s => s.slice(1, -1))) if(!existsSync(join(RAIZ, 'img/mascota', p + '.webp')))
+  errores.push('La mascota usa la pose "' + p + '" pero falta img/mascota/' + p + '.webp.');
+
 // resultado
 for(const a of avisos) console.log('  aviso: ' + a);
 if(errores.length){

@@ -80,6 +80,8 @@ function mostrarResultadosPanel(){
   cont.innerHTML = res.length
     ? res.slice(0, MAX_EN_PANEL).map(_tarjeta).join('')
     : '<p class="bs-vacio">No encontramos relojes para “'+esc(q)+'”. Prueba con otra marca, modelo, color o material, o escríbenos por WhatsApp y te ayudamos a conseguirlo.</p>';
+  // la mascota saca la lupa si no hay resultados (y la guarda si vuelve a haber)
+  document.dispatchEvent(new CustomEvent(res.length ? 'busqueda-con-resultados' : 'busqueda-vacia', { detail: q }));
 }
 function buscarEscribiendo(){
   mostrarResultadosPanel();

@@ -231,7 +231,7 @@ function compartirReloj(r){
     navigator.share({ title: (r.nombre || 'Reloj') + ' — APHILLIPS STORE', text: 'Mira este reloj en APHILLIPS STORE', url: url }).catch(function(){});
     return;
   }
-  var listo = function(){ toast('Enlace copiado. Pégalo donde quieras compartirlo.'); };
+  var listo = function(){ toast('Enlace copiado. Pégalo donde quieras compartirlo.'); document.dispatchEvent(new CustomEvent('enlace-compartido')); };
   if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(listo, function(){ copiarRespaldo(url, listo); });
   else copiarRespaldo(url, listo);
 }

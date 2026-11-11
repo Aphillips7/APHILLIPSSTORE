@@ -9,6 +9,7 @@ import { WHATSAPP_NUM } from './whatsapp.js';
 import { buscadorAbierto, toggleBuscador } from './buscador.js';
 import { vibrar } from './ui.js';
 import { sesion } from './sesion.js';
+import { ofertaDe } from '../sitio/promos.js';
 
 const ICONOS = {
   chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/>',
@@ -23,31 +24,60 @@ const OPCIONES = [
 ];
 
 // Poses 3D de la mascota (img/mascota/*.webp, 360x360 con fondo transparente, todas con el mismo encuadre).
-// Se apilan y solo se ve la pose activa (data-pose en .mascota). La normal es 'recepcion' (manos juntas,
-// agujas en 8:20 como bigote); 'saludo' es la de entrada.
-const POSES = ['recepcion', 'saludo', 'pulgar', 'pensativo', 'sorpresa', 'enamorado', 'dormido', 'tapa'];
-const POSES_YA = ['recepcion', 'saludo'];   // se ven al abrir la pagina: se cargan de una vez
+// Se apilan y solo se ve la pose activa (clase .activa). La normal es 'recepcion' (manos juntas, agujas en
+// 8:20 como bigote) o la de temporada; 'saludo' es la de entrada.
+// POSES = imagenes que YA existen en img/mascota/. Poka-yoke: una pose pedida que aun no tiene imagen usa
+// su RESPALDO (nunca se ve una imagen rota). Al subir una imagen nueva basta con sumarla a POSES.
+const POSES = ['recepcion', 'saludo', 'pulgar', 'pensativo', 'sorpresa', 'enamorado', 'dormido', 'tapa',
+  'lupa', 'senala', 'regla', 'paquete', 'celebra', 'triste', 'muneca', 'lee', 'noche',
+  'navidad', 'madre', 'sanvalentin', 'padre'];
+const RESPALDO = { lupa: 'pensativo', senala: 'pulgar', regla: 'pensativo', paquete: 'pulgar', celebra: 'saludo',
+  triste: 'pensativo', muneca: 'saludo', lee: 'pensativo', noche: 'dormido',
+  navidad: 'recepcion', madre: 'recepcion', sanvalentin: 'recepcion', padre: 'recepcion' };
+function resolverPose(p){
+  for(var i = 0; i < 3 && POSES.indexOf(p) < 0; i++) p = RESPALDO[p] || 'recepcion';
+  return POSES.indexOf(p) >= 0 ? p : 'recepcion';
+}
+// temporada (Panama): la pose normal y el saludo cambian solos en estas fechas
+function temporada(f){
+  f = f || new Date();
+  var m = f.getMonth() + 1, d = f.getDate();
+  if(m === 12 && d <= 8) return 'madre';                 // Dia de la Madre: 8 de diciembre
+  if(m === 12) return 'navidad';
+  if(m === 2 && d >= 7 && d <= 14) return 'sanvalentin';
+  if(m === 6){                                           // Dia del Padre: tercer domingo de junio (10 dias antes)
+    var dom = 1 + (7 - new Date(f.getFullYear(), 5, 1).getDay()) % 7 + 14;
+    if(d >= dom - 10 && d <= dom) return 'padre';
+  }
+  return '';
+}
+const FRASE_TEMPORADA = { madre: '¿Ya tienes el regalo de mamá?', navidad: '¿Buscas el regalo de Navidad perfecto?',
+  sanvalentin: '¿Un regalo para San Valentín?', padre: '¿Ya tienes el regalo de papá?' };
+const POSES_YA = ['recepcion', 'saludo', resolverPose(temporada())];   // se ven al abrir la pagina: se cargan de una vez
 const DIBUJO = '<span class="masc-poses" aria-hidden="true">' + POSES.map(function(p){
-  // la pose inicial se carga ya; las demas cuando la pagina termina de cargar (ver precargarPoses)
+  // las poses iniciales se cargan ya; las demas cuando la pagina termina de cargar (ver precargarPoses)
   return '<img class="masc-pose" data-p="' + p + '" alt="" width="360" height="360" decoding="async" draggable="false" ' +
     (POSES_YA.indexOf(p) >= 0 ? 'src' : 'data-src') + '="img/mascota/' + p + '.webp">';
 }).join('') + '</span>';
 
 // Que pose mostrar segun la cara y el gesto que pide el resto del codigo.
-// Prioridad: contrasena (tapa; espia tambien usa tapa) > cara > gesto > recepcion.
-const POSE_DE_CARA = { feliz: 'saludo', guino: 'pulgar', emocionado: 'pulgar', timido: 'pulgar', sorpresa: 'sorpresa',
-  pensativo: 'pensativo', arriba: 'pensativo', enamorado: 'enamorado', dormido: 'dormido' };
-const POSE_DE_GESTO = { pulgar: 'pulgar', senala: 'pulgar', menton: 'pensativo' };
+// Prioridad: contrasena (tapa; espia tambien usa tapa) > cara > gesto > pose normal (temporada o recepcion).
+// Una cara que no esta en POSE_DE_CARA se usa como nombre de pose (lupa, paquete, celebra, triste...).
+const POSE_DE_CARA = { feliz: 'saludo', guino: 'pulgar', emocionado: 'pulgar', timido: 'pulgar', arriba: 'pensativo' };
+const POSE_DE_GESTO = { pulgar: 'pulgar', senala: 'senala', menton: 'pensativo', regla: 'regla' };
 function poseActual(){
   var g = _raiz.dataset.gesto, c = _raiz.dataset.cara;
   if(g === 'tapa' || g === 'espia') return 'tapa';
-  return POSE_DE_CARA[c] || POSE_DE_GESTO[g] || 'recepcion';
+  return resolverPose((c && (POSE_DE_CARA[c] || c)) || POSE_DE_GESTO[g] || temporada() || 'recepcion');
 }
 function actualizarPose(){
   var p = poseActual();
   if(_raiz.dataset.pose === p) return;
-  var img = _raiz.querySelector('.masc-pose[data-p="' + p + '"]');
-  if(img && !img.getAttribute('src')) img.src = img.dataset.src;   // por si se pide antes de precargar
+  _raiz.querySelectorAll('.masc-pose').forEach(function(img){
+    var es = img.dataset.p === p;
+    if(es && !img.getAttribute('src')) img.src = img.dataset.src;   // por si se pide antes de precargar
+    img.classList.toggle('activa', es);
+  });
   _raiz.dataset.pose = p;
 }
 function precargarPoses(){
@@ -102,7 +132,8 @@ function cerrarPanel(){
   _panel.classList.remove('on');
   setTimeout(function(){ if(!_abierta) _panel.hidden = true; }, 220);
 }
-function ocultarBurbuja(){ if(_burbuja) _burbuja.classList.remove('on'); }
+let _accionBurbuja = null;   // lo que hace tocar el globito (volver arriba, WhatsApp...), si tiene
+function ocultarBurbuja(){ if(_burbuja){ _burbuja.classList.remove('on', 'con-accion'); _accionBurbuja = null; } }
 
 function crear(){
   _raiz = document.createElement('div');
@@ -145,13 +176,36 @@ function crear(){
   document.addEventListener('click', function(e){ if(_abierta && !_raiz.contains(e.target)) cerrarPanel(); });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && _abierta){ cerrarPanel(); _boton.focus(); } });
 
-  // saludo la primera vez en la sesion: "¿Te ayudo a elegir?" unos segundos
-  var visto = false;
+  // tocar el globito hace su accion (si tiene): volver arriba, escribir por WhatsApp...
+  _burbuja.addEventListener('click', function(){ var a = _accionBurbuja; ocultarBurbuja(); if(a) a(); });
+
+  saludoInicial();
+}
+
+// Saludo la primera vez en la sesion (unos segundos despues de entrar), segun el caso:
+//   volvio tras 3 dias o mas -> mira su "muneca": "¡Cuanto tiempo! Mira lo nuevo"
+//   temporada (Navidad, Dia de la Madre, San Valentin, Dia del Padre) -> la frase de la fecha
+//   primera visita del dia -> buenos dias / buenas tardes / buenas noches (de noche: "¿Desvelado?")
+//   si no -> "¿Te ayudo a elegir?"
+function saludoInicial(){
+  var visto = false, ultima = 0, ahora = Date.now();
   try{ visto = sessionStorage.getItem('ap_masc_hola') === '1'; sessionStorage.setItem('ap_masc_hola', '1'); }catch(e){}
-  if(!visto){
-    setTimeout(function(){ if(!_abierta) _burbuja.classList.add('on'); }, 2600);
-    setTimeout(ocultarBurbuja, 9000);
+  try{ ultima = +localStorage.getItem('ap_masc_ultima') || 0; localStorage.setItem('ap_masc_ultima', String(ahora)); }catch(e){}
+  if(visto) return;
+  var h = new Date().getHours(), temp = temporada();
+  var otroDia = !ultima || new Date(ultima).toDateString() !== new Date(ahora).toDateString();
+  var texto = '¿Te ayudo a elegir?', cara = '';
+  if(ultima && ahora - ultima >= 3 * 864e5){ texto = '¡Cuánto tiempo! Mira lo nuevo'; cara = 'muneca'; }
+  else if(temp){ texto = FRASE_TEMPORADA[temp]; }
+  else if(otroDia){
+    if(h >= 22 || h < 6){ texto = '¡Buenas noches! ¿Desvelado? Yo también'; cara = POSES.indexOf('noche') >= 0 ? 'noche' : ''; }   // sin su imagen de pijama se veria dormido
+    else texto = (h < 12 ? '¡Buenos días!' : h < 19 ? '¡Buenas tardes!' : '¡Buenas noches!') + ' ¿Te ayudo a elegir?';
   }
+  setTimeout(function(){
+    if(_abierta) return;
+    if(cara) gesto(cara, '', 3600);
+    decir(texto, 6400, true);
+  }, 2600);
 }
 
 // ---------- gestos al cambiar de seccion ----------
@@ -204,7 +258,7 @@ function vigilarVistas(){
 // lo que hace el cliente (clic, seccion, favorito, buscador, contrasena...), nunca al pasar el cursor. Frases cortas en el globito, sin repetirse seguido (una cada ~8 s como mucho).
 let _tGesto = 0, _ultimaFrase = 0, _tFrase = 0;
 function gesto(cara, g, ms){
-  if(_abierta || _raiz.dataset.cara === 'dormido' && cara !== 'sorpresa') return;
+  if(_abierta || _raiz.classList.contains('durmiendo') && cara !== 'sorpresa') return;
   if(_raiz.dataset.gesto === 'tapa' || _raiz.dataset.gesto === 'espia') return;
   _raiz.dataset.cara = cara;
   if(g) _raiz.dataset.gesto = g; else delete _raiz.dataset.gesto;
@@ -212,23 +266,32 @@ function gesto(cara, g, ms){
   _tCara = setTimeout(function(){ delete _raiz.dataset.cara; }, ms || 2600);
   _tGesto = setTimeout(function(){ delete _raiz.dataset.gesto; }, ms || 2600);
 }
-function decir(texto, ms, forzar){
+function decir(texto, ms, forzar, accion){
   if(_abierta || !_burbuja) return;
   var ahora = Date.now();
   if(!forzar && ahora - _ultimaFrase < 8000) return;
   _ultimaFrase = ahora;
   _burbuja.textContent = texto;
+  _accionBurbuja = accion || null;
+  _burbuja.classList.toggle('con-accion', !!accion);
+  _burbuja.classList.remove('on'); void _burbuja.offsetWidth;   // reinicia el rebote si ya estaba visible
   _burbuja.classList.add('on');
   clearTimeout(_tFrase);
   _tFrase = setTimeout(ocultarBurbuja, ms || 3200);
 }
 function alAzar(lista){ return lista[Math.floor(Math.random() * lista.length)]; }
 function personalidad(){
-  // reloj abierto: a veces comenta, senalando
-  document.addEventListener('reloj-abierto', function(){
-    if(Math.random() < .6) setTimeout(function(){
-      gesto('emocionado', 'senala', 2800);
-      decir(alAzar(['¡Qué buena elección!', 'Este es de mis favoritos', '¿Te ayudo con la talla?', '¡Mira qué detalles!']));
+  // reloj abierto: si tiene oferta lo dice siempre (sorprendido); si no, a veces comenta:
+  // "¿Es para regalo?" (pensativo), "¿Te ayudo con la talla?" (con la regla) u otra frase (senalando)
+  document.addEventListener('reloj-abierto', function(e){
+    var r = e.detail || {};
+    var oferta = false; try{ oferta = !!ofertaDe(r); }catch(err){}
+    setTimeout(function(){
+      if(oferta){ gesto('sorpresa', '', 3000); decir('¡Este tiene precio especial!', 3600, true); return; }
+      var azar = Math.random();
+      if(azar < .2 && (r.genero === 'hombre' || r.genero === 'mujer')){ gesto('pensativo', 'menton', 3000); decir('¿Es para regalo?', 3200); }
+      else if(azar < .4){ gesto('regla', 'regla', 3200); decir('¿Te ayudo con la talla?', 3400); }
+      else if(azar < .7){ gesto('emocionado', 'senala', 2800); decir(alAzar(['¡Qué buena elección!', 'Este es de mis favoritos', '¡Mira qué detalles!'])); }
     }, 1100);
   });
   // favorito agregado: emocionado con el pulgar arriba
@@ -238,6 +301,7 @@ function personalidad(){
     F.alCambiarFavoritos(function(){
       var n = F._favoritos.size;
       if(n > nFav){ gesto('enamorado', 'pulgar', 2800); decir(alAzar(['¡Me encanta! Guardado en favoritos', '¡Excelente gusto!', '¡Ese es un flechazo!']), 2800, true); }
+      else if(n < nFav && nFav > 0){ gesto('triste', '', 2600); decir('Ay… ¿no era el indicado?', 2800, true); }
       nFav = n;
     });
   });
@@ -252,14 +316,14 @@ function personalidad(){
       abierto = ahora;
     }).observe(hd, { attributes: true, attributeFilter: ['class'] });
   }
-  // "Comprar por WhatsApp": guino y pulgar arriba
+  // "Comprar por WhatsApp": con su paquete, recuerda que se envia a todo Panama
   var wa = document.getElementById('modal-wa');
-  if(wa) wa.addEventListener('click', function(){ gesto('guino', 'pulgar', 2600); decir('¡Te esperamos en WhatsApp!', 2600, true); });
+  if(wa) wa.addEventListener('click', function(){ gesto('paquete', 'pulgar', 3000); decir('¡Te lo enviamos a todo Panamá!', 3200, true); });
   // tic, tac: si el cliente lleva rato mirando un reloj, se pone pensativo, se balancea y lo comenta
   var tTic = 0, idTic = '', vecesTic = 0;
   var FRASES_TIC = ['Tic, tac… este reloj te está esperando', 'Tic-tac, tic-tac… ¿te lo llevas?', 'El tiempo vuela… y este reloj también', 'Tic, tac… ¿te ayudo a decidir?'];
   var tictac = function(){
-    if(_abierta || _raiz.dataset.cara === 'dormido' || _raiz.dataset.gesto === 'tapa') return;
+    if(_abierta || _raiz.classList.contains('durmiendo') || _raiz.dataset.gesto === 'tapa') return;
     clearTimeout(_tCara); clearTimeout(_tGesto); delete _raiz.dataset.gesto;
     _raiz.dataset.cara = 'arriba';
     var e = _raiz.querySelector('.masc-entra'); _raiz.classList.remove('tictac'); void e.offsetWidth;
@@ -292,16 +356,71 @@ function personalidad(){
   var tSiesta = 0;
   var despertar = function(){
     clearTimeout(tSiesta);
-    if(_raiz.dataset.cara === 'dormido'){ _raiz.classList.remove('durmiendo'); delete _raiz.dataset.cara; gesto('sorpresa', '', 1200); }
+    if(_raiz.classList.contains('durmiendo')){ _raiz.classList.remove('durmiendo'); delete _raiz.dataset.cara; gesto('sorpresa', '', 1200); }
     tSiesta = setTimeout(function(){
       if(_abierta || document.hidden) return;
       if(document.body.classList.contains('prod-abierto')){ despertar(); return; }   // mirando un reloj no se duerme (hace tic-tac)
       clearTimeout(_tCara); clearTimeout(_tGesto); delete _raiz.dataset.gesto;
-      _raiz.dataset.cara = 'dormido'; _raiz.classList.add('durmiendo'); ocultarBurbuja();
+      var deNoche = new Date().getHours() >= 22 || new Date().getHours() < 6;   // de noche duerme con pijama y gorro
+      _raiz.classList.add('durmiendo'); _raiz.dataset.cara = deNoche ? 'noche' : 'dormido'; ocultarBurbuja();
     }, (new Date().getHours() >= 22 || new Date().getHours() < 6) ? 25000 : 45000);
   };
   ['pointermove', 'pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function(ev){ window.addEventListener(ev, despertar, { passive: true }); });
   despertar();
+
+  // filtrar u ordenar: pensativo
+  ['modal-filtros', 'modal-orden'].forEach(function(id){
+    var m = document.getElementById(id); if(!m) return;
+    var abierto = false;
+    new MutationObserver(function(){
+      var ahora = m.classList.contains('open');
+      if(ahora && !abierto){ gesto('pensativo', 'menton', 3000); decir('¿Buscas algo en particular?', 3000); }
+      abierto = ahora;
+    }).observe(m, { attributes: true, attributeFilter: ['class'] });
+  });
+  // busqueda sin resultados (avisa buscador.js): con la lupa, y tocar el globito abre WhatsApp con lo que busco
+  var tVacia = 0;
+  document.addEventListener('busqueda-vacia', function(e){
+    clearTimeout(tVacia);
+    var q = String(e.detail || '').trim();
+    tVacia = setTimeout(function(){   // espera a que termine de escribir
+      if(!q) return;
+      gesto('lupa', '', 4600);
+      decir('No lo encontré… ¿lo buscamos juntos por WhatsApp?', 5600, true, function(){
+        window.open('https://wa.me/' + WHATSAPP_NUM + '?text=' + encodeURIComponent('¡Hola! Estoy buscando un reloj: ' + q), '_blank', 'noopener');
+      });
+    }, 1100);
+  });
+  document.addEventListener('busqueda-con-resultados', function(){ clearTimeout(tVacia); if(_raiz.dataset.cara === 'lupa'){ delete _raiz.dataset.cara; ocultarBurbuja(); } });
+  // cuenta nueva (avisa cuenta.js): celebra
+  document.addEventListener('cuenta-creada', function(){ reaccionar('salto', 'celebra', true); decir('¡Bienvenido a APHILLIPS STORE!', 4000, true); });
+  // enlace de un reloj copiado (avisa modal.js): pulgar
+  document.addEventListener('enlace-compartido', function(){ gesto('guino', 'pulgar', 2600); decir('¡Compártelo con quien quieras!', 3000, true); });
+  // listado largo: tras bajar unas pantallas senala hacia arriba; tocar el globito vuelve arriba (una vez por listado)
+  var listadoAvisado = '', cargada = Date.now();
+  window.addEventListener('scroll', function(){
+    var b = document.body;
+    if(Date.now() - cargada < 3000) return;   // al cargar el navegador puede devolver la pagina abajo: eso no es bajar
+    if(!b.classList.contains('vista-catalogo') || b.classList.contains('prod-abierto') || _abierta) return;
+    if(window.scrollY < window.innerHeight * 3 || listadoAvisado === _clave) return;
+    listadoAvisado = _clave;
+    gesto('senala', 'senala', 3600);
+    decir('¿Volvemos arriba?', 4400, true, function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  }, { passive: true });
+  // consejos de relojes: pocos (2 por visita como mucho), solo si lleva rato tranquilo, leyendo su papelito
+  var CONSEJOS = ['¿Sabías que el automático se carga con el movimiento de tu muñeca?', 'Tip: un reloj de 40 a 42 mm le queda bien a casi todas las muñecas',
+    'El cristal de zafiro es casi imposible de rayar', '¿Sabías que 100 m de resistencia sirven para nadar, no para bucear?',
+    'Tip: la correa de cuero se cuida lejos del agua y del perfume', 'Un cronógrafo es un reloj con cronómetro incorporado'];
+  var inicio = Date.now(), consejosDichos = 0;
+  try{ consejosDichos = +sessionStorage.getItem('ap_masc_consejos') || 0; }catch(e){}
+  setInterval(function(){
+    if(consejosDichos >= 2 || document.hidden || _abierta || _raiz.classList.contains('durmiendo')) return;
+    if(_raiz.dataset.cara || _raiz.dataset.gesto || Date.now() - inicio < 75000 || Date.now() - _ultimaFrase < 90000) return;
+    consejosDichos++;
+    try{ sessionStorage.setItem('ap_masc_consejos', String(consejosDichos)); }catch(e){}
+    gesto('lee', '', 6000);
+    decir(alAzar(CONSEJOS), 6400, true);
+  }, 20000);
 }
 
 // ---------- contrasenas: se tapa los ojos (y espia si el cliente la muestra) ----------
