@@ -13,12 +13,12 @@
 
   /* Efecto Omega: la portada se queda atras y las secciones de abajo suben por encima.
      header.js pone --hero-p (0 a 1) segun cuanto se ha bajado y --hero-y (px bajados).
-     - PC y celular: la portada es "sticky" (fija) y el carrusel negro sube y la va cubriendo ("se la come").
-     - Celular: la foto queda completamente quieta (sin acercamiento) mientras el carrusel la cubre.
+     - PC: la portada es "sticky" (fija) y el carrusel negro sube y la va cubriendo ("se la come").
+     - Celular: desplazamiento normal (la portada sube como una seccion mas) y la foto sin acercamiento.
      Sin sombra en la union: el carrusel es negro como el final del hero y deben verse como una sola pieza. */
   #destacados, #generos, #catalogo { position: relative; z-index: 1; }
   .hero::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: #000; opacity: calc(var(--hero-p, 0) * .6); }
-  .hero { position: sticky; top: 0; z-index: 0; }
+  @media (min-width: 821px) { .hero { position: sticky; top: 0; z-index: 0; } }
   @media (prefers-reduced-motion: no-preference) {
     .hero-content { opacity: calc(1 - var(--hero-p, 0) * 1.6); translate: 0 calc(var(--hero-p, 0) * -48px); }
     @media (min-width: 821px) {
