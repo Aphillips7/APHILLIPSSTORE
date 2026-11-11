@@ -6,6 +6,11 @@ import { relojes } from './datos.js';
 import { abrir } from './modal.js';
 import { _destEsc, miniatura, srcsetFoto } from './ui.js';
 import { dinero, etiquetaDe, ofertaDe } from '../sitio/promos.js';
+import { temporada } from './temporada.js';
+
+// linea pequena sobre el titulo: cambia sola por temporada (mismas fechas que la mascota, ver temporada.js)
+const ETI_TEMPORADA = { madre: 'Regalos para mamá', navidad: 'Para estas fiestas', sanvalentin: 'Para San Valentín', padre: 'Regalos para papá' };
+(function(){ var e = document.getElementById('dest-eti'), t = temporada(); if(e && ETI_TEMPORADA[t]) e.textContent = ETI_TEMPORADA[t]; })();
 
 const API_DEST = 'https://api.aphillipsstore.com/destacados';
 var DEST_LOCAL = [];
@@ -69,6 +74,7 @@ var _chevD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 // un lienzo, y se guarda en memoria. Si no se puede (sin permiso de la imagen o error), la foto se muestra con
 // el filtro de respaldo.
 var _sinFondo = {};   // url -> Promise<blob url>
+var _fondoPropio = {};   // url -> true si la foto trae su propio fondo (no blanco): en el carrusel negro se le difuminan los bordes
 (function(){
   if(document.getElementById('filtro-sin-blanco')) return;
   var d = document.createElement('div');
@@ -118,6 +124,42 @@ function quitarFondoBlanco(url){
           p[q * 4 + 3] = Math.round(255 * (1 - (t / m) * blancura));
         }
       }
+      // si casi nada de la orilla es blanco, la foto trae su propio fondo (ej. un degradado azul oscuro): se quita
+      // igual, partiendo del color promedio de la orilla y avanzando solo entre pixeles parecidos (sin saltos bruscos,
+      // asi el borde del reloj frena el relleno). Si ni asi se cubre la orilla, se marca para difuminar sus bordes.
+      var cubre = function(){ var o = 0, f = 0;
+        for(xx = 0; xx < W; xx += 3){ o += 2; f += fondo[xx] + fondo[(H - 1) * W + xx]; }
+        for(yy = 0; yy < H; yy += 3){ o += 2; f += fondo[yy * W] + fondo[yy * W + W - 1]; }
+        return f / o; };
+      if(cubre() < 0.5){
+        var sr = 0, sg = 0, sb = 0, cn = 0, i4;
+        for(xx = 0; xx < W; xx += 2){ i4 = xx * 4; sr += p[i4]; sg += p[i4+1]; sb += p[i4+2]; i4 = ((H - 1) * W + xx) * 4; sr += p[i4]; sg += p[i4+1]; sb += p[i4+2]; cn += 2; }
+        for(yy = 0; yy < H; yy += 2){ i4 = yy * W * 4; sr += p[i4]; sg += p[i4+1]; sb += p[i4+2]; i4 = (yy * W + W - 1) * 4; sr += p[i4]; sg += p[i4+1]; sb += p[i4+2]; cn += 2; }
+        sr /= cn; sg /= cn; sb /= cn;
+        var parecido = function(v){ var i = v * 4; return Math.abs(p[i] - sr) + Math.abs(p[i+1] - sg) + Math.abs(p[i+2] - sb) < 95; };
+        var suave = function(v, w){ var i = v * 4, j = w * 4; return Math.abs(p[i] - p[j]) + Math.abs(p[i+1] - p[j+1]) + Math.abs(p[i+2] - p[j+2]) <= 18; };
+        fondo.fill(0); tope = 0;
+        var meter2 = function(v, desde){ if(!fondo[v] && parecido(v) && (desde < 0 || suave(v, desde))){ fondo[v] = 1; pila[tope++] = v; } };
+        for(xx = 0; xx < W; xx++){ meter2(xx, -1); meter2((H - 1) * W + xx, -1); }
+        for(yy = 0; yy < H; yy++){ meter2(yy * W, -1); meter2(yy * W + W - 1, -1); }
+        while(tope){
+          q = pila[--tope]; xx = q % W; yy = (q / W) | 0;
+          if(xx > 0) meter2(q - 1, q); if(xx < W - 1) meter2(q + 1, q);
+          if(yy > 0) meter2(q - W, q); if(yy < H - 1) meter2(q + W, q);
+        }
+        // borde suave del recorte (aqui el fondo es oscuro: no sirve la "blancura")
+        for(yy = 0; yy < H; yy++) for(xx = 0; xx < W; xx++){
+          q = yy * W + xx;
+          if(fondo[q]){ p[q * 4 + 3] = 0; continue; }
+          var t2 = 0, m2 = 0;
+          for(var ey = -1; ey <= 1; ey++) for(var ex = -1; ex <= 1; ex++){
+            var X2 = xx + ex, Y2 = yy + ey; if(X2 < 0 || Y2 < 0 || X2 >= W || Y2 >= H) continue;
+            m2++; if(fondo[Y2 * W + X2]) t2++;
+          }
+          if(t2) p[q * 4 + 3] = Math.round(255 * (1 - (t2 / m2) * .8));
+        }
+        if(cubre() < 0.5) _fondoPropio[url] = true;
+      }
       x.putImageData(d, 0, 0);
       return new Promise(function(ok, mal){ c.toBlob(function(b){ b ? ok(URL.createObjectURL(b)) : mal(new Error('sin blob')); }, 'image/png'); });
     });
@@ -138,6 +180,7 @@ function _destSinFondo(){
     quitarFondoBlanco(url).then(function(blob){
       listo = true; clearTimeout(t);
       img.removeAttribute('srcset'); img.removeAttribute('sizes');
+      img.classList.toggle('fondo-propio', !!_fondoPropio[url]);
       img.onload = function(){ img.classList.remove('con-filtro'); mostrar(); };
       img.src = blob;
     }).catch(function(){ listo = true; clearTimeout(t); img.classList.add('con-filtro'); mostrar(); });

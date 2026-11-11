@@ -44,7 +44,7 @@ const CAMPOS = {
   botonFondo: ['Botones principales: fondo', 'Comprar por WhatsApp, Cotizar y Comprar ahora.'],
   botonTexto: ['Botones principales: letras', ''],
   oscuro: ['Secciones oscuras', '"Encuentra tu próximo reloj" y el reloj de Panamá. El texto encima va en blanco.'],
-  carrusel: ['Fondo del carrusel "Más vendidos"', 'Color de arriba del degradado (abajo termina en blanco).']
+  carrusel: ['Fondo del carrusel "Más vendidos"', 'Tono de las tarjetas: arriba se ve este color oscurecido y abajo termina en negro (sigue al banner).']
 };
 const FORMAS_TXT = [['original', 'Como están'], ['recta', 'Rectos'], ['suave', 'Suaves'], ['pildora', 'Píldora']];
 

@@ -10,6 +10,7 @@ import { buscadorAbierto, toggleBuscador } from './buscador.js';
 import { vibrar } from './ui.js';
 import { sesion } from './sesion.js';
 import { ofertaDe } from '../sitio/promos.js';
+import { temporada } from './temporada.js';
 
 const ICONOS = {
   chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/>',
@@ -38,19 +39,7 @@ function resolverPose(p){
   for(var i = 0; i < 3 && POSES.indexOf(p) < 0; i++) p = RESPALDO[p] || 'recepcion';
   return POSES.indexOf(p) >= 0 ? p : 'recepcion';
 }
-// temporada (Panama): la pose normal y el saludo cambian solos en estas fechas
-function temporada(f){
-  f = f || new Date();
-  var m = f.getMonth() + 1, d = f.getDate();
-  if(m === 12 && d <= 8) return 'madre';                 // Dia de la Madre: 8 de diciembre
-  if(m === 12) return 'navidad';
-  if(m === 2 && d >= 7 && d <= 14) return 'sanvalentin';
-  if(m === 6){                                           // Dia del Padre: tercer domingo de junio (10 dias antes)
-    var dom = 1 + (7 - new Date(f.getFullYear(), 5, 1).getDay()) % 7 + 14;
-    if(d >= dom - 10 && d <= dom) return 'padre';
-  }
-  return '';
-}
+// temporada (temporada.js): la pose normal y el saludo cambian solos en esas fechas
 const FRASE_TEMPORADA = { madre: '¿Ya tienes el regalo de mamá?', navidad: '¿Buscas el regalo de Navidad perfecto?',
   sanvalentin: '¿Un regalo para San Valentín?', padre: '¿Ya tienes el regalo de papá?' };
 const POSES_YA = ['recepcion', 'saludo', resolverPose(temporada())];   // se ven al abrir la pagina: se cargan de una vez
