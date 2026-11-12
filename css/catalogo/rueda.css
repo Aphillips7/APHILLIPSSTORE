@@ -49,22 +49,23 @@
     .rueda-sub{font-size:15px;max-width:24ch;}
     .rueda-btn{font-size:13px;}
   }
-  /* computadora: ARCO compacto que cabe entero en la pantalla de un vistazo. El centro de la rueda queda en el
-     borde de abajo de la seccion: se ve la mitad de arriba completa alrededor del texto y la mitad de abajo
-     pasa por la franja negra de la seccion siguiente y vuelve a salir girando. El radio sale del alto de la
-     pantalla (68vh) para que en una laptop no haya que bajar para verla toda. */
+  /* computadora: ARCO amplio y bajo. El centro de la rueda queda muy por debajo de la seccion (radio = 1.9 x alto),
+     asi el arco es plano: se ven ~7 relojes GRANDES a la vez que suben por un costado, pasan por arriba del texto
+     y bajan por el otro. El texto y el boton van centrados en la seccion, debajo del arco. El alto sale del alto de
+     la pantalla para que en una laptop la seccion entera se vea sin bajar; el tamano de los relojes sale del alto
+     (lo que queda libre arriba del texto). */
   @media (min-width:821px){
     #rueda{
-      --R:clamp(320px,min(36vw,calc(68vh - 70px)),480px);   /* distancia del centro a cada reloj */
-      --w:calc(var(--R) * .22);
-      --h:calc(var(--R) * .33);
-      --cy:calc(var(--R) + var(--h) / 2 + 28px);            /* centro de la rueda = borde de abajo */
-      height:var(--cy);
+      --H:clamp(460px,calc(100vh - 140px),640px);            /* alto de la seccion */
+      --R:calc(var(--H) * 1.9);                              /* distancia del centro a cada reloj */
+      --h:clamp(110px,calc(var(--H) / 2 - 132px),190px);     /* alto de cada reloj */
+      --w:calc(var(--h) * .66);
+      --cy:calc(var(--R) + var(--h) / 2 + 18px);             /* centro de la rueda (muy abajo, fuera de la seccion) */
+      height:var(--H);
     }
     .rueda-aro{top:var(--cy);}
-    /* texto dentro del arco, un poco arriba del borde para que no lo toque ningun reloj */
-    .rueda-centro{top:calc(var(--cy) - var(--R) * .3);width:calc(var(--R) * 1.15);gap:12px;}
-    .rueda-titulo{font-size:clamp(26px,2.2vw,34px);}
-    .rueda-sub{font-size:16px;max-width:32ch;}
-    .rueda-btn{font-size:13px;padding:14px 30px;}
+    .rueda-centro{top:50%;width:min(500px,40vw);gap:10px;}
+    .rueda-titulo{font-size:clamp(24px,1.8vw,30px);}
+    .rueda-sub{font-size:15px;max-width:none;}
+    .rueda-btn{font-size:13px;padding:13px 28px;margin-top:2px;}
   }
