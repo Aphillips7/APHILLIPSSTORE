@@ -58,13 +58,13 @@
     #rueda{
       --H:clamp(460px,calc(100vh - 140px),640px);            /* alto de la seccion */
       --R:calc(var(--H) * 1.9);                              /* distancia del centro a cada reloj */
-      --h:clamp(110px,calc(var(--H) / 2 - 132px),190px);     /* alto de cada reloj */
+      --h:clamp(110px,calc(var(--H) * .6 - 132px),200px);    /* alto de cada reloj */
       --w:calc(var(--h) * .66);
       --cy:calc(var(--R) + var(--h) / 2 + 18px);             /* centro de la rueda (muy abajo, fuera de la seccion) */
       height:var(--H);
     }
     .rueda-aro{top:var(--cy);}
-    .rueda-centro{top:50%;width:min(500px,40vw);gap:10px;}
+    .rueda-centro{top:60%;width:min(500px,40vw);gap:10px;}   /* algo mas abajo de la mitad: deja aire al arco */
     .rueda-titulo{font-size:clamp(24px,1.8vw,30px);}
     .rueda-sub{font-size:15px;max-width:none;}
     .rueda-btn{font-size:13px;padding:13px 28px;margin-top:2px;}
