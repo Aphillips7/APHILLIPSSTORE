@@ -1,7 +1,8 @@
   /* === RUEDA DE RELOJES ("Encuentra tu reloj ideal", js/catalogo/rueda.js) ===
      Los relojes sin fondo forman una rueda (cada uno es un rayo) que gira despacio; el texto queda fijo en el
-     centro. En computadora la rueda se ve completa (la seccion mide el diametro de la rueda: el reloj mas alejado
-     llega a .49 x D del centro); en celular es mas grande que la pantalla y se recorta a los lados. */
+     centro. En computadora la rueda es mucho mas grande que la seccion: arriba se ve completa y abajo los relojes
+     se meten en la franja negra de la seccion siguiente y vuelven a salir girando. En celular es mas ancha que la
+     pantalla y se recorta a los lados. */
   body.vista-catalogo #rueda{display:none;}
   #rueda{
     --D:clamp(600px,54vw,860px);           /* diametro de la rueda */
@@ -13,12 +14,12 @@
   }
   #rueda[hidden]{display:none;}
   .rueda-marco{position:absolute;inset:0;overflow:hidden;}
-  .rueda-aro{position:absolute;left:50%;top:50%;width:0;height:0;animation:rueda-girar 110s linear infinite;will-change:transform;}
-  @keyframes rueda-girar{to{transform:rotate(360deg);}}
-  #rueda.quieta .rueda-aro{animation-play-state:paused;}
-  /* solo con mouse: al pasar por encima se detiene para poder elegir (en celular un toque la dejaba quieta) */
-  @media (hover:hover) and (pointer:fine){ #rueda:hover .rueda-aro{animation-play-state:paused;} }
-  @media (prefers-reduced-motion:reduce){ .rueda-aro{animation:none;} }
+  /* el giro lo hace rueda.js (no una animacion CSS) para poder arrastrarla con el dedo o el mouse, adelante o
+     atras, y lanzarla mas rapido; al soltarla vuelve sola a su velocidad normal. pan-y: deslizar hacia arriba o
+     abajo sigue moviendo la pagina; solo el gesto de lado gira la rueda. */
+  #rueda{touch-action:pan-y;-webkit-user-select:none;user-select:none;}
+  #rueda.arrastrando{cursor:grabbing;}
+  .rueda-aro{position:absolute;left:50%;top:50%;width:0;height:0;will-change:transform;}
   .rueda-reloj{
     position:absolute;left:calc(var(--w) / -2);top:calc(var(--h) / -2);width:var(--w);height:var(--h);
     display:flex;align-items:center;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
@@ -44,4 +45,18 @@
     #rueda{--D:600px;height:calc(var(--D) + 24px);}
     .rueda-centro{gap:10px;}
     .rueda-sub{max-width:24ch;}
+  }
+  /* computadora: rueda grande que sigue de largo hacia abajo (no es un circulo cerrado). El centro (y el texto)
+     queda a la distancia justa para que el reloj de arriba se vea entero; la seccion termina antes del borde de
+     abajo de la rueda, asi esos relojes desaparecen en la franja negra y luego vuelven a salir. */
+  @media (min-width:821px){
+    #rueda{
+      --D:clamp(900px,80vw,1400px);
+      --R:calc(var(--D) * .44);
+      --w:calc(var(--D) * .085);
+      --h:calc(var(--D) * .13);
+      --cy:calc(var(--R) + var(--h) / 2 + 36px);   /* altura del centro de la rueda */
+      height:calc(var(--cy) + var(--D) * .2);
+    }
+    .rueda-aro,.rueda-centro{top:var(--cy);}
   }

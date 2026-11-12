@@ -8,7 +8,8 @@ import { relojes } from './datos.js';
 import { abrir } from './modal.js';
 
 var BASE = 'https://fotos.aphillipsstore.com/';
-var MAX = 16, MIN = 8;   // cuantos relojes caben bien en la rueda / con menos se ve vacia
+// cuantos relojes caben bien en la rueda (en computadora es mas grande: caben mas) / con menos se ve vacia
+var MAX = window.matchMedia && matchMedia('(min-width:821px)').matches ? 20 : 16, MIN = 8;
 
 function urlSinFondo(u){
   return typeof u === 'string' && u.indexOf(BASE + 'relojes/') === 0 ? BASE + 'sinfondo/' + u.slice(BASE.length).split('?')[0] : null;
@@ -63,8 +64,15 @@ function pintar(lienzo, img){
   var b = lienzo.parentNode; if(!b) return;
   var W = b.offsetWidth, H = b.offsetHeight;   // espacio del reloj, sin contar el giro
   if(!W || !H) return;
+  // ZOOM CON LOS DEDOS: si el cliente acerca la pantalla, se dibuja con mas pixeles (hasta los que tiene la
+  // foto original) para que siga nitido; sin esto se estiraba el dibujo chico y se veia borroso.
   var dpr = Math.min(3, window.devicePixelRatio || 1);
-  var pw = Math.round(W * dpr), ph = Math.round(H * dpr);
+  var zoom = window.visualViewport && visualViewport.scale > 1 ? visualViewport.scale : 1;
+  var nat = (img.naturalWidth || img.width) * RECORTE[2];               // ancho real del reloj en la foto
+  var anchoCss = Math.min(W * .9, H * .9 * RECORTE[2] / RECORTE[3]);    // ancho con que se ve el reloj
+  var maxEsc = Math.max(dpr, nat / anchoCss);
+  var esc = Math.min(dpr * zoom, maxEsc);
+  var pw = Math.round(W * esc), ph = Math.round(H * esc);
   if(lienzo.width === pw && lienzo.height === ph) return;
   lienzo.width = pw; lienzo.height = ph;
   var x = lienzo.getContext('2d');
@@ -103,6 +111,69 @@ function dibujar(items){
 }
 var _tRes = 0;
 window.addEventListener('resize', function(){ clearTimeout(_tRes); _tRes = setTimeout(pintarTodos, 200); });
+if(window.visualViewport) visualViewport.addEventListener('resize', function(){ clearTimeout(_tRes); _tRes = setTimeout(pintarTodos, 200); });
+// =================== GIRO (automatico + con el dedo) ===================
+// Gira sola a una vuelta cada 110 s. Con el dedo (o el mouse) se arrastra de lado: adelante o atras, y si se
+// suelta con impulso sigue girando rapido y frena poco a poco hasta volver a su velocidad normal.
+// Se detiene fuera de la pantalla (bateria) y, con mouse, mientras el cursor esta encima (para poder elegir).
+// Un arrastre no abre la ficha del reloj donde empezo; un toque corto si.
+var VEL_BASE = 360 / 110, VEL_MAX = 600;           // grados por segundo
+var _ang = 0, _vel = VEL_BASE, _visible = false, _encima = false, _arr = null, _ultimo = 0, _raf = 0, _movio = false;
+var _quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function aplicar(){ var aro = document.getElementById('rueda-aro'); if(aro) aro.style.transform = 'rotate(' + _ang.toFixed(3) + 'deg)'; }
+function cuadro(t){
+  _raf = 0;
+  var dt = _ultimo ? Math.min(.05, (t - _ultimo) / 1000) : 0; _ultimo = t;
+  if(!_arr){
+    var meta = (_quieto || _encima) ? 0 : VEL_BASE;
+    _vel += (meta - _vel) * (1 - Math.exp(-dt / .9));   // frena (o acelera) suave hacia su velocidad normal
+    _ang = (_ang + _vel * dt) % 360;
+    aplicar();
+  }
+  if(_visible && (_arr || Math.abs(_vel) > .01 || !(_quieto || _encima))) _raf = requestAnimationFrame(cuadro);
+  else _ultimo = 0;
+}
+function andar(){ if(!_raf && _visible){ _ultimo = 0; _raf = requestAnimationFrame(cuadro); } }
+(function(){
+  var sec = document.getElementById('rueda'), aro = document.getElementById('rueda-aro'); if(!sec || !aro) return;
+  function radio(){ return (parseFloat(getComputedStyle(sec).getPropertyValue('--D')) || aro.parentNode.offsetWidth || 600) * .39; }
+  sec.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    var r = aro.getBoundingClientRect();
+    _arr = { id: e.pointerId, x: e.clientX, t: performance.now(), arriba: e.clientY < r.top, R: radio(), v: 0 };
+    _movio = false; andar();
+  });
+  sec.addEventListener('pointermove', function(e){
+    if(!_arr || e.pointerId !== _arr.id) return;
+    var dx = e.clientX - _arr.x, ahora = performance.now();
+    if(!_movio){
+      if(Math.abs(dx) < 8) return;
+      _movio = true; sec.classList.add('arrastrando');
+      try{ sec.setPointerCapture(e.pointerId); }catch(_){}
+    }
+    // de lado sobre la mitad de arriba gira hacia ese lado; sobre la de abajo, al reves (como empujar una rueda)
+    var d = (_arr.arriba ? 1 : -1) * dx / _arr.R * 180 / Math.PI;
+    _ang = (_ang + d) % 360; aplicar();
+    var dt = Math.max(1, ahora - _arr.t) / 1000;
+    _arr.v = _arr.v * .5 + (d / dt) * .5;
+    _arr.x = e.clientX; _arr.t = ahora;
+  });
+  function soltar(e){
+    if(!_arr || e.pointerId !== _arr.id) return;
+    // si paso mucho desde el ultimo movimiento, el dedo ya estaba quieto: sin impulso
+    var v = performance.now() - _arr.t > 120 ? 0 : _arr.v;
+    _vel = _movio ? Math.max(-VEL_MAX, Math.min(VEL_MAX, v)) : _vel;
+    _arr = null; sec.classList.remove('arrastrando'); andar();
+  }
+  sec.addEventListener('pointerup', soltar);
+  sec.addEventListener('pointercancel', function(e){ if(_arr && e.pointerId === _arr.id){ _arr = null; sec.classList.remove('arrastrando'); andar(); } });
+  // tras un arrastre, el click que dispara el navegador al soltar no abre ninguna ficha
+  sec.addEventListener('click', function(e){ if(_movio){ e.preventDefault(); e.stopPropagation(); _movio = false; } }, true);
+  if(window.matchMedia && matchMedia('(hover:hover) and (pointer:fine)').matches){
+    sec.addEventListener('pointerenter', function(e){ if(e.pointerType === 'mouse'){ _encima = true; andar(); } });
+    sec.addEventListener('pointerleave', function(e){ if(e.pointerType === 'mouse'){ _encima = false; andar(); } });
+  }
+})();
 var _armada = false, _cerca = false;
 // arma la rueda cuando ya llego el catalogo Y el cliente se acerca a la seccion (no descarga fotos de mas)
 function armar(){
@@ -119,7 +190,7 @@ function armar(){
   });
   if('IntersectionObserver' in window){
     // fuera de la pantalla la rueda se detiene (no gasta bateria en el celular)
-    new IntersectionObserver(function(es){ es.forEach(function(e){ sec.classList.toggle('quieta', !e.isIntersecting); }); }).observe(sec);
+    new IntersectionObserver(function(es){ es.forEach(function(e){ sec.classList.toggle('quieta', !e.isIntersecting); _visible = e.isIntersecting; andar(); }); }).observe(sec);
     // la seccion empieza oculta: se vigila Marcas (justo arriba) para saber cuando el cliente se acerca
     var guia = document.getElementById('marcas') || sec;
     var io = new IntersectionObserver(function(es){
@@ -127,7 +198,7 @@ function armar(){
       io.disconnect(); _cerca = true; armar();
     }, { rootMargin: '0px 0px 1500px 0px' });
     io.observe(guia);
-  } else _cerca = true;
+  } else { _cerca = true; _visible = true; andar(); }
   // el catalogo llega por la red: se espera a que haya relojes
   var intentos = 0;
   (function esperar(){ if(relojes.length || ++intentos > 100){ armar(); return; } setTimeout(esperar, 300); })();
