@@ -83,6 +83,14 @@ function aplicarFotos(f){
     // el banner del celular usa la foto de computadora si solo cambiaste esa
     var nueva = f[k] || (k === 'heroMovil' ? f.hero : '') || e.dataset.orig;
     if(e.getAttribute(attr) !== nueva) e.setAttribute(attr, nueva);
+    // hombre / mujer traen su propio recorte para celular (<source>): si pusiste una foto propia, el celular
+    // usa esa misma (si no, seguiria mostrando el recorte de la foto anterior)
+    var src = e.parentNode && e.parentNode.tagName === 'PICTURE' ? e.parentNode.querySelector('source') : null;
+    if(src && k !== 'hero'){
+      if(src.dataset.orig === undefined) src.dataset.orig = src.getAttribute('srcset') || '';
+      var movil = f[k] || src.dataset.orig;
+      if(src.getAttribute('srcset') !== movil) src.setAttribute('srcset', movil);
+    }
   });
 }
 function aplicarFaq(q){
