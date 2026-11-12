@@ -75,7 +75,7 @@
      (sin estrellas), textos en blanco y logos en blanco debajo (sin linea de puntos).
      Usa su propia variable --dnoche: glaciar oscurecido hacia el negro; el color "carrusel" del panel la recalcula (tema.js). */
   #destacados{--dk:#fff;--glz:#A7C4D6;--dnoche:linear-gradient(180deg,#5a7b90 0%,#41606f 24%,#2a414f 48%,#152530 72%,#060c10 90%,#000 100%);
-    background:#000;color:#fff;padding-top:clamp(30px,3.6vw,60px);border-radius:0 0 clamp(14px,1.8vw,26px) clamp(14px,1.8vw,26px);}
+    background:#000;color:#fff;padding-top:clamp(30px,3.6vw,60px);border-radius:0;}
   .dest-cab{text-align:center;padding:0 20px;margin-bottom:clamp(20px,2.4vw,36px);}
   .dest-eti{display:block;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--glz);margin-bottom:6px;}
   #destacados .dest-tabs{margin-bottom:clamp(12px,1.4vw,18px);}
