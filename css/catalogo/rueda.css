@@ -1,7 +1,8 @@
   /* === RUEDA DE RELOJES ("Encuentra tu reloj ideal", js/catalogo/rueda.js) ===
      Los relojes sin fondo forman una rueda (cada uno es un rayo) que gira despacio; el texto queda fijo en el
-     centro. En computadora la rueda se ve completa (la seccion mide el diametro de la rueda: el reloj mas alejado
-     llega a .49 x D del centro); en celular es mas grande que la pantalla y se recorta a los lados. */
+     centro. En computadora la rueda es mucho mas grande que la seccion: arriba se ve completa y abajo los relojes
+     se meten en la franja negra de la seccion siguiente y vuelven a salir girando. En celular es mas ancha que la
+     pantalla y se recorta a los lados. */
   body.vista-catalogo #rueda{display:none;}
   #rueda{
     --D:clamp(600px,54vw,860px);           /* diametro de la rueda */
@@ -44,4 +45,18 @@
     #rueda{--D:600px;height:calc(var(--D) + 24px);}
     .rueda-centro{gap:10px;}
     .rueda-sub{max-width:24ch;}
+  }
+  /* computadora: rueda grande que sigue de largo hacia abajo (no es un circulo cerrado). El centro (y el texto)
+     queda a la distancia justa para que el reloj de arriba se vea entero; la seccion termina antes del borde de
+     abajo de la rueda, asi esos relojes desaparecen en la franja negra y luego vuelven a salir. */
+  @media (min-width:821px){
+    #rueda{
+      --D:clamp(900px,80vw,1400px);
+      --R:calc(var(--D) * .44);
+      --w:calc(var(--D) * .085);
+      --h:calc(var(--D) * .13);
+      --cy:calc(var(--R) + var(--h) / 2 + 36px);   /* altura del centro de la rueda */
+      height:calc(var(--cy) + var(--D) * .2);
+    }
+    .rueda-aro,.rueda-centro{top:var(--cy);}
   }
