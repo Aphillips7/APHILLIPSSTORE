@@ -889,10 +889,11 @@ function sitioProblemas(t) {
     .filter(([a, b]) => sitioContraste(a, b) < 4.5).length;
 }
 // Portada (fase 2): misma validacion que js/sitio/portada.js (si cambias una, cambia la otra)
-const PORTADA_SECCIONES = ['destacados', 'generos', 'futuro', 'marcas'];
+const PORTADA_SECCIONES = ['destacados', 'generos', 'futuro', 'marcas', 'rueda'];
 const PORTADA_TEXTOS = { barra: [60, 0], heroEti: [60, 0], heroTitulo: [70, 1], heroBoton: [24, 0], destTitulo: [40, 0], genHombre: [40, 1], genMujer: [40, 1],
   genBoton: [24, 0], futEti: [40, 0], futTitulo: [60, 1], futDesc: [260, 1], futComprar: [24, 0], fichaNombre: [40, 0], fichaDesc: [120, 0], fut2Eti: [40, 0],
-  fut2Titulo: [60, 0], card1Nombre: [40, 0], card1Desc: [120, 0], card2Nombre: [40, 0], card2Desc: [120, 0], marcasTitulo: [40, 0], marcasSub: [160, 0] };
+  fut2Titulo: [60, 0], card1Nombre: [40, 0], card1Desc: [120, 0], card2Nombre: [40, 0], card2Desc: [120, 0], marcasTitulo: [40, 0], marcasSub: [160, 0],
+  ruedaTitulo: [40, 1], ruedaSub: [160, 0], ruedaBoton: [24, 0] };
 const PORTADA_ENLACES = ['futComprar', 'futCard1', 'futCard2'];
 function portadaTexto(v, max, multi) {
   let t = String(v == null ? '' : v).replace(/[\u0000-\u0009\u000b-\u001f<>]/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, max);
