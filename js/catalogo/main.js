@@ -9,6 +9,7 @@ import './menu.js';
 import './metricas.js';
 import './datos.js';
 import './destacados.js';
+import './rueda.js';   // rueda de relojes sin fondo (despues de Marcas)
 import './vistas.js';
 import './filtros.js';
 import './grid.js';

@@ -47,7 +47,7 @@ cloudflare/fotos-worker/   Worker que sube/borra fotos en R2 (api.aphillipsstore
 img/                  logos, hero, generos y carrusel (antes iban en base64 dentro del HTML)
 css/panel/            base (tokens de color glaciar, claro y oscuro), componentes, finanzas, auth, modales, navegacion, dashboard, movil (en ese orden)
 css/catalogo/         base, tarjetas, paneles, generos, vistas, modal, buscador, hero,
-                      destacados, listado, filtros, marcas, pie, hora (en ese orden)
+                      destacados, listado, filtros, marcas, rueda, pie, hora (en ese orden)
 js/firebase.js        configuracion de Firebase (solo Auth); exporta firebase
 js/errores.js         registro anonimo de errores de JavaScript (POST /errores); se importa primero en catalogo y panel
 js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
@@ -123,6 +123,7 @@ js/products.js        reglas de producto compartidas (ver "Reglas de negocio")
 | `mascota.js` | Asistente flotante (reloj 3D con caja glaciar y bigote de agujas; poses en `img/mascota/*.webp`, la normal es `recepcion`): mini ventana con asesoria por WhatsApp, buscador y guia de tamanos; reemplaza al boton flotante de WhatsApp |
 | `metricas.js` | Junta vistas/aperturas/clics y los envia a Cloudflare (`POST /metricas`) cada 20 s y al salir |
 | `destacados.js` | Carrusel "Mas vendidos" (fondo negro y tarjetas glaciar, sigue al hero). Usa la version sin fondo `sinfondo/<clave>` de cada foto si existe; si no, recorta en el navegador (blanco o color de la orilla) |
+| `rueda.js` | Rueda de relojes "Encuentra tu reloj ideal" (despues de Marcas): las fotos sin fondo `sinfondo/<clave>` de hasta 16 relojes a la venta giran en circulo alrededor del texto fijo; tocar uno abre su ficha. Solo usa fotos sin fondo que de verdad cargan; con menos de 8 la seccion se oculta. Se detiene fuera de pantalla, con el mouse encima y con movimiento reducido |
 | `aviso-cookies.js` | Aviso pequeno de cookies la primera vez (localStorage `aphillips_aviso_cookies`); enlaza a `/legal#cookies` |
 | `boletin.js` | "Suscribete al boletin" del pie: ventana con el correo -> POST /boletin (D1, correo de bienvenida con baja) |
 | `buscador.js` | Panel de busqueda: resultados en vivo, "Ver todos"/Enter los pasa a la grilla, sugerencias |

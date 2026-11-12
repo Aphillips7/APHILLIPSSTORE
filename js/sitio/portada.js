@@ -8,7 +8,8 @@ const SECCIONES = [
   { id: 'destacados', nombre: 'Más vendidos (carrusel)' },
   { id: 'generos', nombre: 'Relojes de hombre / mujer' },
   { id: 'futuro', nombre: 'El futuro en tu muñeca' },
-  { id: 'marcas', nombre: 'Marcas' }
+  { id: 'marcas', nombre: 'Marcas' },
+  { id: 'rueda', nombre: 'Rueda de relojes' }
 ];
 // clave: [selector, largo maximo, multilinea, grupo, etiqueta]
 const TEXTOS = {
@@ -33,7 +34,10 @@ const TEXTOS = {
   card2Nombre: ['.fut-card-b .fut-card-pie b', 40, false, 'Encuentra tu próximo reloj', 'Tarjeta 2: nombre'],
   card2Desc: ['.fut-card-b .fut-card-pie span', 120, false, 'Encuentra tu próximo reloj', 'Tarjeta 2: descripción'],
   marcasTitulo: ['.marcas-titulo', 40, false, 'Marcas', 'Título'],
-  marcasSub: ['.marcas-sub', 160, false, 'Marcas', 'Frase']
+  marcasSub: ['.marcas-sub', 160, false, 'Marcas', 'Frase'],
+  ruedaTitulo: ['.rueda-titulo', 40, true, 'Rueda de relojes', 'Título'],
+  ruedaSub: ['.rueda-sub', 160, false, 'Rueda de relojes', 'Frase'],
+  ruedaBoton: ['.rueda-btn', 24, false, 'Rueda de relojes', 'Botón']
 };
 // botones que abren un reloj: clave -> selector del boton
 const ENLACES = {

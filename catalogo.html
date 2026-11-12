@@ -44,6 +44,7 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
 <link rel="stylesheet" href="css/catalogo/listado.css">
 <link rel="stylesheet" href="css/catalogo/filtros.css">
 <link rel="stylesheet" href="css/catalogo/marcas.css">
+<link rel="stylesheet" href="css/catalogo/rueda.css">
 <link rel="stylesheet" href="css/catalogo/futuro.css">
 <link rel="stylesheet" href="css/catalogo/promos.css">
 <link rel="stylesheet" href="css/catalogo/pie.css">
@@ -326,6 +327,17 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
       <div class="marca-foto"><img src="img/marca-technomarine.jpg" alt="Reloj TechnoMarine con correas intercambiables" loading="lazy" decoding="async"></div>
       <div class="marca-txt"><img class="marca-logo logo-technomarine" src="img/marca-logo-technomarine.png" alt="TechnoMarine" loading="lazy"></div>
     </a>
+  </div>
+</section>
+
+<!-- RUEDA DE RELOJES: los relojes a la venta (fotos sin fondo) giran en circulo alrededor del texto.
+     La llena js/catalogo/rueda.js; queda oculta si no hay suficientes fotos sin fondo. Estilos en css/catalogo/rueda.css -->
+<section id="rueda" aria-labelledby="rueda-titulo" hidden>
+  <div class="rueda-aro" id="rueda-aro"></div>
+  <div class="rueda-centro">
+    <h2 class="rueda-titulo" id="rueda-titulo">Encuentra tu reloj ideal</h2>
+    <p class="rueda-sub">Descubre nuestra colección completa de relojes originales, para cada estilo y ocasión.</p>
+    <a class="rueda-btn" href="/relojes" onclick="irAGenero('',event)">Ver relojes</a>
   </div>
 </section>
 
