@@ -8,8 +8,7 @@ import { relojes } from './datos.js';
 import { abrir } from './modal.js';
 
 var BASE = 'https://fotos.aphillipsstore.com/';
-// cuantos relojes caben bien en la rueda (en computadora es mas grande: caben mas) / con menos se ve vacia
-var MAX = window.matchMedia && matchMedia('(min-width:821px)').matches ? 20 : 16, MIN = 8;
+var MAX = 16, MIN = 8;   // cuantos relojes caben bien en la rueda / con menos se ve vacia
 
 function urlSinFondo(u){
   return typeof u === 'string' && u.indexOf(BASE + 'relojes/') === 0 ? BASE + 'sinfondo/' + u.slice(BASE.length).split('?')[0] : null;
