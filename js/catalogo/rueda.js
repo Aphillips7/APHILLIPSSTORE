@@ -41,32 +41,41 @@ function probar(lista){
 // gira, la tarjeta de video lo hace rapido y se ve blanda. Por eso cada reloj se dibuja UNA vez en un lienzo
 // del tamano exacto en pixeles de la pantalla (con su densidad), achicado en alta calidad y por pasos, con la
 // sombra incluida: al girar no hay que achicar nada. Si cambia el tamano de la ventana, se vuelve a dibujar.
+// TAMANO: las fotos sin fondo del panel son de 1000x1000 con el reloj siempre dentro de la franja central
+// (x 180-820, y 60-940, medido en todo el catalogo). Se dibuja solo esa franja y llenando el alto del espacio
+// del reloj (antes se dibujaba la foto entera con su aire y el reloj quedaba de la mitad del tamano).
 var _items = [];
-function achicar(img, lado){
+var RECORTE = [.18, .06, .64, .88];   // x, y, ancho, alto (fraccion de la foto) donde siempre esta el reloj
+function achicar(img, anchoFinal){
+  var W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
+  var sx = W * RECORTE[0], sy = H * RECORTE[1], sw = W * RECORTE[2], sh = H * RECORTE[3];
   // a la mitad cada vez hasta quedar cerca del tamano final: mucho mas fino que achicar de un solo golpe
-  var fuente = img, w = img.naturalWidth || img.width;
-  while(w / 2 >= lado * 1.5){
-    w = Math.round(w / 2);
-    var c = document.createElement('canvas'); c.width = c.height = w;
+  var fuente = img, fx = sx, fy = sy, fw = sw, fh = sh;
+  while(fw / 2 >= anchoFinal * 1.5){
+    var c = document.createElement('canvas'); c.width = Math.round(fw / 2); c.height = Math.round(fh / 2);
     var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
-    x.drawImage(fuente, 0, 0, w, w);
-    fuente = c;
+    x.drawImage(fuente, fx, fy, fw, fh, 0, 0, c.width, c.height);
+    fuente = c; fx = 0; fy = 0; fw = c.width; fh = c.height;
   }
-  return fuente;
+  return { f: fuente, x: fx, y: fy, w: fw, h: fh };
 }
 function pintar(lienzo, img){
-  var css = lienzo.parentNode ? lienzo.parentNode.offsetWidth : 0;   // ancho del boton, sin contar el giro
-  if(!css) return;
+  var b = lienzo.parentNode; if(!b) return;
+  var W = b.offsetWidth, H = b.offsetHeight;   // espacio del reloj, sin contar el giro
+  if(!W || !H) return;
   var dpr = Math.min(3, window.devicePixelRatio || 1);
-  var lado = Math.round(css * dpr);
-  if(lienzo.width === lado) return;
-  lienzo.width = lienzo.height = lado;
+  var pw = Math.round(W * dpr), ph = Math.round(H * dpr);
+  if(lienzo.width === pw && lienzo.height === ph) return;
+  lienzo.width = pw; lienzo.height = ph;
   var x = lienzo.getContext('2d');
   x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
   // margen para que la sombra no se corte en el borde del lienzo
-  var m = Math.round(lado * .06);
-  x.shadowColor = 'rgba(0,0,0,.16)'; x.shadowBlur = Math.round(lado * .05); x.shadowOffsetY = Math.round(lado * .025);
-  x.drawImage(achicar(img, lado), m, m, lado - 2 * m, lado - 2 * m);
+  var m = Math.round(Math.min(pw, ph) * .05);
+  var k = Math.min((pw - 2 * m) / RECORTE[2], (ph - 2 * m) / RECORTE[3]);
+  var dw = RECORTE[2] * k, dh = RECORTE[3] * k;
+  var r = achicar(img, dw);
+  x.shadowColor = 'rgba(0,0,0,.16)'; x.shadowBlur = Math.round(m * .9); x.shadowOffsetY = Math.round(m * .45);
+  x.drawImage(r.f, r.x, r.y, r.w, r.h, (pw - dw) / 2, (ph - dh) / 2, dw, dh);
 }
 function pintarTodos(){ _items.forEach(function(it){ pintar(it.lienzo, it.img); }); }
 function dibujar(items){
