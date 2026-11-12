@@ -14,12 +14,12 @@
   }
   #rueda[hidden]{display:none;}
   .rueda-marco{position:absolute;inset:0;overflow:hidden;}
-  .rueda-aro{position:absolute;left:50%;top:50%;width:0;height:0;animation:rueda-girar 110s linear infinite;will-change:transform;}
-  @keyframes rueda-girar{to{transform:rotate(360deg);}}
-  #rueda.quieta .rueda-aro{animation-play-state:paused;}
-  /* solo con mouse: al pasar por encima se detiene para poder elegir (en celular un toque la dejaba quieta) */
-  @media (hover:hover) and (pointer:fine){ #rueda:hover .rueda-aro{animation-play-state:paused;} }
-  @media (prefers-reduced-motion:reduce){ .rueda-aro{animation:none;} }
+  /* el giro lo hace rueda.js (no una animacion CSS) para poder arrastrarla con el dedo o el mouse, adelante o
+     atras, y lanzarla mas rapido; al soltarla vuelve sola a su velocidad normal. pan-y: deslizar hacia arriba o
+     abajo sigue moviendo la pagina; solo el gesto de lado gira la rueda. */
+  #rueda{touch-action:pan-y;-webkit-user-select:none;user-select:none;}
+  #rueda.arrastrando{cursor:grabbing;}
+  .rueda-aro{position:absolute;left:50%;top:50%;width:0;height:0;will-change:transform;}
   .rueda-reloj{
     position:absolute;left:calc(var(--w) / -2);top:calc(var(--h) / -2);width:var(--w);height:var(--h);
     display:flex;align-items:center;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
