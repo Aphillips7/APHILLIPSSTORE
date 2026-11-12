@@ -1,8 +1,7 @@
   /* === RUEDA DE RELOJES ("Encuentra tu reloj ideal", js/catalogo/rueda.js) ===
      Los relojes sin fondo forman una rueda (cada uno es un rayo) que gira despacio; el texto queda fijo en el
-     centro. En computadora la rueda es mucho mas grande que la seccion: arriba se ve completa y abajo los relojes
-     se meten en la franja negra de la seccion siguiente y vuelven a salir girando. En celular es mas ancha que la
-     pantalla y se recorta a los lados. */
+     centro. En computadora la rueda se ve completa (la seccion mide el diametro de la rueda); en celular es mas
+     ancha que la pantalla y se recorta a los lados. */
   body.vista-catalogo #rueda{display:none;}
   #rueda{
     --D:clamp(600px,54vw,860px);           /* diametro de la rueda */
@@ -49,23 +48,10 @@
     .rueda-sub{font-size:15px;max-width:24ch;}
     .rueda-btn{font-size:13px;}
   }
-  /* computadora: ARCO amplio y bajo. El centro de la rueda queda muy por debajo de la seccion (radio = 1.9 x alto),
-     asi el arco es plano: se ven ~7 relojes GRANDES a la vez que suben por un costado, pasan por arriba del texto
-     y bajan por el otro. El texto y el boton van centrados en la seccion, debajo del arco. El alto sale del alto de
-     la pantalla para que en una laptop la seccion entera se vea sin bajar; el tamano de los relojes sale del alto
-     (lo que queda libre arriba del texto). */
+  /* computadora: circulo completo alrededor del texto (16 relojes a la vez, nada se corta arriba ni abajo),
+     con letras un poco mas grandes */
   @media (min-width:821px){
-    #rueda{
-      --H:clamp(460px,calc(100vh - 140px),640px);            /* alto de la seccion */
-      --R:calc(var(--H) * 1.9);                              /* distancia del centro a cada reloj */
-      --h:clamp(110px,calc(var(--H) * .6 - 132px),200px);    /* alto de cada reloj */
-      --w:calc(var(--h) * .66);
-      --cy:calc(var(--R) + var(--h) / 2 + 18px);             /* centro de la rueda (muy abajo, fuera de la seccion) */
-      height:var(--H);
-    }
-    .rueda-aro{top:var(--cy);}
-    .rueda-centro{top:68%;width:min(500px,40vw);gap:10px;}   /* abajo de la mitad: deja aire al arco */
-    .rueda-titulo{font-size:clamp(24px,1.8vw,30px);}
-    .rueda-sub{font-size:15px;max-width:none;}
-    .rueda-btn{font-size:13px;padding:13px 28px;margin-top:2px;}
+    .rueda-titulo{font-size:clamp(24px,2vw,30px);}
+    .rueda-sub{font-size:16px;}
+    .rueda-btn{font-size:13px;padding:13px 28px;}
   }
