@@ -39,12 +39,9 @@
     transition:background .3s,color .3s;}
   .rueda-btn:hover,.rueda-btn:focus-visible{background:var(--black);color:#fff;}
   /* celular: la rueda es mas ancha que la pantalla. Arriba y abajo se ve completa (sin borde recto que corte
-     relojes) y a los costados se desvanece suavemente en vez de cortarse en seco */
+     relojes); a los costados sale de la pantalla sin desvanecido (el dueno no lo quiere) */
   @media (max-width:820px){
     #rueda{--D:600px;height:calc(var(--D) + 24px);}
-    /* solo la capa de los relojes se desvanece (el fondo blanco de la seccion queda entero) */
-    .rueda-marco{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);
-      mask-image:linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);}
     .rueda-centro{gap:10px;}
     .rueda-sub{max-width:24ch;}
   }
