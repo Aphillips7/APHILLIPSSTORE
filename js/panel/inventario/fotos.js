@@ -11,9 +11,12 @@
    - Fotos antiguas guardadas como texto (base64) se siguen viendo
      hasta que se reemplacen.
    - Subir fotos requiere internet.
-   - Con "Quitar fondo y centrar" (marcado por defecto) se borra el
-     fondo liso y el reloj queda centrado y del mismo tamano en todas
-     (ver fondo.js). "Arreglar fotos" hace lo mismo con las ya subidas.
+   - Con "Quitar fondo y centrar" (marcado por defecto) el fondo liso se
+     quita con IA unida a un recorte por color (sinfondo.js: pulseras
+     completas, bordes suaves) y el reloj queda centrado y del mismo tamano
+     en todas. Si la IA no esta disponible (p. ej. en el iPhone) se usa el
+     recorte por color de fondo.js. Fotos sin fondo liso solo se centran.
+     "Arreglar fotos" hace lo mismo con las ya subidas.
    - De la foto principal se crea en segundo plano su version sin fondo con IA
      (sinfondo.js) para el carrusel negro de la portada.
    - De cada foto se sube tambien una copia JPEG (1200 px) para la
@@ -23,7 +26,7 @@
 import { firebase } from '../../firebase.js';
 import { save, state } from '../state.js';
 import { prepararFoto } from './fondo.js';
-import { asegurarSinFondo } from './sinfondo.js';
+import { asegurarSinFondo, guardarSinFondoDeLienzo, recortarYCentrar, sePuedeRecortar } from './sinfondo.js';
 
 const API_FOTOS = 'https://api.aphillipsstore.com/fotos';
 const MAX_DIM = 1600;
@@ -199,15 +202,18 @@ async function subirFotos(input){
   _subiendo+=archivos.length;
   _bloquearGuardar(true);
   for(var k=0;k<archivos.length;k++){
-    _estado('Subiendo foto '+(k+1)+' de '+archivos.length+'...');
+    _estado((_quitarFondo()?'Recortando':'Subiendo')+' foto '+(k+1)+' de '+archivos.length+'...');
     try{
       var img=await _leerImagen(archivos[k]), original=img;
-      var prep=_quitarFondo()?prepararFoto(img):null;
+      var prep=_quitarFondo()?await _prepararFoto(img, 'Foto '+(k+1)+' de '+archivos.length):null;
+      _estado('Subiendo foto '+(k+1)+' de '+archivos.length+'...');
       if(prep) img=prep.canvas;
       var blob=await _comprimirImg(img, prep&&prep.sinFondo);
       var url=await _subir(blob);
       _fotos.push(url); ok++;
-      _originales[url]=original;
+      // recortada con IA: la misma imagen queda como version del carrusel (sin pasar otra vez por la IA)
+      if(prep && prep.viaIA){ try{ await guardarSinFondoDeLienzo(prep.canvas, url); }catch(e){ console.warn('Version sin fondo no guardada:', e); _originales[url]=original; } }
+      else _originales[url]=original;
       renderFotos();
       // la copia para compartir es un extra: si falla, la foto queda igual
       try{ var jpg=await _jpegCompartir(img); if(jpg) _jpg[url]=await _subir(jpg); }catch(e){ console.warn('Copia JPEG no subida:', e); }
@@ -221,6 +227,20 @@ async function subirFotos(input){
   else if(ok) _estado(ok+' subidas, '+fallos+' con error. Intenta de nuevo con las que faltan.','var(--amber)');
 }
 function _quitarFondo(){ var c=document.getElementById('inv-quitar-fondo'); return !c || c.checked; }
+
+// Quita el fondo con IA + color y centra (1400 px, reloj al 86 %); si la IA falla usa el recorte por color de
+// fondo.js. Si falla una vez, en esta sesion ya no se reintenta (en el iPhone fallaria con cada foto).
+// Devuelve { canvas, sinFondo, viaIA }.
+var _iaNoDisponible=false;
+async function _prepararFoto(img, etiqueta){
+  if(!_iaNoDisponible && sePuedeRecortar(img)){
+    try{
+      var c=await recortarYCentrar(img, function(m){ _estado(etiqueta+': '+m); }, 1400, 0.86);
+      if(c) return { canvas:c, sinFondo:true, viaIA:true };
+    }catch(e){ _iaNoDisponible=true; console.warn('Recorte con IA no disponible; se usa el recorte por color:', e); }
+  }
+  var p=prepararFoto(img); p.viaIA=false; return p;
+}
 
 // "Arreglar fotos": quita el fondo y centra las fotos que ya estaban subidas (se suben como fotos nuevas
 // y reemplazan a las anteriores en la lista; hay que tocar "Guardar cambios" para que quede)
@@ -242,9 +262,10 @@ async function arreglarFotos(){
     var vieja=lista[k];
     _estado('Arreglando foto '+(k+1)+' de '+lista.length+'...');
     try{
-      var prep=prepararFoto(await _leerUrl(vieja));
+      var prep=await _prepararFoto(await _leerUrl(vieja), 'Foto '+(k+1)+' de '+lista.length);
       if(!prep.sinFondo){ sinCambio++; continue; }        // fondo no liso: se deja como estaba
       var url=await _subir(await _comprimirImg(prep.canvas, true));
+      if(prep.viaIA){ try{ await guardarSinFondoDeLienzo(prep.canvas, url); }catch(e){ console.warn('Version sin fondo no guardada:', e); } }
       var i=_fotos.indexOf(vieja); if(i>=0) _fotos[i]=url;
       delete _jpg[vieja];
       try{ var jpg=await _jpegCompartir(prep.canvas); if(jpg) _jpg[url]=await _subir(jpg); }catch(e){ console.warn('Copia JPEG no subida:', e); }

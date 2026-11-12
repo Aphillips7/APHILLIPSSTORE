@@ -24,6 +24,7 @@
    ============================================================ */
 import { firebase } from '../../firebase.js';
 import { state } from '../state.js';
+import { colorDeFondo } from './fondo.js';
 
 const RECORTE_URL = '/herramientas/recorte-ia.html';
 const API_FOTOS = 'https://api.aphillipsstore.com/fotos';
@@ -156,10 +157,23 @@ function caja(alfa, w, h){
   return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
 
-// foto (url del catalogo, o la imagen original al subirla) -> Blob WebP sin fondo, centrado (o null si no se pudo)
-async function crearVersionSinFondo(fuente, alAvanzar){
+// Se puede recortar? true si la foto tiene fondo liso (blanco, gris o un color de estudio) o ya venia recortada.
+// Una foto sin fondo liso (en la mano, sobre una mesa) no se recorta: solo se centra (fondo.js).
+function sePuedeRecortar(img){
+  var w0 = img.naturalWidth || img.width, h0 = img.naturalHeight || img.height, k = Math.min(1, 400 / Math.max(w0, h0));
+  var w = Math.max(1, Math.round(w0 * k)), h = Math.max(1, Math.round(h0 * k));
+  var c = lienzo(w, h), x = c.getContext('2d', { willReadFrequently: true });
+  x.drawImage(img, 0, 0, w, h);
+  var d = x.getImageData(0, 0, w, h).data;
+  return orillaTransparente(d, w, h) > 0.6 || !!colorDeFondo(d, w, h);
+}
+
+// Recorta (IA + color; o solo suaviza si ya venia recortada) y centra el reloj en un cuadrado de "lado" px
+// ocupando "ocupa" del lado mas largo. Devuelve el lienzo (con transparencia) o null si no encontro el reloj.
+async function recortarYCentrar(fuente, alAvanzar, lado, ocupa){
+  lado = lado || LADO; ocupa = ocupa || OCUPA;
   var img = typeof fuente === 'string' ? await leerImagen(fuente) : fuente;
-  var w0 = img.naturalWidth || img.width, h0 = img.naturalHeight || img.height, k = Math.min(1, MAX_ENTRADA / Math.max(w0, h0));
+  var w0 = img.naturalWidth || img.width, h0 = img.naturalHeight || img.height, k = Math.min(1, Math.max(MAX_ENTRADA, lado) / Math.max(w0, h0));
   var w = Math.max(1, Math.round(w0 * k)), h = Math.max(1, Math.round(h0 * k));
   var c = lienzo(w, h), x = c.getContext('2d', { willReadFrequently: true });
   x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, w, h);
@@ -187,10 +201,22 @@ async function crearVersionSinFondo(fuente, alAvanzar){
 
   var b = caja(alfa, w, h);
   if(!b) return null;
-  var out = lienzo(LADO, LADO), o = out.getContext('2d');
+  var out = lienzo(lado, lado), o = out.getContext('2d');
   o.imageSmoothingQuality = 'high';
-  var e = LADO * OCUPA / Math.max(b.w, b.h), dw = b.w * e, dh = b.h * e;
-  o.drawImage(c, b.x, b.y, b.w, b.h, (LADO - dw) / 2, (LADO - dh) / 2, dw, dh);
+  var e = lado * ocupa / Math.max(b.w, b.h), dw = b.w * e, dh = b.h * e;
+  o.drawImage(c, b.x, b.y, b.w, b.h, (lado - dw) / 2, (lado - dh) / 2, dw, dh);
+  return out;
+}
+
+// foto (url del catalogo, o la imagen original al subirla) -> Blob WebP sin fondo, centrado (o null si no se pudo)
+async function crearVersionSinFondo(fuente, alAvanzar){
+  var out = await recortarYCentrar(fuente, alAvanzar, LADO, OCUPA);
+  return out ? codificar(out) : null;
+}
+// lienzo recortado -> archivo para sinfondo/ (WebP 1000 px; en Safari, PNG de 640 px)
+async function codificar(lienzoRecortado){
+  var out = lienzoRecortado;
+  if(out.width !== LADO){ var r = lienzo(LADO, LADO), rx = r.getContext('2d'); rx.imageSmoothingQuality = 'high'; rx.drawImage(out, 0, 0, LADO, LADO); out = r; }
   var blob = await aBlob(out, 'image/webp', 0.9);
   if(blob && blob.type === 'image/webp') return blob;
   // Safari no sabe crear WebP: PNG mas chico (640 px) para que no pese de mas en el carrusel del celular
@@ -269,5 +295,11 @@ async function crearSinFondoCatalogo(rehacer){
 // el panel no se cierra a medias sin avisar
 window.addEventListener('beforeunload', function(e){ if(_procesando){ e.preventDefault(); e.returnValue = ''; } });
 
-export { asegurarSinFondo, crearSinFondoCatalogo, crearVersionSinFondo, fotoPrincipal, tieneSinFondo, urlSinFondo };
+// guarda como version del carrusel un recorte ya hecho al subir (sin volver a pasar por la IA)
+async function guardarSinFondoDeLienzo(lienzoRecortado, url){
+  if(!claveDe(url)) return;
+  await subirSinFondo(await codificar(lienzoRecortado), url);
+}
+
+export { guardarSinFondoDeLienzo, recortarYCentrar, sePuedeRecortar, asegurarSinFondo, crearSinFondoCatalogo, crearVersionSinFondo, fotoPrincipal, tieneSinFondo, urlSinFondo };
 Object.assign(window, { crearSinFondoCatalogo });
