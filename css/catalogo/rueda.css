@@ -12,6 +12,7 @@
     height:calc(var(--D) + 48px);          /* rueda completa + aire arriba y abajo */
   }
   #rueda[hidden]{display:none;}
+  .rueda-marco{position:absolute;inset:0;overflow:hidden;}
   .rueda-aro{position:absolute;left:50%;top:50%;width:0;height:0;animation:rueda-girar 110s linear infinite;will-change:transform;}
   @keyframes rueda-girar{to{transform:rotate(360deg);}}
   #rueda.quieta .rueda-aro{animation-play-state:paused;}
@@ -37,9 +38,13 @@
     font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;
     transition:background .3s,color .3s;}
   .rueda-btn:hover,.rueda-btn:focus-visible{background:var(--black);color:#fff;}
-  /* celular: rueda un poco mas chica para que se vean mas relojes alrededor del texto */
+  /* celular: la rueda es mas ancha que la pantalla. Arriba y abajo se ve completa (sin borde recto que corte
+     relojes) y a los costados se desvanece suavemente en vez de cortarse en seco */
   @media (max-width:820px){
-    #rueda{--D:600px;height:520px;}
+    #rueda{--D:600px;height:calc(var(--D) + 24px);}
+    /* solo la capa de los relojes se desvanece (el fondo blanco de la seccion queda entero) */
+    .rueda-marco{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);
+      mask-image:linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);}
     .rueda-centro{gap:10px;}
     .rueda-sub{max-width:24ch;}
   }
