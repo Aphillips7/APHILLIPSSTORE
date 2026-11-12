@@ -206,6 +206,10 @@ function portadaPublicada(pagina, sitio) {
       e.setAttribute(attr, fotos[k]);
     } });
   }
+  // hombre / mujer traen su propio recorte para celular (<source>): con una foto propia, el celular usa esa misma
+  for (const [k, sel] of [['genHombre', '.gen-hombre source'], ['genMujer', '.gen-mujer source']]) {
+    if (fotos[k]) rw = rw.on(sel, { element(e) { e.setAttribute('data-orig', e.getAttribute('srcset') || ''); e.setAttribute('srcset', fotos[k]); } });
+  }
   return rw.transform(pagina);
 }
 function ofertaActiva(promos, r) {

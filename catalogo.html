@@ -244,14 +244,14 @@ else if(location.pathname.slice(-13) === 'catalogo.html' && location.hostname ==
 <section id="generos" aria-label="Colecciones">
   <div class="gen-grid">
     <a href="/relojes-hombre" class="gen-tile gen-hombre gen-reveal" onclick="irAGenero('hombre',event)">
-      <img src="img/genero-hombre.webp" alt="Reloj Bulova para hombre" loading="lazy" decoding="async">
+      <picture><source media="(max-width:820px)" srcset="img/genero-hombre-movil.webp"><img src="img/genero-hombre.webp" alt="Hombre de pelo rizado con saco gris y reloj cronógrafo de acero con esfera turquesa" loading="lazy" decoding="async"></picture>
       <div class="gen-info">
         <h2 class="gen-titulo">Relojes<br>de hombre</h2>
         <span class="hero-btn">Ver relojes</span>
       </div>
     </a>
     <a href="/relojes-mujer" class="gen-tile gen-mujer gen-reveal" onclick="irAGenero('mujer',event)">
-      <img src="img/genero-mujer.webp" alt="Reloj Bulova para mujer" loading="lazy" decoding="async">
+      <picture><source media="(max-width:820px)" srcset="img/genero-mujer-movil.webp"><img src="img/genero-mujer.webp" alt="Mujer con vestido celeste y reloj de acero con esfera celeste" loading="lazy" decoding="async"></picture>
       <div class="gen-info">
         <h2 class="gen-titulo">Relojes<br>de mujer</h2>
         <span class="hero-btn">Ver relojes</span>
