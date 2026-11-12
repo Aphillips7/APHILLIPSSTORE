@@ -42,21 +42,29 @@
   /* celular: la rueda es mas ancha que la pantalla. Arriba y abajo se ve completa (sin borde recto que corte
      relojes); a los costados sale de la pantalla sin desvanecido (el dueno no lo quiere) */
   @media (max-width:820px){
-    #rueda{--D:600px;height:calc(var(--D) + 24px);}
-    .rueda-centro{gap:10px;}
-    .rueda-sub{max-width:24ch;}
+    /* relojes un poco mas lejos del centro (.42) para que el texto con letras grandes nunca los toque */
+    #rueda{--D:600px;--R:calc(var(--D) * .42);height:calc(var(--D) * 1.04 + 24px);}
+    .rueda-centro{gap:12px;width:min(88%,300px);}
+    .rueda-titulo{font-size:25px;}
+    .rueda-sub{font-size:15px;max-width:24ch;}
+    .rueda-btn{font-size:13px;}
   }
-  /* computadora: rueda grande que sigue de largo hacia abajo (no es un circulo cerrado). El centro (y el texto)
-     queda a la distancia justa para que el reloj de arriba se vea entero; la seccion termina antes del borde de
-     abajo de la rueda, asi esos relojes desaparecen en la franja negra y luego vuelven a salir. */
+  /* computadora: ARCO compacto que cabe entero en la pantalla de un vistazo. El centro de la rueda queda en el
+     borde de abajo de la seccion: se ve la mitad de arriba completa alrededor del texto y la mitad de abajo
+     pasa por la franja negra de la seccion siguiente y vuelve a salir girando. El radio sale del alto de la
+     pantalla (68vh) para que en una laptop no haya que bajar para verla toda. */
   @media (min-width:821px){
     #rueda{
-      --D:clamp(900px,80vw,1400px);
-      --R:calc(var(--D) * .44);
-      --w:calc(var(--D) * .085);
-      --h:calc(var(--D) * .13);
-      --cy:calc(var(--R) + var(--h) / 2 + 36px);   /* altura del centro de la rueda */
-      height:calc(var(--cy) + var(--D) * .2);
+      --R:clamp(320px,min(36vw,calc(68vh - 70px)),480px);   /* distancia del centro a cada reloj */
+      --w:calc(var(--R) * .22);
+      --h:calc(var(--R) * .33);
+      --cy:calc(var(--R) + var(--h) / 2 + 28px);            /* centro de la rueda = borde de abajo */
+      height:var(--cy);
     }
-    .rueda-aro,.rueda-centro{top:var(--cy);}
+    .rueda-aro{top:var(--cy);}
+    /* texto dentro del arco, un poco arriba del borde para que no lo toque ningun reloj */
+    .rueda-centro{top:calc(var(--cy) - var(--R) * .3);width:calc(var(--R) * 1.15);gap:12px;}
+    .rueda-titulo{font-size:clamp(26px,2.2vw,34px);}
+    .rueda-sub{font-size:16px;max-width:32ch;}
+    .rueda-btn{font-size:13px;padding:14px 30px;}
   }
