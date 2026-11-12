@@ -64,7 +64,7 @@
       height:var(--H);
     }
     .rueda-aro{top:var(--cy);}
-    .rueda-centro{top:60%;width:min(500px,40vw);gap:10px;}   /* algo mas abajo de la mitad: deja aire al arco */
+    .rueda-centro{top:68%;width:min(500px,40vw);gap:10px;}   /* abajo de la mitad: deja aire al arco */
     .rueda-titulo{font-size:clamp(24px,1.8vw,30px);}
     .rueda-sub{font-size:15px;max-width:none;}
     .rueda-btn{font-size:13px;padding:13px 28px;margin-top:2px;}
