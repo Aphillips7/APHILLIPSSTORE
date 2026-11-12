@@ -15,6 +15,8 @@ const LADO = 1400;        // cuadrado final
 const OCUPA = 0.86;       // el reloj ocupa el 86 % del lado mas largo
 const TOL = 34;           // diferencia de color que aun cuenta como fondo
 const SUAVE = 22;         // borde suave (anti-dientes) despues de TOL
+const PASO = 12;          // salto maximo de color entre dos pixeles vecinos para seguir avanzando por el fondo:
+                          // el fondo cambia de a poco; el borde de una pulsera blanca o un brillo, de golpe
 
 function dist(d, i, c){ var r = d[i]-c[0], g = d[i+1]-c[1], b = d[i+2]-c[2]; return Math.sqrt(r*r + g*g + b*b); }
 
@@ -36,19 +38,22 @@ function borrarFondo(d, w, h){
   var fondo = colorDeFondo(d, w, h);
   if(!fondo) return false;
   var n = w*h, visto = new Uint8Array(n), cola = new Int32Array(n), ini = 0, fin = 0;
-  function meter(p){ if(!visto[p] && dist(d, p*4, fondo) < TOL + SUAVE){ visto[p] = 1; cola[fin++] = p; } }
-  for(var x = 0; x < w; x++){ meter(x); meter((h-1)*w + x); }
-  for(var y = 0; y < h; y++){ meter(y*w); meter(y*w + w - 1); }
+  // el relleno solo avanza a un vecino parecido al fondo Y sin salto brusco de color: asi no se mete en una
+  // pulsera blanca o plateada que toca el borde de la foto (antes le borraba pedazos)
+  function salto(a, b){ var i = a*4, j = b*4; return Math.abs(d[i]-d[j]) + Math.abs(d[i+1]-d[j+1]) + Math.abs(d[i+2]-d[j+2]); }
+  function meter(p, desde){ if(!visto[p] && dist(d, p*4, fondo) < TOL + SUAVE && (desde < 0 || salto(p, desde) <= PASO)){ visto[p] = 1; cola[fin++] = p; } }
+  for(var x = 0; x < w; x++){ meter(x, -1); meter((h-1)*w + x, -1); }
+  for(var y = 0; y < h; y++){ meter(y*w, -1); meter(y*w + w - 1, -1); }
   while(ini < fin){
     var p = cola[ini++], i = p*4, dd = dist(d, i, fondo);
     // transparencia: 0 en el fondo, gradual en el borde del reloj
     d[i+3] = dd <= TOL ? 0 : Math.round(d[i+3] * (dd - TOL) / SUAVE);
     if(dd > TOL) continue;                         // el borde suave no sigue expandiendose
     var px = p % w;
-    if(px > 0) meter(p-1);
-    if(px < w-1) meter(p+1);
-    if(p >= w) meter(p-w);
-    if(p < n-w) meter(p+w);
+    if(px > 0) meter(p-1, p);
+    if(px < w-1) meter(p+1, p);
+    if(p >= w) meter(p-w, p);
+    if(p < n-w) meter(p+w, p);
   }
   return true;
 }
