@@ -7,7 +7,8 @@
   /* franja de marcas: los logos (blancos con fondo transparente) se ven negros y pasan sin parar; se detiene al pasar el mouse */
   .logos-marcas{overflow:hidden;margin:0 0 clamp(22px,2.6vw,40px);padding:clamp(16px,1.8vw,26px) 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
   .lm-pista{display:flex;width:max-content;animation:lmGira 32s linear infinite;}
-  .logos-marcas:hover .lm-pista{animation-play-state:paused;}
+  /* se detiene al pasar el mouse (solo con mouse: en el celular un toque dejaba la franja pausada) */
+  @media (hover:hover) and (pointer:fine){ .logos-marcas:hover .lm-pista{animation-play-state:paused;} }
   .lm-grupo{display:flex;align-items:center;flex:none;}
   .lm-logo{display:flex;align-items:center;justify-content:center;flex:none;padding:0 clamp(28px,4vw,64px);height:clamp(30px,3vw,44px);opacity:.82;transition:opacity var(--fast) var(--ease);}
   .lm-logo:hover,.lm-logo:focus-visible{opacity:1;}
@@ -70,17 +71,11 @@
   .dest-comprar button{padding:0;border:none;background:none;font:inherit;cursor:pointer;}
 
   /* === MODO NOCHE (estilo TAG, en negro y glaciar) ===
-     El carrusel sigue al negro del hero sin corte: fondo negro, tarjetas de azul glaciar profundo a negro con
-     estrellitas glaciar y blancas (algunas titilan), textos en blanco y logos en blanco debajo (sin linea de puntos).
+     El carrusel sigue al negro del hero sin corte: fondo negro, tarjetas de azul glaciar profundo a negro
+     (sin estrellas), textos en blanco y logos en blanco debajo (sin linea de puntos).
      Usa su propia variable --dnoche: glaciar oscurecido hacia el negro; el color "carrusel" del panel la recalcula (tema.js). */
   #destacados{--dk:#fff;--glz:#A7C4D6;--dnoche:linear-gradient(180deg,#5a7b90 0%,#41606f 24%,#2a414f 48%,#152530 72%,#060c10 90%,#000 100%);
-    background:#000;color:#fff;padding-top:clamp(30px,3.6vw,60px);border-radius:0 0 clamp(14px,1.8vw,26px) clamp(14px,1.8vw,26px);}
-  /* estrellas sobre todo el fondo de la seccion (debajo del contenido) */
-  #destacados::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;opacity:.55;
-    background-image:radial-gradient(1px 1px at 8% 12%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 23% 34%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1.2px 1.2px at 41% 8%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 62% 22%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1px 1px at 79% 9%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 93% 30%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1px 1px at 5% 78%,var(--glz) 50%,transparent 51%),radial-gradient(1px 1px at 97% 84%,#fff 50%,transparent 51%);}
+    background:#000;color:#fff;padding-top:clamp(30px,3.6vw,60px);border-radius:0;}
   .dest-cab{text-align:center;padding:0 20px;margin-bottom:clamp(20px,2.4vw,36px);}
   .dest-eti{display:block;font-size:var(--fs-etiqueta);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--glz);margin-bottom:6px;}
   #destacados .dest-tabs{margin-bottom:clamp(12px,1.4vw,18px);}
@@ -92,18 +87,6 @@
   #destacados .dest-wrap{max-width:1180px;}
   /* tarjetas */
   #destacados .dest-foto{background:var(--dnoche);}
-  #destacados .dest-foto::before,#destacados .dest-foto::after{content:'';position:absolute;inset:0;pointer-events:none;}
-  #destacados .dest-foto::before{background-image:radial-gradient(1px 1px at 11% 14%,#fff 50%,transparent 51%),radial-gradient(1.3px 1.3px at 27% 6%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1px 1px at 46% 19%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 68% 9%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1.2px 1.2px at 88% 17%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 7% 41%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1px 1px at 93% 46%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 18% 63%,#fff 50%,transparent 51%),
-      radial-gradient(1.2px 1.2px at 84% 66%,var(--glz) 50%,transparent 51%),radial-gradient(1px 1px at 35% 82%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1px 1px at 61% 88%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 52% 3%,#fff 50%,transparent 51%);opacity:.7;}
-  /* las que titilan, muy despacio */
-  #destacados .dest-foto::after{background-image:radial-gradient(1.4px 1.4px at 21% 27%,#fff 50%,transparent 51%),radial-gradient(1.4px 1.4px at 76% 31%,var(--glz) 50%,transparent 51%),
-      radial-gradient(1.4px 1.4px at 9% 88%,#fff 50%,transparent 51%),radial-gradient(1.4px 1.4px at 91% 79%,#fff 50%,transparent 51%);animation:destTitila 4.5s ease-in-out infinite;}
-  @keyframes destTitila{0%,100%{opacity:.15;}50%{opacity:.95;}}
-  @media (prefers-reduced-motion:reduce){ #destacados .dest-foto::after{animation:none;opacity:.6;} }
   #destacados .dest-foto .g{z-index:1;}
   #destacados .dest-div i{background:#000;}
   #destacados .dest-nombre,#destacados .dest-sub,#destacados .dest-precio{color:#fff;}
