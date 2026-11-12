@@ -37,6 +37,38 @@ function probar(lista){
     });
   })).then(function(r){ return r.filter(Boolean).slice(0, MAX); });
 }
+// NITIDEZ: la foto pesa 1000 px pero en la rueda mide ~130 px. Si se deja que el navegador la achique mientras
+// gira, la tarjeta de video lo hace rapido y se ve blanda. Por eso cada reloj se dibuja UNA vez en un lienzo
+// del tamano exacto en pixeles de la pantalla (con su densidad), achicado en alta calidad y por pasos, con la
+// sombra incluida: al girar no hay que achicar nada. Si cambia el tamano de la ventana, se vuelve a dibujar.
+var _items = [];
+function achicar(img, lado){
+  // a la mitad cada vez hasta quedar cerca del tamano final: mucho mas fino que achicar de un solo golpe
+  var fuente = img, w = img.naturalWidth || img.width;
+  while(w / 2 >= lado * 1.5){
+    w = Math.round(w / 2);
+    var c = document.createElement('canvas'); c.width = c.height = w;
+    var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    x.drawImage(fuente, 0, 0, w, w);
+    fuente = c;
+  }
+  return fuente;
+}
+function pintar(lienzo, img){
+  var css = lienzo.parentNode ? lienzo.parentNode.offsetWidth : 0;   // ancho del boton, sin contar el giro
+  if(!css) return;
+  var dpr = Math.min(3, window.devicePixelRatio || 1);
+  var lado = Math.round(css * dpr);
+  if(lienzo.width === lado) return;
+  lienzo.width = lienzo.height = lado;
+  var x = lienzo.getContext('2d');
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+  // margen para que la sombra no se corte en el borde del lienzo
+  var m = Math.round(lado * .06);
+  x.shadowColor = 'rgba(0,0,0,.16)'; x.shadowBlur = Math.round(lado * .05); x.shadowOffsetY = Math.round(lado * .025);
+  x.drawImage(achicar(img, lado), m, m, lado - 2 * m, lado - 2 * m);
+}
+function pintarTodos(){ _items.forEach(function(it){ pintar(it.lienzo, it.img); }); }
 function dibujar(items){
   var sec = document.getElementById('rueda'), aro = document.getElementById('rueda-aro');
   if(!sec || !aro) return;
@@ -51,11 +83,17 @@ function dibujar(items){
     b.style.setProperty('--a', (360 * k / n).toFixed(2) + 'deg');
     b.setAttribute('data-id', it.id);
     b.setAttribute('aria-label', 'Ver ' + it.nombre);
-    b.appendChild(it.img);
+    it.lienzo = document.createElement('canvas');
+    it.lienzo.setAttribute('aria-hidden', 'true');
+    b.appendChild(it.lienzo);
     aro.appendChild(b);
   });
+  _items = items;
   sec.hidden = false;
+  pintarTodos();   // ya visible: se mide cada boton y se dibuja antes de que se pinte la pantalla
 }
+var _tRes = 0;
+window.addEventListener('resize', function(){ clearTimeout(_tRes); _tRes = setTimeout(pintarTodos, 200); });
 var _armada = false, _cerca = false;
 // arma la rueda cuando ya llego el catalogo Y el cliente se acerca a la seccion (no descarga fotos de mas)
 function armar(){
